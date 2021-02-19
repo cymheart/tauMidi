@@ -1,0 +1,756 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Ventrue unitType = "Ventrue">
+    <SampleList path = "\Samples\">        <!--样本列表-->
+        <Sample name = "024_C0KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>24</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "024_C0KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>24</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "031_G0KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>31</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "031_G0KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>31</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "035_B0KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>35</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "035_B0KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>35</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "038_D1KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>38</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "038_D1KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>38</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "042_F#1KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>42</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "042_F#1KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>42</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "045_A1KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>45</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "045_A1KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>45</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "050_D2KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>50</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "050_D2KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>50</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "054_F#2KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>54</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "054_F#2KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>54</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "058_A#2KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>58</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "058_A#2KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>58</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "060_C3KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>60</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "060_C3KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>60</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "062_D3KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>62</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "062_D3KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>62</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "064_E3KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>64</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "064_E3KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>64</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "065_F3KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>65</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "065_F3KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>65</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "068_G#3KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>68</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "068_G#3KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>68</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "070_A#3KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>70</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "070_A#3KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>70</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "072_C4KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>72</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "072_C4KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>72</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "077_F4KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>77</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "077_F4KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>77</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "081_A4KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>81</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "081_A4KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>81</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "086_D5KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>86</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "086_D5KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>86</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "090_F#5KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>90</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "090_F#5KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>90</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "095_B5KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>95</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "095_B5KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>95</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "099_D#6KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>99</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "099_D#6KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>99</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "101_F6KM56_HL">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>101</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+        <Sample name = "101_F6KM56_HR">
+            <Start></Start>
+            <End></End>
+            <LoopStart></LoopStart>
+            <LoopEnd></LoopEnd>
+            <Rate> 44100 </Rate>
+            <OriginalPitch>101</OriginalPitch>
+            <CentPitchCorrection> 0 </CentPitchCorrection>
+            <LinkType>MonoSample</LinkType>
+            <Link></Link>
+        </Sample>
+    </SampleList>
+    <InstrumentList>        <!--乐器列表-->
+        <Instrument name = "layer">
+            <Region>
+                <AttackVolEnv>0</AttackVolEnv>
+                <ReleaseVolEnv>30.599</ReleaseVolEnv>
+            </Region>
+            <Region  sample = "024_C0KM56_HL">
+                <KeyRange> 21-27 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>24</OverridingRootKey>
+            </Region>
+            <Region  sample = "024_C0KM56_HR">
+                <KeyRange> 21-27 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>24</OverridingRootKey>
+            </Region>
+            <Region  sample = "031_G0KM56_HL">
+                <KeyRange> 28-32 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>31</OverridingRootKey>
+            </Region>
+            <Region  sample = "031_G0KM56_HR">
+                <KeyRange> 28-32 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>31</OverridingRootKey>
+            </Region>
+            <Region  sample = "035_B0KM56_HL">
+                <KeyRange> 33-36 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>35</OverridingRootKey>
+            </Region>
+            <Region  sample = "035_B0KM56_HR">
+                <KeyRange> 33-36 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>35</OverridingRootKey>
+            </Region>
+            <Region  sample = "038_D1KM56_HL">
+                <KeyRange> 37-39 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>38</OverridingRootKey>
+            </Region>
+            <Region  sample = "038_D1KM56_HR">
+                <KeyRange> 37-39 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>38</OverridingRootKey>
+            </Region>
+            <Region  sample = "042_F#1KM56_HL">
+                <KeyRange> 40-43 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>42</OverridingRootKey>
+            </Region>
+            <Region  sample = "042_F#1KM56_HR">
+                <KeyRange> 40-43 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>42</OverridingRootKey>
+            </Region>
+            <Region  sample = "045_A1KM56_HL">
+                <KeyRange> 44-47 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>45</OverridingRootKey>
+            </Region>
+            <Region  sample = "045_A1KM56_HR">
+                <KeyRange> 44-47 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>45</OverridingRootKey>
+            </Region>
+            <Region  sample = "050_D2KM56_HL">
+                <KeyRange> 48-51 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>50</OverridingRootKey>
+            </Region>
+            <Region  sample = "050_D2KM56_HR">
+                <KeyRange> 48-51 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>50</OverridingRootKey>
+            </Region>
+            <Region  sample = "054_F#2KM56_HL">
+                <KeyRange> 52-55 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>54</OverridingRootKey>
+            </Region>
+            <Region  sample = "054_F#2KM56_HR">
+                <KeyRange> 52-55 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>54</OverridingRootKey>
+            </Region>
+            <Region  sample = "058_A#2KM56_HL">
+                <KeyRange> 56-58 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>58</OverridingRootKey>
+            </Region>
+            <Region  sample = "058_A#2KM56_HR">
+                <KeyRange> 56-58 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>58</OverridingRootKey>
+            </Region>
+            <Region  sample = "060_C3KM56_HL">
+                <KeyRange> 59-60 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>60</OverridingRootKey>
+            </Region>
+            <Region  sample = "060_C3KM56_HR">
+                <KeyRange> 59-60 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>60</OverridingRootKey>
+            </Region>
+            <Region  sample = "062_D3KM56_HL">
+                <KeyRange> 61-62 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>62</OverridingRootKey>
+            </Region>
+            <Region  sample = "062_D3KM56_HR">
+                <KeyRange> 61-62 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>62</OverridingRootKey>
+            </Region>
+            <Region  sample = "064_E3KM56_HL">
+                <KeyRange> 63-64 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>64</OverridingRootKey>
+            </Region>
+            <Region  sample = "064_E3KM56_HR">
+                <KeyRange> 63-64 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>64</OverridingRootKey>
+            </Region>
+            <Region  sample = "065_F3KM56_HL">
+                <KeyRange> 65-66 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>65</OverridingRootKey>
+            </Region>
+            <Region  sample = "065_F3KM56_HR">
+                <KeyRange> 65-66 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>65</OverridingRootKey>
+            </Region>
+            <Region  sample = "068_G#3KM56_HL">
+                <KeyRange> 67-68 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>68</OverridingRootKey>
+            </Region>
+            <Region  sample = "068_G#3KM56_HR">
+                <KeyRange> 67-68 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>68</OverridingRootKey>
+            </Region>
+            <Region  sample = "070_A#3KM56_HL">
+                <KeyRange> 69-70 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>70</OverridingRootKey>
+            </Region>
+            <Region  sample = "070_A#3KM56_HR">
+                <KeyRange> 69-70 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>70</OverridingRootKey>
+            </Region>
+            <Region  sample = "072_C4KM56_HL">
+                <KeyRange> 71-74 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>72</OverridingRootKey>
+            </Region>
+            <Region  sample = "072_C4KM56_HR">
+                <KeyRange> 71-74 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>72</OverridingRootKey>
+            </Region>
+            <Region  sample = "077_F4KM56_HL">
+                <KeyRange> 75-78 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>77</OverridingRootKey>
+            </Region>
+            <Region  sample = "077_F4KM56_HR">
+                <KeyRange> 75-78 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>77</OverridingRootKey>
+            </Region>
+            <Region  sample = "081_A4KM56_HL">
+                <KeyRange> 79-83 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>81</OverridingRootKey>
+            </Region>
+            <Region  sample = "081_A4KM56_HR">
+                <KeyRange> 79-83 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>81</OverridingRootKey>
+            </Region>
+            <Region  sample = "086_D5KM56_HL">
+                <KeyRange> 84-87 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>86</OverridingRootKey>
+            </Region>
+            <Region  sample = "086_D5KM56_HR">
+                <KeyRange> 84-87 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>86</OverridingRootKey>
+            </Region>
+            <Region  sample = "090_F#5KM56_HL">
+                <KeyRange> 88-92 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>90</OverridingRootKey>
+            </Region>
+            <Region  sample = "090_F#5KM56_HR">
+                <KeyRange> 88-92 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>90</OverridingRootKey>
+            </Region>
+            <Region  sample = "095_B5KM56_HL">
+                <KeyRange> 93-96 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>95</OverridingRootKey>
+            </Region>
+            <Region  sample = "095_B5KM56_HR">
+                <KeyRange> 93-96 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>95</OverridingRootKey>
+            </Region>
+            <Region  sample = "099_D#6KM56_HL">
+                <KeyRange> 97-100 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>99</OverridingRootKey>
+            </Region>
+            <Region  sample = "099_D#6KM56_HR">
+                <KeyRange> 97-100 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>99</OverridingRootKey>
+            </Region>
+            <Region  sample = "101_F6KM56_HL">
+                <KeyRange> 100-127 </KeyRange>
+                <Pan>-50</Pan>
+                <OverridingRootKey>101</OverridingRootKey>
+            </Region>
+            <Region  sample = "101_F6KM56_HR">
+                <KeyRange> 100-127 </KeyRange>
+                <Pan>50</Pan>
+                <OverridingRootKey>101</OverridingRootKey>
+            </Region>
+        </Instrument>
+    </InstrumentList>
+    <PresetList>        <!--预设列表-->
+        <Preset name = "GrandPiano" bankMSB = "0" bankLSB = "0" InstNum = "0">
+            <Region instrument = "layer">
+                <KeyRange> 21-127 </KeyRange>
+            </Region>
+        </Preset>
+    </PresetList>
+</Ventrue>
