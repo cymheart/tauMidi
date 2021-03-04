@@ -214,6 +214,12 @@ namespace ventrue
 			MidiControllerType ctrlType, int inputPort,
 			float inputNativeValueMin, float inputNativeValueMax);
 
+		//获取输入端口的输入值
+		inline float GetInputValue(int port)
+		{
+			return (*inputInfos)[(int)port]->inputNativeValue;
+		}
+
 		//获取输入端口的输入类型
 		inline ModInputType GetInputType(int port)
 		{

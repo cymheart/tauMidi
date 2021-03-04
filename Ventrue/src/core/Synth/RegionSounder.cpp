@@ -180,7 +180,7 @@ namespace ventrue {
 	void RegionSounder::InitRegionModulation()
 	{
 		regionModulation->SetDestModifyedGenList(modifyedGenList);
-		regionModulation->SetModifyedGenTypes(modifyedGenTypes);
+		regionModulation->SetModifyedGenTypes(&modifyedGenTypes);
 		regionModulation->SetInsideCtrlModulatorList(&insideCtrlModulatorList);
 		regionModulation->SetChannel(virInst->GetChannel());
 		regionModulation->SetRegions(instRegion, instGlobalRegion, presetRegion, presetGlobalRegion);
@@ -271,6 +271,163 @@ namespace ventrue {
 	}
 
 
+	////设置控制发声参数
+	//void RegionSounder::SetParams()
+	//{
+	//	bool isModifyedBasePitchMul = false;
+	//	bool isModifyedSampleStartIdx = false;
+	//	bool isModifyedSampleEndIdx = false;
+	//	bool isModifyedSampleStartLoopIdx = false;
+	//	bool isModifyedSampleEndLoopIdx = false;
+	//	bool isModifyedVolEnv = false;
+	//	bool isModifyedModEnv = false;
+	//	bool isModifyedBiquadParams = false;
+
+
+	//	unordered_set<GeneratorType>::iterator it = modifyedGenTypes.begin();
+	//	for (; it != modifyedGenTypes.end(); it++)
+	//	{
+
+	//		//for (int i = 0; modifyedGenTypes[i] != GeneratorType::None; i++){
+	//		switch (*it)
+	//		{
+	//		case GeneratorType::SampleModes:
+	//			SetSampleModes();
+	//			break;
+
+	//		case GeneratorType::ScaleTuning:
+	//		case GeneratorType::OverridingRootKey:
+	//		case GeneratorType::FineTune:
+	//		case GeneratorType::CoarseTune:
+	//			if (!isModifyedBasePitchMul)
+	//			{
+	//				SetBasePitchMul();
+	//				isModifyedBasePitchMul = true;
+	//			}
+	//			break;
+
+	//		case GeneratorType::InitialAttenuation:
+	//			SetAttenuationl();
+	//			break;
+
+	//		case GeneratorType::Pan:
+	//			SetPan();
+	//			break;
+
+	//		case GeneratorType::StartAddrsOffset:
+	//		case GeneratorType::StartAddrsCoarseOffset:
+	//			if (!isModifyedSampleStartIdx) {
+	//				SetSampleStartIdx();
+	//				isModifyedSampleStartIdx = true;
+	//			}
+	//			break;
+
+	//		case GeneratorType::EndAddrsOffset:
+	//		case GeneratorType::EndAddrsCoarseOffset:
+	//			if (!isModifyedSampleEndIdx) {
+	//				SetSampleEndIdx();
+	//				isModifyedSampleEndIdx = true;
+	//			}
+	//			break;
+
+	//		case GeneratorType::StartloopAddrsOffset:
+	//		case GeneratorType::StartloopAddrsCoarseOffset:
+	//			if (!isModifyedSampleStartLoopIdx) {
+	//				SetSampleStartLoopIdx();
+	//				isModifyedSampleStartLoopIdx = true;
+	//			}
+	//			break;
+
+	//		case GeneratorType::EndloopAddrsOffset:
+	//		case GeneratorType::EndloopAddrsCoarseOffset:
+	//			if (!isModifyedSampleEndLoopIdx) {
+	//				SetSampleEndLoopIdx();
+	//				isModifyedSampleEndLoopIdx = true;
+	//			}
+	//			break;
+
+	//		case GeneratorType::VibLfoToPitch:
+	//			SetVibLfoToPitch();
+	//			break;
+	//		case GeneratorType::DelayVibLFO:
+	//			SetDelayVibLFO();
+	//			break;
+	//		case GeneratorType::FreqVibLFO:
+	//			SetFreqVibLFO();
+	//			break;
+
+	//		case GeneratorType::ModLfoToFilterFc:
+	//			SetModLfoToFilterFc();
+	//			break;
+
+	//		case GeneratorType::ModLfoToPitch:
+	//			SetModLfoToPitch();
+	//			break;
+
+	//		case GeneratorType::ModLfoToVolume:
+	//			SetModLfoToVolume();
+	//			break;
+
+	//		case GeneratorType::DelayModLFO:
+	//			SetDelayModLFO();
+	//			break;
+	//		case GeneratorType::FreqModLFO:
+	//			SetFreqModLFO();
+	//			break;
+
+	//		case GeneratorType::DelayVolEnv:
+	//		case GeneratorType::AttackVolEnv:
+	//		case GeneratorType::HoldVolEnv:
+	//		case GeneratorType::DecayVolEnv:
+	//		case GeneratorType::SustainVolEnv:
+	//		case GeneratorType::ReleaseVolEnv:
+	//		case GeneratorType::KeynumToVolEnvHold:
+	//		case GeneratorType::KeynumToVolEnvDecay:
+	//			if (!isModifyedVolEnv) {
+	//				SetVolEnv();
+	//				isModifyedVolEnv = true;
+	//			}
+	//			break;
+
+	//		case GeneratorType::DelayModEnv:
+	//		case GeneratorType::AttackModEnv:
+	//		case GeneratorType::HoldModEnv:
+	//		case GeneratorType::DecayModEnv:
+	//		case GeneratorType::SustainModEnv:
+	//		case GeneratorType::ReleaseModEnv:
+	//		case GeneratorType::KeynumToModEnvHold:
+	//		case GeneratorType::KeynumToModEnvDecay:
+	//			if (!isModifyedModEnv) {
+	//				SetModEnv();
+	//				isModifyedModEnv = true;
+	//			}
+	//			break;
+
+	//		case GeneratorType::ModEnvToPitch:
+	//			SetModEnvToPitch();
+	//			break;
+
+	//		case GeneratorType::ModEnvToFilterFc:
+	//			SetModEnvToFilterFc();
+	//			break;
+
+
+	//		case GeneratorType::InitialFilterFc:
+	//		case GeneratorType::InitialFilterQ:
+	//			if (!isModifyedBiquadParams) {
+	//				SetBiquadParams();
+	//				isModifyedBiquadParams = true;
+	//			}
+	//			break;
+
+	//		case GeneratorType::SustainPedalOnOff:
+	//			SetSustainPedalOnOff();
+	//			break;
+	//		}
+	//	}
+	//}
+
+
 	//设置控制发声参数
 	void RegionSounder::SetParams()
 	{
@@ -283,9 +440,10 @@ namespace ventrue {
 		bool isModifyedModEnv = false;
 		bool isModifyedBiquadParams = false;
 
-		for (int i = 0; modifyedGenTypes[i] != GeneratorType::None; i++)
+		unordered_set<GeneratorType>::iterator it = modifyedGenTypes.begin();
+		for (; it != modifyedGenTypes.end(); it++)
 		{
-			switch (modifyedGenTypes[i])
+			switch (*it)
 			{
 			case GeneratorType::SampleModes:
 				SetSampleModes();
@@ -471,7 +629,6 @@ namespace ventrue {
 				attenuation = dstAttenuation;
 			}
 		}
-
 	}
 
 	//设置声向
@@ -948,8 +1105,9 @@ namespace ventrue {
 		int offset = childFrameSampleCount * 0.1f;
 		for (int i = 0; i < childFrameSampleCount; i += offset)
 		{
-			if (fabsf(leftChannelSamples[i]) > 0.001f ||
-				fabsf(rightChannelSamples[i]) > 0.001f)
+			//注意此处0.0001f值不能设置过大，默认为0.0001f，过大，会截断声音
+			if (fabsf(leftChannelSamples[i]) > 0.0001f ||
+				fabsf(rightChannelSamples[i]) > 0.0001f)
 				return false;
 		}
 

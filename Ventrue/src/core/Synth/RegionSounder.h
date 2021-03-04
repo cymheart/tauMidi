@@ -310,7 +310,8 @@ namespace ventrue
 
 	private:
 
-		GeneratorType modifyedGenTypes[64];
+		unordered_set<GeneratorType> modifyedGenTypes;
+		//GeneratorType modifyedGenTypes[64];
 
 		Sample* sample = nullptr;
 		float* input = nullptr;

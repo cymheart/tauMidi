@@ -208,6 +208,7 @@ namespace ventrue
 				region = ParsePresetRegionGeneratorList((int)j, orePreset);
 				ParsePresetRegionModulatorList(region, (int)j, orePreset);
 			}
+
 		}
 
 		if (modulators != nullptr) {
@@ -303,13 +304,9 @@ namespace ventrue
 			case SF2Generator::InitialFilterFc:
 
 				if (regionType == RegionType::Preset)
-				{
 					val = UnitTransform::TimecentsToSecsf(val);
-				}
 				else
-				{
 					val = UnitTransform::CentsToHertz(val);
-				}
 
 				genList.SetAmount(GeneratorType::InitialFilterFc, val);
 				break;
@@ -346,7 +343,10 @@ namespace ventrue
 				break;
 
 			case SF2Generator::FreqModLFO:
-				val = UnitTransform::CentsToHertz(val);
+				if (regionType == RegionType::Preset)
+					val = UnitTransform::TimecentsToSecsf(val);
+				else
+					val = UnitTransform::CentsToHertz(val);
 				genList.SetAmount(GeneratorType::FreqModLFO, val);
 				break;
 
@@ -356,7 +356,10 @@ namespace ventrue
 				break;
 
 			case SF2Generator::FreqVibLFO:
-				val = UnitTransform::CentsToHertz(val);
+				if (regionType == RegionType::Preset)
+					val = UnitTransform::TimecentsToSecsf(val);
+				else
+					val = UnitTransform::CentsToHertz(val);
 				genList.SetAmount(GeneratorType::FreqVibLFO, val);
 				break;
 
@@ -442,7 +445,7 @@ namespace ventrue
 			case SF2Generator::Velocity:  genList.SetAmount(GeneratorType::Velocity, val); break;
 
 			case SF2Generator::InitialAttenuation:
-				genList.SetAmount(GeneratorType::InitialAttenuation, val / -10.0f);
+				genList.SetAmount(GeneratorType::InitialAttenuation, -val * 0.1f);
 				break;
 
 			case SF2Generator::EndloopAddrsCoarseOffset:genList.SetAmount(GeneratorType::EndloopAddrsCoarseOffset, val); break;

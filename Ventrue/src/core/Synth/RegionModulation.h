@@ -23,12 +23,12 @@ namespace ventrue
 		//调制
 		void Modulation();
 
-
 		//设置Gen修改项保存变量
-		inline void SetModifyedGenTypes(GeneratorType* modifyedGenTypes)
+		inline void SetModifyedGenTypes(unordered_set<GeneratorType>* modifyedGenTypes)
 		{
 			this->modifyedGenTypes = modifyedGenTypes;
 		}
+
 
 		//设置内部控制器调制器列表
 		inline void SetInsideCtrlModulatorList(ModulatorList* insideCtrlModulatorList)
@@ -98,8 +98,8 @@ namespace ventrue
 		/// <param name="orgGenlist">输入的生成器列表</param>
 		/// <param name="modGenlist">调制后的对应输出的生成器Genlist</param>
 		/// <param name="isAlreadyModedGenTypes">标志对应生成器是否被调制过的flag值</param>
-		void SetGenListMods(ModulatorVec* mods, GeneratorList* inGenlist, GeneratorList* outModGenlist, bool* isAlreadyModedGenTypes);
-		void ExecuteGenListMods(ModulatorVec* mods, GeneratorList* modGenlist, bool* isAlreadyModedGenTypes);
+		void SetGenListMods(ModulatorVec* mods, GeneratorList* inGenlist, GeneratorList* outModGenlist, bool* isAlreadyModedGenTypes = nullptr);
+		void ExecuteGenListMods(ModulatorVec* mods, GeneratorList* modGenlist, bool* isAlreadyModedGenTypes, bool isCheckMod = false);
 
 		void CombGenValue(GeneratorType genType, bool isTestModFlag);
 
@@ -295,7 +295,7 @@ namespace ventrue
 		GeneratorList* genList = nullptr;
 		GeneratorList* outGenList = nullptr;
 
-		GeneratorType* modifyedGenTypes = nullptr;
+		unordered_set<GeneratorType>* modifyedGenTypes = nullptr;
 
 		//对每个已调制的乐器生成器项作bool标记
 		bool isModedInstGenTypes[64] = { false };

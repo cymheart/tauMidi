@@ -7,98 +7,98 @@
 
 namespace ventrue
 {
-    class Channel
-    {
- 
-    public:
-        Channel(int channelNum);
-        ~Channel();
+	class Channel
+	{
 
-        //获取通道号
-        int GetChannelNum()
-        {
-            return channelNum;
-        }
+	public:
+		Channel(int channelNum);
+		~Channel();
 
-        void Clear();
+		//获取通道号
+		int GetChannelNum()
+		{
+			return channelNum;
+		}
 
-        int GetBankSelectMSB()
-        {
-            return bankMSB;
-        }
+		void Clear();
 
-        int GetBankSelectLSB()
-        {
-            return bankLSB;
-        }
+		int GetBankSelectMSB()
+		{
+			return bankMSB;
+		}
 
-        int GetProgramNum()
-        {
-              return programNum;
-        }
+		int GetBankSelectLSB()
+		{
+			return bankLSB;
+		}
 
-        //手动选择乐器
-        void SelectProgram(int bankMSB, int bankLSB, int instNum);
-        
-        //设置乐器
-        void SetProgramNum(int num);
-       
-        void SetControllerValue(MidiControllerType type, int value);
-        int GetControllerValue(MidiControllerType type);    
+		int GetProgramNum()
+		{
+			return programNum;
+		}
 
-        float GetModPresetValue(ModInputPreset presetType);
+		//手动选择乐器
+		void SelectProgram(int bankMSB, int bankLSB, int instNum);
 
-        ///获取控制器计算值
-        float GetControllerComputedValue(MidiControllerType type);
+		//设置乐器
+		void SetProgramNum(int num);
 
-        MidiControllerTypeList& GetUsedControllerTypeList();
-        ModPresetTypeList& GetUsedPresetTypeList();
+		void SetControllerValue(MidiControllerType type, int value);
+		int GetControllerValue(MidiControllerType type);
 
-        //设置滑音
-        void SetPitchBlend(int value);
+		float GetModPresetValue(ModInputPreset presetType);
 
-        //设置midi录制类
-        void SetMidiRecord(MidiTrackRecord* midiTrackRecord)
-        {
-            this->midiTrackRecord = midiTrackRecord;
-        }
+		///获取控制器计算值
+		float GetControllerComputedValue(MidiControllerType type);
 
-    private:
+		MidiControllerTypeList& GetUsedControllerTypeList();
+		ModPresetTypeList& GetUsedPresetTypeList();
 
-        void ComputeControllerHighResValue(int type);
-        float MapValueToSys(MidiControllerType type, float value, bool isHighResValue);
+		//设置滑音
+		void SetPitchBlend(int value);
 
-        //增加使用的控制器类型
-        void AddUsedControllerType(MidiControllerType type);
+		//设置midi录制类
+		void SetMidiRecord(MidiTrackRecord* midiTrackRecord)
+		{
+			this->midiTrackRecord = midiTrackRecord;
+		}
 
-        //增加使用的预设类型
-        void AddUsedPresetType(ModInputPreset type);
+	private:
 
-    public:
-        
+		void ComputeControllerHighResValue(int type);
+		float MapValueToSys(MidiControllerType type, float value, bool isHighResValue);
 
-    private:
-        //通道号
-        int channelNum = 0;
+		//增加使用的控制器类型
+		void AddUsedControllerType(MidiControllerType type);
 
-        //
-        int bankMSB = 0;
-        int bankLSB = 0;
-        int programNum = 1;
+		//增加使用的预设类型
+		void AddUsedPresetType(ModInputPreset type);
 
-        //
-        int ccValue[128] = { 0 };
-        float ccComputedValue[128] = { 0 };
-        float pitchBlend = 0;
-
-        MidiControllerTypeList usedControllerTypeList;
-        ModPresetTypeList usedPresetTypeList;
+	public:
 
 
-        //
-        MidiTrackRecord* midiTrackRecord = nullptr;
-  
-    };
+	private:
+		//通道号
+		int channelNum = 0;
+
+		//
+		int bankMSB = 0;
+		int bankLSB = 0;
+		int programNum = 1;
+
+		//
+		int ccValue[128] = { 0 };
+		float ccComputedValue[128] = { 0 };
+		float pitchBlend = 0;
+
+		MidiControllerTypeList usedControllerTypeList;
+		ModPresetTypeList usedPresetTypeList;
+
+
+		//
+		MidiTrackRecord* midiTrackRecord = nullptr;
+
+	};
 }
 
 #endif

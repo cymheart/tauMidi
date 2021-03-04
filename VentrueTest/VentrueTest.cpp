@@ -92,6 +92,7 @@ int main(int argc, char* argv[])
 
 	//添加需要播放的midi文件
 	cmd->AppendMidiFile(midiPath + "venture.mid");
+	cmd->AppendMidiFile(midiPath + "吻别.mid");
 	cmd->AppendMidiFile(midiPath + "learning\\Sound of Silence-Simon & Garfunkel.mid");
 	cmd->AppendMidiFile(midiPath + "learning\\QianQianQueGe.mid");
 	cmd->AppendMidiFile(midiPath + "learning\\ShiNian.mid");
@@ -103,7 +104,7 @@ int main(int argc, char* argv[])
 	cmd->AppendMidiFile(midiPath + "learning\\Promise.mid");
 
 	//播放第1个midi文件
-	cmd->PlayMidi(0);
+	cmd->PlayMidi(1);
 
 	//播放第2个midi文件
 	//cmd->PlayMidi(1);
