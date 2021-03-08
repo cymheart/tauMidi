@@ -9,7 +9,7 @@
 #include "scutils/UniqueID.h"
 #include "scutils/RingBuffer.h"
 #include "Effect/EffectList.h"
-
+#include "iir1/iir/Iir1.h"
 
 using namespace task;
 using namespace scutils;

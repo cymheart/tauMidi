@@ -1,7 +1,6 @@
 ﻿#ifndef _Compressor_h_
 #define _Compressor_h_
 
-#include "Biquad.h"
 #include"scutils/MathUtils.h"
 using namespace scutils;
 

@@ -24,7 +24,7 @@ namespace ventrue
 		void Modulation();
 
 		//设置Gen修改项保存变量
-		inline void SetModifyedGenTypes(unordered_set<GeneratorType>* modifyedGenTypes)
+		inline void SetModifyedGenTypes(unordered_set<int>* modifyedGenTypes)
 		{
 			this->modifyedGenTypes = modifyedGenTypes;
 		}
@@ -295,7 +295,7 @@ namespace ventrue
 		GeneratorList* genList = nullptr;
 		GeneratorList* outGenList = nullptr;
 
-		unordered_set<GeneratorType>* modifyedGenTypes = nullptr;
+		unordered_set<int>* modifyedGenTypes = nullptr;
 
 		//对每个已调制的乐器生成器项作bool标记
 		bool isModedInstGenTypes[64] = { false };

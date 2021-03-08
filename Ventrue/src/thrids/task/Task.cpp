@@ -1,4 +1,4 @@
-#include"Task.h"
+﻿#include"Task.h"
 
 namespace task
 {
@@ -30,6 +30,8 @@ namespace task
 
 	void Task::Release(Task* task)
 	{
+		task->isRemove = false;
+
 		if (task->isSysReleaseTask)
 		{
 			DEL(task);

@@ -12,7 +12,7 @@ namespace dsignal
 
 	void CascadeBiquad::CalculateCoefficients()
 	{
-		Biquad::CalculateCoefficients();
+		RBJBiquad::CalculateCoefficients();
 
 		//
 		for (int i = 0; i < biquads.size(); i++)
@@ -24,7 +24,7 @@ namespace dsignal
 		//
 		for (int i = 0; i < level - 1; i++)
 		{
-			Biquad* biquad = new Biquad;
+			RBJBiquad* biquad = new RBJBiquad;
 			biquad->SetNumAndDenCoefficient(b0, b1, b2, a0, a1, a2);
 			biquads.push_back(biquad);
 		}
@@ -35,7 +35,7 @@ namespace dsignal
 		if (!IsEnable())
 			return;
 
-		Biquad::Filtering(inputs, size);
+		RBJBiquad::Filtering(inputs, size);
 
 		for (int i = 0; i < biquads.size(); i++)
 		{
@@ -48,7 +48,7 @@ namespace dsignal
 		if (!IsEnable())
 			return input;
 
-		input = Biquad::Filtering(input);
+		input = RBJBiquad::Filtering(input);
 
 		for (int i = 0; i < biquads.size(); i++)
 		{
@@ -73,7 +73,7 @@ namespace dsignal
 		if (!IsEnable())
 			return false;
 
-		Biquad::Freqz(x_out, y_out, len, sign);
+		RBJBiquad::Freqz(x_out, y_out, len, sign);
 		if (biquads.size() <= 0)
 			return true;
 

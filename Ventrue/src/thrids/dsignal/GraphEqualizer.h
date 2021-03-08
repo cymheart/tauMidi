@@ -1,53 +1,49 @@
 ﻿#ifndef _GraphEqualizer_h_
 #define _GraphEqualizer_h_
 
-#include "Biquad.h"
+#include "iir1/iir/Iir1.h"
+#include"Filter.h"
 
 namespace dsignal
 {
 	//频带均衡信息
 	struct FreqBandEQInfo
 	{
-		//开始频率点(单位:HZ)
-		float freqStart = 0;
+		//中心频率(单位:HZ)
+		float centerFreq = 0;
 
-		//结束频率点(单位:HZ)
-		float freqEnd = 0;
+		//带宽(单位:HZ)
+		float bandWidth = 0;
 
 		//频带增益(单位:db)
 		float gainDB = 0;
 	};
 
 	/**
-	* 图示均衡器
+	* 图形均衡器
 	*/
 	class GraphEqualizer
 	{
 	public:
 		GraphEqualizer();
-		~GraphEqualizer();
-
-		void Clear();
 
 		void SetSampleRate(float sampleRate)
 		{
 			this->sampleRate = sampleRate;
 		}
 
-		void SetFreqBandEQInfos(FreqBandEQInfo* freqBandEQInfos, int size);
-		void Create();
 		void SetFreqBandGain(int bandIdx, float gainDB);
 
 		vector<dsignal::Filter*> GetFilters();
 
-	private:
 		double Filtering(double input);
-
 
 	private:
 		float sampleRate = 44100;
-		FreqBandEQInfo* freqBandEQInfo = nullptr;
-		Biquad* freqBandBiquad;
+		int bandCount = 10;
+		FreqBandEQInfo freqBandEQInfo[31];
+		Iir::RBJ::BandShelf freqBandBiquad[31];
+		Filter bandFilter[31];
 		int size = 0;
 	};
 }

@@ -14,7 +14,7 @@ namespace ventrue
 	void EffectEqualizerCmd::_SetFreqBandGain(Task* task)
 	{
 		EffectTask* effectTask = (EffectTask*)task;
-		Equalizer& eq = *(Equalizer*)(effectTask->effect);
+		EffectEqualizer& eq = *(EffectEqualizer*)(effectTask->effect);
 		eq.SetFreqBandGain(effectTask->valuei[0], effectTask->valuef[0]);
 	}
 

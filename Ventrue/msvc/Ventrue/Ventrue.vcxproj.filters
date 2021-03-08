@@ -58,6 +58,12 @@
     <Filter Include="thrids\dsignal">
       <UniqueIdentifier>{8cd7d44a-8c46-4697-a82b-dff6e23ae284}</UniqueIdentifier>
     </Filter>
+    <Filter Include="thrids\iir1">
+      <UniqueIdentifier>{e78a902b-e548-4770-b4c3-dcc401bcbd02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\iir1\iir">
+      <UniqueIdentifier>{39db0ee9-6f2b-49c1-b0cd-51abe917aaef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\Synth\Channel.cpp">
@@ -240,9 +246,6 @@
     <ClCompile Include="..\..\src\core\Effect\EffectCmd\EffectDelayCmd.cpp">
       <Filter>core\Effect\EffectCmd</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\thrids\dsignal\Biquad.cpp">
-      <Filter>thrids\dsignal</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\thrids\dsignal\Dsignal.cpp">
       <Filter>thrids\dsignal</Filter>
     </ClCompile>
@@ -251,9 +254,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\thrids\dsignal\Bode.cpp">
       <Filter>thrids\dsignal</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\Effect\Equalizer.cpp">
-      <Filter>core\Effect</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\thrids\dsignal\ParameterEqualizer.cpp">
       <Filter>thrids\dsignal</Filter>
@@ -272,6 +272,36 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\Effect\EffectCmd\EffectCompressorCmd.cpp">
       <Filter>core\Effect\EffectCmd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir1\iir\Biquad.cpp">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir1\iir\Butterworth.cpp">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir1\iir\Cascade.cpp">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir1\iir\ChebyshevI.cpp">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir1\iir\ChebyshevII.cpp">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir1\iir\Custom.cpp">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir1\iir\PoleFilter.cpp">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir1\iir\RBJ.cpp">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\RBJBiquad.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Effect\EffectEqualizer.cpp">
+      <Filter>core\Effect</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -500,9 +530,6 @@
     <ClInclude Include="..\..\src\core\Effect\EffectCmd\EffectDelayCmd.h">
       <Filter>core\Effect\EffectCmd</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\thrids\dsignal\Biquad.h">
-      <Filter>thrids\dsignal</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\thrids\dsignal\Dsignal.h">
       <Filter>thrids\dsignal</Filter>
     </ClInclude>
@@ -511,9 +538,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\thrids\dsignal\Bode.h">
       <Filter>thrids\dsignal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\Effect\Equalizer.h">
-      <Filter>core\Effect</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\thrids\dsignal\ParameterEqualizer.h">
       <Filter>thrids\dsignal</Filter>
@@ -532,6 +556,54 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\Effect\EffectCmd\EffectCompressorCmd.h">
       <Filter>core\Effect\EffectCmd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\Biquad.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\Butterworth.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\Cascade.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\ChebyshevI.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\ChebyshevII.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\Common.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\Custom.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\Layout.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\MathSupplement.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\PoleFilter.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\RBJ.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\State.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\Types.h">
+      <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\RBJBiquad.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Effect\EffectEqualizer.h">
+      <Filter>core\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir1\iir\Iir1.h">
+      <Filter>thrids\iir1\iir</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

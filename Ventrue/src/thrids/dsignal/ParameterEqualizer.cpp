@@ -10,7 +10,7 @@ namespace dsignal
 	void ParameterEqualizer::Init()
 	{
 		//高通
-		biquad[0].biquadFilterType = BiquadFilterType::HighPass;
+		biquad[0].rbjFilterType = RBJFilterType::HighPass;
 		biquad[0].qtype = QType::Q;
 		biquad[0].f0 = 25;
 		biquad[0].fs = sampleRate;
@@ -18,7 +18,7 @@ namespace dsignal
 		biquad[0].CalculateCoefficients();
 
 		//低架
-		biquad[1].biquadFilterType = BiquadFilterType::LowShelf;
+		biquad[1].rbjFilterType = RBJFilterType::LowShelf;
 		biquad[1].qtype = QType::Q;
 		biquad[1].Q = 0.707;
 		biquad[1].f0 = 25;
@@ -31,7 +31,7 @@ namespace dsignal
 		//尖峰
 		for (int i = 2; i <= 6; i++)
 		{
-			biquad[i].biquadFilterType = BiquadFilterType::PeakingEQ;
+			biquad[i].rbjFilterType = RBJFilterType::PeakingEQ;
 			biquad[i].qtype = QType::Q;
 			biquad[i].Q = 0.707;
 			biquad[i].f0 = 25;
@@ -43,7 +43,7 @@ namespace dsignal
 
 
 		//高架
-		biquad[7].biquadFilterType = BiquadFilterType::HighShelf;
+		biquad[7].rbjFilterType = RBJFilterType::HighShelf;
 		biquad[7].qtype = QType::Q;
 		biquad[7].Q = 0.707;
 		biquad[7].f0 = 25;
@@ -54,7 +54,7 @@ namespace dsignal
 
 
 		//低通
-		biquad[8].biquadFilterType = BiquadFilterType::LowPass;
+		biquad[8].rbjFilterType = RBJFilterType::LowPass;
 		biquad[8].qtype = QType::Q;
 		biquad[8].f0 = 25;
 		biquad[8].fs = sampleRate;

@@ -24,6 +24,7 @@ namespace task
 		~TaskTimer();
 
 		void Start();
+		void ReStart();
 		void Stop();
 
 	private:

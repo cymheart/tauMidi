@@ -9,6 +9,19 @@ namespace dsignal
 		den.clear();
 	}
 
+	//设置系数(分子分母对半分)
+	void Filter::SetCoefficient(double coeff[], int count)
+	{
+		num.clear();
+		den.clear();
+
+		int n = count / 2;
+		for (int i = 0; i < n; i++) {
+			num.push_back(coeff[i]);
+			den.push_back(coeff[n + i]);
+		}
+	}
+
 	//设置分子系数
 	//分子系数: b[0], b[1], b[2] .... b[n]
 	void Filter::SetNumCoefficient(double nums[], int len)

@@ -14,6 +14,7 @@ namespace dsignal
 
 		/// <summary>
 		/// 计算数字滤波器的频率响应
+		/// 参考:https://blog.csdn.net/liyuanbhu/article/details/38727329
 		/// 
 		/// 数字滤波器传递函数:
 		///         b[0]+ b[1]z^-1 + b[2]z^-2 + ... + b[n]z^-n 
@@ -22,7 +23,7 @@ namespace dsignal
 		/// 
 		/// 频率响应为：
 		///            b[0]+ b[1]e^-jw + b[2]e^-j2w + ... + b[n]e^-jnw 
-		/// H(e^jw)=  --------------------------------------------
+		/// H(e^jw)=  -------------------------------------------------
 		///            a[0]+ a[1]e^-jw + a[2]e^-j2w + ... + a[n]e^-jnw   
 		/// 
 		/// 其中 e^-jnw = cos(nw) - isin(nw)

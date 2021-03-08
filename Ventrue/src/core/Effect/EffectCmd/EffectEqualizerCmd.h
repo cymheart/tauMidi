@@ -1,7 +1,7 @@
 ﻿#ifndef _EffectEqualizerCmd_h_
 #define _EffectEqualizerCmd_h_
 
-#include"Effect/Equalizer.h"
+#include"Effect/EffectEqualizer.h"
 #include"EffectCmd.h"
 
 namespace ventrue

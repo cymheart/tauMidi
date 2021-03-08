@@ -415,6 +415,13 @@ namespace task
 				if (cur == nullptr)
 					continue;
 
+				if (cur->isRemove)
+				{
+					Task::Release(cur);
+					iter = timerReads.erase(iter);
+					continue;
+				}
+
 				int tm = (int)(chrono::duration_cast<res>(curTime - cur->startTime).count() * 0.001f);
 				if (cur->delay > 0 && tm < cur->delay)
 				{
@@ -427,8 +434,13 @@ namespace task
 				if (cur->msg == TMSG_TIMER_STOP) {
 					TaskTimer* timer = ((TimerTask*)cur)->timer;
 					if (timer->task != nullptr) {
-						timerReads.remove(timer->task);
-						Task::Release(timer->task);
+						timer->task->isRemove = true;
+					}
+				}
+				else if (cur->msg == TMSG_TIMER_RESTART) {
+					TaskTimer* timer = ((TimerTask*)cur)->timer;
+					if (timer->task != nullptr) {
+						timer->task->startTime = curTime;
 					}
 				}
 
@@ -457,7 +469,8 @@ namespace task
 			for (TaskList::iterator iter = reads.begin(); iter != reads.end();)
 			{
 				cur = (*iter);
-				if (ProcessTask(cur) == 1)
+
+				if (!cur->isRemove && ProcessTask(cur) == 1)
 				{
 					isStop = true;
 					taskQue->Clear();

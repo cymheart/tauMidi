@@ -172,7 +172,7 @@ Java_cymheart_ventrue_VentrueCmd_OffKey(JNIEnv *env, jclass clazz, jlong ndk_ven
 extern "C"
 JNIEXPORT jlong JNICALL
 Java_cymheart_ventrue_effect_Equalizer_ndkCreateEqualizer(JNIEnv *env, jclass clazz) {
-    Equalizer* eq = new Equalizer();
+    EffectEqualizer* eq = new EffectEqualizer();
     return (int64_t)eq;
 }
 
@@ -183,7 +183,7 @@ Java_cymheart_ventrue_effect_EffectEqualizerCmd_ndkCreateEffectEqualizerCmd(JNIE
                                                                             jlong ndk_ventrue,
                                                                             jlong ndk_equalizer) {
     Ventrue* ventrue = (Ventrue*)ndk_ventrue;
-    Equalizer* eq = (Equalizer*)ndk_equalizer;
+    EffectEqualizer* eq = (EffectEqualizer*)ndk_equalizer;
     eq->SetFreqBandGain(0, 1);
     EffectEqualizerCmd* cmd = new EffectEqualizerCmd(ventrue, eq);
     return  (int64_t)cmd;
@@ -209,7 +209,7 @@ Java_cymheart_ventrue_VentrueCmd_ndkAddEffect(JNIEnv *env, jclass clazz, jlong n
 extern "C"
 JNIEXPORT jobjectArray JNICALL
 Java_cymheart_ventrue_effect_Equalizer_ndkGetFilter(JNIEnv *env, jclass clazz, jlong ndk_effect) {
-    Equalizer* eq = (Equalizer*)ndk_effect;
+    EffectEqualizer* eq = (EffectEqualizer*)ndk_effect;
     vector<dsignal::Filter*> filters = eq->GetFilters();
 
     jclass jFilterClass = env->FindClass("cymheart/ventrue/dsignal/Filter");

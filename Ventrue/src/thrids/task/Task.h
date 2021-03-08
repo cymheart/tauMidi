@@ -5,7 +5,7 @@
 
 namespace task
 {
-	
+
 	class Task
 	{
 	public:
@@ -48,7 +48,9 @@ namespace task
 
 		//执行的优先顺序值，越小的值，意味着越早执行
 		int priority = 0;
-	
+
+		bool isRemove = false;
+
 	};
 }
 #endif

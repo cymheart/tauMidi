@@ -32,6 +32,9 @@ namespace dsignal
 			return isEnable;
 		}
 
+		//设置系数(分子分母对半分)
+		void SetCoefficient(double coeff[], int count);
+
 		//设置分子系数
 		//分子系数: b[0], b[1], b[2] .... b[n]
 		void SetNumCoefficient(double nums[], int len);

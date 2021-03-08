@@ -12,7 +12,11 @@ namespace ventrue {
 
 	RegionSounder::RegionSounder()
 	{
-		biquad = new Biquad;
+
+		biquad = new Iir::RBJ::LowPass;
+
+
+		//biquad = new Biquad;
 		modifyedGenList = new GeneratorList();
 
 		vibLfo = new Lfo();
@@ -71,8 +75,10 @@ namespace ventrue {
 		isHoldDownKey = false;
 
 		//
-		biquad->Clear();
 		isActiveLowPass = false;
+		biquadCutoffFrequency = 0;
+		biquadQ = ONESQRT2;
+		biquad->reset();
 
 		//
 		isActivePortamento = false;
@@ -271,163 +277,6 @@ namespace ventrue {
 	}
 
 
-	////设置控制发声参数
-	//void RegionSounder::SetParams()
-	//{
-	//	bool isModifyedBasePitchMul = false;
-	//	bool isModifyedSampleStartIdx = false;
-	//	bool isModifyedSampleEndIdx = false;
-	//	bool isModifyedSampleStartLoopIdx = false;
-	//	bool isModifyedSampleEndLoopIdx = false;
-	//	bool isModifyedVolEnv = false;
-	//	bool isModifyedModEnv = false;
-	//	bool isModifyedBiquadParams = false;
-
-
-	//	unordered_set<GeneratorType>::iterator it = modifyedGenTypes.begin();
-	//	for (; it != modifyedGenTypes.end(); it++)
-	//	{
-
-	//		//for (int i = 0; modifyedGenTypes[i] != GeneratorType::None; i++){
-	//		switch (*it)
-	//		{
-	//		case GeneratorType::SampleModes:
-	//			SetSampleModes();
-	//			break;
-
-	//		case GeneratorType::ScaleTuning:
-	//		case GeneratorType::OverridingRootKey:
-	//		case GeneratorType::FineTune:
-	//		case GeneratorType::CoarseTune:
-	//			if (!isModifyedBasePitchMul)
-	//			{
-	//				SetBasePitchMul();
-	//				isModifyedBasePitchMul = true;
-	//			}
-	//			break;
-
-	//		case GeneratorType::InitialAttenuation:
-	//			SetAttenuationl();
-	//			break;
-
-	//		case GeneratorType::Pan:
-	//			SetPan();
-	//			break;
-
-	//		case GeneratorType::StartAddrsOffset:
-	//		case GeneratorType::StartAddrsCoarseOffset:
-	//			if (!isModifyedSampleStartIdx) {
-	//				SetSampleStartIdx();
-	//				isModifyedSampleStartIdx = true;
-	//			}
-	//			break;
-
-	//		case GeneratorType::EndAddrsOffset:
-	//		case GeneratorType::EndAddrsCoarseOffset:
-	//			if (!isModifyedSampleEndIdx) {
-	//				SetSampleEndIdx();
-	//				isModifyedSampleEndIdx = true;
-	//			}
-	//			break;
-
-	//		case GeneratorType::StartloopAddrsOffset:
-	//		case GeneratorType::StartloopAddrsCoarseOffset:
-	//			if (!isModifyedSampleStartLoopIdx) {
-	//				SetSampleStartLoopIdx();
-	//				isModifyedSampleStartLoopIdx = true;
-	//			}
-	//			break;
-
-	//		case GeneratorType::EndloopAddrsOffset:
-	//		case GeneratorType::EndloopAddrsCoarseOffset:
-	//			if (!isModifyedSampleEndLoopIdx) {
-	//				SetSampleEndLoopIdx();
-	//				isModifyedSampleEndLoopIdx = true;
-	//			}
-	//			break;
-
-	//		case GeneratorType::VibLfoToPitch:
-	//			SetVibLfoToPitch();
-	//			break;
-	//		case GeneratorType::DelayVibLFO:
-	//			SetDelayVibLFO();
-	//			break;
-	//		case GeneratorType::FreqVibLFO:
-	//			SetFreqVibLFO();
-	//			break;
-
-	//		case GeneratorType::ModLfoToFilterFc:
-	//			SetModLfoToFilterFc();
-	//			break;
-
-	//		case GeneratorType::ModLfoToPitch:
-	//			SetModLfoToPitch();
-	//			break;
-
-	//		case GeneratorType::ModLfoToVolume:
-	//			SetModLfoToVolume();
-	//			break;
-
-	//		case GeneratorType::DelayModLFO:
-	//			SetDelayModLFO();
-	//			break;
-	//		case GeneratorType::FreqModLFO:
-	//			SetFreqModLFO();
-	//			break;
-
-	//		case GeneratorType::DelayVolEnv:
-	//		case GeneratorType::AttackVolEnv:
-	//		case GeneratorType::HoldVolEnv:
-	//		case GeneratorType::DecayVolEnv:
-	//		case GeneratorType::SustainVolEnv:
-	//		case GeneratorType::ReleaseVolEnv:
-	//		case GeneratorType::KeynumToVolEnvHold:
-	//		case GeneratorType::KeynumToVolEnvDecay:
-	//			if (!isModifyedVolEnv) {
-	//				SetVolEnv();
-	//				isModifyedVolEnv = true;
-	//			}
-	//			break;
-
-	//		case GeneratorType::DelayModEnv:
-	//		case GeneratorType::AttackModEnv:
-	//		case GeneratorType::HoldModEnv:
-	//		case GeneratorType::DecayModEnv:
-	//		case GeneratorType::SustainModEnv:
-	//		case GeneratorType::ReleaseModEnv:
-	//		case GeneratorType::KeynumToModEnvHold:
-	//		case GeneratorType::KeynumToModEnvDecay:
-	//			if (!isModifyedModEnv) {
-	//				SetModEnv();
-	//				isModifyedModEnv = true;
-	//			}
-	//			break;
-
-	//		case GeneratorType::ModEnvToPitch:
-	//			SetModEnvToPitch();
-	//			break;
-
-	//		case GeneratorType::ModEnvToFilterFc:
-	//			SetModEnvToFilterFc();
-	//			break;
-
-
-	//		case GeneratorType::InitialFilterFc:
-	//		case GeneratorType::InitialFilterQ:
-	//			if (!isModifyedBiquadParams) {
-	//				SetBiquadParams();
-	//				isModifyedBiquadParams = true;
-	//			}
-	//			break;
-
-	//		case GeneratorType::SustainPedalOnOff:
-	//			SetSustainPedalOnOff();
-	//			break;
-	//		}
-	//	}
-	//}
-
-
 	//设置控制发声参数
 	void RegionSounder::SetParams()
 	{
@@ -440,10 +289,10 @@ namespace ventrue {
 		bool isModifyedModEnv = false;
 		bool isModifyedBiquadParams = false;
 
-		unordered_set<GeneratorType>::iterator it = modifyedGenTypes.begin();
+		unordered_set<int>::iterator it = modifyedGenTypes.begin();
 		for (; it != modifyedGenTypes.end(); it++)
 		{
-			switch (*it)
+			switch ((GeneratorType)*it)
 			{
 			case GeneratorType::SampleModes:
 				SetSampleModes();
@@ -841,14 +690,14 @@ namespace ventrue {
 		Q = modifyedGenList->GetAmount(GeneratorType::InitialFilterQ);
 		Q = UnitTransform::ResonanceDbToFilterQ(Q);
 
-		double qDiff = biquad->Q - Q;
-		if (fc != biquad->f0 ||
+		double qDiff = biquadQ - Q;
+		if (fc != biquadCutoffFrequency ||
 			(qDiff < -0.0001f || qDiff > 0.0001f))
 		{
-			biquad->Q = Q;
-			biquad->f0 = fc;
-			biquad->fs = ventrue->GetSampleProcessRate();
-			biquad->CalculateCoefficients();
+			biquadSampleRate = ventrue->GetSampleProcessRate();
+			biquadCutoffFrequency = fc;
+			biquadQ = Q;
+			biquad->setup(biquadSampleRate, biquadCutoffFrequency, biquadQ);
 		}
 	}
 
@@ -1200,7 +1049,8 @@ namespace ventrue {
 			a = 0;
 
 			//重设低通滤波器
-			ResetLowPassFilter(endSec);
+			if (isActiveLowPass)
+				ResetLowPassFilter(endSec);
 
 			//采样音调处理
 			pitchOffsetMul = LfosAndEnvsModulation(LfoEnvTarget::ModPitch, endSec);
@@ -1241,7 +1091,7 @@ namespace ventrue {
 
 				//低通滤波处理
 				if (isActiveLowPass)
-					sampleValue = (float)biquad->Filtering(sampleValue);
+					sampleValue = biquad->filter(sampleValue);
 
 				if (renderQuality == RenderQuality::Good ||
 					renderQuality == RenderQuality::Fast)
@@ -1357,21 +1207,18 @@ namespace ventrue {
 	// 重设低通滤波器
 	void RegionSounder::ResetLowPassFilter(float computedSec)
 	{
-		if (isActiveLowPass)
-		{
-			float fcMul = LfosAndEnvsModulation(LfoEnvTarget::ModFilterCutoff, computedSec);
-			float fcResult = fc * fcMul;
-			if (fcResult > 19912) { fcResult = 19912; }
-			else if (fcResult < 0) { fcResult = 0; }
+		float fcMul = LfosAndEnvsModulation(LfoEnvTarget::ModFilterCutoff, computedSec);
+		float fcResult = fc * fcMul;
+		if (fcResult > 19912) { fcResult = 19912; }
+		else if (fcResult < 0) { fcResult = 0; }
 
-			double qDiff = biquad->Q - Q;
-			if (fcResult != biquad->f0 ||
-				(qDiff < -0.0001f || qDiff > 0.0001f))
-			{
-				biquad->f0 = fcResult;
-				biquad->Q = Q;
-				biquad->CalculateCoefficients();
-			}
+		double qDiff = biquadQ - Q;
+		if (fcResult != biquadCutoffFrequency ||
+			(qDiff < -0.0001f || qDiff > 0.0001f))
+		{
+			biquadCutoffFrequency = fcResult;
+			biquadQ = Q;
+			biquad->setup(biquadSampleRate, biquadCutoffFrequency, biquadQ);
 		}
 	}
 

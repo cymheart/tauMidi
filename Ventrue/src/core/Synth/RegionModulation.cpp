@@ -180,7 +180,7 @@ namespace ventrue
 
 			if (isTestModFlag && isModedInstGenTypes[i])
 			{
-				modifyedGenTypes->insert((GeneratorType)i);
+				modifyedGenTypes->insert(i);
 			}
 		}
 	}
@@ -230,7 +230,7 @@ namespace ventrue
 				break;
 
 			default:
-				instValue += presetValue;
+				instValue += presetValue; //在分或分贝状态下做加法
 				break;
 			}
 		}
@@ -250,58 +250,58 @@ namespace ventrue
 	//根据初始化时最终复合计算出的生成器列表，设置需要修改的参数类型
 	void RegionModulation::InitNeedModifyGenParamTypes()
 	{
-		modifyedGenTypes->insert(GeneratorType::SampleModes);
-		modifyedGenTypes->insert(GeneratorType::ScaleTuning);
-		modifyedGenTypes->insert(GeneratorType::InitialAttenuation);
-		modifyedGenTypes->insert(GeneratorType::Pan);
-		modifyedGenTypes->insert(GeneratorType::StartAddrsOffset);
-		modifyedGenTypes->insert(GeneratorType::EndAddrsOffset);
-		modifyedGenTypes->insert(GeneratorType::StartloopAddrsOffset);
-		modifyedGenTypes->insert(GeneratorType::EndloopAddrsOffset);
-		modifyedGenTypes->insert(GeneratorType::SustainPedalOnOff);
+		modifyedGenTypes->insert((int)GeneratorType::SampleModes);
+		modifyedGenTypes->insert((int)GeneratorType::ScaleTuning);
+		modifyedGenTypes->insert((int)GeneratorType::InitialAttenuation);
+		modifyedGenTypes->insert((int)GeneratorType::Pan);
+		modifyedGenTypes->insert((int)GeneratorType::StartAddrsOffset);
+		modifyedGenTypes->insert((int)GeneratorType::EndAddrsOffset);
+		modifyedGenTypes->insert((int)GeneratorType::StartloopAddrsOffset);
+		modifyedGenTypes->insert((int)GeneratorType::EndloopAddrsOffset);
+		modifyedGenTypes->insert((int)GeneratorType::SustainPedalOnOff);
 
 		if (!modifyedGenList->IsEmpty(GeneratorType::VibLfoToPitch))
 		{
-			modifyedGenTypes->insert(GeneratorType::VibLfoToPitch);
-			modifyedGenTypes->insert(GeneratorType::DelayVibLFO);
-			modifyedGenTypes->insert(GeneratorType::FreqVibLFO);
+			modifyedGenTypes->insert((int)GeneratorType::VibLfoToPitch);
+			modifyedGenTypes->insert((int)GeneratorType::DelayVibLFO);
+			modifyedGenTypes->insert((int)GeneratorType::FreqVibLFO);
 		}
 
 		if (!modifyedGenList->IsEmpty(GeneratorType::ModLfoToFilterFc))
-			modifyedGenTypes->insert(GeneratorType::ModLfoToFilterFc);
+			modifyedGenTypes->insert((int)GeneratorType::ModLfoToFilterFc);
 
 		if (!modifyedGenList->IsEmpty(GeneratorType::ModLfoToPitch))
-			modifyedGenTypes->insert(GeneratorType::ModLfoToPitch);
+			modifyedGenTypes->insert((int)GeneratorType::ModLfoToPitch);
 
 		if (!modifyedGenList->IsEmpty(GeneratorType::ModLfoToVolume))
-			modifyedGenTypes->insert(GeneratorType::ModLfoToVolume);
+			modifyedGenTypes->insert((int)GeneratorType::ModLfoToVolume);
 
 
-		modifyedGenTypes->insert(GeneratorType::DelayModLFO);
-		modifyedGenTypes->insert(GeneratorType::FreqModLFO);
+		modifyedGenTypes->insert((int)GeneratorType::DelayModLFO);
+		modifyedGenTypes->insert((int)GeneratorType::FreqModLFO);
 
 
 		bool isActiveModEnv = false;
 		if (!modifyedGenList->IsEmpty(GeneratorType::ModEnvToPitch)) {
-			modifyedGenTypes->insert(GeneratorType::ModEnvToPitch);
+			modifyedGenTypes->insert((int)GeneratorType::ModEnvToPitch);
 			isActiveModEnv = true;
 		}
 
 		if (!modifyedGenList->IsEmpty(GeneratorType::ModEnvToFilterFc)) {
-			modifyedGenTypes->insert(GeneratorType::ModEnvToFilterFc);
+			modifyedGenTypes->insert((int)GeneratorType::ModEnvToFilterFc);
 			isActiveModEnv = true;
 		}
 
-		modifyedGenTypes->insert(GeneratorType::AttackVolEnv);
+		modifyedGenTypes->insert((int)GeneratorType::AttackVolEnv);
 
 		if (isActiveModEnv) {
-			modifyedGenTypes->insert(GeneratorType::AttackModEnv);
+			modifyedGenTypes->insert((int)GeneratorType::AttackModEnv);
 		}
 
 		if (!modifyedGenList->IsEmpty(GeneratorType::InitialFilterFc) ||
 			!modifyedGenList->IsEmpty(GeneratorType::InitialFilterQ))
 		{
-			modifyedGenTypes->insert(GeneratorType::InitialFilterFc);
+			modifyedGenTypes->insert((int)GeneratorType::InitialFilterFc);
 		}
 	}
 
@@ -430,7 +430,7 @@ namespace ventrue
 				Process(targetGenType, modValue, mod.GetOutModulationType());
 
 			if (isCheckMod)
-				modifyedGenTypes->insert(targetGenType);
+				modifyedGenTypes->insert((int)targetGenType);
 		}
 	}
 

@@ -34,6 +34,15 @@ namespace task
 		taskProcesser->PostTask(task);
 	}
 
+	void TaskTimer::ReStart()
+	{
+		TimerTask* t = new TimerTask();
+		t->timer = this;
+		t->msg = TaskMsg::TMSG_TIMER_RESTART;
+		t->processCallBack = StartTask;
+		taskProcesser->PostTask(t);
+	}
+
 	void TaskTimer::Stop()
 	{
 		TimerTask* t = new TimerTask();
@@ -75,11 +84,11 @@ namespace task
 		TimerTask* timeTask = (TimerTask*)task;
 		TaskTimer& timer = *(timeTask->timer);
 
-		if (timer.isStop)
+		if (!timer.isStop)
 			return;
 
 		timer.isStop = false;
-		timer.PostTask(0);
+		timer.PostTask(timer.durationMS);
 	}
 
 }

@@ -3,7 +3,7 @@
 
 #include "scutils/Utils.h"
 #include "scutils/MathUtils.h"
-#include "Biquad.h"
+#include "RBJBiquad.h"
 using namespace scutils;
 
 namespace dsignal
@@ -12,7 +12,7 @@ namespace dsignal
 	/**
 	* 级联双二阶Biquad滤波器
 	*/
-	class CascadeBiquad : public Biquad
+	class CascadeBiquad : public RBJBiquad
 	{
 	public:
 		~CascadeBiquad();
@@ -36,7 +36,7 @@ namespace dsignal
 		int level = 1;
 
 	private:
-		vector<Biquad*> biquads;
+		vector<RBJBiquad*> biquads;
 	};
 }
 

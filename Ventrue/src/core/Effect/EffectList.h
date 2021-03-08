@@ -3,7 +3,7 @@
 
 #include"scutils/Utils.h"
 #include "VentrueEffect.h"
-#include"Equalizer.h"
+#include"EffectEqualizer.h"
 #include"EffectReverb.h"
 #include"EffectChorus.h"
 #include"EffectDelay.h"

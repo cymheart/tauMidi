@@ -4,105 +4,56 @@ namespace dsignal
 {
 	GraphEqualizer::GraphEqualizer()
 	{
-		FreqBandEQInfo freqbandEQInfos[10];
-		freqbandEQInfos[0].freqStart = 22;
-		freqbandEQInfos[0].freqEnd = 44;
-		freqbandEQInfos[0].gainDB = 0;
+		/*	float info[] = {
+				32,21, 63,42, 125,85, 250,169,
+				500,340, 1000,679, 2000,1357, 4000,2716,
+				8000,5430, 16000,10861 };*/
 
-		for (int i = 1; i < 10; i++)
+		float info[] = {
+			32,1, 63,1, 125,1, 250,1,
+			500,1, 1000,1, 2000,1, 4000,1,
+			8000,1, 16000,1 };
+
+
+		bandCount = 10;
+		double coeff[6];
+		int j = 0;
+
+		for (int i = 0; i < bandCount; i++)
 		{
-			freqbandEQInfos[i].freqStart = freqbandEQInfos[i - 1].freqEnd;
-			freqbandEQInfos[i].freqEnd = freqbandEQInfos[i].freqStart * 2;
-			freqbandEQInfos[i].gainDB = 0;
+			freqBandEQInfo[i].centerFreq = info[i * 2];
+			freqBandEQInfo[i].bandWidth = info[i * 2 + 1];
+			freqBandEQInfo[i].gainDB = 0;
+
+			//
+			freqBandBiquad[i].setup(sampleRate, info[i * 2], 0, info[i * 2 + 1]);
+
+			j = 0;
+			coeff[j++] = freqBandBiquad[i].getB0();
+			coeff[j++] = freqBandBiquad[i].getB1();
+			coeff[j++] = freqBandBiquad[i].getB2();
+			coeff[j++] = freqBandBiquad[i].getA0();
+			coeff[j++] = freqBandBiquad[i].getA1();
+			coeff[j++] = freqBandBiquad[i].getA2();
+			bandFilter[i].SetCoefficient(coeff, 6);
 		}
-
-		freqbandEQInfos[9].freqEnd = 19912;
-
-		SetFreqBandEQInfos(freqbandEQInfos, 10);
-		Create();
-	}
-
-	GraphEqualizer::~GraphEqualizer()
-	{
-		Clear();
-	}
-
-	void GraphEqualizer::Clear()
-	{
-		if (freqBandEQInfo != nullptr) {
-			free(freqBandEQInfo);
-			freqBandEQInfo = nullptr;
-		}
-
-		if (freqBandBiquad != nullptr) {
-			delete[] freqBandBiquad;
-			freqBandBiquad = nullptr;
-		}
-
-		size = 0;
 	}
 
 	vector<dsignal::Filter*> GraphEqualizer::GetFilters()
 	{
-		vector<dsignal::Filter*> biquads;
-		for (int i = 0; i < size * 2; i++)
+		vector<dsignal::Filter*> filters;
+		for (int i = 0; i < bandCount; i++)
 		{
-			biquads.push_back(&(freqBandBiquad[i]));
+			filters.push_back(&(bandFilter[i]));
 		}
 
-		return biquads;
+		return filters;
 	}
 
-
-	void GraphEqualizer::SetFreqBandEQInfos(FreqBandEQInfo* freqBandEQInfos, int size)
-	{
-		if (size <= 0 || freqBandEQInfos == nullptr)
-			return;
-
-		try
-		{
-			Clear();
-			freqBandEQInfo = (FreqBandEQInfo*)malloc(sizeof(FreqBandEQInfo) * size);
-			memcpy(freqBandEQInfo, freqBandEQInfos, (size_t)(size * sizeof(FreqBandEQInfo)));
-			freqBandBiquad = new Biquad[size * 2];
-			this->size = size;
-		}
-		catch (exception)
-		{
-
-		}
-	}
-
-
-	void GraphEqualizer::Create()
-	{
-		int j = 0;
-		for (int i = 0; i < size; i++)
-		{
-			//
-			freqBandBiquad[j].biquadFilterType = BiquadFilterType::HighShelf;
-			freqBandBiquad[j].qtype = QType::ShelfSlope;
-			freqBandBiquad[j].f0 = freqBandEQInfo[i].freqStart;
-			freqBandBiquad[j].fs = sampleRate;
-			freqBandBiquad[j].S = 1;
-			freqBandBiquad[j].gainDB = freqBandEQInfo[i].gainDB;
-			freqBandBiquad[j].CalculateCoefficients();
-			j++;
-
-			freqBandBiquad[j].biquadFilterType = BiquadFilterType::HighShelf;
-			freqBandBiquad[j].qtype = QType::ShelfSlope;
-			freqBandBiquad[j].f0 = freqBandEQInfo[i].freqEnd;
-			freqBandBiquad[j].fs = sampleRate;
-			freqBandBiquad[j].S = 1;
-			freqBandBiquad[j].gainDB = -freqBandEQInfo[i].gainDB;
-			freqBandBiquad[j].CalculateCoefficients();
-			j++;
-		}
-	}
 
 	void GraphEqualizer::SetFreqBandGain(int bandIdx, float gainDB)
 	{
-		if (bandIdx < 0 || bandIdx >= size)
+		if (bandIdx < 0 || bandIdx >= bandCount)
 			return;
 
 		if (freqBandEQInfo[bandIdx].gainDB == gainDB)
@@ -110,20 +61,29 @@ namespace dsignal
 
 		freqBandEQInfo[bandIdx].gainDB = gainDB;
 
-		int idx = bandIdx * 2;
-		freqBandBiquad[idx].gainDB = gainDB;
-		freqBandBiquad[idx].CalculateCoefficients();
+		freqBandBiquad[bandIdx].setup(
+			sampleRate,
+			freqBandEQInfo[bandIdx].centerFreq,
+			freqBandEQInfo[bandIdx].gainDB,
+			freqBandEQInfo[bandIdx].bandWidth);
 
-		freqBandBiquad[idx + 1].gainDB = -gainDB;
-		freqBandBiquad[idx + 1].CalculateCoefficients();
+		int j = 0;
+		double coeff[6];
+		coeff[j++] = freqBandBiquad[bandIdx].getB0();
+		coeff[j++] = freqBandBiquad[bandIdx].getB1();
+		coeff[j++] = freqBandBiquad[bandIdx].getB2();
+		coeff[j++] = freqBandBiquad[bandIdx].getA0();
+		coeff[j++] = freqBandBiquad[bandIdx].getA1();
+		coeff[j++] = freqBandBiquad[bandIdx].getA2();
+		bandFilter[bandIdx].SetCoefficient(coeff, 6);
 	}
 
 
 	double GraphEqualizer::Filtering(double input)
 	{
-		for (int i = 0; i < size * 2; i++)
+		for (int i = 0; i < bandCount; i++)
 		{
-			input = freqBandBiquad[i].Filtering(input);
+			input = freqBandBiquad[i].filter(input);
 		}
 
 		return input;

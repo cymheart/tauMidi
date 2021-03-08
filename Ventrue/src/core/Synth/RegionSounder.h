@@ -8,7 +8,6 @@
 #include"Midi/MidiTypes.h"
 #include"ModulatorList.h"
 #include"RegionModulation.h"
-#include"dsignal/Biquad.h"
 
 using namespace stk;
 
@@ -310,13 +309,16 @@ namespace ventrue
 
 	private:
 
-		unordered_set<GeneratorType> modifyedGenTypes;
-		//GeneratorType modifyedGenTypes[64];
+		unordered_set<int> modifyedGenTypes;
 
 		Sample* sample = nullptr;
 		float* input = nullptr;
 
-		Biquad* biquad = nullptr;
+
+		Iir::RBJ::LowPass* biquad = nullptr;
+		double biquadSampleRate = 44100;
+		double biquadCutoffFrequency = 0;
+		double biquadQ = ONESQRT2;
 
 		//是否保持按键状态
 		//当设置延音踏板SustainPedalOnOff时设置

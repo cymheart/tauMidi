@@ -18,8 +18,9 @@
 #include "Audio/AudioSDL/Audio_SDL.h"
 #include "Audio/AudioOboe/Audio_oboe.h"
 #include"dsignal/Bode.h"
-#include"Effect/Equalizer.h"
+#include"Effect/EffectEqualizer.h"
 #include <Effect\EffectCompressor.h>
+
 using namespace dsignal;
 
 /*
