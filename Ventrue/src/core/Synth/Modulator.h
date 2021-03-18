@@ -92,7 +92,11 @@ namespace ventrue
 		ChannelPressure = 13,
 		//滑音
 		PitchWheel = 14,
-		PitchWheelSensivity = 16
+		PitchWheelSensivity = 16,
+
+		//
+		CoarseTune,
+		FineTune
 	};
 
 	// 调制器输入端输入类型

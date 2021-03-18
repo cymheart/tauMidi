@@ -62,11 +62,7 @@ namespace ventrue
 		Semaphore* sem = nullptr;
 
 	private:
-		static void Release(Task* task)
-		{
-			Ventrue::VentrueEventPool->Push((VentrueEvent*)task);
-		}
-
+		static void Release(Task* task);
 	};
 }
 

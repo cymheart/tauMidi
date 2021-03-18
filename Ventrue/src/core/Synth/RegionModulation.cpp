@@ -390,6 +390,9 @@ namespace ventrue
 				else if (mod.GetInputType(j) == ModInputType::Preset)
 				{
 					mod.Input(j, channel->GetModPresetValue(mod.GetInputPresetType(j)));
+
+					if (mod.GetInputPresetType(j) == ModInputPreset::PitchWheel)
+						mod.SetAmount(channel->GetPitchBendRange());
 				}
 				else
 				{

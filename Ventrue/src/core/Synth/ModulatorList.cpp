@@ -50,28 +50,25 @@ namespace ventrue
 	void ModulatorList::CreateInsideModulators()
 	{
 		CreateInsidePanModulator();
+		CreateInsideCoarseTuneModulator();
+		CreateInsideFineTuneModulator();
 		CreateInsideVolumeModulator();
 		CreateInsideSustainPedalOnOffModulator();
-		CreateInsidePitchBlendModulator();
+		CreateInsidePitchBendModulator();
 		CreateInsideVibModulator();
 	}
 
 	//根据指定类型启用内部控制器调制器
 	void ModulatorList::OpenInsideCtrlModulator(MidiControllerType ctrlType)
 	{
+		//特例处理
+		if (ctrlType == MidiControllerType::ExpressionControllerMSB)
+			ctrlType = MidiControllerType::ChannelVolumeMSB;
+
 		if (isUsedInsideCtrlMod[(int)ctrlType] == true)
 			return;
 
 		AddModulator(insideCtrlMod[(int)ctrlType]);
-
-		/* switch (ctrlType)
-		 {
-		 default:
-
-			 AddModulator(insideCtrlMod[(int)ctrlType]);
-			 break;
-		 }*/
-
 		isUsedInsideCtrlMod[(int)ctrlType] = true;
 	}
 
@@ -82,14 +79,6 @@ namespace ventrue
 			return;
 
 		AddModulator(insidePresetMod[(int)modPresetType]);
-
-		/* switch (modPresetType)
-		 {
-		 default:
-			 AddModulator(insidePresetMod[(int)modPresetType]);
-			 break;
-		 }*/
-
 		isUsedInsidePresetMod[(int)modPresetType] = true;
 	}
 
@@ -160,6 +149,49 @@ namespace ventrue
 		insideCtrlMod[(int)MidiControllerType::PanMSB] = mod;
 	}
 
+
+	//生成内部CoarseTune调制器(以半音为单位校正音调)
+	void ModulatorList::CreateInsideCoarseTuneModulator()
+	{
+		Modulator* mod = new Modulator();
+		mod->SetType(ModulatorType::Inside);
+
+		mod->AddInputInfo(
+			ModInputType::Preset,
+			ModInputPreset::CoarseTune, MidiControllerType::CC_None,
+			0,
+			-16383.0f,
+			16383.0f);
+
+		mod->SetOutTarget(GeneratorType::CoarseTune);
+		mod->SetOutModulationType(ModulationType::Add);
+		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 1);
+		mod->SetAmount(16383.0f);
+		insidePresetMod[(int)ModInputPreset::CoarseTune] = mod;
+
+	}
+
+	//生成内部FineTune调制器(以音分为单位校正音调)
+	void ModulatorList::CreateInsideFineTuneModulator()
+	{
+		Modulator* mod = new Modulator();
+		mod->SetType(ModulatorType::Inside);
+
+		mod->AddInputInfo(
+			ModInputType::Preset,
+			ModInputPreset::FineTune, MidiControllerType::CC_None,
+			0,
+			-16383.0f,
+			16383.0f);
+
+		mod->SetOutTarget(GeneratorType::FineTune);
+		mod->SetOutModulationType(ModulationType::Add);
+		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 1);
+		mod->SetAmount(16383.0f);
+		insidePresetMod[(int)ModInputPreset::FineTune] = mod;
+	}
+
+
 	//生成内部Volume调制器
 	void ModulatorList::CreateInsideVolumeModulator()
 	{
@@ -173,19 +205,6 @@ namespace ventrue
 		insideCtrlMod[(int)MidiControllerType::ChannelVolumeMSB] = mod;
 	}
 
-
-	//生成内部Expression调制器
-	void ModulatorList::CreateInsideExpressionModulator()
-	{
-		Modulator* mod = new Modulator();
-		mod->SetType(ModulatorType::Inside);
-		mod->SetCtrlModulatorInputInfo(MidiControllerType::ExpressionControllerMSB, 0);
-		mod->SetOutTarget(GeneratorType::InitialAttenuation);
-		mod->SetOutModulationType(ModulationType::Add);
-		mod->SetSourceTransform(0, VolGainTans, RangeFloat(0, 1), RangeFloat(-144, 0));
-		mod->SetAmount(1);
-		insideCtrlMod[(int)MidiControllerType::ExpressionControllerMSB] = mod;
-	}
 
 	//生成内部SustainPedalOnOff调制器
 	void ModulatorList::CreateInsideSustainPedalOnOffModulator()
@@ -202,7 +221,7 @@ namespace ventrue
 
 
 	//生成内部滑音调制器
-	void ModulatorList::CreateInsidePitchBlendModulator()
+	void ModulatorList::CreateInsidePitchBendModulator()
 	{
 		Modulator* mod = new Modulator();
 		mod->SetType(ModulatorType::Inside);

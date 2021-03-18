@@ -105,9 +105,9 @@ namespace task
 			{
 				int tmA = (int)chrono::duration_cast<res>(curTime - left->startTime).count();
 				int tmB = (int)chrono::duration_cast<res>(curTime - right->startTime).count();
-				int delayA = (int)(tmA - left->delay);
-				int delayB = (int)(tmB - right->delay);
-				return delayA > delayB;
+				int delayA = (int)(left->delay - tmA);
+				int delayB = (int)(right->delay - tmB);
+				return delayA < delayB;
 			}
 
 		private:

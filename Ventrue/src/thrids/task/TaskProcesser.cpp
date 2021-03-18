@@ -153,6 +153,10 @@ namespace task
 		switch (task->msg)
 		{
 		case TMSG_TIMER_START:
+			ret = PostTimerTask(task, -1000, isFromSelfThread);
+			break;
+
+		case TMSG_TIMER_RESTART:
 			ret = PostTimerTask(task, -2000, isFromSelfThread);
 			break;
 
@@ -161,7 +165,7 @@ namespace task
 			break;
 
 		case TMSG_TIMER_STOP:
-			ret = PostCommonTask(task, -1000, isFromSelfThread);
+			ret = PostTimerTask(task, -3000, isFromSelfThread);
 			break;
 
 		default:
@@ -435,12 +439,14 @@ namespace task
 					TaskTimer* timer = ((TimerTask*)cur)->timer;
 					if (timer->task != nullptr) {
 						timer->task->isRemove = true;
+						timer->task = nullptr;
 					}
 				}
 				else if (cur->msg == TMSG_TIMER_RESTART) {
 					TaskTimer* timer = ((TimerTask*)cur)->timer;
 					if (timer->task != nullptr) {
 						timer->task->startTime = curTime;
+						timer->task->isRemove = false;
 					}
 				}
 

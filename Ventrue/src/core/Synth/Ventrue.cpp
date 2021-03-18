@@ -29,10 +29,6 @@ using namespace dsignal;
 */
 namespace ventrue {
 
-	ObjectPool<KeySounder>* Ventrue::KeySounderPool = new ObjectPool<KeySounder>();
-	ObjectPool<RegionSounder>* Ventrue::RegionSounderPool = new ObjectPool<RegionSounder>();
-	ObjectPool<VentrueEvent>* Ventrue::VentrueEventPool = new ObjectPool<VentrueEvent>();
-
 	Ventrue::Ventrue()
 	{
 		openedAudioTime = new clock::time_point;
@@ -124,10 +120,6 @@ namespace ventrue {
 		DEL(sfParserMap);
 
 		//
-		DEL(KeySounderPool);
-		DEL(RegionSounderPool);
-		DEL(VentrueEventPool);
-
 		delete[] totalRegionSounders;
 		delete[] totalRegionSounders2;
 
@@ -598,6 +590,13 @@ namespace ventrue {
 		int key = bankSelectMSB << 16 | bankSelectLSB << 8 | instrumentNum;
 		auto it = presetBankDict->find(key);
 		if (it != presetBankDict->end()) {
+			return it->second;
+		}
+
+		//
+		key = bankSelectMSB << 16 | instrumentNum;
+		it = presetBankDict->find(key);
+		if (it != presetBankDict->end()) {
 			//cout << "使用乐器:"<<instrumentNum<<" " << it->second->name << endl;
 			return it->second;
 		}
@@ -644,7 +643,7 @@ namespace ventrue {
 	// 请求帧渲染事件
 	void Ventrue::ReqFrameRender()
 	{
-		VentrueEvent* ev = VentrueEventPool->Pop();
+		VentrueEvent* ev = VentruePool::GetInstance().VentrueEventPool().Pop();
 		ev->ventrue = this;
 		ev->evType = VentrueEventType::Render;
 		ev->processCallBack = _FrameRender;

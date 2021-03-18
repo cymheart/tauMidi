@@ -5,6 +5,7 @@ namespace ventrue
 	VentrueCmd::VentrueCmd(Ventrue* ventrue)
 	{
 		this->ventrue = ventrue;
+		ventrueEventPool = &(VentruePool::GetInstance().VentrueEventPool());
 	}
 
 	//处理任务
@@ -16,7 +17,8 @@ namespace ventrue
 	//// 按下按键
 	void VentrueCmd::OnKey(int key, float velocity, VirInstrument* virInst)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::OnKey;
 		ev->processCallBack = _OnKey;
@@ -36,7 +38,7 @@ namespace ventrue
 	// 释放按键
 	void VentrueCmd::OffKey(int key, float velocity, VirInstrument* virInst)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::OffKey;
 		ev->processCallBack = _OffKey;
@@ -57,7 +59,7 @@ namespace ventrue
 	//增加效果器
 	void VentrueCmd::AddEffect(VentrueEffect* effect)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::Unknown;
 		ev->processCallBack = _AddEffect;
@@ -75,7 +77,7 @@ namespace ventrue
 	// 发送文本
 	void VentrueCmd::SendText(string text)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::Text;
 		ev->processCallBack = _SendText;
@@ -95,7 +97,7 @@ namespace ventrue
 	// 添加Midi文件
 	void VentrueCmd::AppendMidiFile(string midifile)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::AppendMidiFile;
 		ev->processCallBack = _AppendMidi;
@@ -117,7 +119,7 @@ namespace ventrue
 	// 添加并播放Midi文件
 	void VentrueCmd::PlayMidiFile(string midifile)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::PlayMidiFile;
 		ev->processCallBack = _PlayMidi;
@@ -129,7 +131,7 @@ namespace ventrue
 	// 请求播放Midi文件
 	void VentrueCmd::PlayMidi(MidiFile* midiFile)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::PlayMidi;
 		ev->processCallBack = _PlayMidi;
@@ -140,7 +142,7 @@ namespace ventrue
 	// 播放指定编号的内部Midi文件
 	void VentrueCmd::PlayMidi(int midiFileIdx)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::PlayMidiIdx;
 		ev->processCallBack = _PlayMidi;
@@ -189,7 +191,7 @@ namespace ventrue
 	// 禁止播放指定编号Midi文件的轨道
 	void VentrueCmd::DisableMidiTrack(int midiFileIdx, int trackIdx)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::DisablePlayMidiTrack;
 		ev->processCallBack = _DisableMidiTrack;
@@ -230,7 +232,7 @@ namespace ventrue
 	// 启用播放指定编号Midi文件的轨道
 	void VentrueCmd::EnableMidiTrack(int midiFileIdx, int trackIdx)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::DisablePlayMidiTrack;
 		ev->processCallBack = _EnableMidiTrack;
@@ -269,7 +271,7 @@ namespace ventrue
 	// 指定midi文件播放的起始时间点
 	void VentrueCmd::MidiGotoSec(int midiFileIdx, float sec)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::PlayMidiGoto;
 		ev->processCallBack = _MidiGotoSec;
@@ -294,7 +296,7 @@ namespace ventrue
 	// 设置设备通道Midi控制器值
 	void VentrueCmd::SetDeviceChannelMidiControllerValue(int deviceChannelNum, MidiControllerType midiController, int value)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::SetDeviceChannelMidiControllerValue;
 		ev->processCallBack = _SetDeviceChannelMidiControllerValue;
@@ -334,7 +336,7 @@ namespace ventrue
 		thread_local VirInstrument* inst = 0;
 		thread_local Semaphore waitGetInstrumentSem;
 
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::EnableInstrument;
 		ev->processCallBack = _EnableInstrument;
@@ -385,7 +387,7 @@ namespace ventrue
 	/// <param name="tickForQuarterNote">一个四分音符发音的tick数</param>
 	void VentrueCmd::RecordMidi(VirInstrument* virInst, float bpm, float tickForQuarterNote)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::RecordMidi;
 		ev->virInst = virInst;
@@ -416,7 +418,7 @@ namespace ventrue
 	/// <param name="virInst">如果为null,将录制所有乐器</param>
 	void VentrueCmd::StopRecordMidi(VirInstrument* virInst)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::StopRecordMidi;
 		ev->virInst = virInst;
@@ -461,7 +463,7 @@ namespace ventrue
 		thread_local MidiFile* midiFile = 0;
 		thread_local Semaphore waitSem;
 
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::CreateRecordMidiFileObject;
 		ev->processCallBack = _CreateRecordMidiFileObject;
@@ -490,7 +492,7 @@ namespace ventrue
 	//保存midiFile到文件
 	void VentrueCmd::SaveMidiFileToDisk(MidiFile* midiFile, string saveFilePath)
 	{
-		VentrueEvent* ev = Ventrue::VentrueEventPool->Pop();
+		VentrueEvent* ev = ventrueEventPool->Pop();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::SaveMidiFileToDisk;
 		ev->midiFile = midiFile;

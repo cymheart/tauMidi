@@ -55,7 +55,13 @@ namespace ventrue
 		ModPresetTypeList& GetUsedPresetTypeList();
 
 		//设置滑音
-		void SetPitchBlend(int value);
+		void SetPitchBend(int value);
+
+		//获取滑音范围
+		float GetPitchBendRange()
+		{
+			return pitchBendRange;
+		}
 
 		//设置midi录制类
 		void SetMidiRecord(MidiTrackRecord* midiTrackRecord)
@@ -88,8 +94,12 @@ namespace ventrue
 
 		//
 		int ccValue[128] = { 0 };
+		float ccCombValue[128] = { 0 };
 		float ccComputedValue[128] = { 0 };
-		float pitchBlend = 0;
+		float pitchBend = 0;
+		float pitchBendRange = 2;
+		float fineTune = 0;
+		float coarseTune = 0;
 
 		MidiControllerTypeList usedControllerTypeList;
 		ModPresetTypeList usedPresetTypeList;

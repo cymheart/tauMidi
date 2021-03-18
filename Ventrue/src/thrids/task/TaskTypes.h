@@ -3,6 +3,8 @@
 
 #include"scutils/Utils.h"
 #include"scutils/Semaphore.h"
+#include"scutils/SingletonDefine.h"
+#include"scutils/ObjectPool.h"
 #include<chrono>
 
 using namespace scutils;

@@ -11,8 +11,37 @@ namespace task
 	class TimerTask :public Task
 	{
 	public:
+		TimerTask()
+		{
+			isSysReleaseTask = false;
+			releaseCallBack = Release;
+		}
+
+	public:
 		TaskTimer* timer = nullptr;
 		void* data = nullptr;
+
+	private:
+		static void Release(Task* task);
+	};
+
+	class TimerTaskPool
+	{
+		SINGLETON(TimerTaskPool)
+
+	public:
+		TimerTask* Pop()
+		{
+			return pool.Pop();
+		}
+
+		void Push(TimerTask* task)
+		{
+			pool.Push(task);
+		}
+
+	private:
+		ObjectPool<TimerTask> pool;
 	};
 
 	class TaskTimer
@@ -23,6 +52,11 @@ namespace task
 
 		~TaskTimer();
 
+		void SetDuration(int ms)
+		{
+			durationMS = ms;
+		}
+
 		void Start();
 		void ReStart();
 		void Stop();
@@ -32,15 +66,17 @@ namespace task
 
 		static void RunTask(Task* task);
 		static void StartTask(Task* task);
+		static void StopTask(Task* task);
 
 	public:
 		TimerTask* task;
-	private:
 
+	private:
+		TimerTaskPool* timerTaskPool = nullptr;
 		int durationMS;
-		TaskProcesser* taskProcesser;
-		void* data;
-		TimerCallBack timerCB;
+		TaskProcesser* taskProcesser = nullptr;
+		void* data = nullptr;
+		TimerCallBack timerCB = nullptr;
 
 		bool isStop;
 		bool isRepeat;

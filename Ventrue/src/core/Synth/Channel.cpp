@@ -35,9 +35,9 @@ namespace ventrue
 	}
 
 	//设置滑音
-	void Channel::SetPitchBlend(int value)
+	void Channel::SetPitchBend(int value)
 	{
-		pitchBlend = (float)value;
+		pitchBend = (float)value;
 		AddUsedPresetType(ModInputPreset::PitchWheel);
 
 		//录制
@@ -49,8 +49,8 @@ namespace ventrue
 	//0~31(MSB) 和 32~64(LSB)成对出现
 	void Channel::SetControllerValue(MidiControllerType type, int value)
 	{
-
 		int itype = (int)type;
+		int imsbType = itype;
 
 		ccValue[itype] = value;
 
@@ -62,16 +62,60 @@ namespace ventrue
 
 		if (itype >= 0 && itype <= 63)
 		{
-			int highResType;
-			if (itype <= 31) { highResType = itype; }
-			else { highResType = itype - 32; }
-			ComputeControllerHighResValue(highResType);
-			AddUsedControllerType((MidiControllerType)highResType);
+			if (itype <= 31) { imsbType = itype; }
+			else { imsbType = itype - 32; }
+			ComputeControllerHighResValue(imsbType);
+			AddUsedControllerType((MidiControllerType)imsbType);
 		}
 		else if (itype <= 127)
 		{
 			ccComputedValue[itype] = MapValueToSys(type, (float)value, false);
 			AddUsedControllerType(type);
+		}
+
+
+		//
+		switch (type)
+		{
+		case ventrue::MidiControllerType::DataEntryMSB:
+			if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
+				ccValue[(int)MidiControllerType::RPNLSB] == 0)
+			{
+				pitchBendRange = ccValue[itype];
+			}
+			else if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
+				ccValue[(int)MidiControllerType::RPNLSB] == 1)
+			{
+				fineTune = ccValue[itype];
+				AddUsedPresetType(ModInputPreset::FineTune);
+			}
+			else if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
+				ccValue[(int)MidiControllerType::RPNLSB] == 2)
+			{
+				coarseTune = ccValue[itype];
+				AddUsedPresetType(ModInputPreset::CoarseTune);
+			}
+			break;
+
+		case ventrue::MidiControllerType::DataEntryLSB:
+			if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
+				ccValue[(int)MidiControllerType::RPNLSB] == 0)
+			{
+				pitchBendRange = ccCombValue[imsbType];
+			}
+			else if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
+				ccValue[(int)MidiControllerType::RPNLSB] == 1)
+			{
+				fineTune = ccCombValue[imsbType];
+				AddUsedPresetType(ModInputPreset::FineTune);
+			}
+			else if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
+				ccValue[(int)MidiControllerType::RPNLSB] == 2)
+			{
+				coarseTune = ccCombValue[imsbType];
+				AddUsedPresetType(ModInputPreset::CoarseTune);
+			}
+			break;
 		}
 
 
@@ -134,9 +178,16 @@ namespace ventrue
 		case ventrue::ModInputPreset::ChannelPressure:
 			break;
 		case ventrue::ModInputPreset::PitchWheel:
-			return pitchBlend;
+			return pitchBend;
 		case ventrue::ModInputPreset::PitchWheelSensivity:
 			break;
+
+		case ventrue::ModInputPreset::CoarseTune:
+			return coarseTune;
+
+		case ventrue::ModInputPreset::FineTune:
+			return fineTune;
+
 		default:
 			break;
 		}
@@ -182,11 +233,12 @@ namespace ventrue
 
 		if (ccValue[lsbType] != 0)
 		{
-			float value = (float)(ccValue[msbType] << 7 | ccValue[lsbType]);
-			ccComputedValue[type] = MapValueToSys((MidiControllerType)type, value, true);
+			ccCombValue[msbType] = (float)(ccValue[msbType] << 7 | ccValue[lsbType]);
+			ccComputedValue[type] = MapValueToSys((MidiControllerType)type, ccCombValue[msbType], true);
 		}
 		else
 		{
+			ccCombValue[msbType] = ccValue[msbType];
 			ccComputedValue[type] = MapValueToSys((MidiControllerType)type, (float)ccValue[msbType], false);
 		}
 	}
@@ -201,6 +253,7 @@ namespace ventrue
 	void Channel::Clear()
 	{
 		memset(ccValue, 0, sizeof(int) * 128);
+		memset(ccCombValue, 0, sizeof(int) * 128);
 		memset(ccComputedValue, 0, sizeof(float) * 128);
 
 		ccComputedValue[(int)MidiControllerType::PanMSB] = 0;

@@ -54,17 +54,20 @@ namespace ventrue
 		//生成内部pan调制器
 		void CreateInsidePanModulator();
 
+		//生成内部CoarseTune调制器(以半音为单位校正音调)
+		void CreateInsideCoarseTuneModulator();
+
+		//生成内部FineTune调制器(以音分为单位校正音调)
+		void CreateInsideFineTuneModulator();
+
 		//生成内部Volume调制器
 		void CreateInsideVolumeModulator();
-
-		//生成内部Expression调制器
-		void CreateInsideExpressionModulator();
 
 		//生成内部SustainPedalOnOff调制器
 		void CreateInsideSustainPedalOnOffModulator();
 
 		//生成内部滑音调制器
-		void CreateInsidePitchBlendModulator();
+		void CreateInsidePitchBendModulator();
 
 		static float VolGainTans(float gain);
 

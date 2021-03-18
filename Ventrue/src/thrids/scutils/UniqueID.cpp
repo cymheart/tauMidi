@@ -77,7 +77,7 @@ namespace scutils
 		uint64_t  uniqueId = 0;
 		threadLock.lock();
 		uniqueId = gen();
-		threadLock.lock();
+		threadLock.unlock();
 		return uniqueId;
 	}
 }

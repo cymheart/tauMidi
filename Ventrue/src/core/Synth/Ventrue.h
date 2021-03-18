@@ -1,11 +1,10 @@
-﻿#include <climits>
-
-#ifndef _Ventrue_h_
+﻿#ifndef _Ventrue_h_
 #define _Ventrue_h_
 
 #include "VentrueTypes.h"
 #include "Audio/Audio.h"
 #include "Midi/MidiTypes.h"
+#include"VentruePool.h"
 
 
 namespace ventrue
@@ -350,12 +349,6 @@ namespace ventrue
 		static void _FrameRender(Task* ev);
 
 	public:
-
-		static ObjectPool<KeySounder>* KeySounderPool;
-		static ObjectPool<RegionSounder>* RegionSounderPool;
-		static ObjectPool<VentrueEvent>* VentrueEventPool;
-
-
 		//渲染发音的时间点回调
 		RenderTimeCallBack renderTimeCallBack = nullptr;
 		//渲染发音的时间点回调附带数据

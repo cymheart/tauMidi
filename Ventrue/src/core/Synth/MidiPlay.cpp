@@ -299,7 +299,7 @@ namespace ventrue
 		{
 			PitchBendEvent* ev = (PitchBendEvent*)midEv;
 			Channel* channel = (*trackList[trackIdx])[ev->channel];
-			channel->SetPitchBlend(ev->value);
+			channel->SetPitchBend(ev->value);
 			ventrue->ModulationVirInstParams(channel);
 		}
 		break;

@@ -151,13 +151,13 @@ namespace ventrue {
 	// 释放
 	void RegionSounder::Release()
 	{
-		Ventrue::RegionSounderPool->Push(this);
+		VentruePool::GetInstance().RegionSounderPool().Push(this);
 	}
 
 
 	RegionSounder* RegionSounder::New()
 	{
-		RegionSounder* regionSounder = Ventrue::RegionSounderPool->Pop();
+		RegionSounder* regionSounder = VentruePool::GetInstance().RegionSounderPool().Pop();
 		regionSounder->Clear();
 		return regionSounder;
 	}

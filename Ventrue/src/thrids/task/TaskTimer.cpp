@@ -2,6 +2,27 @@
 
 namespace task
 {
+
+	BUILD_SHARE(TimerTaskPool)
+
+		//TimerTask	
+		void TimerTask::Release(Task* task)
+	{
+		TimerTaskPool::GetInstance().Push((TimerTask*)task);
+	}
+
+	//TimerTaskPool
+	TimerTaskPool::TimerTaskPool()
+	{
+
+	}
+
+	TimerTaskPool::~TimerTaskPool()
+	{
+
+	}
+
+	//TaskTimer
 	TaskTimer::TaskTimer(TaskProcesser* taskProcesser,
 		TimerCallBack timerCB,
 		void* data, int durationMS, bool isRepeat)
@@ -19,15 +40,18 @@ namespace task
 			float fps = taskProcesser->GetFrameRate();
 			this->durationMS = (int)(1000 / fps);
 		}
+
+		//
 	}
 
 	TaskTimer::~TaskTimer()
 	{
 	}
 
+
 	void TaskTimer::Start()
 	{
-		task = new TimerTask();
+		task = TimerTaskPool::GetInstance().Pop();
 		task->timer = this;
 		task->msg = TaskMsg::TMSG_TIMER_START;
 		task->processCallBack = StartTask;
@@ -36,7 +60,7 @@ namespace task
 
 	void TaskTimer::ReStart()
 	{
-		TimerTask* t = new TimerTask();
+		TimerTask* t = TimerTaskPool::GetInstance().Pop();
 		t->timer = this;
 		t->msg = TaskMsg::TMSG_TIMER_RESTART;
 		t->processCallBack = StartTask;
@@ -45,15 +69,16 @@ namespace task
 
 	void TaskTimer::Stop()
 	{
-		TimerTask* t = new TimerTask();
+		TimerTask* t = TimerTaskPool::GetInstance().Pop();
 		t->timer = this;
 		t->msg = TaskMsg::TMSG_TIMER_STOP;
+		task->processCallBack = StopTask;
 		taskProcesser->PostTask(t);
 	}
 
 	void TaskTimer::PostTask(int tm)
 	{
-		task = new TimerTask();
+		task = TimerTaskPool::GetInstance().Pop();
 		task->timer = this;
 		task->msg = TaskMsg::TMSG_TIMER_RUN;
 		task->processCallBack = RunTask;
@@ -89,6 +114,13 @@ namespace task
 
 		timer.isStop = false;
 		timer.PostTask(timer.durationMS);
+	}
+
+	void TaskTimer::StopTask(Task* task)
+	{
+		TimerTask* timeTask = (TimerTask*)task;
+		TaskTimer& timer = *(timeTask->timer);
+		timer.isStop = true;
 	}
 
 }

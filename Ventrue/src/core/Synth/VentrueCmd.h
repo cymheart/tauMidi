@@ -141,6 +141,7 @@ namespace ventrue
 
 	private:
 		Ventrue* ventrue = nullptr;
+		ObjectPool<VentrueEvent>* ventrueEventPool = nullptr;
 
 	};
 }

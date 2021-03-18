@@ -3,7 +3,7 @@
 
 #include"Utils.h"
 #include <time.h>
-#include"Singleton.h"
+#include"SingletonDefine.h"
 
 
 /*
@@ -17,7 +17,7 @@ macheine id(10bits)标明最多只能有1024台机器同时产生ID，sequence n
 */
 namespace scutils
 {
-	class  UniqueID
+	class UniqueID
 	{
 		SINGLETON(UniqueID)
 
