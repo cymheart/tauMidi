@@ -303,6 +303,12 @@
     <ClCompile Include="..\..\src\core\Effect\EffectEqualizer.cpp">
       <Filter>core\Effect</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\VentruePool.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\VentrueEvent.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\Synth\Channel.h">
@@ -378,9 +384,6 @@
       <Filter>thrids\scutils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\thrids\scutils\Semaphore.h">
-      <Filter>thrids\scutils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\thrids\scutils\Singleton.h">
       <Filter>thrids\scutils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\thrids\scutils\UniqueID.h">
@@ -604,6 +607,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\thrids\iir1\iir\Iir1.h">
       <Filter>thrids\iir1\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\SingletonDefine.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\VentruePool.h">
+      <Filter>core\Synth</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

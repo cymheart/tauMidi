@@ -4,9 +4,10 @@
 
 namespace ventrue
 {
-	Channel::Channel(int channelNum)
+	Channel::Channel(Track* track, int channelNum)
 	{
 		Clear();
+		this->track = track;
 		this->channelNum = channelNum;
 	}
 
@@ -207,7 +208,7 @@ namespace ventrue
 		{
 			float val = ccComputedValue[(int)MidiControllerType::ChannelVolumeMSB] *
 				ccComputedValue[(int)MidiControllerType::ExpressionControllerMSB];
-			val = powf(val, 3);
+			val = powf(val, 1.6);
 			return val;
 		}
 		break;

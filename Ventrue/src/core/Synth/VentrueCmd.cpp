@@ -219,7 +219,6 @@ namespace ventrue
 			if (ventrue.midiPlayList->size() <= ventrueEvent->midiFileIdx) {
 				return;
 			}
-
 			if (ventrueEvent->midiTrackIdx == -1)
 				(*ventrue.midiPlayList)[ventrueEvent->midiFileIdx]->DisableAllTrack();
 			else

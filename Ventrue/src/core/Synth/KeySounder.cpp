@@ -19,7 +19,7 @@ namespace ventrue
 
 	KeySounder* KeySounder::New()
 	{
-		KeySounder* keySounder = VentruePool::GetInstance().KeySounderPool().Pop();  //Ventrue::KeySounderPool->Pop();
+		KeySounder* keySounder = new KeySounder(); // VentruePool::GetInstance().KeySounderPool().Pop(); //new KeySounder(); //
 		keySounder->Clear();
 		keySounder->id = UniqueID::GetInstance().gen();
 		return keySounder;
@@ -32,17 +32,6 @@ namespace ventrue
 		isOnningKey = false;
 		virInst = nullptr;
 
-		if (regionSounderList != nullptr)
-		{
-			RegionSounderList::iterator it = regionSounderList->begin();
-			RegionSounderList::iterator end = regionSounderList->end();
-			for (; it != end; it++)
-			{
-				(*it)->Release();
-			}
-			regionSounderList->clear();
-		}
-
 	}
 
 	void KeySounder::Release()
@@ -54,7 +43,8 @@ namespace ventrue
 		}
 		regionSounderList->clear();
 
-		VentruePool::GetInstance().KeySounderPool().Push(this);
+		delete this;
+		//VentruePool::GetInstance().KeySounderPool().Push(this);
 	}
 
 	//按下按键

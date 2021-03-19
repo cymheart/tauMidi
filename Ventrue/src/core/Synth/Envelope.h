@@ -66,7 +66,7 @@ namespace ventrue
 
 		// 松开按键
 		// <param name="sec">松开按键的时间点，秒</param>
-		void OffKey(float sec);
+		void OffKey(float sec, float releaseSec = -1);
 
 		//包络线时间线是否停止
 		inline bool IsStop()

@@ -382,20 +382,22 @@ namespace ventrue
 		float reverbDepth, chorusDepth;
 		float maxReverbDepth = 0, maxChorusDepth = 0;
 		int idx = startSaveIdx;
-		KeySounderList::iterator it = keySounders->begin();
-		KeySounderList::iterator end = keySounders->end();
+		bool isBreak = false;
+		KeySounderList::reverse_iterator it = keySounders->rbegin();
+		KeySounderList::reverse_iterator rend = keySounders->rend();
 
-
-		for (; it != end; it++)
+		for (; it != rend; it++)
 		{
 			RegionSounderList* regionSounderList = (*it)->GetRegionSounderList();
-			size_t size = regionSounderList->size();
-			for (int i = 0; i < size; i++)
+			for (int i = regionSounderList->size() - 1; i >= 0; i--)
 			{
 				RegionSounder* regionSounder = (*regionSounderList)[i];
-
-				if (regionSounder->IsSoundEnd())
+				if (regionSounder->IsSoundEnd()) {
 					continue;
+				}
+
+				if (isBreak)
+					regionSounder->OffKey(127, 0.1f);
 
 				totalRegionSounder[idx++] = regionSounder;
 
@@ -408,6 +410,10 @@ namespace ventrue
 				chorusDepth = regionSounder->GetGenChorusEffectsSend() * 0.01f;
 				if (chorusDepth > maxChorusDepth)
 					maxChorusDepth = chorusDepth;
+
+				if (!isBreak && idx - startSaveIdx >= 60)
+					isBreak = true;
+
 			}
 		}
 
@@ -419,6 +425,7 @@ namespace ventrue
 
 		return idx - startSaveIdx;
 	}
+
 
 	//设置区域混音深度
 	void VirInstrument::SetRegionReverbDepth(float value)

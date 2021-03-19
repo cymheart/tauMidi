@@ -49,10 +49,26 @@ namespace ventrue
 
 	// 松开按键
 	// <param name="sec">松开按键的时间点，秒</param>
-	void Envelope::OffKey(float sec)
+	void Envelope::OffKey(float sec, float releaseSec)
 	{
 		if (onKey == false)
+		{
+			if (releaseSec < 0)
+				return;
+
+			StageRangeInfo& range = stageRangeInfo[(int)EnvStage::Release];
+			if (range.xmax < releaseSec ||
+				abs(releaseSec - range.xmax) < 0.0001)
+				return;
+
+			range.ymax = curtValue;
+			range.ymin = 0;
+			range.yRangeWidth = curtValue;
+			range.xmin = 0;
+			range.xmax = releaseSec;
+			offKeySec = sec - openSec;
 			return;
+		}
 
 		onKey = false;
 		offKeySec = sec - openSec;
@@ -70,8 +86,16 @@ namespace ventrue
 			range.ymax = curtValue;
 			range.ymin = 0;
 			range.yRangeWidth = curtValue;
+
+			if (releaseSec >= 0 &&
+				releaseSec < range.xmax)
+			{
+				range.xmin = 0;
+				range.xmax = releaseSec;
+			}
 		}
 	}
+
 
 	// 根据时间点获取包络线的值
 	// <param name="sec">秒</param>

@@ -57,7 +57,7 @@ namespace ventrue {
 
 		audio->SetAudioCallback(FillAudioSample, this);
 
-		synthSampleRingBuffer = new RingBuffer(1024 * 4 * 2 * 50);
+		//synthSampleRingBuffer = new RingBuffer(1024 * 4 * 2 * 40);
 
 		sfParserMap = new SoundFontParserMap();
 		AddSoundFontParsers();
@@ -294,7 +294,7 @@ namespace ventrue {
 		Channel* channel = GetDeviceChannel(deviceChannelNum);
 		if (channel == nullptr)
 		{
-			channel = new Channel(deviceChannelNum);
+			channel = new Channel(nullptr, deviceChannelNum);
 			channel->SelectProgram(bankSelectMSB, bankSelectLSB, instrumentNum);
 			(*deviceChannelMap)[deviceChannelNum] = channel;
 		}
@@ -633,7 +633,9 @@ namespace ventrue {
 		while (true)
 		{
 			if (isFrameRenderCompleted) {
-				synthSampleRingBuffer->ReadToDst(stream, len);
+
+				//synthSampleRingBuffer->ReadToDst(stream, len);
+				memcpy(stream, synthSampleStream, len);
 				ReqFrameRender();
 				return;
 			}
@@ -756,7 +758,6 @@ namespace ventrue {
 	}
 
 
-
 	// 渲染区域发声
 	void Ventrue::RenderRegionSound()
 	{
@@ -774,11 +775,6 @@ namespace ventrue {
 		//开始渲染区域声音
 		if (totalRegionSounderCount <= 0)
 			return;
-
-
-		//限制发声数量到指定阀值
-		LimitRegionSounderCount(limitRegionSounderCount);
-
 
 		//是否使用线程池并行处理按键发音数据
 		//多线程渲染在childFrameSampleCount比较小的情况下(比如小于64时)，由于在一大帧(frameSampleCount)中调用太过频繁，效率并不是太好
@@ -801,38 +797,6 @@ namespace ventrue {
 		}
 	}
 
-	//限制发声数量到指定阀值
-	void Ventrue::LimitRegionSounderCount(int limitCount)
-	{
-		//
-		int endlevel = 1;
-		while (totalRegionSounderCount > limitCount)
-		{
-			int idx = 0;
-			int endCount = 0;
-			for (int i = 0; i < totalRegionSounderCount; i++)
-			{
-				if (totalRegionSounderCount - endCount > limitCount)
-				{
-					totalRegionSounders[i]->EndSoundLevel(endlevel);
-					if (!totalRegionSounders[i]->IsSoundEnd())
-						totalRegionSounders2[idx++] = totalRegionSounders[i];
-					else
-						endCount++;
-				}
-				else
-				{
-					totalRegionSounders2[idx++] = totalRegionSounders[i];
-				}
-			}
-
-			RegionSounder** tmp = totalRegionSounders;
-			totalRegionSounders = totalRegionSounders2;
-			totalRegionSounders2 = tmp;
-			totalRegionSounderCount = idx;
-			endlevel++;
-		}
-	}
 
 
 	//混合所有乐器中的样本到ventrue的声道buffer中
@@ -906,14 +870,23 @@ namespace ventrue {
 		case ChannelOutputMode::Stereo:
 			for (int i = 0; i < frameSampleCount; i++)
 			{
-				synthSampleRingBuffer->Write<float>(leftChannelSamples[i]);
-				synthSampleRingBuffer->Write<float>(rightChannelSamples[i]);
+				*out++ = leftChannelSamples[i];
+				*out++ = rightChannelSamples[i];
 			}
+
+			/*	for (int i = 0; i < frameSampleCount; i++)
+				{
+					synthSampleRingBuffer->Write<float>(leftChannelSamples[i]);
+					synthSampleRingBuffer->Write<float>(rightChannelSamples[i]);
+				}*/
 			break;
 
 		case ChannelOutputMode::Mono:
 			for (int i = 0; i < frameSampleCount; i++)
-				synthSampleRingBuffer->Write<float>(leftChannelSamples[i]);
+				*out++ = leftChannelSamples[i];
+
+			//for (int i = 0; i < frameSampleCount; i++)
+			//	synthSampleRingBuffer->Write<float>(leftChannelSamples[i]);
 			break;
 		}
 	}

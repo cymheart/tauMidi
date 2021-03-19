@@ -193,7 +193,7 @@ namespace ventrue {
 	}
 
 	// 松开按键
-	void RegionSounder::OffKey(float velocity)
+	void RegionSounder::OffKey(float velocity, float releaseSec)
 	{
 		//没有使用单音模式时才可以保持按键
 		if (isHoldDownKey && !virInst->UseMonoMode()) {
@@ -204,7 +204,7 @@ namespace ventrue {
 		isDownNoteKey = false;
 		isNeedOffKey = false;
 		isHoldDownKey = false;
-		OffKeyEnvs();
+		OffKeyEnvs(releaseSec);
 
 		if (loopPlayBack == LoopPlayBackMode::LoopEndContinue)
 			isLoopSample = false;
@@ -879,13 +879,13 @@ namespace ventrue {
 	}
 
 
-	void RegionSounder::OffKeyEnvs()
+	void RegionSounder::OffKeyEnvs(float releaseSec)
 	{
 		for (int i = 0; i < (int)LfoEnvTarget::ModCount; i++)
 		{
 			for (int j = 0; j < envInfoLists[i]->size(); j++)
 			{
-				(*(envInfoLists[i]))[j].env->OffKey(sec);
+				(*(envInfoLists[i]))[j].env->OffKey(sec, releaseSec);
 			}
 		}
 	}

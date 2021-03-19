@@ -133,7 +133,7 @@ namespace ventrue
 		RegionSounderList* regionSounderList = nullptr;
 
 		//
-		SamplesLinkToInstRegionInfo activeInstRegionLinkInfos[256];
+		SamplesLinkToInstRegionInfo activeInstRegionLinkInfos[512];
 	};
 }
 

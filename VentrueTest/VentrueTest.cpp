@@ -86,22 +86,25 @@ int main(int argc, char* argv[])
 	ventrue->OpenAudio();
 
 	//设置音源
-	ventrue->ParseSoundFont("SF2", sfPath + "GeneralUser GS MuseScore v1.442.sf2");
-	//ventrue->ParseSoundFont("SF2", sfPath + "gnusmas_gm_soundfont_2.01.sf2");
+	//ventrue->ParseSoundFont("SF2", sfPath + "GeneralUser GS MuseScore v1.442.sf2");
+	ventrue->ParseSoundFont("SF2", sfPath + "gnusmas_gm_soundfont_2.01.sf2");
 	//ventrue->ParseSoundFont("VentrueFont", sfPath + "OreSoundFont\\GarageBandPianoH\\GarageBandPianoH.xml");
 
 	//添加需要播放的midi文件
 	cmd->AppendMidiFile(midiPath + "venture.mid");
 	cmd->AppendMidiFile(midiPath + "吻别.mid");
+	cmd->AppendMidiFile(midiPath + "狂妄之人2.mid");
+	cmd->AppendMidiFile(midiPath + "狂妄之人.mid");
 	cmd->AppendMidiFile(midiPath + "learning\\Sound of Silence-Simon & Garfunkel.mid");
 	cmd->AppendMidiFile(midiPath + "learning\\QianQianQueGe.mid");
 	cmd->AppendMidiFile(midiPath + "learning\\ShiNian.mid");
 	cmd->AppendMidiFile(midiPath + "(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid");
 	cmd->AppendMidiFile(midiPath + "dream.mid");
 	cmd->AppendMidiFile(midiPath + "learning\\Brainiac Maniac 2.mid");
-	cmd->AppendMidiFile(midiPath + "song100\\007.mid");
+	cmd->AppendMidiFile(midiPath + "song100\\048.mid");
 	cmd->AppendMidiFile(midiPath + "learning\\剑之心(Heart_Of_Sword).mid");
 	cmd->AppendMidiFile(midiPath + "learning\\Promise.mid");
+
 
 	//播放第1个midi文件
 	cmd->PlayMidi(1);

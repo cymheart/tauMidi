@@ -62,6 +62,8 @@
     <ClCompile Include="..\..\src\core\Synth\Track.cpp" />
     <ClCompile Include="..\..\src\core\Synth\UnitTransform.cpp" />
     <ClCompile Include="..\..\src\core\Synth\VentrueCmd.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\VentrueEvent.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\VentruePool.cpp" />
     <ClCompile Include="..\..\src\core\Synth\VirInstrument.cpp" />
     <ClCompile Include="..\..\src\thrids\dsignal\RBJBiquad.cpp" />
     <ClCompile Include="..\..\src\thrids\dsignal\Bode.cpp" />
@@ -142,6 +144,7 @@
     <ClInclude Include="..\..\src\core\Synth\Ventrue.h" />
     <ClInclude Include="..\..\src\core\Synth\VentrueEvent.h" />
     <ClInclude Include="..\..\src\core\Synth\VentrueCmd.h" />
+    <ClInclude Include="..\..\src\core\Synth\VentruePool.h" />
     <ClInclude Include="..\..\src\core\Synth\VentrueTypes.h" />
     <ClInclude Include="..\..\src\core\Synth\Preset.h" />
     <ClInclude Include="..\..\src\core\Synth\Region.h" />
@@ -179,7 +182,7 @@
     <ClInclude Include="..\..\src\thrids\scutils\ObjectPool.h" />
     <ClInclude Include="..\..\src\thrids\scutils\RingBuffer.h" />
     <ClInclude Include="..\..\src\thrids\scutils\Semaphore.h" />
-    <ClInclude Include="..\..\src\thrids\scutils\Singleton.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\SingletonDefine.h" />
     <ClInclude Include="..\..\src\thrids\scutils\UniqueID.h" />
     <ClInclude Include="..\..\src\thrids\scutils\Utils.h" />
     <ClInclude Include="..\..\src\thrids\scutils\Vec2.h" />

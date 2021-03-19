@@ -11,7 +11,7 @@ namespace ventrue
 	{
 
 	public:
-		Channel(int channelNum);
+		Channel(Track* track, int channelNum);
 		~Channel();
 
 		//获取通道号
@@ -86,6 +86,8 @@ namespace ventrue
 	private:
 		//通道号
 		int channelNum = 0;
+		//所在轨道
+		Track* track = nullptr;
 
 		//
 		int bankMSB = 0;

@@ -339,10 +339,6 @@ namespace ventrue
 		//获取当前距离音频开启的时间
 		float GetCurtAudioTime();
 
-		//限制发声数量到指定阀值
-		void LimitRegionSounderCount(int limitCount);
-
-
 		static void FillAudioSample(void* udata, uint8_t* stream, int len);
 
 		//

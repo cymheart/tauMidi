@@ -156,7 +156,7 @@ namespace ventrue
 
 
 		// 松开按键    
-		void OffKey(float velocity);
+		void OffKey(float velocity, float releaseSec = -1);
 
 		void SetFrameBuffer(float* leftChannelBuf, float* rightChannelBuf);
 
@@ -241,7 +241,7 @@ namespace ventrue
 		// <param name="key"></param>
 		float CalBasePitchMulByKey(int key);
 
-		void OffKeyEnvs();
+		void OffKeyEnvs(float releaseSec = -1);
 
 
 
