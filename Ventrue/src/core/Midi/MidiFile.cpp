@@ -28,11 +28,12 @@ namespace ventrue
 		std::ifstream t;
 		try
 		{
-			size_t length;
+			size_t length = 0;
 			t.open(filePath, ios::in | ios::binary);
 			t.seekg(0, std::ios::end);
 			length = t.tellg();
 			t.seekg(0, std::ios::beg);
+
 			char* buffer = new char[length];
 			t.read(buffer, length);
 			t.close();
@@ -40,10 +41,12 @@ namespace ventrue
 			delete[] buffer;
 			ParseCore();
 		}
-		catch (exception)
+		catch (exception e)
 		{
 			t.close();
 			cout << filePath << "文件打开出错!" << endl;
+			string error(e.what());
+			cout << "错误原因:" << error << endl;
 		}
 
 		midiReader->clear();

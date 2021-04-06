@@ -6,184 +6,187 @@
 
 namespace ventrue
 {
-    RegionSounderThreadData::RegionSounderThreadData(Ventrue* ventrue)
-    {
-        this->ventrue = ventrue;
-        leftChannelFrameBuffer = (float*)malloc(sizeof(float) * ventrue->GetChildFrameSampleCount());
-        rightChannelFrameBuffer = (float*)malloc(sizeof(float) * ventrue->GetChildFrameSampleCount());
-    }
+	RegionSounderThreadData::RegionSounderThreadData(Ventrue* ventrue)
+	{
+		this->ventrue = ventrue;
+		leftChannelFrameBuffer = (float*)malloc(sizeof(float) * ventrue->GetChildFrameSampleCount());
+		rightChannelFrameBuffer = (float*)malloc(sizeof(float) * ventrue->GetChildFrameSampleCount());
+	}
 
-    RegionSounderThreadData::~RegionSounderThreadData()
-    {
-        free(leftChannelFrameBuffer);
-        free(rightChannelFrameBuffer);
-    }
-
-
-    void RegionSounderThreadData::SetFrameBuffer()
-    {
-        regionSounder->SetFrameBuffer(leftChannelFrameBuffer, rightChannelFrameBuffer);
-    }
+	RegionSounderThreadData::~RegionSounderThreadData()
+	{
+		free(leftChannelFrameBuffer);
+		free(rightChannelFrameBuffer);
+	}
 
 
-    // 唤醒线程
-    void RegionSounderThreadData::Wake(RegionSounder* regionSounder)
-    {
-        this->regionSounder = regionSounder;
-        waitSem.set();
-    }
-
-    void RegionSounderThreadData::Wake()
-    {
-        waitSem.set();
-    }
-
-    // 线程休眠
-    void RegionSounderThreadData::Sleep()
-    {
-        waitSem.wait();
-    }
+	void RegionSounderThreadData::SetFrameBuffer()
+	{
+		regionSounder->SetFrameBuffer(leftChannelFrameBuffer, rightChannelFrameBuffer);
+	}
 
 
-    RegionSounderThread::RegionSounderThread()
-        :threadStopedCount(0)
-    {    
-    }
+	// 唤醒线程
+	void RegionSounderThreadData::Wake(RegionSounder* regionSounder)
+	{
+		this->regionSounder = regionSounder;
+		waitSem.set();
+	}
 
-    RegionSounderThread::~RegionSounderThread()
-    {
-        Stop();
-    }
+	void RegionSounderThreadData::Wake()
+	{
+		waitSem.set();
+	}
 
-    void RegionSounderThread::Start()
-    {
-        if (runState != RunState::Stoped)
-            return;
+	// 线程休眠
+	void RegionSounderThreadData::Sleep()
+	{
+		waitSem.wait();
+	}
 
-        runState = RunState::Running;
-        threadStopedCount = 0;
-        coreCount = ScUtils_GetCPUCount();
-        if (coreCount > 4) coreCount /= 3;
-        freeThreadIdx = coreCount - 1;
-        for (int i = 0; i < coreCount; i++)
-        {
-            thread t(KeySounderProcesserThread, this);
-            t.detach();
-        }
-    }
 
-    void RegionSounderThread::Wait()
-    {
-        waitSem.wait();
-    }
+	RegionSounderThread::RegionSounderThread()
+		:threadStopedCount(0)
+	{
+	}
 
-    void RegionSounderThread::Stop()
-    {
-        if (runState == RunState::Stoped ||
-            runState == RunState::Stoping)
-            return;
+	RegionSounderThread::~RegionSounderThread()
+	{
+		Stop();
+	}
 
-        isStop = true;
-        runState = RunState::Stoping;
+	void RegionSounderThread::Start()
+	{
+		if (runState != RunState::Stoped)
+			return;
 
-        while (threadStopedCount < coreCount)
-        {
-            for (int i = 0; i < threads.size(); i++)
-                threads[i]->Wake();
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
+		runState = RunState::Running;
+		threadStopedCount = 0;
+		coreCount = ScUtils_GetCPUCount();
+		if (coreCount > 4) coreCount /= 2;
+		freeThreadIdx = coreCount - 1;
+		for (int i = 0; i < coreCount; i++)
+		{
+			thread t(KeySounderProcesserThread, this);
+			t.detach();
+		}
+	}
 
-        for (int i = 0; i < threads.size(); i++)
-        {
-            DEL(threads[i]);
-        }
+	void RegionSounderThread::Wait()
+	{
+		waitSem.wait();
+	}
 
-        runState = RunState::Stoped;
-    }
+	void RegionSounderThread::Stop()
+	{
+		if (runState == RunState::Stoped ||
+			runState == RunState::Stoping)
+			return;
 
-    void RegionSounderThread::Render(RegionSounder** regionSounders, int count)
-    {
-        processCount = count;
-        for (int i = 0; i < count; i++)
-            Render(regionSounders[i]);
-    }
+		isStop = true;
+		runState = RunState::Stoping;
 
-    void RegionSounderThread::Render(RegionSounder* regionSounder)
-    {
-        RegionSounderThreadData* rsthread = nullptr;
-        locker.lock();
+		while (threadStopedCount < coreCount)
+		{
+			for (int i = 0; i < threads.size(); i++)
+				threads[i]->Wake();
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
 
-        if (freeThreadIdx == -1)
-        {
-            regionSounderQueue.push_back(regionSounder);
-            locker.unlock();
-            return;
-        }
+		for (int i = 0; i < threads.size(); i++)
+		{
+			DEL(threads[i]);
+		}
 
-        if (threads.size() > 0) {
-            rsthread = threads[freeThreadIdx];
-            freeThreadIdx--;
-        }
+		runState = RunState::Stoped;
+	}
 
-        locker.unlock();
+	void RegionSounderThread::Render(RegionSounder** regionSounders, int count)
+	{
+		processCount = count;
+		for (int i = 0; i < count; i++)
+			Render(regionSounders[i]);
+	}
 
-        if (rsthread != nullptr)
-            rsthread->Wake(regionSounder);
-    }
+	void RegionSounderThread::Render(RegionSounder* regionSounder)
+	{
+		RegionSounderThreadData* rsthread = nullptr;
+		locker.lock();
 
-    void RegionSounderThread::KeySounderProcesserThread(void* param)
-    {
-        RegionSounderThread& self = *(RegionSounderThread*)param;
-        RegionSounderThreadData* regionSounderThread = new RegionSounderThreadData(self.ventrue);
+		if (freeThreadIdx == -1)
+		{
+			regionSounderQueue.push_back(regionSounder);
+			locker.unlock();
+			return;
+		}
 
-        self.locker.lock();
-        self.threads.push_back(regionSounderThread);
-        self.locker.unlock();
+		if (threads.size() > 0) {
+			rsthread = threads[freeThreadIdx];
+			freeThreadIdx--;
+		}
 
-        while (!self.isStop)
-        {
-            regionSounderThread->Sleep();
-            if (self.isStop)break;
+		locker.unlock();
 
-            if (regionSounderThread->regionSounder != nullptr)
-            {
-                regionSounderThread->SetFrameBuffer();
-                regionSounderThread->regionSounder->Render();
-                self.NextQueueItemProcess(regionSounderThread);
-            }
-        }
+		if (rsthread != nullptr)
+			rsthread->Wake(regionSounder);
+	}
 
-        self.threadStopedCount++;
-    }
+	void RegionSounderThread::KeySounderProcesserThread(void* param)
+	{
+		RegionSounderThread& self = *(RegionSounderThread*)param;
+		RegionSounderThreadData* regionSounderThreadData = new RegionSounderThreadData(self.ventrue);
 
-    void RegionSounderThread::NextQueueItemProcess(RegionSounderThreadData* regionSounderThread)
-    {
-        RegionSounder* regionSounder = nullptr;
+		self.locker.lock();
+		self.threads.push_back(regionSounderThreadData);
+		self.locker.unlock();
 
-        locker.lock();
+		while (!self.isStop)
+		{
+			regionSounderThreadData->Sleep();
+			if (self.isStop)
+				break;
 
-        regionSounderThread->regionSounder->GetVirInstrument()->CombineRegionSounderSamples(regionSounderThread->regionSounder);
-        processCount--;
-        freeThreadIdx++;
-        threads[freeThreadIdx] = regionSounderThread;
+			if (regionSounderThreadData->regionSounder != nullptr)
+			{
+				regionSounderThreadData->SetFrameBuffer();
+				regionSounderThreadData->regionSounder->Render();
+				self.NextQueueItemProcess(regionSounderThreadData);
+			}
+		}
 
-        if (regionSounderQueue.size() > 0)
-        {
-            regionSounder = regionSounderQueue.back();
-            regionSounderQueue.pop_back();
-            freeThreadIdx--;
-        }
-        else
-        {
-            if (processCount == 0)
-                waitSem.set();
+		self.threadStopedCount++;
+	}
 
-            locker.unlock();
-            return;
-        }
+	void RegionSounderThread::NextQueueItemProcess(RegionSounderThreadData* regionSounderThreadData)
+	{
+		RegionSounder* regionSounder = nullptr;
 
-        locker.unlock();
+		locker.lock();
 
-        regionSounderThread->Wake(regionSounder);
-    }
+		regionSounderThreadData->regionSounder->GetVirInstrument()->
+			CombineRegionSounderSamples(regionSounderThreadData->regionSounder);
+
+		processCount--;
+		freeThreadIdx++;
+		threads[freeThreadIdx] = regionSounderThreadData;
+
+		if (regionSounderQueue.size() > 0)
+		{
+			regionSounder = regionSounderQueue.back();
+			regionSounderQueue.pop_back();
+			freeThreadIdx--;
+		}
+		else
+		{
+			if (processCount == 0)
+				waitSem.set();
+
+			locker.unlock();
+			return;
+		}
+
+		locker.unlock();
+
+		regionSounderThreadData->Wake(regionSounder);
+	}
 }

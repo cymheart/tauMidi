@@ -33,6 +33,7 @@ namespace ventrue
 		realHoldSec = 0;
 		curtValue = 0;
 		curtSec = 0;
+		isFastRelease = false;
 	}
 
 	// 启动
@@ -61,37 +62,31 @@ namespace ventrue
 				abs(releaseSec - range.xmax) < 0.0001)
 				return;
 
-			range.ymax = curtValue;
-			range.ymin = 0;
-			range.yRangeWidth = curtValue;
-			range.xmin = 0;
-			range.xmax = releaseSec;
+			isFastRelease = true;
+			SetStageRangeInfo(range, 0, releaseSec, 0, curtValue);
 			offKeySec = sec - openSec;
 			return;
 		}
 
 		onKey = false;
 		offKeySec = sec - openSec;
-
+		//
 		StageRangeInfo& range = stageRangeInfo[(int)EnvStage::Release];
-
 		if (curtStage == EnvStage::Delay)
 		{
-			range.ymin = 0;
-			range.ymax = 0;
-			range.yRangeWidth = 0;
+			SetStageRangeInfo(range, 0, 0, 0, 0);
 		}
 		else
 		{
-			range.ymax = curtValue;
-			range.ymin = 0;
-			range.yRangeWidth = curtValue;
-
 			if (releaseSec >= 0 &&
 				releaseSec < range.xmax)
 			{
-				range.xmin = 0;
-				range.xmax = releaseSec;
+				isFastRelease = true;
+				SetStageRangeInfo(range, 0, releaseSec, 0, curtValue);
+			}
+			else
+			{
+				SetStageRangeInfo(range, 0, range.xmax, 0, curtValue);
 			}
 		}
 	}
@@ -177,6 +172,7 @@ namespace ventrue
 		curtValue = 0;
 		baseSec = 0;
 		curtSec = sec;
+		isFastRelease = false;
 
 		//当包络线处于延音阶段时，采样音会一直在某个采样段循环播放，直到松开按键后，将进入释音阶段
 		//此时声音的时间会重新以0点为参考
@@ -316,8 +312,13 @@ namespace ventrue
 
 		case EnvStage::Decay:
 		case EnvStage::Release:
+
 			//y = xNormal < 1 ? pow(10.0f, -(xNormal * 200 * 0.05f)) : 0;
-			y = xNormal < 1 ? FastPow2(-(xNormal * 20)) : 0;
+			if (!isFastRelease)
+				y = xNormal < 1 ? FastPow2(-(xNormal * 20)) : 0;
+			else
+				y = 1 - xNormal;
+
 			y = range.ymin + y * range.yRangeWidth;
 			break;
 

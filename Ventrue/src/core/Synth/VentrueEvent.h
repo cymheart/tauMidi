@@ -61,6 +61,9 @@ namespace ventrue
 		void* exPtr[10] = { nullptr };
 		Semaphore* sem = nullptr;
 
+
+	public:
+		static VentrueEvent* New();
 	private:
 		static void Release(Task* task);
 	};

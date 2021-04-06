@@ -253,8 +253,8 @@ namespace ventrue
 
 	void Channel::Clear()
 	{
-		memset(ccValue, 0, sizeof(int) * 128);
-		memset(ccCombValue, 0, sizeof(int) * 128);
+		memset(ccValue, 0, sizeof(float) * 128);
+		memset(ccCombValue, 0, sizeof(float) * 128);
 		memset(ccComputedValue, 0, sizeof(float) * 128);
 
 		ccComputedValue[(int)MidiControllerType::PanMSB] = 0;

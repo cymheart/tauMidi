@@ -6,7 +6,6 @@
 #include "scutils/Semaphore.h"
 #include "task/TaskProcesser.h"
 #include "scutils/ObjectPool.h"
-#include "scutils/UniqueID.h"
 #include "scutils/RingBuffer.h"
 #include "Effect/EffectList.h"
 #include "iir1/iir/Iir1.h"
@@ -588,12 +587,6 @@ namespace ventrue
 
 	};
 
-	struct NoteOnEvOnKeyInfo
-	{
-		NoteOnEvent* noteOnEvent = nullptr;
-		KeySounderID keySounderID = 0;
-		VirInstrument* virInst = nullptr;
-	};
 
 	struct RealtimeKeyEvent
 	{
@@ -605,6 +598,15 @@ namespace ventrue
 		float timeSec;
 		//采样时间点
 		float sampleSec;
+	};
+
+
+	struct KeyEvent
+	{
+		bool isOnKey;
+		int key;
+		float velocity;
+		bool isRealTime;
 	};
 
 }

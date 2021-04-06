@@ -50,8 +50,6 @@ namespace ventrue
 		MidiFile* midiFile = nullptr;
 		MidiTrackList* midiTrackList = nullptr;
 
-		// 按键事件对应的乐器信息
-		NoteOnEvOnKeyInfoList* noteOnEvOnKeyInfos = nullptr;
 
 		// 音轨演奏信息
 		TrackList trackList;

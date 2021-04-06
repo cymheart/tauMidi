@@ -151,6 +151,7 @@ namespace ventrue {
 	// 释放
 	void RegionSounder::Release()
 	{
+		//delete this;
 		VentruePool::GetInstance().RegionSounderPool().Push(this);
 	}
 
@@ -158,6 +159,7 @@ namespace ventrue {
 	RegionSounder* RegionSounder::New()
 	{
 		RegionSounder* regionSounder = VentruePool::GetInstance().RegionSounderPool().Pop();
+		//RegionSounder* regionSounder = new RegionSounder();
 		regionSounder->Clear();
 		return regionSounder;
 	}
@@ -1184,8 +1186,7 @@ namespace ventrue {
 
 		//计算采样点插值
 		float a = (float)(lastSamplePos - prevIntPos);
-		float sampleValue = (input[prevIntPos] * (1.0f - a) + input[nextIntPos] * a);
-		return sampleValue;
+		return (input[prevIntPos] * (1.0f - a) + input[nextIntPos] * a);
 
 	}
 

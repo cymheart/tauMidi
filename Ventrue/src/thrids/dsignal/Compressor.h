@@ -157,10 +157,10 @@ namespace dsignal
 		float invSampleFreq = 1 / 44100.0f;
 
 		//启动时长
-		float attackSecLen = 0.002;
+		float attackSecLen = 0.002f;
 
 		//释放时长
-		float releaseSecLen = 0.01;
+		float releaseSecLen = 0.01f;
 
 		//门限
 		float threshold = -10;

@@ -54,7 +54,6 @@ namespace scutils
 		if (nowtime == last_stamp)
 		{
 			seqid = (++seqid) & sequenceMask;
-
 			if (seqid == 0)
 			{
 				nowtime = wait_next_ms(last_stamp);

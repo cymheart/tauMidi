@@ -20,6 +20,7 @@
 #include"dsignal/Bode.h"
 #include"Effect/EffectEqualizer.h"
 #include <Effect\EffectCompressor.h>
+#include<algorithm>
 
 using namespace dsignal;
 
@@ -39,6 +40,7 @@ namespace ventrue {
 		presetList = new PresetList;
 		presetBankDict = new PresetMap;
 		virInstList = new VirInstList;
+		virInsts = new vector<VirInstrument*>;
 		taskProcesser = new TaskProcesser;
 		realtimeKeyOpTaskProcesser = new TaskProcesser;
 		realtimeKeyEventList = new RealtimeKeyEventList;
@@ -46,8 +48,6 @@ namespace ventrue {
 		regionSounderThreadPool = new RegionSounderThread;
 		regionSounderThreadPool->SetVentrue(this);
 
-		totalRegionSounders = new RegionSounder * [3000];
-		totalRegionSounders2 = new RegionSounder * [3000];
 
 #ifdef _WIN32
 		audio = new Audio_SDL();
@@ -98,6 +98,7 @@ namespace ventrue {
 		DEL_OBJS_VECTOR(midiPlayList);
 		DEL_OBJS_VECTOR(midiFileList);
 
+		DEL(virInsts);
 		DEL(presetBankDict);
 		DEL_OBJS_VECTOR(virInstList);
 		DEL(realtimeKeyEventList);
@@ -119,9 +120,6 @@ namespace ventrue {
 			DEL(it->second);
 		DEL(sfParserMap);
 
-		//
-		delete[] totalRegionSounders;
-		delete[] totalRegionSounders2;
 
 #ifdef _WIN32
 		timeEndPeriod(1);
@@ -153,7 +151,9 @@ namespace ventrue {
 		audio->SetChannelCount((int)channelOutputMode);
 	}
 
-	// 设置帧样本数量
+	//设置帧样本数量
+	//这个值越小，声音的实时性越高（在实时演奏时，值最好在1024以下，最合适的值为512）,
+	//当这个值比较小时，cpu内耗增加
 	void Ventrue::SetFrameSampleCount(int count)
 	{
 		frameSampleCount = count;
@@ -217,6 +217,11 @@ namespace ventrue {
 
 
 	//设置是否使用多线程
+	//使用多线程渲染处理声音
+	//多线程渲染在childFrameSampleCount比较小的情况下(比如小于64时)，由于在一大帧中线程调用太过频繁，线程切换的消耗大于声音渲染的时间
+	//当childFrameSampleCount >= 256时，多线程效率会比较高
+	//在播放midi音乐时，并不适合开启多线程，因为midi播放事件要求一个非常小的childFrameSampleCount值
+	//但在测试同时发音数量很高的midi音乐时，多线程的效率非常高，播放也稳定
 	void Ventrue::SetUseMulThread(bool use)
 	{
 		useMulThreads = use;
@@ -324,6 +329,7 @@ namespace ventrue {
 			virInst = new VirInstrument(this, channel, preset);
 			SetVirInstRelationValues(virInst);
 			virInstList->push_back(virInst);
+			virInsts->push_back(virInst);
 		}
 		else
 		{
@@ -645,7 +651,7 @@ namespace ventrue {
 	// 请求帧渲染事件
 	void Ventrue::ReqFrameRender()
 	{
-		VentrueEvent* ev = VentruePool::GetInstance().VentrueEventPool().Pop();
+		VentrueEvent* ev = VentrueEvent::New();
 		ev->ventrue = this;
 		ev->evType = VentrueEventType::Render;
 		ev->processCallBack = _FrameRender;
@@ -680,8 +686,8 @@ namespace ventrue {
 			ProcessRealtimeKeyEvents();
 			ProcessMidiEvents();
 
-			//渲染区域发声
-			RenderRegionSound();
+			//渲染虚拟乐器区域发声
+			RenderVirInstRegionSound();
 
 			//移除已完成采样的KeySounder
 			RemoveProcessEndedKeySounder();
@@ -758,19 +764,24 @@ namespace ventrue {
 	}
 
 
-	// 渲染区域发声
-	void Ventrue::RenderRegionSound()
+	// 渲染虚拟乐器区域发声
+	void Ventrue::RenderVirInstRegionSound()
 	{
+
 		//为渲染准备所有正在发声的区域
 		totalRegionSounderCount = 0;
 		for (int i = 0; i < virInstList->size(); i++)
 		{
+			(*virInstList)[i]->CreateKeySounders();
+
 			totalRegionSounderCount +=
 				(*virInstList)[i]->CreateRegionSounderForRender(
 					totalRegionSounders, totalRegionSounderCount);
 		}
 
-		//
+		//快速释音超过限制的区域发声
+		FastReleaseRegionSounders();
+
 		//printf("声音总数:%d\n", totalRegionSounderCount);
 		//开始渲染区域声音
 		if (totalRegionSounderCount <= 0)
@@ -778,7 +789,7 @@ namespace ventrue {
 
 		//是否使用线程池并行处理按键发音数据
 		//多线程渲染在childFrameSampleCount比较小的情况下(比如小于64时)，由于在一大帧(frameSampleCount)中调用太过频繁，效率并不是太好
-		//当childFrameSampleCount >= 1024时，多线程效率会比较高
+		//当childFrameSampleCount >= 256时，多线程效率会比较高
 		//在播放midi音乐时，并不适合开启多线程，因为midi播放事件要求一个非常小的childFrameSampleCount值
 		//但在测试同时发音数量很高的midi音乐时，多线程的效率非常高，播放也稳定
 		if (!useMulThreads)
@@ -797,6 +808,47 @@ namespace ventrue {
 		}
 	}
 
+	//快速释音超过限制的区域发声
+	void Ventrue::FastReleaseRegionSounders()
+	{
+		int instSize = virInsts->size();
+		if (instSize == 0)
+			return;
+
+		//按乐器当前区域发声数量由少到多排列乐器
+		sort(virInsts->begin(), virInsts->end(), SounderCountCompare);
+
+		int limitTotalCount = limitRegionSounderCount;
+		int limitPerElemCount = limitTotalCount / virInsts->size();
+		VirInstrument* inst;
+		int count;
+		RegionSounder** regionSounders;
+		for (int i = 0; i < instSize; i++)
+		{
+			inst = (*virInsts)[i];
+			count = inst->GetRegionSounderCount();
+			if (count <= limitPerElemCount) {
+				limitTotalCount -= count;
+				limitPerElemCount = limitTotalCount / (instSize - i);
+				continue;
+			}
+
+			regionSounders = inst->GetRegionSounders();
+			for (int j = limitPerElemCount; j < count; j++)
+			{
+				regionSounders[j]->OffKey(127, 0.002f);
+			}
+			limitTotalCount -= limitPerElemCount;
+			limitPerElemCount = limitTotalCount / (instSize - i);
+		}
+	}
+
+	bool Ventrue::SounderCountCompare(VirInstrument* a, VirInstrument* b)
+	{
+		int regionCountA = a->GetRegionSounderCount();
+		int regionCountB = b->GetRegionSounderCount();
+		return regionCountA <= regionCountB;//升序
+	}
 
 
 	//混合所有乐器中的样本到ventrue的声道buffer中

@@ -6,7 +6,6 @@
 #include "Midi/MidiTypes.h"
 #include"VentruePool.h"
 
-
 namespace ventrue
 {
 
@@ -26,6 +25,11 @@ namespace ventrue
 		void OpenAudio();
 
 		//设置是否使用多线程
+		//使用多线程渲染处理声音
+		//多线程渲染在childFrameSampleCount比较小的情况下(比如小于64时)，由于在一大帧中线程调用太过频繁，线程切换的消耗大于声音渲染的时间
+		//当childFrameSampleCount >= 256时，多线程效率会比较高
+		//在播放midi音乐时，并不适合开启多线程，因为midi播放事件要求一个非常小的childFrameSampleCount值
+		//但在测试同时发音数量很高的midi音乐时，多线程的效率非常高，播放也稳定
 		void SetUseMulThread(bool use);
 
 		//设置声道模式(立体声，单声道设置)
@@ -103,6 +107,8 @@ namespace ventrue
 		}
 
 		// 设置帧样本数量
+		//这个值越小，声音的实时性越高（在实时演奏时，值最好在1024以下，最合适的值为512）,	
+		//当这个值比较小时，cpu内耗增加
 		void SetFrameSampleCount(int count);
 
 		// 获取帧样本数量
@@ -112,6 +118,7 @@ namespace ventrue
 		}
 
 		// 设置子帧样本数量
+		//这个值最好固定在64
 		inline void SetChildFrameSampleCount(int count)
 		{
 			childFrameSampleCount = count;
@@ -123,6 +130,19 @@ namespace ventrue
 		inline int GetChildFrameSampleCount()
 		{
 			return childFrameSampleCount;
+		}
+
+		// 获取处理每子帧样本所花费的时间(单位:秒)
+		inline float GetPerChildFrameSampleSec()
+		{
+			return invSampleProcessRate * childFrameSampleCount;
+		}
+
+		//设置极限发声区域数量(默认值:600)
+		//当播放有卡顿现象时，把这个值调小，会提高声音的流畅度
+		inline void SetLimitRegionSounderCount(int count)
+		{
+			limitRegionSounderCount = count;
 		}
 
 		// 增加一个样本到样本列表
@@ -158,19 +178,6 @@ namespace ventrue
 		// 帧渲染
 		void FrameRender(uint8_t* stream, int len);
 
-		//获取所有发声区域的数量
-		int GetTotalRegionSounderCount()
-		{
-			return totalRegionSounderCount;
-		}
-
-		//设置发声区域数量极限
-		void SetLimitRegionSounderCount(int count)
-		{
-			if (count < 0) count = 0;
-			limitRegionSounderCount = count;
-		}
-
 		// 设置是否总是使用滑音    
 		void SetAlwaysUsePortamento(bool isAlwaysUse);
 
@@ -188,8 +195,6 @@ namespace ventrue
 		{
 			return alwaysUsePortamento;
 		}
-
-
 
 		//设置滑音过渡时间
 		void SetPortaTime(float tm);
@@ -314,8 +319,11 @@ namespace ventrue
 		//混合所有乐器中的样本到声道buffer中
 		void MixVirInstsSamplesToChannelBuffer();
 
-		// 渲染区域发声     
-		void RenderRegionSound();
+		// 渲染虚拟乐器区域发声     
+		void RenderVirInstRegionSound();
+
+		//快速释音超过限制的区域发声
+		void FastReleaseRegionSounders();
 
 
 		//应用效果器到乐器的声道buffer
@@ -343,6 +351,8 @@ namespace ventrue
 
 		//
 		static void _FrameRender(Task* ev);
+
+		static bool SounderCountCompare(VirInstrument* a, VirInstrument* b);
 
 	public:
 		//渲染发音的时间点回调
@@ -383,7 +393,7 @@ namespace ventrue
 
 		//使用多线程渲染处理声音
 		//多线程渲染在childFrameSampleCount比较小的情况下(比如小于64时)，由于在一大帧中线程调用太过频繁，线程切换的消耗大于声音渲染的时间
-		//当childFrameSampleCount >= 1024时，多线程效率会比较高
+		//当childFrameSampleCount >= 256时，多线程效率会比较高
 		//在播放midi音乐时，并不适合开启多线程，因为midi播放事件要求一个非常小的childFrameSampleCount值
 		//但在测试同时发音数量很高的midi音乐时，多线程的效率非常高，播放也稳定
 		bool useMulThreads = false;
@@ -396,32 +406,31 @@ namespace ventrue
 		PresetMap* presetBankDict = nullptr;
 
 		//// 左通道已处理采样点
-		float leftChannelSamples[8192] = { 0 };
+		float leftChannelSamples[8192 * 10] = { 0 };
 
 		//// 右通道已处理采样点
-		float rightChannelSamples[8192] = { 0 };
+		float rightChannelSamples[8192 * 10] = { 0 };
 
-		float leftChannelFrameBuf[4096] = { 0 };
-		float rightChannelFrameBuf[4096] = { 0 };
+		float leftChannelFrameBuf[4096 * 10] = { 0 };
+		float rightChannelFrameBuf[4096 * 10] = { 0 };
 
 		//目前渲染子帧位置
 		uint32_t childFramePos = 0;
 
 
 		// 合成后的最终采样流
-		uint8_t synthSampleStream[40000] = { 0 };
+		uint8_t synthSampleStream[1000000] = { 0 };
 
 		// 合成后的最终采样流
 		RingBuffer* synthSampleRingBuffer;
 
-		//所有正在发声的区域1
-		RegionSounder** totalRegionSounders = nullptr;
-		//所有正在发声的区域2
-		RegionSounder** totalRegionSounders2 = nullptr;
+		//所有正在发声的区域
+		RegionSounder* totalRegionSounders[100000] = { nullptr };
 		//所有正在发声的区域数量
 		int totalRegionSounderCount = 0;
-		//限制发声区域数量
-		int limitRegionSounderCount = 140;
+		//发声区域最大限制数量
+		int limitRegionSounderCount = 600;
+
 
 		TaskProcesser* taskProcesser = nullptr;
 		TaskProcesser* realtimeKeyOpTaskProcesser = nullptr;
@@ -430,6 +439,8 @@ namespace ventrue
 
 		//使用中的虚拟乐器列表
 		VirInstList* virInstList = nullptr;
+		//使用中的虚拟乐器列表
+		vector<VirInstrument*>* virInsts = nullptr;
 
 		//是否启用乐器混响处理
 		bool isEnableInstReverb = false;
@@ -468,7 +479,6 @@ namespace ventrue
 		int curtSampleCount = 0;
 
 
-
 		//音源解析格式
 		SoundFontParserMap* sfParserMap;
 
@@ -503,6 +513,5 @@ namespace ventrue
 		friend class RegionSounderThread;
 	};
 }
-
 
 #endif

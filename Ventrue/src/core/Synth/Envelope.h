@@ -250,6 +250,9 @@ namespace ventrue
 		float realDecaySec = 0;
 		float realHoldSec = 0;
 
+		//是否快速释音
+		bool isFastRelease = false;
+
 	};
 }
 

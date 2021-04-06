@@ -3,6 +3,8 @@
 #include"RegionSounder.h"
 #include"Ventrue.h"
 #include"Channel.h"
+#include"Preset.h"
+#include <random>
 
 
 namespace ventrue
@@ -14,6 +16,8 @@ namespace ventrue
 		this->preset = preset;
 		keySounders = new KeySounderList;
 		onKeySounders = new vector<KeySounder*>;
+		onkeyEventMap = new unordered_map<int, list<KeyEvent>>();
+		offkeyEventMap = new unordered_map<int, list<KeyEvent>>();
 
 		//
 		effects = new EffectList();
@@ -45,6 +49,8 @@ namespace ventrue
 
 		DEL_OBJS_LIST(keySounders, KeySounderList);
 		DEL(onKeySounders);
+		DEL(onkeyEventMap);
+		DEL(offkeyEventMap);
 	}
 
 
@@ -123,10 +129,67 @@ namespace ventrue
 		return true;
 	}
 
-
 	//按键
-	KeySounder* VirInstrument::OnKey(int key, float velocity)
+	void VirInstrument::OnKey(int key, float velocity, int tickCount, bool isRealTime)
 	{
+		if (onkeyEventMap->size() > 10 &&
+			(velocity < 10 ||
+				(!isRealTime && tickCount <= 5)))
+		{
+			return;
+		}
+
+		KeyEvent keyEvent;
+		keyEvent.isOnKey = true;
+		keyEvent.key = key;
+		keyEvent.velocity = velocity;
+		keyEvent.isRealTime = isRealTime;
+		(*onkeyEventMap)[key].push_back(keyEvent);
+	}
+
+	//执行松开按键
+	void VirInstrument::OffKey(int key, float velocity, bool isRealTime)
+	{
+		auto eventIter = onkeyEventMap->find(key);
+		if (eventIter != onkeyEventMap->end())
+		{
+			list<KeyEvent>& keyEventList = eventIter->second;
+			list<KeyEvent>::iterator it = keyEventList.begin();
+			list<KeyEvent>::iterator end = keyEventList.end();
+			for (; it != end; it++)
+			{
+				KeyEvent& keyEvent = *it;
+				if (keyEvent.key == key &&
+					keyEvent.isOnKey == true &&
+					keyEvent.isRealTime == isRealTime)
+				{
+					keyEventList.erase(it);
+
+					if (keyEventList.size() == 0)
+						onkeyEventMap->erase(eventIter);
+
+					return;
+				}
+			}
+		}
+
+
+		//
+		KeyEvent keyEvent;
+		keyEvent.isOnKey = false;
+		keyEvent.key = key;
+		keyEvent.velocity = velocity;
+		keyEvent.isRealTime = isRealTime;
+		(*offkeyEventMap)[key].push_back(keyEvent);
+	}
+
+
+	//执行按键
+	KeySounder* VirInstrument::OnKeyExecute(int key, float velocity)
+	{
+		//录制
+		midiTrackRecord->RecordOnKey(key, velocity, channel->GetChannelNum());
+
 		KeySounder* keySounder = KeySounder::New();
 		_OnKey(keySounder, key, velocity);
 
@@ -143,10 +206,28 @@ namespace ventrue
 			}
 		}
 
-		//录制
-		midiTrackRecord->RecordOnKey(key, velocity, channel->GetChannelNum());
-
 		return keySounder;
+	}
+
+	//执行松开按键
+	void VirInstrument::OffKeyExecute(int key, float velocity)
+	{
+		//录制	
+		midiTrackRecord->RecordOffKey(key, velocity, channel->GetChannelNum());
+
+		//
+		KeySounder* keySounder = nullptr;
+		vector<KeySounder*>::iterator it = onKeySounders->begin();
+		vector<KeySounder*>::iterator end = onKeySounders->end();
+		for (; it != end; it++)
+		{
+			if ((*it)->IsOnningKey(key)) {
+				keySounder = *it;
+				break;
+			}
+		}
+
+		_OffKey(keySounder, velocity);
 	}
 
 	//按键动作送入RegionSounder中执行处理
@@ -164,45 +245,11 @@ namespace ventrue
 	}
 
 
-	//松开按键,一次只能关闭一个按键
-	void VirInstrument::OffKey(int key, float velocity)
-	{
-		KeySounder* keySounder = nullptr;
-		KeySounderList::iterator it = keySounders->begin();
-		KeySounderList::iterator end = keySounders->end();
-		for (; it != end; it++)
-		{
-			if ((*it)->IsOnningKey(key)) {
-				keySounder = *it;
-				break;
-			}
-		}
-
-		OffKey(keySounder, velocity);
-	}
-
-	// 执行松开指定发音按键
-	void VirInstrument::OffKey(KeySounderID keySounderID, float velocity)
-	{
-		KeySounder* keySounder = GetOnKeyStateSounder(keySounderID);
-		OffKey(keySounder, velocity);
-	}
-
 	// 松开指定发音按键
-	void VirInstrument::OffKey(KeySounder* keySounder, float velocity)
-	{
-		_OffKey(keySounder, velocity, true);
-	}
-
-	// 松开指定发音按键
-	void VirInstrument::_OffKey(KeySounder* keySounder, float velocity, bool isRecord)
+	void VirInstrument::_OffKey(KeySounder* keySounder, float velocity)
 	{
 		if (keySounder == nullptr)
 			return;
-
-		//录制
-		if (isRecord)
-			midiTrackRecord->RecordOffKey(keySounder->GetOnKey(), velocity, channel->GetChannelNum());
 
 		//
 		if ((!keySounder->IsOnningKey() &&
@@ -215,8 +262,8 @@ namespace ventrue
 			return;
 		}
 
-		KeySounder* lastKeySounder = GetLastOnKeyStateSounder();
-		if (lastKeySounder == nullptr)
+		KeySounder* lastOnKeySounder = GetLastOnKeyStateSounder();
+		if (lastOnKeySounder == nullptr)
 			return;
 
 		keySounder->IsHoldInSoundQueue = false;
@@ -225,7 +272,7 @@ namespace ventrue
 
 		//单音模式中会保持按下的按键按键历史队列当中，当释放一个发音按键后
 		//倒数第二个保持按键状态的按键将重新发音
-		if (useMonoMode && lastKeySounder == keySounder)
+		if (useMonoMode && lastOnKeySounder == keySounder)
 		{
 			MonoModeReSoundLastOnKey();
 		}
@@ -245,8 +292,6 @@ namespace ventrue
 		//如果滑音状态下，由于会生成最后一个保持按键的重新发音的KeySounder,此时声音会重新滑向这个发音键，状态不冲突
 		//一个新的发音生成之后，才会重队列中执行移除按键的操作
 		KeySounder* keySounder = KeySounder::New();
-		keySounder->SetID(lastOnKeySounder->GetID());
-		lastOnKeySounder->SetID(0);
 		lastOnKeySounder->OffKey();
 		_RemoveOnKeyStateSounder(lastOnKeySounder);
 
@@ -300,18 +345,6 @@ namespace ventrue
 		if (onKeySounders->size() == 0)
 			return nullptr;
 		return (*onKeySounders)[onKeySounders->size() - 1];
-	}
-
-	// 获取指定的实际按下的按键的KeySounder
-	KeySounder* VirInstrument::GetOnKeyStateSounder(KeySounderID keySounderID)
-	{
-		for (int i = 0; i < onKeySounders->size(); i++)
-		{
-			if ((*onKeySounders)[i]->GetID() == keySounderID)
-				return (*onKeySounders)[i];
-		}
-
-		return nullptr;
 	}
 
 	//从KeySounders中查找KeySounder
@@ -373,18 +406,94 @@ namespace ventrue
 		}
 	}
 
+
+	//生成发声keySounders
+	void VirInstrument::CreateKeySounders()
+	{
+		if (!onkeyEventMap->empty())
+		{
+			KeySounder* keySounder;
+			//printf("乐器%s:onKeyEventCount:%d\n", preset->name.c_str(), onkeyEventMap->size());
+			if (onkeyEventMap->size() > 150)
+			{
+				vector<KeyEvent> temp;
+				for (auto iter = onkeyEventMap->begin(); iter != onkeyEventMap->end(); ++iter)
+				{
+					list<KeyEvent>& keyEventList = iter->second;
+					list<KeyEvent>::iterator it = keyEventList.begin();
+					list<KeyEvent>::iterator end = keyEventList.end();
+					for (; it != end; it++)
+					{
+						temp.push_back(*it);
+					}
+				}
+
+				random_shuffle(temp.begin(), temp.end());
+
+				for (int i = 0; i < 150; i++)
+				{
+					KeyEvent& keyEvent = temp[i];
+					keySounder = OnKeyExecute(keyEvent.key, keyEvent.velocity);
+					keySounder->SetRealtimeControlType(keyEvent.isRealTime);
+				}
+			}
+			else
+			{
+				for (auto iter = onkeyEventMap->begin(); iter != onkeyEventMap->end(); ++iter)
+				{
+					list<KeyEvent>& keyEventList = iter->second;
+					list<KeyEvent>::iterator it = keyEventList.begin();
+					list<KeyEvent>::iterator end = keyEventList.end();
+					for (; it != end; it++)
+					{
+						KeyEvent& keyEvent = *it;
+						keySounder = OnKeyExecute(keyEvent.key, keyEvent.velocity);
+						if (keySounder)
+							keySounder->SetRealtimeControlType(keyEvent.isRealTime);
+
+					}
+				}
+			}
+
+			onkeyEventMap->clear();
+		}
+
+		//
+		if (!offkeyEventMap->empty())
+		{
+			for (auto iter = offkeyEventMap->begin(); iter != offkeyEventMap->end(); ++iter)
+			{
+				list<KeyEvent>& keyEventList = iter->second;
+				list<KeyEvent>::iterator it = keyEventList.begin();
+				list<KeyEvent>::iterator end = keyEventList.end();
+				for (; it != end; it++)
+				{
+					KeyEvent& keyEvent = *it;
+					OffKeyExecute(keyEvent.key, keyEvent.velocity);
+				}
+			}
+
+			offkeyEventMap->clear();
+		}
+	}
+
 	//为渲染准备所有正在发声的区域
 	int VirInstrument::CreateRegionSounderForRender(RegionSounder** totalRegionSounder, int startSaveIdx)
 	{
+		//
+		regionSounderCount = 0;
+
+		//
 		if (IsSoundEnd())
 			return 0;
 
 		float reverbDepth, chorusDepth;
 		float maxReverbDepth = 0, maxChorusDepth = 0;
 		int idx = startSaveIdx;
-		bool isBreak = false;
 		KeySounderList::reverse_iterator it = keySounders->rbegin();
 		KeySounderList::reverse_iterator rend = keySounders->rend();
+
+		//printf("%s发声按键总数:%d\n", preset->name.c_str(), keySounders->size());
 
 		for (; it != rend; it++)
 		{
@@ -396,10 +505,8 @@ namespace ventrue
 					continue;
 				}
 
-				if (isBreak)
-					regionSounder->OffKey(127, 0.1f);
-
 				totalRegionSounder[idx++] = regionSounder;
+				regionSounders[regionSounderCount++] = regionSounder;
 
 				//获取区域混音深度数值
 				reverbDepth = regionSounder->GetGenReverbEffectsSend() * 0.01f;
@@ -410,10 +517,6 @@ namespace ventrue
 				chorusDepth = regionSounder->GetGenChorusEffectsSend() * 0.01f;
 				if (chorusDepth > maxChorusDepth)
 					maxChorusDepth = chorusDepth;
-
-				if (!isBreak && idx - startSaveIdx >= 60)
-					isBreak = true;
-
 			}
 		}
 
@@ -425,6 +528,7 @@ namespace ventrue
 
 		return idx - startSaveIdx;
 	}
+
 
 
 	//设置区域混音深度
@@ -529,6 +633,8 @@ namespace ventrue
 	// 移除已完成所有区域发声处理(采样处理)的KeySounder      
 	void VirInstrument::RemoveProcessEndedKeySounder()
 	{
+		//	printf("当前乐器发声按键总数:%d\n", keySounders->size());
+
 		int offIdx = 0;
 		KeySounderList::iterator it = keySounders->begin();
 		for (; it != keySounders->end(); )
@@ -557,7 +663,7 @@ namespace ventrue
 		//
 		for (int i = 0; i < offIdx; i++)
 		{
-			OffKey(offKeySounder[i]);
+			_OffKey(offKeySounder[i], 127);
 		}
 
 	}

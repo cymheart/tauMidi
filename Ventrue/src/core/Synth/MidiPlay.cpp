@@ -12,7 +12,7 @@ namespace ventrue
 {
 	MidiPlay::MidiPlay()
 	{
-		noteOnEvOnKeyInfos = new NoteOnEvOnKeyInfoList;
+		//noteOnEvOnKeyInfos = new NoteOnEvOnKeyInfoList;
 		assistTrack = new Track;
 	}
 
@@ -25,7 +25,7 @@ namespace ventrue
 			DEL(assistMidiEvList[i]);
 
 		DEL(assistTrack);
-		DEL(noteOnEvOnKeyInfos);
+		//DEL(noteOnEvOnKeyInfos);
 	}
 
 	/// <summary>
@@ -61,7 +61,6 @@ namespace ventrue
 		isDirectGoto = false;
 		isOpen = false;
 		startTime = 0;
-		noteOnEvOnKeyInfos->clear();
 
 		for (int i = 0; i < assistMidiEvList.size(); i++)
 			DEL(assistMidiEvList[i]);
@@ -225,18 +224,12 @@ namespace ventrue
 
 			NoteOnEvent* noteOnEv = (NoteOnEvent*)midEv;
 			Channel& channel = *(*trackList[trackIdx])[noteOnEv->channel];
-
 			Preset* preset = ventrue->GetInstrumentPreset(channel.GetBankSelectMSB(), channel.GetBankSelectLSB(), channel.GetProgramNum());
 			if (preset == nullptr)
 				return;
 
 			VirInstrument* virInst = ventrue->EnableVirInstrument(preset, &channel);
-			KeySounder* keySounder = virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity);
-			if (keySounder == nullptr)
-				break;
-
-			//设置为非实时控制类型
-			keySounder->SetRealtimeControlType(false);
+			virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1, false);
 
 			//对缺少对应关闭音符事件的NoteOn，在辅助轨道上添加一个0.5s后关闭的事件
 			if (noteOnEv->noteOffEvent == nullptr)
@@ -250,12 +243,6 @@ namespace ventrue
 				assistMidiEvList.push_back(noteOffEvent);
 			}
 
-
-			NoteOnEvOnKeyInfo info;
-			info.noteOnEvent = noteOnEv;
-			info.keySounderID = keySounder->GetID();
-			info.virInst = virInst;
-			noteOnEvOnKeyInfos->push_back(info);
 		}
 		break;
 
@@ -265,20 +252,14 @@ namespace ventrue
 				break;
 
 			NoteOffEvent* noteOffEv = (NoteOffEvent*)midEv;
-			NoteOnEvent* noteOnEv = noteOffEv->noteOnEvent;
-			if (noteOnEv == nullptr)
-				break;
+			Channel& channel = *(*trackList[trackIdx])[noteOffEv->channel];
+			Preset* preset = ventrue->GetInstrumentPreset(channel.GetBankSelectMSB(), channel.GetBankSelectLSB(), channel.GetProgramNum());
+			if (preset == nullptr)
+				return;
 
-			NoteOnEvOnKeyInfoList::iterator it = noteOnEvOnKeyInfos->begin();
-			for (; it != noteOnEvOnKeyInfos->end(); it++)
-			{
-				if ((*it).noteOnEvent == noteOnEv)
-				{
-					(*it).virInst->OffKey((KeySounderID)(*it).keySounderID, (float)noteOffEv->velocity);
-					it = noteOnEvOnKeyInfos->erase(it);
-					break;
-				}
-			}
+			VirInstrument* virInst = ventrue->EnableVirInstrument(preset, &channel);
+			virInst->OffKey(noteOffEv->note, (float)noteOffEv->velocity, false);
+
 		}
 		break;
 

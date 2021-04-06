@@ -65,6 +65,20 @@ namespace ventrue
 			return isSoundEnd;
 		}
 
+		//获取区域发声数量
+		inline int GetRegionSounderCount()
+		{
+			return regionSounderCount;
+		}
+
+		//获取区域发声数组
+		inline RegionSounder** GetRegionSounders()
+		{
+			return regionSounders;
+		}
+
+
+
 		//最后一个保留按键
 		inline KeySounder* GetLastKeySounder()
 		{
@@ -82,9 +96,6 @@ namespace ventrue
 
 		// 在Mono模式下重新发音最后一个按键
 		void MonoModeReSoundLastOnKey();
-
-		// 获取指定的实际按下的按键的KeySounder
-		KeySounder* GetOnKeyStateSounder(KeySounderID keySounderID);
 
 		//从KeySounders中查找KeySounder
 		bool FindKeySounderFromKeySounders(KeySounder* keySounder);
@@ -165,20 +176,23 @@ namespace ventrue
 		//设置和声深度
 		void SetRegionChorusDepth(float value);
 
+
 		//按键
-		KeySounder* OnKey(int key, float velocity);
+		void OnKey(int key, float velocity, int tickCount = 0, bool isRealTime = true);
 
 		//松开按键
-		void OffKey(int key, float velocity = 127.0f);
+		void OffKey(int key, float velocity = 127.0f, bool isRealTime = true);
+
+
+		//执行按键
+		KeySounder* OnKeyExecute(int key, float velocity);
+
+		//执行松开按键
+		void OffKeyExecute(int key, float velocity = 127.0f);
+
 
 		// 松开指定发音按键
-		void OffKey(KeySounder* keySounder, float velocity = 127.0f);
-
-		// 执行松开指定发音按键
-		void OffKey(KeySounderID keySounderID, float velocity = 127.0f);
-
-		// 松开指定发音按键
-		void _OffKey(KeySounder* keySounder, float velocity, bool isRecord);
+		void _OffKey(KeySounder* keySounder, float velocity);
 
 		//按键执行
 		void _OnKey(KeySounder* keySounder, int key, float velocity);
@@ -202,6 +216,9 @@ namespace ventrue
 
 		//合并区域已处理发音样本
 		void CombineRegionSounderSamples(RegionSounder* regionSounder);
+
+		//生成发声keySounders
+		void CreateKeySounders();
 
 		//为渲染准备所有正在发声的区域
 		int CreateRegionSounderForRender(RegionSounder** totalRegionSounder, int startSaveIdx);
@@ -255,12 +272,14 @@ namespace ventrue
 
 		//按键中的keySounders
 		vector<KeySounder*>* onKeySounders = nullptr;
+		unordered_map<int, list<KeyEvent>>* onkeyEventMap = nullptr;
+		unordered_map<int, list<KeyEvent>>* offkeyEventMap = nullptr;
 
 		// 左通道已处理采样点
-		float leftChannelSamples[8192] = { 0 };
+		float leftChannelSamples[8192 * 10] = { 0 };
 
 		// 右通道已处理采样点
-		float rightChannelSamples[8192] = { 0 };
+		float rightChannelSamples[8192 * 10] = { 0 };
 
 		//最后一个松开按键的键
 		//最后一个保持按键状态的keySounder,总是不被直接从内存池中移除，
@@ -269,8 +288,13 @@ namespace ventrue
 		//当开起一直保持功能后，生成滑音只需要最近一个按键的发音信息即可，而无所谓是否按下还是已经按下过
 		KeySounder* lastKeySounder = nullptr;
 
-		int exclusiveClasses[128] = { 0 };
-		KeySounder* offKeySounder[256];
+		int exclusiveClasses[1024 * 10] = { 0 };
+		KeySounder* offKeySounder[1024 * 20];
+
+		//当前乐器中所有正在发声的区域
+		RegionSounder* regionSounders[10000] = { nullptr };
+		//当前乐器中所有正在发声的区域数量
+		int regionSounderCount = 0;
 
 		//midiTrack录制
 		MidiTrackRecord* midiTrackRecord;
