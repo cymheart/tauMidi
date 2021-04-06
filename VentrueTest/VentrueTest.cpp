@@ -108,9 +108,9 @@ int main(int argc, char* argv[])
 
 	//添加需要播放的midi文件
 	//cmd->AppendMidiFile(midiPath + "venture.mid");
-	//cmd->AppendMidiFile(midiPath + "吻别.mid");
+	cmd->AppendMidiFile(midiPath + "吻别.mid");
 	//cmd->AppendMidiFile(midiPath + "dream.mid");
-	cmd->AppendMidiFile(midiPath + "圆周率+TSMB2之作+3.14百万音符.mid");  //（百万音符来袭）
+	//cmd->AppendMidiFile(midiPath + "圆周率+TSMB2之作+3.14百万音符.mid");  //（百万音符来袭）
 	//cmd->AppendMidiFile(midiPath + "狂妄之人2.mid"); //（音符非常多）
 	//cmd->AppendMidiFile(midiPath + "狂妄之人.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\Sound of Silence-Simon & Garfunkel.mid");
