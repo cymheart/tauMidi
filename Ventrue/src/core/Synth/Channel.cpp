@@ -93,7 +93,7 @@ namespace ventrue
 			else if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
 				ccValue[(int)MidiControllerType::RPNLSB] == 2)
 			{
-				coarseTune = ccValue[itype];
+				coarseTune = ccComputedValue[itype];
 				AddUsedPresetType(ModInputPreset::CoarseTune);
 			}
 			break;
@@ -102,7 +102,8 @@ namespace ventrue
 			if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
 				ccValue[(int)MidiControllerType::RPNLSB] == 0)
 			{
-				pitchBendRange = ccCombValue[imsbType];
+				//半音+音分(转化为半音)
+				pitchBendRange = ccValue[imsbType] + ccValue[itype] * 0.01f;
 			}
 			else if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
 				ccValue[(int)MidiControllerType::RPNLSB] == 1)
@@ -113,7 +114,7 @@ namespace ventrue
 			else if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
 				ccValue[(int)MidiControllerType::RPNLSB] == 2)
 			{
-				coarseTune = ccCombValue[imsbType];
+				coarseTune = ccComputedValue[imsbType];
 				AddUsedPresetType(ModInputPreset::CoarseTune);
 			}
 			break;

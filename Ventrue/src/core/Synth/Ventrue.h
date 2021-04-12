@@ -181,6 +181,9 @@ namespace ventrue
 		// 设置是否总是使用滑音    
 		void SetAlwaysUsePortamento(bool isAlwaysUse);
 
+		// 设置是否使用滑音    
+		void SetUsePortamento(bool isUse);
+
 		//设置是否使用单音模式  
 		void SetUseMonoMode(bool isUse);
 
@@ -196,7 +199,13 @@ namespace ventrue
 			return alwaysUsePortamento;
 		}
 
-		//设置滑音过渡时间
+		// 获取是使用滑音   
+		inline bool UsePortamento()
+		{
+			return usePortamento;
+		}
+
+		//设置滑音过渡时间(单位:秒)
 		void SetPortaTime(float tm);
 
 		//获取滑音过渡时间
@@ -214,6 +223,8 @@ namespace ventrue
 		{
 			return useLegato;
 		}
+
+
 
 		//投递任务
 		void PostTask(TaskCallBack taskCallBack, void* data, int delay = 0);
@@ -381,14 +392,17 @@ namespace ventrue
 		// 使用单音模式  
 		bool useMonoMode = false;
 
-		// 是否总是使用滑音
-		bool alwaysUsePortamento = false;
-
-		// 使用连音   
+		// 使用连音  
+		//如果前一个按键没有松开，即触发第二个按键，将触发连音
+		//此时第二个按键发音将没有attact的过程
 		bool useLegato = false;
 
-		//滑音过渡时间
-		float portaTime = 0;
+		// 是否总是使用滑音
+		bool alwaysUsePortamento = false;
+		// 是否使用滑音
+		bool usePortamento = false;
+		//滑音过渡时间(单位:秒)
+		float portaTime = 0.015f;
 
 
 		//使用多线程渲染处理声音

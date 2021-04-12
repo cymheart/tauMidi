@@ -778,7 +778,7 @@ namespace ventrue {
 	// 使用滑音
 	void RegionSounder::UsePortamento()
 	{
-		if (virInst->GetPortaTime() != 0)
+		if (virInst->UsePortamento() && virInst->GetPortaTime() != 0)
 		{
 			RegionSounder* regionSounder = virInst->FindLastSameRegion(instRegion);
 			if (regionSounder == nullptr)
@@ -811,6 +811,8 @@ namespace ventrue {
 
 
 	// 使用连音
+	// 连音的定义:根据当前发音区域的乐器的最后一个keySounder的查找与当前regionSounder对应的
+	//instRegion,如果找到并且处于Sustain阶段，将直接使当前发音区域从Sustain阶段发音,
 	void RegionSounder::UseLegato()
 	{
 		if (virInst->UseLegato() && virInst->GetLastOnKeyStateSounder() != nullptr)

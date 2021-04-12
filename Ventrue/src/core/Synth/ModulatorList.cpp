@@ -160,13 +160,13 @@ namespace ventrue
 			ModInputType::Preset,
 			ModInputPreset::CoarseTune, MidiControllerType::CC_None,
 			0,
-			-16383.0f,
-			16383.0f);
+			0,
+			1);
 
 		mod->SetOutTarget(GeneratorType::CoarseTune);
 		mod->SetOutModulationType(ModulationType::Add);
 		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 1);
-		mod->SetAmount(16383.0f);
+		mod->SetAmount(64);
 		insidePresetMod[(int)ModInputPreset::CoarseTune] = mod;
 
 	}
@@ -181,13 +181,13 @@ namespace ventrue
 			ModInputType::Preset,
 			ModInputPreset::FineTune, MidiControllerType::CC_None,
 			0,
-			-16383.0f,
-			16383.0f);
+			0,
+			32639);
 
 		mod->SetOutTarget(GeneratorType::FineTune);
 		mod->SetOutModulationType(ModulationType::Add);
 		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 1);
-		mod->SetAmount(16383.0f);
+		mod->SetAmount(100);
 		insidePresetMod[(int)ModInputPreset::FineTune] = mod;
 	}
 

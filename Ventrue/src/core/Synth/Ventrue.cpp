@@ -369,6 +369,7 @@ namespace ventrue {
 	void Ventrue::SetVirInstRelationValues(VirInstrument* virInst)
 	{
 		virInst->SetAlwaysUsePortamento(alwaysUsePortamento);
+		virInst->SetUsePortamento(usePortamento);
 		virInst->SetUseLegato(useLegato);
 		virInst->SetUseMonoMode(useMonoMode);
 		virInst->SetPortaTime(portaTime);
@@ -378,7 +379,17 @@ namespace ventrue {
 	// 设置是否总是使用滑音    
 	void Ventrue::SetAlwaysUsePortamento(bool isAlwaysUse)
 	{
+		if (isAlwaysUse == true)
+			usePortamento = isAlwaysUse;
+
 		alwaysUsePortamento = isAlwaysUse;
+		SetVirInstsRelationValues();
+	}
+
+	// 设置是否使用滑音    
+	void Ventrue::SetUsePortamento(bool isUse)
+	{
+		usePortamento = isUse;
 		SetVirInstsRelationValues();
 	}
 
@@ -812,14 +823,14 @@ namespace ventrue {
 	void Ventrue::FastReleaseRegionSounders()
 	{
 		int instSize = virInsts->size();
-		if (instSize == 0)
+		if (instSize <= 1)
 			return;
 
 		//按乐器当前区域发声数量由少到多排列乐器
 		sort(virInsts->begin(), virInsts->end(), SounderCountCompare);
 
 		int limitTotalCount = limitRegionSounderCount;
-		int limitPerElemCount = limitTotalCount / virInsts->size();
+		int limitPerElemCount = limitTotalCount / instSize;
 		VirInstrument* inst;
 		int count;
 		RegionSounder** regionSounders;
@@ -847,7 +858,7 @@ namespace ventrue {
 	{
 		int regionCountA = a->GetRegionSounderCount();
 		int regionCountB = b->GetRegionSounderCount();
-		return regionCountA <= regionCountB;//升序
+		return regionCountA < regionCountB;//升序
 	}
 
 

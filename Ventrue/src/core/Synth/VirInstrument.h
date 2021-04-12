@@ -104,25 +104,31 @@ namespace ventrue
 		RegionSounder* FindLastSameRegion(Region* region);
 
 		//是否使用单音模式
-		bool UseMonoMode()
+		inline bool UseMonoMode()
 		{
 			return useMonoMode;
 		}
 
 		// 获取是否总是使用滑音   
-		bool AlwaysUsePortamento()
+		inline bool AlwaysUsePortamento()
 		{
 			return alwaysUsePortamento;
 		}
 
+		// 获取是使用滑音   
+		inline bool UsePortamento()
+		{
+			return usePortamento;
+		}
+
 		//获取滑音过渡时间
-		float GetPortaTime()
+		inline float GetPortaTime()
 		{
 			return portaTime;
 		}
 
 		//是否使用连音
-		bool UseLegato()
+		inline bool UseLegato()
 		{
 			return useLegato;
 		}
@@ -140,33 +146,39 @@ namespace ventrue
 		void ApplyEffectsToChannelBuffer();
 
 
-		void SetPreset(Preset* preset)
+		inline void SetPreset(Preset* preset)
 		{
 			this->preset = preset;
 		}
 
 		//设置滑音过渡时间
-		void SetPortaTime(float tm)
+		inline void SetPortaTime(float tm)
 		{
 			portaTime = tm;
 		}
 
 		//设置是否使用连音
-		void SetUseLegato(bool isUse)
+		inline void SetUseLegato(bool isUse)
 		{
 			useLegato = isUse;
 		}
 
 		//设置是否使用单音模式  
-		void SetUseMonoMode(bool isUse)
+		inline void SetUseMonoMode(bool isUse)
 		{
 			useMonoMode = isUse;
 		}
 
 		// 设置是否总是使用滑音    
-		void SetAlwaysUsePortamento(bool isAlwaysUse)
+		inline void SetAlwaysUsePortamento(bool isAlwaysUse)
 		{
 			alwaysUsePortamento = isAlwaysUse;
+		}
+
+		// 设置是否使用滑音    
+		inline void SetUsePortamento(bool isUse)
+		{
+			usePortamento = isUse;
 		}
 
 
@@ -250,11 +262,13 @@ namespace ventrue
 		// 使用单音模式  
 		bool useMonoMode = false;
 
-		// 是否总是使用滑音
-		bool alwaysUsePortamento = false;
-
 		// 使用连音   
 		bool useLegato = false;
+
+		// 是否总是使用滑音
+		bool alwaysUsePortamento = false;
+		// 是否使用滑音
+		bool usePortamento = false;
 
 		//滑音过渡时间
 		float portaTime = 0;
