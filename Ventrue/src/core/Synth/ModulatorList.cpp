@@ -54,8 +54,8 @@ namespace ventrue
 		CreateInsideFineTuneModulator();
 		CreateInsideVolumeModulator();
 		CreateInsideSustainPedalOnOffModulator();
+		CreateInsideModulationWheelModulator();
 		CreateInsidePitchBendModulator();
-		CreateInsideVibModulator();
 	}
 
 	//根据指定类型启用内部控制器调制器
@@ -213,10 +213,23 @@ namespace ventrue
 		mod->SetType(ModulatorType::Inside);
 		mod->SetCtrlModulatorInputInfo(MidiControllerType::SustainPedalOnOff, 0);
 		mod->SetOutTarget(GeneratorType::SustainPedalOnOff);
-		mod->SetOutModulationType(ModulationType::Add);
+		mod->SetOutModulationType(ModulationType::Replace);
 		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 0);
 		mod->SetAmount(1);
 		insideCtrlMod[(int)MidiControllerType::SustainPedalOnOff] = mod;
+	}
+
+	//生成内部ModulationWheel调制器
+	void ModulatorList::CreateInsideModulationWheelModulator()
+	{
+		Modulator* mod = new Modulator();
+		mod->SetType(ModulatorType::Inside);
+		mod->SetCtrlModulatorInputInfo(MidiControllerType::ModulationWheelMSB, 0);
+		mod->SetOutTarget(GeneratorType::VibLfoToPitch);
+		mod->SetOutModulationType(ModulationType::Add);
+		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 0);
+		mod->SetAmount(70);
+		insideCtrlMod[(int)MidiControllerType::ModulationWheelMSB] = mod;
 	}
 
 
@@ -241,21 +254,6 @@ namespace ventrue
 		mod->SetAmount(2);
 		insidePresetMod[(int)ModInputPreset::PitchWheel] = mod;
 	}
-
-
-	//生成内部颤音调制器
-	void ModulatorList::CreateInsideVibModulator()
-	{
-		Modulator* mod = new Modulator();
-		mod->SetType(ModulatorType::Inside);
-		mod->SetCtrlModulatorInputInfo(MidiControllerType::ModulationWheelMSB, 0);
-		mod->SetOutTarget(GeneratorType::VibLfoToPitch);
-		mod->SetOutModulationType(ModulationType::Add);
-		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 0);
-		mod->SetAmount(50);
-		insideCtrlMod[(int)MidiControllerType::ModulationWheelMSB] = mod;
-	}
-
 
 	float ModulatorList::VolGainTans(float gain)
 	{

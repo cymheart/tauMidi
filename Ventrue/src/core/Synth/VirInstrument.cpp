@@ -221,7 +221,7 @@ namespace ventrue
 		vector<KeySounder*>::iterator end = onKeySounders->end();
 		for (; it != end; it++)
 		{
-			if ((*it)->IsOnningKey(key)) {
+			if ((*it)->IsOnningKey(key) && !(*it)->IsNeedOffKey()) {
 				keySounder = *it;
 				break;
 			}

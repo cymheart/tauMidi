@@ -29,6 +29,7 @@ namespace ventrue
 		downKey = 0;
 		IsHoldInSoundQueue = false;
 		isOnningKey = false;
+		isNeedOffKey = false;
 		virInst = nullptr;
 
 	}
@@ -78,10 +79,12 @@ namespace ventrue
 	// 需要松开按键
 	void KeySounder::NeedOffKey()
 	{
+		isNeedOffKey = true;
+
+		//
 		size_t size = regionSounderList->size();
 		for (int i = 0; i < size; i++)
 			(*regionSounderList)[i]->NeedOffKey();
-
 	}
 
 	// 生成当前按键区域的独占类表

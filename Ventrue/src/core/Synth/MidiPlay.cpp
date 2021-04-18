@@ -7,6 +7,7 @@
 #include"Midi/MidiTrack.h"
 #include"Midi/MidiFile.h"
 #include"VirInstrument.h"
+#include"Preset.h"
 
 namespace ventrue
 {
@@ -228,9 +229,11 @@ namespace ventrue
 			if (preset == nullptr)
 				return;
 
+
 			VirInstrument* virInst = ventrue->EnableVirInstrument(preset, &channel);
 			virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1, false);
 
+			//printf("%s:%d\n", virInst->GetPreset()->name.c_str(), channel.GetProgramNum());
 			//对缺少对应关闭音符事件的NoteOn，在辅助轨道上添加一个0.5s后关闭的事件
 			if (noteOnEv->noteOffEvent == nullptr)
 			{
@@ -291,6 +294,8 @@ namespace ventrue
 			Channel* channel = (*trackList[trackIdx])[ev->channel];
 			channel->SetControllerValue(ev->ctrlType, ev->value);
 			ventrue->ModulationVirInstParams(channel);
+
+
 		}
 		break;
 		}

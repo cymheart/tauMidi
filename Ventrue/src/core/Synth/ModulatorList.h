@@ -41,9 +41,6 @@ namespace ventrue
 		//根据指定类型关闭内部预设调制器
 		void CloseInsidePresetModulator(ModInputPreset modPresetType);
 
-		//生成内部颤音调制器
-		void CreateInsideVibModulator();
-
 		//关闭所有内部调制器
 		void CloseAllInsideModulator();
 
@@ -65,6 +62,9 @@ namespace ventrue
 
 		//生成内部SustainPedalOnOff调制器
 		void CreateInsideSustainPedalOnOffModulator();
+
+		//生成内部ModulationWheel调制器
+		void CreateInsideModulationWheelModulator();
 
 		//生成内部滑音调制器
 		void CreateInsidePitchBendModulator();

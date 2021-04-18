@@ -72,6 +72,13 @@ namespace ventrue
 			return isOnningKey;
 		}
 
+		// 判断是否需要释放按键  
+		inline bool IsNeedOffKey()
+		{
+			return isNeedOffKey;
+		}
+
+
 		//是否保持按键状态
 		bool IsHoldDownKey();
 
@@ -129,6 +136,7 @@ namespace ventrue
 
 		//是否正在按键
 		bool isOnningKey = false;
+		bool isNeedOffKey = false;
 
 		RegionSounderList* regionSounderList = nullptr;
 

@@ -712,7 +712,9 @@ namespace ventrue {
 		{
 			isHold = false;
 		}
-		else { isHold = true; }
+		else {
+			isHold = true;
+		}
 
 		//设置是否保持按键状态
 		if (isDownNoteKey == false)
