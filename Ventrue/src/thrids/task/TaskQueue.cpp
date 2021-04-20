@@ -56,17 +56,29 @@ namespace task
 	//增加数据任务到自身线程数据任务列表
 	void TaskQueue::AddToWriteListSelfThread(Task* task)
 	{
-		TaskList::iterator iter = writeListSelfThread->begin();
-		for (; iter != writeListSelfThread->end(); iter++)
+		if (task->GetPriority() == TASK_MAX_PRIORITY)
 		{
-			if (task->GetPriority() < (*iter)->GetPriority())
-				break;
-		}
-
-		if (iter != writeListSelfThread->end())
-			writeListSelfThread->insert(iter, task);
-		else
 			writeListSelfThread->push_back(task);
+		}
+		else if (task->GetPriority() == TASK_MIN_PRIORITY)
+		{
+			writeListSelfThread->push_front(task);
+		}
+		else
+		{
+			TaskList::iterator iter = writeListSelfThread->begin();
+			for (; iter != writeListSelfThread->end(); iter++)
+			{
+				if (task->GetPriority() < (*iter)->GetPriority())
+					break;
+			}
+
+			if (iter != writeListSelfThread->end())
+				writeListSelfThread->insert(iter, task);
+			else
+				writeListSelfThread->push_back(task);
+
+		}
 	}
 
 	//增加定时任务到自身线程定时任务列表
@@ -79,17 +91,28 @@ namespace task
 	//增加其他线程过来的数据任务到数据任务列表
 	void TaskQueue::AddToWriteList(Task* task)
 	{
-		TaskList::iterator iter = writeList->begin();
-		for (; iter != writeList->end(); iter++)
+		if (task->GetPriority() == TASK_MAX_PRIORITY)
 		{
-			if (task->GetPriority() < (*iter)->GetPriority())
-				break;
-		}
-
-		if (iter != writeList->end())
-			writeList->insert(iter, task);
-		else
 			writeList->push_back(task);
+		}
+		else if (task->GetPriority() == TASK_MIN_PRIORITY)
+		{
+			writeList->push_front(task);
+		}
+		else
+		{
+			TaskList::iterator iter = writeList->begin();
+			for (; iter != writeList->end(); iter++)
+			{
+				if (task->GetPriority() < (*iter)->GetPriority())
+					break;
+			}
+
+			if (iter != writeList->end())
+				writeList->insert(iter, task);
+			else
+				writeList->push_back(task);
+		}
 	}
 
 	//增加其它线程过来的定时任务到定时任务列表*/

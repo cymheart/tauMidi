@@ -235,7 +235,12 @@ namespace ventrue
 			}
 		}
 
+		//限制新的计算值的范围
+		instValue = modifyedGenList->LimitValueRange(genType, instValue);
+
+		//
 		float oldInstValue = modifyedGenList->GetAmount(genType);
+
 		if (abs(oldInstValue - instValue) < 0.0001f) {
 			isModedInstGenTypes[(int)genType] = false;
 		}

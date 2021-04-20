@@ -169,7 +169,6 @@ namespace ventrue
 	{
 		CalRealHoldSec();
 		CalRealDecaySec();
-		curtValue = 0;
 		baseSec = 0;
 		curtSec = sec;
 		isFastRelease = false;

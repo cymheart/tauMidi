@@ -20,7 +20,7 @@ namespace task
 		inline void SetPriority(int priority)
 		{
 			if (priority > TASK_MAX_PRIORITY) priority = TASK_MAX_PRIORITY;
-			if (priority < TASK_MAX_PRIORITY) priority = TASK_MAX_PRIORITY;
+			if (priority < TASK_MIN_PRIORITY) priority = TASK_MIN_PRIORITY;
 			this->priority = priority;
 		}
 
@@ -47,7 +47,7 @@ namespace task
 		bool isSysReleaseTask = true;
 
 		//执行的优先顺序值，越小的值，意味着越早执行
-		int priority = 0;
+		int priority = TASK_MAX_PRIORITY;
 
 		bool isRemove = false;
 

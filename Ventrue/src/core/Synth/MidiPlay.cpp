@@ -134,19 +134,19 @@ namespace ventrue
 		{
 			isOpen = true;
 			for (int i = 0; i < trackList.size(); i++)
-				trackList[i]->startSec = sec;
+				trackList[i]->baseTickTime = sec;
 
-			assistTrack->startSec = sec;
+			assistTrack->baseTickTime = sec;
 
 			if (gotoSec > 0)
 			{
 				isDirectGoto = true;
-				TrackPlayCore(sec + gotoSec);
+				TrackPlayCore(gotoSec + sec);
 				isDirectGoto = false;
 			}
 		}
 
-		TrackPlayCore(sec + gotoSec);
+		TrackPlayCore(gotoSec + sec);
 	}
 
 
@@ -206,13 +206,15 @@ namespace ventrue
 			TempoEvent* tempoEv = (TempoEvent*)midEv;
 
 			// 设置轨道速度
-			trackList[trackIdx]->SetTempo(tempoEv->microTempo, midiFile->GetTickForQuarterNote(), sec);
+			trackList[trackIdx]->SetTempo(tempoEv->microTempo, midiFile->GetTickForQuarterNote(), tempoEv->startTick);
+			trackList[trackIdx]->CalCurtTicksCount(sec);
 
 			if (midiFile->GetFormat() == MidiFileFormat::SyncTracks)
 			{
 				for (int i = 1; i < trackList.size(); i++)
 				{
-					trackList[i]->SetTempo(tempoEv->microTempo, midiFile->GetTickForQuarterNote(), sec);
+					trackList[i]->SetTempo(tempoEv->microTempo, midiFile->GetTickForQuarterNote(), tempoEv->startTick);
+					trackList[i]->CalCurtTicksCount(sec);
 				}
 			}
 		}
@@ -294,8 +296,6 @@ namespace ventrue
 			Channel* channel = (*trackList[trackIdx])[ev->channel];
 			channel->SetControllerValue(ev->ctrlType, ev->value);
 			ventrue->ModulationVirInstParams(channel);
-
-
 		}
 		break;
 		}

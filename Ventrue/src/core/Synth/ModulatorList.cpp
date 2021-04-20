@@ -228,7 +228,7 @@ namespace ventrue
 		mod->SetOutTarget(GeneratorType::VibLfoToPitch);
 		mod->SetOutModulationType(ModulationType::Add);
 		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 0);
-		mod->SetAmount(70);
+		mod->SetAmount(50);
 		insideCtrlMod[(int)MidiControllerType::ModulationWheelMSB] = mod;
 	}
 

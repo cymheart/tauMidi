@@ -17,7 +17,8 @@ namespace task
 	using TaskCallBack = void (*)(Task* task);
 	using TaskList = list<Task*>;
 
-#define TASK_MAX_PRIORITY 99
+#define TASK_MAX_PRIORITY 100000
+#define TASK_MIN_PRIORITY -1
 
 	enum TaskMsg
 	{

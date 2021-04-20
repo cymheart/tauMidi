@@ -22,14 +22,17 @@ namespace ventrue
 		/// </summary>
 		/// <param name="microTempo">一个四分音符的微秒数</param>
 		/// <param name="tickForQuarterNote">一个四分音符的tick数</param>
-		/// <param name="sec">当前时间点</param>
-		void SetTempo(float microTempo, float tickForQuarterNote, double sec);
+		/// <param name="startTick">开始设置速度的tick数</param>
+		void SetTempo(float microTempo, float tickForQuarterNote, int startTickCount);
 
 		//根据当前时间点,计算已经过的tick的数量   
 		void CalCurtTicksCount(double sec);
 
 		//根据给定时间点获取tick的数量
 		uint32_t GetTickCount(double sec);
+
+		//根据给定tick数量获取时间点
+		double GetTickSec(int tickCount);
 
 	public:
 
@@ -63,7 +66,6 @@ namespace ventrue
 		// 重新调整播放速度前，已经过tick数量
 		uint32_t baseTickCount = 0;
 		double baseTickTime = 0;
-		double startSec = 0;
 
 		/// <summary>
 		/// 当前已经过的tick个数

@@ -31,7 +31,6 @@ namespace ventrue
 		BPM = 120;
 		eventOffsetIdx = 0;
 		curtTickCount = 0;
-		startSec = 0;
 		baseTickCount = 0;
 		baseTickTime = 0;
 		isEnded = false;
@@ -49,17 +48,13 @@ namespace ventrue
 	/// </summary>
 	/// <param name="microTempo">一个四分音符的微秒数</param>
 	/// <param name="tickForQuarterNote">一个四分音符的tick数</param>
-	/// <param name="sec">当前时间点</param>
-	void Track::SetTempo(float microTempo, float tickForQuarterNote, double sec)
+	/// <param name="startTick">开始设置速度的tick数</param>
+	void Track::SetTempo(float microTempo, float tickForQuarterNote, int startTickCount)
 	{
-		//先计算curtTickCount
-		CalCurtTicksCount(sec);
-
-		//
+		baseTickTime = GetTickSec(startTickCount);
 		msPerTick = microTempo / tickForQuarterNote * 0.001f;
 		BPM = 60000000 / microTempo;  //60000000: 1分钟的微秒数
-		baseTickCount = curtTickCount;
-		baseTickTime = (float)(sec - startSec);
+		baseTickCount = startTickCount;
 	}
 
 	/// <summary>  
@@ -71,10 +66,15 @@ namespace ventrue
 		curtTickCount = GetTickCount(sec);
 	}
 
-
 	//根据给定时间点获取tick的数量
 	uint32_t Track::GetTickCount(double sec)
 	{
-		return baseTickCount + (uint32_t)((sec - startSec - baseTickTime) * 1000 / msPerTick);
+		return baseTickCount + (uint32_t)((sec - baseTickTime) * 1000 / msPerTick);
+	}
+
+	//根据给定tick数量获取时间点
+	double Track::GetTickSec(int tickCount)
+	{
+		return baseTickTime + (tickCount - baseTickCount) * msPerTick / 1000;
 	}
 }
