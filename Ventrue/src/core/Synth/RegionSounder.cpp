@@ -116,7 +116,7 @@ namespace ventrue {
 		sampleStartLoopIdx = 0;
 		sampleEndLoopIdx = 0;
 		sampleProcessBlockSize = 64;
-		invSampleProcessBlockSize = 1 / sampleProcessBlockSize;
+		invSampleProcessBlockSize = 1.0f / sampleProcessBlockSize;
 		childFrameSampleCount = 64;
 		sampleProcessRate = 44100;
 		curtCalBasePitchMul = 1;
@@ -957,7 +957,7 @@ namespace ventrue {
 		if (leftChannelSamples == nullptr || rightChannelSamples == nullptr)
 			return true;
 
-		int offset = childFrameSampleCount * 0.1f;
+		int offset = (int)(childFrameSampleCount * 0.1f);
 		for (int i = 0; i < childFrameSampleCount; i += offset)
 		{
 			//注意此处0.0001f值不能设置过大，默认为0.0001f，过大，会截断声音

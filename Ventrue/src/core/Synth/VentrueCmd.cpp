@@ -110,6 +110,7 @@ namespace ventrue
 		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
 		Ventrue& ventrue = *(ventrueEvent->ventrue);
 		MidiFile* midiFile = new MidiFile();
+		midiFile->SetTrackChannelMergeMode(ventrue.GetTrackChannelMergeMode());
 		midiFile->Parse(ventrueEvent->midiFilePath);
 		ventrue.midiFileList->push_back(midiFile);
 	}

@@ -55,6 +55,10 @@ namespace ventrue
 		/// 对应音轨事件队列的当前处理位置
 		/// </summary>
 		int eventOffsetIdx = 0;
+		// <summary>
+		/// 对应音轨事件队列的当前处理位置
+		/// </summary>
+		list<MidiEvent*>::iterator eventOffsetIter;
 
 		//是否播放结束
 		bool isEnded = false;

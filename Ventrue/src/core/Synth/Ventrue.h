@@ -24,6 +24,8 @@ namespace ventrue
 		// 开启声音播放引擎
 		void OpenAudio();
 
+
+
 		//设置是否使用多线程
 		//使用多线程渲染处理声音
 		//多线程渲染在childFrameSampleCount比较小的情况下(比如小于64时)，由于在一大帧中线程调用太过频繁，线程切换的消耗大于声音渲染的时间
@@ -52,6 +54,19 @@ namespace ventrue
 		{
 			return renderQuality;
 		}
+
+		//设置轨道通道合并模式
+		inline void SetTrackChannelMergeMode(TrackChannelMergeMode mode)
+		{
+			mergeMode = mode;
+		}
+
+		//获取轨道通道合并模式
+		inline TrackChannelMergeMode GetTrackChannelMergeMode()
+		{
+			return mergeMode;
+		}
+
 
 		//增加一个解析格式类型
 		void AddSoundFontParser(string formatName, SoundFontParser* sfParser);
@@ -412,6 +427,8 @@ namespace ventrue
 		//但在测试同时发音数量很高的midi音乐时，多线程的效率非常高，播放也稳定
 		bool useMulThreads = false;
 
+		//轨道通道合并模式
+		TrackChannelMergeMode mergeMode = TrackChannelMergeMode::AutoMerge;
 
 		//
 		SampleList* sampleList = nullptr;
@@ -525,6 +542,7 @@ namespace ventrue
 		friend class VirInstrument;
 		friend class MidiPlay;
 		friend class RegionSounderThread;
+		friend class KeySounder;
 	};
 }
 

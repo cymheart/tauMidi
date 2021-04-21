@@ -150,31 +150,6 @@ namespace ventrue
 	//执行松开按键
 	void VirInstrument::OffKey(int key, float velocity, bool isRealTime)
 	{
-		auto eventIter = onkeyEventMap->find(key);
-		if (eventIter != onkeyEventMap->end())
-		{
-			list<KeyEvent>& keyEventList = eventIter->second;
-			list<KeyEvent>::iterator it = keyEventList.begin();
-			list<KeyEvent>::iterator end = keyEventList.end();
-			for (; it != end; it++)
-			{
-				KeyEvent& keyEvent = *it;
-				if (keyEvent.key == key &&
-					keyEvent.isOnKey == true &&
-					keyEvent.isRealTime == isRealTime)
-				{
-					keyEventList.erase(it);
-
-					if (keyEventList.size() == 0)
-						onkeyEventMap->erase(eventIter);
-
-					return;
-				}
-			}
-		}
-
-
-		//
 		KeyEvent keyEvent;
 		keyEvent.isOnKey = false;
 		keyEvent.key = key;
@@ -256,7 +231,9 @@ namespace ventrue
 			!keySounder->IsHoldInSoundQueue))
 			return;
 
-		if (keySounder->IsHoldDownKey() && !useMonoMode)
+		if (!keySounder->IsSoundEnd() &&
+			keySounder->IsHoldDownKey() &&
+			!useMonoMode)
 		{
 			keySounder->NeedOffKey();
 			return;
@@ -268,9 +245,10 @@ namespace ventrue
 
 		keySounder->IsHoldInSoundQueue = false;
 		keySounder->OffKey(velocity);
+
 		RemoveOnKeyStateSounder(keySounder);
 
-		//单音模式中会保持按下的按键按键历史队列当中，当释放一个发音按键后
+		//单音模式中会保持按下的按键按键历史队列当中，当释放历史队列中最后一个发音按键后
 		//倒数第二个保持按键状态的按键将重新发音
 		if (useMonoMode && lastOnKeySounder == keySounder)
 		{
@@ -633,8 +611,6 @@ namespace ventrue
 	// 移除已完成所有区域发声处理(采样处理)的KeySounder      
 	void VirInstrument::RemoveProcessEndedKeySounder()
 	{
-		//	printf("当前乐器发声按键总数:%d\n", keySounders->size());
-
 		int offIdx = 0;
 		KeySounderList::iterator it = keySounders->begin();
 		for (; it != keySounders->end(); )
@@ -644,7 +620,9 @@ namespace ventrue
 			{
 				if (keySounder->IsOnningKey())
 				{
-					offKeySounder[offIdx++] = keySounder;
+					if (keySounder->IsNeedOffKey() && !useMonoMode)
+						offKeySounder[offIdx++] = keySounder;
+
 					it++;
 					continue;
 				}

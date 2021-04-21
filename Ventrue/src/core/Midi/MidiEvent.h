@@ -22,7 +22,7 @@ namespace ventrue
 		/// <summary>
 		/// 事件相关通道
 		/// </summary>
-		int channel = 0;
+		int channel = -1;
 
 	};
 

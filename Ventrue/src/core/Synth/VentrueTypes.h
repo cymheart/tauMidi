@@ -35,6 +35,7 @@ namespace ventrue
 	class Channel;
 	class Track;
 	class MidiFile;
+	class MidiEvent;
 	class GeneratorList;
 	class RegionSounderThread;
 	class RegionSounderThreadData;

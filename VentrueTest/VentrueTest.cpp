@@ -81,8 +81,9 @@ int main(int argc, char* argv[])
 	ventrue->SetFrameSampleCount(512);
 	ventrue->SetSampleProcessRate(44100);
 	ventrue->SetChildFrameSampleCount(64);
-	ventrue->SetLimitRegionSounderCount(600);
-	//ventrue->SetRenderQuality(RenderQuality::SuperHigh);
+	ventrue->SetLimitRegionSounderCount(700);
+	ventrue->SetTrackChannelMergeMode(AutoMerge);
+	ventrue->SetRenderQuality(RenderQuality::SuperHigh);
 	//ventrue->SetUseMulThread(true);
 	//ventrue->SetChannelOutputMode(ChannelOutputMode::Mono);
 	//ventrue->SetUsePortamento(true);
@@ -121,20 +122,22 @@ int main(int argc, char* argv[])
 	//cmd->AppendMidiFile(midiPath + "learning\\ShiNian.mid");
 	//cmd->AppendMidiFile(midiPath + "(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\Brainiac Maniac 2.mid");
-	//cmd->AppendMidiFile(midiPath + "song100\\044.mid");
+	//cmd->AppendMidiFile(midiPath + "song100\\060.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\剑之心(Heart_Of_Sword).mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\Promise.mid");
 	cmd->AppendMidiFile(midiPath + "笑傲江湖.mid");
 	//cmd->AppendMidiFile(midiPath + "笑傲江湖3.mid");
+	//cmd->AppendMidiFile(midiPath + "test.mid");
 	//播放第1个midi文件
 	cmd->PlayMidi(0);
 	//播放第2个midi文件
 	//cmd->PlayMidi(1);
 
 	//cmd->DisableAllMidiTrack(0);
-	//cmd->EnableMidiTrack(0, 7);
-	//cmd->DisableMidiTrack(0, 1);
-	//cmd->MidiGotoSec(0, 3 * 60 - 20);
+	//cmd->EnableMidiTrack(0, 9);
+
+	//cmd->DisableMidiTrack(0, 9);
+	//cmd->MidiGotoSec(0, 45);
 
 
 	//去掉注释,弹奏测试

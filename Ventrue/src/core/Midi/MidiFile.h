@@ -15,33 +15,40 @@ namespace ventrue
 		MidiFile();
 		~MidiFile();
 
+		//设置轨道通道合并模式
+		inline void SetTrackChannelMergeMode(TrackChannelMergeMode mode)
+		{
+			mergeMode = mode;
+		}
+
+
 		// 获取文件格式
-		MidiFileFormat GetFormat()
+		inline MidiFileFormat GetFormat()
 		{
 			return format;
 		}
 
 		//设置格式
-		void SetFormat(MidiFileFormat format)
+		inline void SetFormat(MidiFileFormat format)
 		{
 			this->format = format;
 		}
 
 		// 获取一个四分音符的tick数
-		float GetTickForQuarterNote()
+		inline float GetTickForQuarterNote()
 		{
 			return tickForQuarterNote;
 		}
 
 		// 设置一个四分音符的tick数
-		void SetTickForQuarterNote(float tickForQuarterNote)
+		inline void SetTickForQuarterNote(float tickForQuarterNote)
 		{
 			this->tickForQuarterNote = (short)tickForQuarterNote;
 		}
 
-		MidiTrackList* GetTrackList()
+		inline MidiTrackList* GetTrackList()
 		{
-			return midiTrackList;
+			return &midiTrackList;
 		}
 
 		//增加一个Midi轨道
@@ -57,6 +64,11 @@ namespace ventrue
 		void SaveMidiFormatMemDataToDist(string saveFilePath);
 
 	private:
+
+		//合并轨道通道
+		void MergeTrackChannels();
+		bool CanMergeTrackChannels(list<MidiEvent*>* eventListA, list<MidiEvent*>* eventListB);
+
 		//解析内核
 		bool ParseCore();
 		//解析头块
@@ -88,6 +100,9 @@ namespace ventrue
 
 		bool isLittleEndianSystem = true;
 
+		//轨道通道合并模式
+		TrackChannelMergeMode mergeMode = TrackChannelMergeMode::AutoMerge;
+
 		// 最后解析的事件号
 		byte lastParseEventNum = 0;
 
@@ -107,7 +122,7 @@ namespace ventrue
 		short tickForQuarterNote = 480;
 
 
-		MidiTrackList* midiTrackList = nullptr;
+		MidiTrackList midiTrackList;
 
 	};
 }

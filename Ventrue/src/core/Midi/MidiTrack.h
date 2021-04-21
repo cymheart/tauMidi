@@ -32,16 +32,28 @@ namespace ventrue
 		/// 获取事件列表
 		/// </summary>
 		/// <returns></returns>
-		inline MidiEventList* GetEventList();
+		inline list<MidiEvent*>* GetEventList()
+		{
+			return &midiEventList;
+		}
+
+		/// <summary>
+		/// 获取通道分类的事件列表
+		/// </summary>
+		/// <returns></returns>
+		inline MidiEventList* GetEventListAtChannel()
+		{
+			return midiEventListAtChannel;
+		}
 
 		/// <summary>
 		/// 获取事件数量
 		/// </summary>
 		/// <returns></returns>
-		inline int GetEventCount();
-
-
-
+		inline int GetEventCount()
+		{
+			return (int)midiEventList.size();
+		}
 
 		/// <summary>
 		/// 寻找匹配的NoteOnEvent
@@ -55,7 +67,8 @@ namespace ventrue
 		void ChangeMidiEventsTickForQuarterNote(float changedTickForQuarterNote);
 
 	private:
-		MidiEventList* midiEventList;
+		list<MidiEvent*> midiEventList;
+		MidiEventList midiEventListAtChannel[16];
 
 		//一个四分音符所要弹奏的tick数,默认值120
 		float tickForQuarterNote = 120;
@@ -64,24 +77,6 @@ namespace ventrue
 
 	};
 
-
-	/// <summary>
-	/// 获取事件列表
-	/// </summary>
-	/// <returns></returns>
-	MidiEventList* MidiTrack::GetEventList()
-	{
-		return midiEventList;
-	}
-
-	/// <summary>
-	/// 获取事件数量
-	/// </summary>
-	/// <returns></returns>
-	int MidiTrack::GetEventCount()
-	{
-		return (int)midiEventList->size();
-	}
 }
 
 #endif

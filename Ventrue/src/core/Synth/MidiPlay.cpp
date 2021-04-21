@@ -133,8 +133,13 @@ namespace ventrue
 		if (isOpen == false)
 		{
 			isOpen = true;
+			list<MidiEvent*>* eventList;
 			for (int i = 0; i < trackList.size(); i++)
+			{
+				eventList = (*midiTrackList)[i]->GetEventList();
+				trackList[i]->eventOffsetIter = eventList->begin();
 				trackList[i]->baseTickTime = sec;
+			}
 
 			assistTrack->baseTickTime = sec;
 
@@ -152,7 +157,9 @@ namespace ventrue
 
 	void MidiPlay::TrackPlayCore(double sec)
 	{
-		MidiEventList* eventList;
+		list<MidiEvent*>* eventList;
+		MidiEvent* ev;
+
 		for (int i = 0; i < trackList.size(); i++)
 		{
 			if (trackList[i]->isEnded)
@@ -161,23 +168,26 @@ namespace ventrue
 			trackList[i]->CalCurtTicksCount(sec);
 
 			eventList = (*midiTrackList)[i]->GetEventList();
-			int j = trackList[i]->eventOffsetIdx;
-
-			for (; j < eventList->size(); j++)
+			list<MidiEvent*>::iterator it = trackList[i]->eventOffsetIter;
+			list<MidiEvent*>::iterator end = eventList->end();
+			for (; it != end; it++)
 			{
-				if ((*eventList)[j]->startTick > trackList[i]->curtTickCount)
+				ev = *it;
+
+				if (ev->startTick > trackList[i]->curtTickCount)
 				{
-					trackList[i]->eventOffsetIdx = j;
+					trackList[i]->eventOffsetIter = it;
 					break;
 				}
 
-				ProcessTrackEvent((*eventList)[j], i, sec);
+				ProcessTrackEvent(ev, i, sec);
 			}
 
-			if (j == eventList->size())
+			if (it == end)
 			{
 				trackList[i]->isEnded = true;
 			}
+
 		}
 
 

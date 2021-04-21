@@ -12,14 +12,12 @@ namespace ventrue
 		midiWriter = new ByteStream();
 
 		isLittleEndianSystem = JudgeLittleOrBigEndianSystem();
-		midiTrackList = new MidiTrackList;
 	}
 
 	MidiFile::~MidiFile()
 	{
 		DEL(midiReader);
 		DEL(midiWriter);
-		DEL_OBJS_VECTOR(midiTrackList);
 	}
 
 	// 解析文件到可识别数据结构
@@ -52,13 +50,148 @@ namespace ventrue
 		midiReader->clear();
 	}
 
+	//合并轨道通道
+	void MidiFile::MergeTrackChannels()
+	{
+		MidiEventList* eventListAtChannelA;
+		MidiEventList* eventListAtChannelB;
+		list<MidiEvent*>* eventListA;
+		list<MidiEvent*>* eventListB;
+
+		for (int i = 0; i < midiTrackList.size() - 1; i++)
+		{
+			eventListAtChannelA = midiTrackList[i]->GetEventListAtChannel();
+			eventListA = midiTrackList[i]->GetEventList();
+
+			if (eventListA->empty())
+				continue;
+
+			bool isEmptyChannelA = true;
+			for (int n = 0; n < 16; n++)
+			{
+				if (eventListAtChannelA[n].size() != 0) {
+					isEmptyChannelA = false;
+					break;
+				}
+			}
+
+			if (isEmptyChannelA)
+				continue;
+
+			for (int j = i + 1; j < midiTrackList.size(); j++)
+			{
+				eventListAtChannelB = midiTrackList[j]->GetEventListAtChannel();
+				eventListB = midiTrackList[j]->GetEventList();
+
+				for (int n = 0; n < 16; n++)
+				{
+					if (eventListAtChannelA[n].size() == 0 ||
+						eventListAtChannelB[n].size() == 0)
+						continue;
+
+					if (mergeMode == AutoMerge &&
+						!CanMergeTrackChannels(eventListA, eventListB))
+						continue;
+
+					//
+					list<MidiEvent*>::iterator itA = eventListA->begin();
+					list<MidiEvent*>::iterator itB = eventListB->begin();
+					MidiEvent* evB;
+					for (; itB != eventListB->end(); )
+					{
+						evB = *itB;
+						if (evB->channel != n) {
+							itB++;
+							continue;
+						}
+
+						for (; itA != eventListA->end(); itA++)
+						{
+							if (evB->startTick <= (*itA)->startTick)
+							{
+								eventListA->insert(itA, evB);
+								break;
+							}
+						}
+
+						if (itA == eventListA->end())
+						{
+							eventListA->push_back(evB);
+						}
+
+						itB = eventListB->erase(itB);
+					}
+
+					eventListAtChannelB[n].clear();
+				}
+			}
+		}
+
+		//
+		MidiTrackList tmp;
+		for (int i = 0; i < midiTrackList.size(); i++)
+		{
+			list<MidiEvent*>* eventList = midiTrackList[i]->GetEventList();
+			if (eventList->empty()) {
+				delete midiTrackList[i];
+				continue;
+			}
+
+			tmp.push_back(midiTrackList[i]);
+		}
+
+		if (tmp.size() == midiTrackList.size())
+			return;
+
+		midiTrackList.clear();
+		for (int i = 0; i < tmp.size(); i++)
+			midiTrackList.push_back(tmp[i]);
+	}
+
+	bool MidiFile::CanMergeTrackChannels(list<MidiEvent*>* eventListA, list<MidiEvent*>* eventListB)
+	{
+		list<MidiEvent*>::iterator itA = eventListA->begin();
+		MidiEvent* evA;
+		bool isHavProgramChangeA = false;
+		for (; itA != eventListA->end(); itA++)
+		{
+			evA = *itA;
+			if (evA->startTick > 0)
+				break;
+
+			if (evA->type == MidiEventType::ProgramChange) {
+				isHavProgramChangeA = true;
+				break;
+			}
+
+		}
+
+		list<MidiEvent*>::iterator itB = eventListB->begin();
+		MidiEvent* evB;
+		bool isHavProgramChangeB = false;
+		for (; itB != eventListB->end(); itB++)
+		{
+			evB = *itB;
+			if (evB->startTick > 0)
+				break;
+
+			if (evB->type == MidiEventType::ProgramChange) {
+				isHavProgramChangeB = true;
+				break;
+			}
+		}
+
+		if ((isHavProgramChangeA && isHavProgramChangeB) ||
+			(!isHavProgramChangeA && !isHavProgramChangeB))
+			return false;
+
+		return true;
+	}
+
 	//增加一个Midi轨道
 	void MidiFile::AddMidiTrack(MidiTrack* midiTrack)
 	{
-		if (midiTrackList == nullptr)
-			midiTrackList = new MidiTrackList();
-
-		midiTrackList->push_back(midiTrack);
+		midiTrackList.push_back(midiTrack);
 		trackCount++;
 	}
 
@@ -79,6 +212,9 @@ namespace ventrue
 			if (ret == -1)
 				return false;
 		}
+
+		if (mergeMode == AutoMerge || mergeMode == AlwaysMerge)
+			MergeTrackChannels();
 
 		return true;
 	}
@@ -168,7 +304,7 @@ namespace ventrue
 		}
 
 		if (track->GetEventCount() != 0)
-			midiTrackList->push_back(track);
+			midiTrackList.push_back(track);
 
 		return parseRet;
 	}
@@ -322,6 +458,33 @@ namespace ventrue
 			byte type = midiReader->read<byte>();
 			switch (type)
 			{
+			case 0x03:
+			case 0x04:
+			{
+				TextEvent* textEvent = new TextEvent();
+
+				switch (type)
+				{
+				case 0x03: textEvent->textType = MidiTextType::TrackName; break;
+				case 0x04: textEvent->textType = MidiTextType::InstrumentName; break;
+				}
+
+				uint32_t len = ReadDynamicValue(*midiReader);
+				if (len != 0)
+				{
+					byte* byteCodes = (byte*)malloc(len);
+					midiReader->read(byteCodes, 0, len);
+					byteCodes[len - 1] = 0;
+					if (byteCodes != nullptr) {
+						textEvent->text.assign((const char*)byteCodes);
+						free(byteCodes);
+					}
+				}
+
+				track.AddEvent(textEvent);
+			}
+			break;
+
 			case 0x51:
 			{
 				midiReader->read<byte>();
@@ -410,7 +573,7 @@ namespace ventrue
 
 		CreateHeaderChunk();
 
-		for (int i = 0; i < midiTrackList->size(); i++)
+		for (int i = 0; i < midiTrackList.size(); i++)
 		{
 			curtParseTickCount = 0;
 			CreateTrackChuck(i);
@@ -454,7 +617,7 @@ namespace ventrue
 	//生成轨道块
 	int MidiFile::CreateTrackChuck(int trackIdx)
 	{
-		MidiTrack& track = *(*midiTrackList)[trackIdx];
+		MidiTrack& track = *midiTrackList[trackIdx];
 
 		//
 		byte headerType[4] = { 'M','T','r','k' };
@@ -463,11 +626,13 @@ namespace ventrue
 		//len
 		size_t writeLenPos = midiWriter->getWriteCursor();
 		midiWriter->write((int)0);
-		MidiEventList* midiEvents = track.GetEventList();
 
-		for (int i = 0; i < midiEvents->size(); i++)
+		list<MidiEvent*>* midiEvents = track.GetEventList();
+		list<MidiEvent*>::iterator it = midiEvents->begin();
+		list<MidiEvent*>::iterator end = midiEvents->end();
+		for (; it != end; it++)
 		{
-			CreateEventData(*(*midiEvents)[i]);
+			CreateEventData(*(*it));
 		}
 
 		//结尾: 00FF2F00
@@ -635,7 +800,6 @@ namespace ventrue
 
 		return 0; //继续解析当前音轨数据
 	}
-
 
 	//读取变长值
 	uint32_t MidiFile::ReadDynamicValue(ByteStream& reader, int maxByteCount)

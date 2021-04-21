@@ -89,6 +89,18 @@ namespace ventrue
 			return downKey;
 		}
 
+		// 获取按键按下时间点
+		inline float GetOnKeySec()
+		{
+			return downKeySec;
+		}
+
+		// 获取发声结束时间点
+		inline float GetSoundEndSec()
+		{
+			return soundEndSec;
+		}
+
 		// 获取力度   
 		inline float GetVelocity()
 		{
@@ -109,6 +121,8 @@ namespace ventrue
 
 		//调制生成器参数     
 		void ModulationParams();
+
+
 
 
 	private:
@@ -132,11 +146,16 @@ namespace ventrue
 
 		KeySounderID id = 0;
 		int downKey = 0;
+		float downKeySec = 0;
+		float soundEndSec = 0;
 		float velocity = 0;
 
 		//是否正在按键
 		bool isOnningKey = false;
 		bool isNeedOffKey = false;
+		bool isSoundEnd = false;
+
+
 
 		RegionSounderList* regionSounderList = nullptr;
 

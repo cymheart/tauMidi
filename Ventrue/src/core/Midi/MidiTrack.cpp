@@ -5,19 +5,20 @@ namespace ventrue
 {
 	MidiTrack::MidiTrack()
 	{
-		midiEventList = new MidiEventList;
+
 	}
 
 	MidiTrack::MidiTrack(const MidiTrack& obj)
 	{
-		midiEventList = new MidiEventList;
-
-		MidiEventList* cpyMidiEventList = obj.midiEventList;
+		list<MidiEvent*>& cpyMidiEventList = ((MidiTrack&)obj).midiEventList;
 		MidiEvent* midiEvent = nullptr;
 		MidiEvent* cpyMidiEvent;
-		for (int i = 0; i < cpyMidiEventList->size(); i++)
+
+		list<MidiEvent*>::iterator it = cpyMidiEventList.begin();
+		list<MidiEvent*>::iterator end = cpyMidiEventList.end();
+		for (; it != end; it++)
 		{
-			cpyMidiEvent = (*cpyMidiEventList)[i];
+			cpyMidiEvent = *it;
 
 			switch (cpyMidiEvent->type)
 			{
@@ -94,7 +95,13 @@ namespace ventrue
 
 	MidiTrack::~MidiTrack()
 	{
-		DEL_OBJS_VECTOR(midiEventList);
+		list<MidiEvent*>::iterator it = midiEventList.begin();
+		list<MidiEvent*>::iterator end = midiEventList.end();
+		for (; it != end; it++)
+		{
+			delete* it;
+		}
+		midiEventList.clear();
 	}
 
 
@@ -104,7 +111,10 @@ namespace ventrue
 	/// <param name="ev"></param>
 	void MidiTrack::AddEvent(MidiEvent* ev)
 	{
-		midiEventList->push_back(ev);
+		midiEventList.push_back(ev);
+
+		if (ev->channel >= 0)
+			midiEventListAtChannel[ev->channel].push_back(ev);
 
 		//对noteon事件增加一个map索引，方便noteoff快速找到其对应noteon
 		if (ev->type == MidiEventType::NoteOn)
@@ -140,7 +150,7 @@ namespace ventrue
 	}
 
 	//变换tick
-#define TransTick(orgTick) (dstBaseTick + (orgTick - orgBaseTick) * orgMsPerTick / dstMsPerTick);
+#define TransTick(orgTick) (int)(dstBaseTick + (orgTick - orgBaseTick) * orgMsPerTick / dstMsPerTick);
 
 //改变轨道事件中一个四分音符所要弹奏的tick数
 	void MidiTrack::ChangeMidiEventsTickForQuarterNote(float changedTickForQuarterNote)
@@ -155,9 +165,11 @@ namespace ventrue
 		//修改后的每tick的毫秒数
 		float dstMsPerTick = 0;
 
-		for (int i = 0; i < midiEventList->size(); i++)
+		list<MidiEvent*>::iterator it = midiEventList.begin();
+		list<MidiEvent*>::iterator end = midiEventList.end();
+		for (; it != end; it++)
 		{
-			MidiEvent* midiEvent = (*midiEventList)[i];
+			MidiEvent* midiEvent = *it;
 
 			switch (midiEvent->type)
 			{

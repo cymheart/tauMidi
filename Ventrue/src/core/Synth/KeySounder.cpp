@@ -30,6 +30,7 @@ namespace ventrue
 		IsHoldInSoundQueue = false;
 		isOnningKey = false;
 		isNeedOffKey = false;
+		isSoundEnd = false;
 		virInst = nullptr;
 
 	}
@@ -53,6 +54,7 @@ namespace ventrue
 		ventrue = virInst->GetVentrue();
 		isOnningKey = true;
 		downKey = key;
+		downKeySec = ventrue->sec;
 		this->velocity = velocity;
 		CreateActiveRegionSounderList();
 
@@ -140,12 +142,18 @@ namespace ventrue
 	// 包括了采样处理结束，和效果音残余处理结束
 	bool KeySounder::IsSoundEnd()
 	{
+		if (isSoundEnd)
+			return true;
+
 		size_t size = regionSounderList->size();
 		for (int i = 0; i < size; i++)
 		{
 			if (!(*regionSounderList)[i]->IsSoundEnd())
 				return false;
 		}
+
+		isSoundEnd = true;
+		soundEndSec = ventrue->sec;
 		return true;
 	}
 
