@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 	ventrue->SetChildFrameSampleCount(64);
 	ventrue->SetLimitRegionSounderCount(700);
 	ventrue->SetTrackChannelMergeMode(AutoMerge);
-	ventrue->SetRenderQuality(RenderQuality::SuperHigh);
+	//ventrue->SetRenderQuality(RenderQuality::SuperHigh);
 	//ventrue->SetUseMulThread(true);
 	//ventrue->SetChannelOutputMode(ChannelOutputMode::Mono);
 	//ventrue->SetUsePortamento(true);
