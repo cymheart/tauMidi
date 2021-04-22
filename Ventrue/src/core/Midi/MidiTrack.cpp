@@ -150,7 +150,7 @@ namespace ventrue
 	}
 
 	//变换tick
-#define TransTick(orgTick) (int)(dstBaseTick + (orgTick - orgBaseTick) * orgMsPerTick / dstMsPerTick);
+#define TransTick(orgTick) (int)((dstBaseTick + (orgTick - orgBaseTick) * orgMsPerTick / dstMsPerTick));
 
 //改变轨道事件中一个四分音符所要弹奏的tick数
 	void MidiTrack::ChangeMidiEventsTickForQuarterNote(float changedTickForQuarterNote)

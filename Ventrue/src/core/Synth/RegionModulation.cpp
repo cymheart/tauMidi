@@ -12,13 +12,17 @@ namespace ventrue
 		presetCombGenList->SetType(RegionType::Preset);
 
 		presetRegionModGenList = new GeneratorList();
+		presetRegionModGenList->SetType(RegionType::Preset);
 		presetGlobalRegionModGenList = new GeneratorList();
+		presetGlobalRegionModGenList->SetType(RegionType::Preset);
 
 		instCombGenList = new GeneratorList();
 		instCombGenList->SetType(RegionType::Insttrument);
 
 		instRegionModGenList = new GeneratorList();
+		instRegionModGenList->SetType(RegionType::Insttrument);
 		instGlobalRegionModGenList = new GeneratorList();
+		instGlobalRegionModGenList->SetType(RegionType::Insttrument);
 
 		modsModGenList = new GeneratorList();
 	}
@@ -238,7 +242,7 @@ namespace ventrue
 		//限制新的计算值的范围
 		instValue = modifyedGenList->LimitValueRange(genType, instValue);
 
-		//
+		//与旧值比较，判断是否需要修改，如果和旧值相同，将不作修改
 		float oldInstValue = modifyedGenList->GetAmount(genType);
 
 		if (abs(oldInstValue - instValue) < 0.0001f) {

@@ -111,7 +111,6 @@ namespace ventrue
 		{
 			name.assign((const char*)insts[i]->instrumentName, 20);
 			Instrument* oreInst = ventrue->AddInstrument(name);
-
 			for (size_t j = insts[i]->InstrumentBagIndex; j < insts[i + 1]->InstrumentBagIndex; j++)
 			{
 				region = ParseInstRegionGeneratorList((int)j, oreInst);
@@ -299,7 +298,10 @@ namespace ventrue
 			case SF2Generator::StartAddrsCoarseOffset: genList.SetAmount(GeneratorType::StartAddrsCoarseOffset, val); break;
 			case SF2Generator::ModLfoToPitch: genList.SetAmount(GeneratorType::ModLfoToPitch, val); break;
 			case SF2Generator::VibLfoToPitch: genList.SetAmount(GeneratorType::VibLfoToPitch, val); break;
-			case SF2Generator::ModEnvToPitch: genList.SetAmount(GeneratorType::ModEnvToPitch, val); break;
+
+			case SF2Generator::ModEnvToPitch:
+				genList.SetAmount(GeneratorType::ModEnvToPitch, val);
+				break;
 
 			case SF2Generator::InitialFilterFc:
 
@@ -384,7 +386,7 @@ namespace ventrue
 				break;
 
 			case SF2Generator::SustainModEnv:
-				genList.SetAmount(GeneratorType::SustainModEnv, val / 1000.0f);
+				genList.SetAmount(GeneratorType::SustainModEnv, 1 - val / 1000.0f);
 				break;
 
 			case SF2Generator::ReleaseModEnv:

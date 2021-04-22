@@ -310,6 +310,10 @@ namespace ventrue
 			break;
 
 		case EnvStage::Decay:
+			y = 1 - xNormal;
+			y = range.ymin + y * range.yRangeWidth;
+			break;
+
 		case EnvStage::Release:
 
 			//y = xNormal < 1 ? pow(10.0f, -(xNormal * 200 * 0.05f)) : 0;

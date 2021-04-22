@@ -43,21 +43,26 @@ string GetProgramDir()
 void art(VentrueCmd* cmd)
 {
 	//选择乐器
-	VirInstrument* inst = cmd->EnableVirInstrument(0, 0, 0, 49);
+	//VirInstrument* inst = cmd->EnableVirInstrument(0, 0, 0, 49);
 
 	/*cmd->SetDeviceChannelMidiControllerValue(0, MidiControllerType::ModulationWheelMSB, 127);
 	cmd->OnKey(60, 127, inst);
 	Sleep(6300);
 	cmd->OffKey(60, 127, inst);*/
 
-	cmd->OnKey(60, 127, inst);
+	//cmd->OnKey(62, 127, inst);
 
-	////在指定乐器上弹奏
-	for (int i = 36; i < 36; i++)
+	for (int j = 0; j < 1; j++)
 	{
-		cmd->OnKey(i, 127, inst);
-		//Sleep(655);
-		//cmd->OffKey(i, 127, inst);
+		VirInstrument* inst = cmd->EnableVirInstrument(0, 1, 0, 38);
+
+		////在指定乐器上弹奏
+		for (int i = 36; i < 127; i++)
+		{
+			cmd->OnKey(i, 127, inst);
+			Sleep(55);
+			cmd->OffKey(i, 127, inst);
+		}
 	}
 }
 
@@ -112,7 +117,7 @@ int main(int argc, char* argv[])
 
 	//添加需要播放的midi文件
 	//cmd->AppendMidiFile(midiPath + "venture.mid");
-	//cmd->AppendMidiFile(midiPath + "吻别.mid");
+	cmd->AppendMidiFile(midiPath + "吻别.mid");
 	//cmd->AppendMidiFile(midiPath + "dream.mid");
 	//cmd->AppendMidiFile(midiPath + "圆周率+TSMB2之作+3.14百万音符.mid");  //（百万音符来袭）
 	//cmd->AppendMidiFile(midiPath + "狂妄之人2.mid"); //（音符非常多）
@@ -125,7 +130,7 @@ int main(int argc, char* argv[])
 	//cmd->AppendMidiFile(midiPath + "song100\\060.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\剑之心(Heart_Of_Sword).mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\Promise.mid");
-	cmd->AppendMidiFile(midiPath + "笑傲江湖.mid");
+	//cmd->AppendMidiFile(midiPath + "笑傲江湖.mid");
 	//cmd->AppendMidiFile(midiPath + "笑傲江湖3.mid");
 	//cmd->AppendMidiFile(midiPath + "test.mid");
 	//播放第1个midi文件
@@ -134,7 +139,7 @@ int main(int argc, char* argv[])
 	//cmd->PlayMidi(1);
 
 	//cmd->DisableAllMidiTrack(0);
-	//cmd->EnableMidiTrack(0, 9);
+	//cmd->EnableMidiTrack(0, 1);
 
 	//cmd->DisableMidiTrack(0, 9);
 	//cmd->MidiGotoSec(0, 45);

@@ -707,19 +707,12 @@ namespace ventrue {
 	void RegionSounder::SetSustainPedalOnOff()
 	{
 		float value = modifyedGenList->GetAmount(GeneratorType::SustainPedalOnOff);
-		bool isHold = false;
-		if (value < 0.5f)
-		{
-			isHold = false;
-		}
-		else {
-			isHold = true;
-		}
+		bool isHold = value < 0.5f ? false : true;
 
-		//设置是否保持按键状态
 		if (isDownNoteKey == false)
 			return;
 
+		//设置是否保持按键状态
 		isHoldDownKey = isHold;
 
 		if (!isHoldDownKey && isNeedOffKey && isDownNoteKey)

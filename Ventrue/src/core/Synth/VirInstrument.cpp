@@ -196,6 +196,9 @@ namespace ventrue
 		vector<KeySounder*>::iterator end = onKeySounders->end();
 		for (; it != end; it++)
 		{
+			//如果在已按键状态表中查到一个对应的key的keySounder，
+			//同时还需要判断这个keySounder有没有被请求松开过，如果没有被请求松开过，
+			//才可以对应此刻的松开按键
 			if ((*it)->IsOnningKey(key) && !(*it)->IsNeedOffKey()) {
 				keySounder = *it;
 				break;
@@ -231,6 +234,9 @@ namespace ventrue
 			!keySounder->IsHoldInSoundQueue))
 			return;
 
+		//如果keySounder发声没有结束，同时又是保持按键状态，
+		//将对此keySounder设置一个需要松开按键请求，而不理解松开按键
+		//引擎将在合适的时机（发声结束时），真正松开这个按键
 		if (!keySounder->IsSoundEnd() &&
 			keySounder->IsHoldDownKey() &&
 			!useMonoMode)
@@ -620,6 +626,8 @@ namespace ventrue
 			{
 				if (keySounder->IsOnningKey())
 				{
+					//如果此时keySounder需要松开按键 且不是单音模式
+					//意味着如果有踏板保持控制，说明踏板保持是关闭的，此时需要松开这个按键
 					if (keySounder->IsNeedOffKey() && !useMonoMode)
 						offKeySounder[offIdx++] = keySounder;
 
@@ -638,7 +646,7 @@ namespace ventrue
 			}
 		}
 
-		//
+		//处理需要松开的按键
 		for (int i = 0; i < offIdx; i++)
 		{
 			_OffKey(offKeySounder[i], 127);

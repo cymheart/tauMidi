@@ -353,6 +353,7 @@ namespace ventrue
 		// 是否激活连音
 		bool isActiveLegato = false;
 
+		//是否是循环样本
 		bool isLoopSample = true;
 
 		// 采样处理是否结束
@@ -365,7 +366,10 @@ namespace ventrue
 		// 当前处理采样的时间点
 		float sec = 0;
 
+		//是否需要松开按键
 		bool isNeedOffKey = false;
+
+		//按键是否是按下状态
 		bool isDownNoteKey = false;
 		int downNoteKey = 60;
 

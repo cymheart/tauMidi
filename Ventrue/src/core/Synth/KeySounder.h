@@ -152,7 +152,11 @@ namespace ventrue
 
 		//是否正在按键
 		bool isOnningKey = false;
+
+		//是否需要松开按键
 		bool isNeedOffKey = false;
+
+		//发声是否结束
 		bool isSoundEnd = false;
 
 
