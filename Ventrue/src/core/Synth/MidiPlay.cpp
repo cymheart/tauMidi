@@ -245,7 +245,7 @@ namespace ventrue
 			VirInstrument* virInst = ventrue->EnableVirInstrument(preset, &channel);
 			virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1, false);
 
-			printf("%s:%d,  按键:%d\n", virInst->GetPreset()->name.c_str(), channel.GetProgramNum(), noteOnEv->note);
+			//printf("%s:%d,  按键:%d\n", virInst->GetPreset()->name.c_str(), channel.GetProgramNum(), noteOnEv->note);
 
 			//对缺少对应关闭音符事件的NoteOn，在辅助轨道上添加一个0.5s后关闭的事件
 			if (noteOnEv->noteOffEvent == nullptr)
