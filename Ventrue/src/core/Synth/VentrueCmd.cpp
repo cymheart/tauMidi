@@ -266,6 +266,85 @@ namespace ventrue
 
 	}
 
+	// 禁止播放指定编号Midi文件的轨道通道
+	void VentrueCmd::DisableMidiTrackChannel(int midiFileIdx, int trackIdx, int channelIdx)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->evType = VentrueEventType::DisablePlayMidiTrack;
+		ev->processCallBack = _DisableMidiTrackChannel;
+		ev->midiFile = nullptr;
+		ev->midiFileIdx = midiFileIdx;
+		ev->midiTrackIdx = trackIdx;
+		ev->value = channelIdx;
+		ventrue->PostTask(ev);
+	}
+
+	// 禁止播放Midi指定轨道上的所有通道
+	void VentrueCmd::DisableMidiTrackAllChannels(int midiFileIdx, int trackIdx)
+	{
+		DisableMidiTrackChannel(midiFileIdx, trackIdx, -1);
+	}
+
+
+	void VentrueCmd::_DisableMidiTrackChannel(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		MidiFile* midiFile = nullptr;
+
+		if (ventrueEvent->evType == VentrueEventType::DisablePlayMidiTrack)
+		{
+			if (ventrue.midiPlayList->size() <= ventrueEvent->midiFileIdx) {
+				return;
+			}
+			if (ventrueEvent->value == -1)
+				(*ventrue.midiPlayList)[ventrueEvent->midiFileIdx]->DisableTrackAllChannels(ventrueEvent->midiTrackIdx);
+			else
+				(*ventrue.midiPlayList)[ventrueEvent->midiFileIdx]->DisableTrackChannel(ventrueEvent->midiTrackIdx, ventrueEvent->value);
+		}
+
+	}
+
+	// 启用播放指定编号Midi文件的轨道通道
+	void VentrueCmd::EnableMidiTrackChannel(int midiFileIdx, int trackIdx, int channelIdx)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->evType = VentrueEventType::DisablePlayMidiTrack;
+		ev->processCallBack = _EnableMidiTrackChannel;
+		ev->midiFile = nullptr;
+		ev->midiFileIdx = midiFileIdx;
+		ev->midiTrackIdx = trackIdx;
+		ev->value = channelIdx;
+		ventrue->PostTask(ev);
+	}
+
+	// 启用播放Midi指定轨道上的所有通道
+	void VentrueCmd::EnableMidiTrackAllChannels(int midiFileIdx, int trackIdx)
+	{
+		EnableMidiTrackChannel(midiFileIdx, trackIdx, -1);
+	}
+
+
+	void VentrueCmd::_EnableMidiTrackChannel(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		MidiFile* midiFile = nullptr;
+
+		if (ventrueEvent->evType == VentrueEventType::DisablePlayMidiTrack)
+		{
+			if (ventrue.midiPlayList->size() <= ventrueEvent->midiFileIdx) {
+				return;
+			}
+			if (ventrueEvent->value == -1)
+				(*ventrue.midiPlayList)[ventrueEvent->midiFileIdx]->EnableTrackAllChannels(ventrueEvent->midiTrackIdx);
+			else
+				(*ventrue.midiPlayList)[ventrueEvent->midiFileIdx]->EnableTrackChannel(ventrueEvent->midiTrackIdx, ventrueEvent->value);
+		}
+
+	}
 
 	// 指定midi文件播放的起始时间点
 	void VentrueCmd::MidiGotoSec(int midiFileIdx, float sec)

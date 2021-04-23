@@ -6,7 +6,7 @@
 
 namespace task
 {
-	using TimerCallBack = void (*)(void* data);
+
 
 	class TimerTask :public Task
 	{

@@ -53,6 +53,18 @@ namespace ventrue
 		// 启用播放Midi的所有轨道
 		void EnableAllMidiTrack(int midiFileIdx);
 
+		// 禁止播放指定编号Midi文件的轨道通道
+		void DisableMidiTrackChannel(int midiFileIdx, int trackIdx, int channelIdx);
+
+		// 禁止播放Midi指定轨道上的所有通道
+		void DisableMidiTrackAllChannels(int midiFileIdx, int trackIdx);
+
+		// 启用播放指定编号Midi文件的轨道通道
+		void EnableMidiTrackChannel(int midiFileIdx, int trackIdx, int channelIdx);
+
+		// 启用播放Midi指定轨道上的所有通道
+		void EnableMidiTrackAllChannels(int midiFileIdx, int trackIdx);
+
 		// 指定midi文件播放的起始时间点
 		void MidiGotoSec(int midiFileIdx, float sec);
 
@@ -131,6 +143,8 @@ namespace ventrue
 		static void _SendText(Task* ev);
 		static void _DisableMidiTrack(Task* ev);
 		static void _EnableMidiTrack(Task* ev);
+		static void _DisableMidiTrackChannel(Task* ev);
+		static void _EnableMidiTrackChannel(Task* ev);
 		static void _MidiGotoSec(Task* ev);
 		static void _SetDeviceChannelMidiControllerValue(Task* ev);
 		static void _EnableInstrument(Task* ev);

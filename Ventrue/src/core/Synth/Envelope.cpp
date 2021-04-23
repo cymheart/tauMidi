@@ -296,9 +296,12 @@ namespace ventrue
 			break;
 
 		case EnvStage::Attack:
-			//y = expf(xNormal * 10);
-			//y = xNormal < 1 ? 1 - pow(10.0f, -(xNormal * 60 * 0.05f)) : 1;
-			y = xNormal;
+			//y = xNormal < 1 ? 1 - pow(10.0f, -(xNormal * 20 * 0.05f)) : 1;
+			if (attackSec < 0.4f)
+				y = pow(xNormal, 4);
+			else
+				y = xNormal;
+
 			break;
 
 		case EnvStage::Hold:
@@ -313,6 +316,7 @@ namespace ventrue
 			y = 1 - xNormal;
 			y = range.ymin + y * range.yRangeWidth;
 			break;
+
 
 		case EnvStage::Release:
 

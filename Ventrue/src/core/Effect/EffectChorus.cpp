@@ -4,8 +4,8 @@ namespace ventrue
 {
 	EffectChorus::EffectChorus()
 	{
-		leftChannelChorus = new Chorus();
-		rightChannelChorus = new Chorus();
+		leftChannelChorus = new Chorus(2000);
+		rightChannelChorus = new Chorus(2000);
 		outFrames = new StkFrames();
 
 		outFrames->resize(1, 2, 0);

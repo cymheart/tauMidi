@@ -120,6 +120,41 @@ namespace ventrue
 		assistTrack->isDisablePlay = false;
 	}
 
+
+	void MidiPlay::DisableTrackChannel(int trackIdx, int channel)
+	{
+		if (trackIdx >= trackList.size())
+			return;
+
+		trackList[trackIdx]->DisablePlayChannel(channel);
+	}
+
+	void MidiPlay::EnableTrackChannel(int trackIdx, int channel)
+	{
+		if (trackIdx >= trackList.size())
+			return;
+
+		trackList[trackIdx]->EnablePlayChannel(channel);
+	}
+
+	void MidiPlay::DisableTrackAllChannels(int trackIdx)
+	{
+		if (trackIdx >= trackList.size())
+			return;
+
+		for (int i = 0; i < 16; i++)
+			trackList[trackIdx]->DisablePlayChannel(i);
+	}
+
+	void MidiPlay::EnableTrackAllChannels(int trackIdx)
+	{
+		if (trackIdx >= trackList.size())
+			return;
+
+		for (int i = 0; i < 16; i++)
+			trackList[trackIdx]->EnablePlayChannel(i);
+	}
+
 	//设置播放的起始时间点
 	void MidiPlay::GotoSec(double gotoSec)
 	{
@@ -237,17 +272,21 @@ namespace ventrue
 
 			NoteOnEvent* noteOnEv = (NoteOnEvent*)midEv;
 			Channel& channel = *(*trackList[trackIdx])[noteOnEv->channel];
+			if (channel.IsDisablePaly())
+				break;
+
 			Preset* preset = ventrue->GetInstrumentPreset(channel.GetBankSelectMSB(), channel.GetBankSelectLSB(), channel.GetProgramNum());
 			if (preset == nullptr)
 				return;
 
-
 			VirInstrument* virInst = ventrue->EnableVirInstrument(preset, &channel);
 			virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1, false);
 
-			//printf("%s:%d,  按键:%d\n", virInst->GetPreset()->name.c_str(), channel.GetProgramNum(), noteOnEv->note);
+			/*printf("时间:%.2f <<<%s>>> 乐器号:%d  按键:%d 轨道%d 通道:%d \n",
+				ventrue->sec, virInst->GetPreset()->name.c_str(),
+				channel.GetProgramNum(), noteOnEv->note, trackIdx, noteOnEv->channel);*/
 
-			//对缺少对应关闭音符事件的NoteOn，在辅助轨道上添加一个0.5s后关闭的事件
+				//对缺少对应关闭音符事件的NoteOn，在辅助轨道上添加一个0.5s后关闭的事件
 			if (noteOnEv->noteOffEvent == nullptr)
 			{
 				NoteOffEvent* noteOffEvent = new NoteOffEvent();
@@ -269,6 +308,9 @@ namespace ventrue
 
 			NoteOffEvent* noteOffEv = (NoteOffEvent*)midEv;
 			Channel& channel = *(*trackList[trackIdx])[noteOffEv->channel];
+			if (channel.IsDisablePaly())
+				break;
+
 			Preset* preset = ventrue->GetInstrumentPreset(channel.GetBankSelectMSB(), channel.GetBankSelectLSB(), channel.GetProgramNum());
 			if (preset == nullptr)
 				return;

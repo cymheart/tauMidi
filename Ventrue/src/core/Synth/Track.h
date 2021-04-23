@@ -34,6 +34,11 @@ namespace ventrue
 		//根据给定tick数量获取时间点
 		double GetTickSec(int tickCount);
 
+		//禁止播放通道
+		void DisablePlayChannel(int n);
+		//开启播放通道
+		void EnablePlayChannel(int n);
+
 	public:
 
 		/// <summary>

@@ -20,11 +20,6 @@ namespace ventrue
 		}
 	}
 
-	Channel* Track::operator[] (int n)
-	{
-		return channels[n];
-	}
-
 	void Track::Clear()
 	{
 		msPerTick = 4.166f;
@@ -41,6 +36,29 @@ namespace ventrue
 		channels[9]->SetControllerValue(MidiControllerType::BankSelectMSB, 128);
 		channels[9]->SetControllerValue(MidiControllerType::BankSelectLSB, 0);
 		channels[9]->SetProgramNum(0);
+	}
+
+	Channel* Track::operator[] (int n)
+	{
+		return channels[n];
+	}
+
+	//禁止播放通道
+	void Track::DisablePlayChannel(int n)
+	{
+		if (n >= 16)
+			return;
+
+		channels[n]->DiablePlay();
+	}
+
+	//开启播放通道
+	void Track::EnablePlayChannel(int n)
+	{
+		if (n >= 16)
+			return;
+
+		channels[n]->EnablePlay();
 	}
 
 	/// <summary>

@@ -245,8 +245,16 @@ namespace ventrue
 		//是否启用效果器
 		bool isEnableEffect = true;
 
+		//
+		bool isFadeEffectDepth = false;
+		float startFadeEffectDepthSec = 0;
+
 		//区域混音深度
 		float regionReverbDepth = 0;
+		//目标区域混音深度
+		float dstRegionReverbDepth = 0;
+		float startRegionReverbDepth = 0;
+
 		// 是否激活了区域混音处理
 		bool isActiveRegionReverb = false;
 		// 区域混音处理
@@ -254,6 +262,10 @@ namespace ventrue
 
 		//区域和声深度
 		float regionChorusDepth = 0;
+		//目标区域和声深度
+		float dstRegionChorusDepth = 0;
+		float startRegionChorusDepth = 0;
+
 		// 是否激活了区域和声处理
 		bool isActiveRegionChorus = false;
 		// 区域和声处理

@@ -69,6 +69,24 @@ namespace ventrue
 			this->midiTrackRecord = midiTrackRecord;
 		}
 
+		//是否禁止播放
+		bool IsDisablePaly()
+		{
+			return isDisablePlay;
+		}
+
+		//禁止播放
+		void DiablePlay()
+		{
+			isDisablePlay = true;
+		}
+
+		//开启播放
+		void EnablePlay()
+		{
+			isDisablePlay = false;
+		}
+
 	private:
 
 		void ComputeControllerHighResValue(int type);
@@ -102,6 +120,9 @@ namespace ventrue
 		float pitchBendRange = 2;
 		float fineTune = 0;
 		float coarseTune = 0;
+
+		//是否禁止播放
+		bool isDisablePlay = false;
 
 		MidiControllerTypeList usedControllerTypeList;
 		ModPresetTypeList usedPresetTypeList;

@@ -34,6 +34,10 @@ namespace ventrue
 		void DisableAllTrack();
 		void EnableTrack(int trackIdx);
 		void EnableAllTrack();
+		void DisableTrackChannel(int trackIdx, int channel);
+		void EnableTrackChannel(int trackIdx, int channel);
+		void DisableTrackAllChannels(int trackIdx);
+		void EnableTrackAllChannels(int trackIdx);
 
 		//设置播放的起始时间点
 		void GotoSec(double gotoSec);

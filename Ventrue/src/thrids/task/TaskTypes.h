@@ -15,6 +15,7 @@ namespace task
 	class TaskTimer;
 	class Task;
 	using TaskCallBack = void (*)(Task* task);
+	using TimerCallBack = void (*)(void* data);
 	using TaskList = list<Task*>;
 
 #define TASK_MAX_PRIORITY 100000

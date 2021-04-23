@@ -464,6 +464,21 @@ namespace ventrue
 	//为渲染准备所有正在发声的区域
 	int VirInstrument::CreateRegionSounderForRender(RegionSounder** totalRegionSounder, int startSaveIdx)
 	{
+		//平滑过渡效果深度设置值
+		if (isFadeEffectDepth)
+		{
+			float scale = (ventrue->sec - startFadeEffectDepthSec) / 0.5f;
+			if (scale >= 1)
+			{
+				isFadeEffectDepth = false;
+				scale = 1;
+			}
+
+			SetRegionReverbDepth(startRegionReverbDepth + (dstRegionReverbDepth - startRegionReverbDepth) * scale);
+			SetRegionChorusDepth(startRegionChorusDepth + (dstRegionChorusDepth - startRegionChorusDepth) * scale);
+		}
+
+
 		//
 		regionSounderCount = 0;
 
@@ -505,13 +520,30 @@ namespace ventrue
 		}
 
 		//存在发音时，设置调整混音，和声数值
-		if (idx > startSaveIdx) {
-			SetRegionReverbDepth(maxReverbDepth);
-			SetRegionChorusDepth(maxChorusDepth);
+		if (idx > startSaveIdx)
+		{
+			startRegionReverbDepth = regionReverbDepth;
+			dstRegionReverbDepth = maxReverbDepth;
+
+			startRegionChorusDepth = regionChorusDepth;
+			dstRegionChorusDepth = maxChorusDepth;
+
+			startFadeEffectDepthSec = ventrue->sec;
+
+			if (abs(dstRegionReverbDepth - startRegionReverbDepth) < 0.001 &&
+				abs(dstRegionChorusDepth - startRegionChorusDepth) < 0.001)
+			{
+				isFadeEffectDepth = false;
+			}
+			else
+			{
+				isFadeEffectDepth = true;
+			}
 		}
 
 		return idx - startSaveIdx;
 	}
+
 
 
 
@@ -532,7 +564,7 @@ namespace ventrue
 
 			regionReverb->SetEnable(true);
 
-			if (regionReverbDepth != regionReverb->GetEffectMix())
+			if (abs(regionReverbDepth - regionReverb->GetEffectMix()) > 0.001f)
 			{
 				regionReverb->SetRoomSize(0.8f);
 				regionReverb->SetWidth(0.2f);
@@ -558,10 +590,10 @@ namespace ventrue
 
 			regionChorus->SetEnable(true);
 
-			if (regionChorusDepth != regionChorus->GetEffectMix())
+			if (abs(regionChorusDepth - regionChorus->GetEffectMix()) > 0.001f)
 			{
-				regionChorus->SetModDepth(0.8f);
-				regionChorus->SetModFrequency(0.008f);
+				regionChorus->SetModDepth(1);
+				regionChorus->SetModFrequency(0.02f);
 				regionChorus->SetEffectMix(regionChorusDepth);
 			}
 		}

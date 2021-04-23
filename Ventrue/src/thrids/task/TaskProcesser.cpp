@@ -89,6 +89,18 @@ namespace task
 		taskProcesser->Run();
 	}
 
+	//生成固定帧率定时器
+	TaskTimer* TaskProcesser::CreateTimer(TimerCallBack timerCB, void* data, boolean isRepeat)
+	{
+		return new TaskTimer(this, timerCB, data, isRepeat);
+	}
+
+	//生成定时器
+	TaskTimer* TaskProcesser::CreateTimer(TimerCallBack timerCB, void* data, int durationMS, boolean isRepeat)
+	{
+		return new TaskTimer(this, timerCB, data, durationMS, isRepeat);
+	}
+
 
 	int TaskProcesser::PostTask(TaskCallBack taskCallBack)
 	{
