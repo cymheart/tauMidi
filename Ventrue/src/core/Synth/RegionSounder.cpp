@@ -88,8 +88,6 @@ namespace ventrue {
 		//
 		invSampleProcessRate = 1.0f / 44100.0f;
 		processedSampleCount = 0;
-		leftChannelGain = 0.5f;
-		rightChannelGain = 0.5f;
 		basePitchMul = 1;
 		isLoopSample = true;
 		isSampleProcessEnd = false;
@@ -108,6 +106,18 @@ namespace ventrue {
 		startAttenFadeSec = 0;
 		totalAttenFadeTime = 0.05f;
 		attenFadeComputedValue = 0;
+
+		//
+		for (int i = 0; i < 2; i++)
+		{
+			channelGain[i] = -1;
+			dstChannelGain[i] = -1;
+			orgChannelGain[i] = -1;
+			totalChannelGainFadeValue[i] = 0;
+			startChannelGainFadeSec[i] = 0;
+			totalChannelGainFadeTime[i] = 0.05f;
+			channelGainFadeComputedValue[i] = 0;
+		}
 
 		//
 		lastSamplePos = -1;
@@ -488,12 +498,39 @@ namespace ventrue {
 		float genPan = modifyedGenList->GetAmount(GeneratorType::Pan);
 
 		//声向音量倍率调制
-		leftChannelGain = (50 - genPan) * 0.01f;
-		rightChannelGain = (1 - leftChannelGain);
+		dstChannelGain[0] = (50 - genPan) * 0.01f;
+		dstChannelGain[1] = (1 - dstChannelGain[0]);
 
 		//声向曲线调制音量倍率
-		leftChannelGain = (float)FastSin(leftChannelGain * M_PI / 2);
-		rightChannelGain = (float)FastSin(rightChannelGain * M_PI / 2);
+		dstChannelGain[0] = (float)FastSin(dstChannelGain[0] * M_PI / 2);
+		dstChannelGain[1] = (float)FastSin(dstChannelGain[1] * M_PI / 2);
+
+		for (int i = 0; i < 2; i++)
+		{
+			if (channelGain[i] == -1)
+			{
+				channelGain[i] = dstChannelGain[i];
+			}
+			else
+			{
+				//channelGain的过渡处理
+				//当orgChannelGain 改变到 dstChannelGain时，如果两者之间的差值过大，将会
+				//造成不连续断音的违和感，此时通过一个时间上的过渡处理，来平滑这种衰减的改变
+				if (abs(channelGain[i] - dstChannelGain[i]) > 0.05f)
+				{
+					//预设总量为20的改变通过0.05s来平滑改变，其它平滑改变按此比例调整平滑总时间		
+					totalChannelGainFadeTime[i] = 0.05f / 0.2f * abs(channelGain[i] - dstChannelGain[i]);
+					orgChannelGain[i] = channelGain[i];
+					totalChannelGainFadeValue[i] = dstChannelGain[i] - orgChannelGain[i];
+					channelGainFadeComputedValue[i] = totalChannelGainFadeValue[i] / totalChannelGainFadeTime[i];
+					startChannelGainFadeSec[i] = sec;
+				}
+				else
+				{
+					channelGain[i] = dstChannelGain[i];
+				}
+			}
+		}
 	}
 
 	//设置样本起始位置
@@ -1073,6 +1110,20 @@ namespace ventrue {
 			}
 			atten_mul_vel = attenuation * velocity;
 
+
+			//channelGain的过渡处理
+			//当orgChannelGain 改变到 dstChannelGain时，如果两者之间的差值过大，将会
+			//造成不连续断音的违和感，此时通过一个时间上的过渡处理，来平缓这种衰减的急剧改变
+			for (int i = 0; i < 2; i++) {
+				if (channelGain[i] != dstChannelGain[i])
+				{
+					if (sec - startChannelGainFadeSec[i] < totalChannelGainFadeTime[i])
+						channelGain[i] = orgChannelGain[i] + channelGainFadeComputedValue[i] * (sec - startChannelGainFadeSec[i]);
+					else
+						channelGain[i] = dstChannelGain[i];
+				}
+			}
+
 			//
 			if (renderQuality == RenderQuality::Good || renderQuality == RenderQuality::Fast)
 			{
@@ -1105,8 +1156,8 @@ namespace ventrue {
 				}
 
 				volGainSampleValue = volGain * sampleValue;
-				leftChannelSamples[idx] = leftChannelGain * volGainSampleValue;
-				rightChannelSamples[idx] = rightChannelGain * volGainSampleValue;
+				leftChannelSamples[idx] = channelGain[0] * volGainSampleValue;
+				rightChannelSamples[idx] = channelGain[1] * volGainSampleValue;
 
 				idx++;
 				processedSampleCount++;
@@ -1224,8 +1275,10 @@ namespace ventrue {
 	float RegionSounder::LfosAndEnvsModulation(LfoEnvTarget modTarget, float computedSec)
 	{
 		float result = 1;
+		size_t size;
+
 		LfoModInfoList& lfoInfoList = *(lfoInfoLists[(int)modTarget]);
-		size_t size = lfoInfoList.size();
+		size = lfoInfoList.size();
 		for (int i = 0; i < size; i++)
 		{
 			float lfoVal = lfoInfoList[i].lfo->SinWave(computedSec);
@@ -1248,6 +1301,7 @@ namespace ventrue {
 			else
 				result *= envVal;
 		}
+
 
 		return result;
 	}

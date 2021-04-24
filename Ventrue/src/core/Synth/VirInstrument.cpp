@@ -4,6 +4,7 @@
 #include"Ventrue.h"
 #include"Channel.h"
 #include"Preset.h"
+#include"Track.h"
 #include <random>
 
 
@@ -129,9 +130,11 @@ namespace ventrue
 		return true;
 	}
 
+
 	//按键
 	void VirInstrument::OnKey(int key, float velocity, int tickCount, bool isRealTime)
 	{
+		//
 		if (onkeyEventMap->size() > 10 &&
 			(velocity < 10 ||
 				(!isRealTime && tickCount <= 5)))
@@ -419,6 +422,9 @@ namespace ventrue
 					KeyEvent& keyEvent = temp[i];
 					keySounder = OnKeyExecute(keyEvent.key, keyEvent.velocity);
 					keySounder->SetRealtimeControlType(keyEvent.isRealTime);
+
+					//
+					//PrintOnKeyInfo(keyEvent.key, keyEvent.velocity, keyEvent.isRealTime);
 				}
 			}
 			else
@@ -435,6 +441,8 @@ namespace ventrue
 						if (keySounder)
 							keySounder->SetRealtimeControlType(keyEvent.isRealTime);
 
+						//
+						//PrintOnKeyInfo(keyEvent.key, keyEvent.velocity, keyEvent.isRealTime);
 					}
 				}
 			}
@@ -458,6 +466,26 @@ namespace ventrue
 			}
 
 			offkeyEventMap->clear();
+		}
+	}
+
+	void VirInstrument::PrintOnKeyInfo(int key, float velocity, bool isRealTime)
+	{
+		//
+		int trackNum = 0;
+		Track* track = channel->GetTrack();
+		if (track) trackNum = track->GetNum();
+		if (isRealTime)
+		{
+			printf("时间%.2f <<<%s>>> 乐器号%d  按键%d 通道%d 实时 \n",
+				ventrue->sec, GetPreset()->name.c_str(),
+				channel->GetProgramNum(), key, channel->GetChannelNum());
+		}
+		else
+		{
+			printf("时间%.2f <<<%s>>> 乐器号%d  按键%d 轨道%d 通道%d \n",
+				ventrue->sec, GetPreset()->name.c_str(),
+				channel->GetProgramNum(), key, trackNum, channel->GetChannelNum());
 		}
 	}
 

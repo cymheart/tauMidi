@@ -10,8 +10,20 @@ namespace ventrue
 	class Track
 	{
 	public:
-		Track();
+		Track(int num);
 		~Track();
+
+		//设置轨道号
+		inline void SetNum(int num)
+		{
+			this->num = num;
+		}
+
+		//获取轨道号
+		inline int GetNum()
+		{
+			return num;
+		}
 
 		Channel* operator[] (int n);
 		void Clear();
@@ -40,6 +52,11 @@ namespace ventrue
 		void EnablePlayChannel(int n);
 
 	public:
+
+		/// <summary>
+		/// 轨道号
+		/// </summary>
+		int num = 0;
 
 		/// <summary>
 		/// 每tick的毫秒数

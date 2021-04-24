@@ -235,6 +235,8 @@ namespace ventrue
 		//为渲染准备所有正在发声的区域
 		int CreateRegionSounderForRender(RegionSounder** totalRegionSounder, int startSaveIdx);
 
+		void PrintOnKeyInfo(int key, float velocity, bool isRealTime);
+
 	private:
 
 		//发音结束,包括效果器作用带来的尾音是否结束
@@ -243,7 +245,7 @@ namespace ventrue
 		//效果器
 		EffectList* effects;
 		//是否启用效果器
-		bool isEnableEffect = true;
+		bool isEnableEffect = false;
 
 		//
 		bool isFadeEffectDepth = false;

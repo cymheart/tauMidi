@@ -14,7 +14,7 @@ namespace ventrue
 	MidiPlay::MidiPlay()
 	{
 		//noteOnEvOnKeyInfos = new NoteOnEvOnKeyInfoList;
-		assistTrack = new Track;
+		assistTrack = new Track(0);
 	}
 
 	MidiPlay::~MidiPlay()
@@ -79,7 +79,7 @@ namespace ventrue
 			size_t count = midiTrackList->size() - trackList.size();
 			for (size_t i = 0; i < count; i++)
 			{
-				trackList.push_back(new Track());
+				trackList.push_back(new Track(trackList.size()));
 			}
 		}
 	}
@@ -221,8 +221,17 @@ namespace ventrue
 			if (it == end)
 			{
 				trackList[i]->isEnded = true;
-			}
 
+				//轨道播发结束后，清除相关设置
+				for (int j = 0; j < 16; j++)
+				{
+					Channel* channel = (*trackList[i])[j];
+					if (channel != nullptr) {
+						channel->SetControllerValue(MidiControllerType::SustainPedalOnOff, 0);
+						ventrue->ModulationVirInstParams(channel);
+					}
+				}
+			}
 		}
 
 
@@ -277,16 +286,18 @@ namespace ventrue
 
 			Preset* preset = ventrue->GetInstrumentPreset(channel.GetBankSelectMSB(), channel.GetBankSelectLSB(), channel.GetProgramNum());
 			if (preset == nullptr)
-				return;
+			{
+				preset = ventrue->GetInstrumentPreset(0, 0, channel.GetProgramNum());
+				if (preset == nullptr)
+					return;
+			}
+
+
 
 			VirInstrument* virInst = ventrue->EnableVirInstrument(preset, &channel);
 			virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1, false);
 
-			/*printf("时间:%.2f <<<%s>>> 乐器号:%d  按键:%d 轨道%d 通道:%d \n",
-				ventrue->sec, virInst->GetPreset()->name.c_str(),
-				channel.GetProgramNum(), noteOnEv->note, trackIdx, noteOnEv->channel);*/
-
-				//对缺少对应关闭音符事件的NoteOn，在辅助轨道上添加一个0.5s后关闭的事件
+			//对缺少对应关闭音符事件的NoteOn，在辅助轨道上添加一个0.5s后关闭的事件
 			if (noteOnEv->noteOffEvent == nullptr)
 			{
 				NoteOffEvent* noteOffEvent = new NoteOffEvent();
@@ -313,7 +324,11 @@ namespace ventrue
 
 			Preset* preset = ventrue->GetInstrumentPreset(channel.GetBankSelectMSB(), channel.GetBankSelectLSB(), channel.GetProgramNum());
 			if (preset == nullptr)
-				return;
+			{
+				preset = ventrue->GetInstrumentPreset(0, 0, channel.GetProgramNum());
+				if (preset == nullptr)
+					return;
+			}
 
 			VirInstrument* virInst = ventrue->EnableVirInstrument(preset, &channel);
 			virInst->OffKey(noteOffEv->note, (float)noteOffEv->velocity, false);

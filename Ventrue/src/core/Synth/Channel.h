@@ -15,9 +15,15 @@ namespace ventrue
 		~Channel();
 
 		//获取通道号
-		int GetChannelNum()
+		inline int GetChannelNum()
 		{
 			return channelNum;
+		}
+
+		//获取通道所在轨道
+		inline Track* GetTrack()
+		{
+			return track;
 		}
 
 		void Clear();
@@ -110,7 +116,7 @@ namespace ventrue
 		//
 		int bankMSB = 0;
 		int bankLSB = 0;
-		int programNum = 1;
+		int programNum = 0;
 
 		//
 		int ccValue[128] = { 0 };

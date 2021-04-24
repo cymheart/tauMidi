@@ -93,21 +93,22 @@ namespace ventrue
 		case GeneratorType::ScaleTuning: return 100;
 		case GeneratorType::InitialAttenuation: return 0;
 
-		case GeneratorType::AttackVolEnv:
-			return 0.001f;
-			break;
-
+		case GeneratorType::ReleaseModEnv:
 		case GeneratorType::ReleaseVolEnv:
-			return 0.001f;
+			if (type == RegionType::Insttrument)
+				return 0.01f;
+			return 1;
 			break;
 
+		case GeneratorType::AttackVolEnv:
 		case GeneratorType::DecayVolEnv:
 		case GeneratorType::HoldVolEnv:
 		case GeneratorType::AttackModEnv:
 		case GeneratorType::DecayModEnv:
 		case GeneratorType::HoldModEnv:
-		case GeneratorType::ReleaseModEnv:
-			return 0.001f;
+			if (type == RegionType::Insttrument)
+				return 0.001f;
+			return 1;
 
 		case GeneratorType::SustainVolEnv:
 		case GeneratorType::SustainModEnv:
@@ -218,20 +219,17 @@ namespace ventrue
 			else if (value < -12000) value = 12000;
 			return value;
 
-		case GeneratorType::AttackVolEnv:
-			return value < 0.001f ? 0.001f : value;
-			break;
 
 		case GeneratorType::ReleaseVolEnv:
-			return value < 0.001f ? 0.001f : value;
-			break;
+		case GeneratorType::ReleaseModEnv:
+			return value < 0.01f ? 0.01f : value;
 
+		case GeneratorType::AttackVolEnv:
 		case GeneratorType::DecayVolEnv:
 		case GeneratorType::HoldVolEnv:
 		case GeneratorType::AttackModEnv:
 		case GeneratorType::DecayModEnv:
 		case GeneratorType::HoldModEnv:
-		case GeneratorType::ReleaseModEnv:
 			return value < 0.001f ? 0.001f : value;
 
 		case GeneratorType::SustainModEnv:

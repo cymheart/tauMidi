@@ -156,7 +156,7 @@ namespace ventrue
 		for (; itA != eventListA->end(); itA++)
 		{
 			evA = *itA;
-			if (evA->startTick > 0)
+			if (evA->type == MidiEventType::NoteOn)
 				break;
 
 			if (evA->type == MidiEventType::ProgramChange) {
@@ -172,7 +172,7 @@ namespace ventrue
 		for (; itB != eventListB->end(); itB++)
 		{
 			evB = *itB;
-			if (evB->startTick > 0)
+			if (evB->type == MidiEventType::NoteOn)
 				break;
 
 			if (evB->type == MidiEventType::ProgramChange) {

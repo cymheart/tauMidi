@@ -332,11 +332,6 @@ namespace ventrue
 		// 已处理的采样点计数
 		int processedSampleCount = 0;
 
-		// 左通道音量增益
-		float leftChannelGain = 0.5f;
-
-		// 右通道音量增益
-		float rightChannelGain = 0.5f;
 
 		// 按键key相对于根音符的频率偏移倍率
 		float basePitchMul = 1;
@@ -387,9 +382,20 @@ namespace ventrue
 		//开始衰减过渡时间点
 		float startAttenFadeSec = 0;
 		//总衰减过渡时间
-		float totalAttenFadeTime = 0.03f;
+		float totalAttenFadeTime = 0.05f;
 		//衰减过渡计算值
 		float attenFadeComputedValue = 0;
+
+		// 左右通道音量增益
+		//0:left
+		//1:right
+		float channelGain[2] = { -1 };
+		float dstChannelGain[2] = { -1 };
+		float orgChannelGain[2] = { -1 };
+		float totalChannelGainFadeValue[2] = { 0 };
+		float startChannelGainFadeSec[2] = { 0 };
+		float totalChannelGainFadeTime[2] = { 0.05f };
+		float channelGainFadeComputedValue[2] = { 0 };
 
 
 		// 低频滤波截至频率

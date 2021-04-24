@@ -103,11 +103,30 @@ namespace ventrue
 			case GeneratorType::VelRange:
 				if (!instList->IsEmpty(type)) {
 					RangeFloat rangeAmount = instList->GetAmountRange(type);
-					modifyedGenList->SetAmountRange(GeneratorType::KeyRange, rangeAmount.min, rangeAmount.max);
+					modifyedGenList->SetAmountRange(type, rangeAmount.min, rangeAmount.max);
 				}
 				else if (!instGlobalList->IsEmpty(type)) {
 					RangeFloat rangeAmount = instGlobalList->GetAmountRange(type);
-					modifyedGenList->SetAmountRange(GeneratorType::KeyRange, rangeAmount.min, rangeAmount.max);
+					modifyedGenList->SetAmountRange(type, rangeAmount.min, rangeAmount.max);
+				}
+				break;
+
+			case GeneratorType::Keynum:
+			case GeneratorType::Velocity:
+			case GeneratorType::ExclusiveClass:
+			case GeneratorType::EndAddrsCoarseOffset:
+			case GeneratorType::EndAddrsOffset:
+			case GeneratorType::EndloopAddrsCoarseOffset:
+			case GeneratorType::EndloopAddrsOffset:
+			case GeneratorType::StartAddrsOffset:
+			case GeneratorType::StartAddrsCoarseOffset:
+			case GeneratorType::StartloopAddrsCoarseOffset:
+			case GeneratorType::StartloopAddrsOffset:
+				if (!instList->IsEmpty(type)) {
+					modifyedGenList->SetAmount(type, instList->GetAmount(type));
+				}
+				else if (!instGlobalList->IsEmpty(type)) {
+					modifyedGenList->SetAmount(type, instGlobalList->GetAmount(type));
 				}
 				break;
 
@@ -191,6 +210,7 @@ namespace ventrue
 
 	void RegionModulation::CombGenValue(GeneratorType genType, bool isTestModFlag)
 	{
+
 		float instValue = 0;
 		float presetValue = 0;
 		bool isHavPresetValue = false;

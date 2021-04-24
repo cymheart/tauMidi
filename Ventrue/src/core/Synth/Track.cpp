@@ -3,8 +3,10 @@
 
 namespace ventrue
 {
-	Track::Track()
+	Track::Track(int num)
 	{
+		this->num = num;
+
 		for (int i = 0; i < 16; i++)
 			channels[i] = new Channel(this, i);
 
