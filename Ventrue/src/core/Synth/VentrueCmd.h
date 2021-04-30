@@ -40,6 +40,9 @@ namespace ventrue
 
 		void PlayMidi(MidiFile* midiFile);
 
+		// 为midi文件设置打击乐号
+		void SetPercussionProgramNum(int midiFileIdx, int num);
+
 		//添加midi文件
 		void AppendMidiFile(string midifile);
 
@@ -139,6 +142,7 @@ namespace ventrue
 		static void _OffKey(Task* ev);
 		static void _AddEffect(Task* ev);
 		static void _PlayMidi(Task* ev);
+		static void _SetPercussionProgramNum(Task* ev);
 		static void _AppendMidi(Task* ev);
 		static void _SendText(Task* ev);
 		static void _DisableMidiTrack(Task* ev);

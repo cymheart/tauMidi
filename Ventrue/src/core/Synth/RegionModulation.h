@@ -99,25 +99,42 @@ namespace ventrue
 		/// <param name="modGenlist">调制后的对应输出的生成器Genlist</param>
 		/// <param name="isAlreadyModedGenTypes">标志对应生成器是否被调制过的flag值</param>
 		void SetGenListMods(ModulatorVec* mods, GeneratorList* inGenlist, GeneratorList* outModGenlist, bool* isAlreadyModedGenTypes = nullptr);
-		void ExecuteGenListMods(ModulatorVec* mods, GeneratorList* modGenlist, bool* isAlreadyModedGenTypes, bool isCheckMod = false);
+		void ExecuteGenListMods(ModulatorVec* mods, GeneratorList* modGenlist, bool* isAlreadyModedGenTypes);
+
+		/// <summary>
+		/// 设置调制器输入
+		/// </summary>
+		/// <param name="mods">用于调制输入生成器的调制器</param>
+		void SetModsInputs(ModulatorVec* mods);
+
+		//执行最终修改区域的Gen项mods调制
+		void InsideModifyedGenListMods();
+
+		//设置调制器的输入
+		//当targetGenType == GeneratorType::None时，此时的调制器调制目标是另一调制器
+		//此时也是可以通过测试，使用下面的处理来处理数据的链式结果
+		void SetModulatorInput(Modulator& mod);
+
 
 		void CombGenValue(GeneratorType genType, bool isTestModFlag);
 
 		bool Process(GeneratorType targetGenType, float modValue, ModulationType modType);
 
-		inline void SetGenList(GeneratorList* modGenList)
+		inline void SetProcessGenList(GeneratorList* modGenList)
 		{
-			this->outGenList = modGenList;
+			processGenList = modGenList;
 		}
 
 		inline bool ModulationGenType(GeneratorType genType, float modValue, ModulationType modType)
 		{
-			float val = outGenList->GetAmount(genType);
+			float val = processGenList->GetAmount(genType);
 			if (modType == ModulationType::Replace) { val = modValue; }
 			else if (modType == ModulationType::Add) { val += modValue; }
 			else { val *= modValue; }
 
-			outGenList->SetAmount(genType, val);
+			processGenList->SetAmount(genType, val);
+
+
 			return true;
 		}
 
@@ -287,13 +304,13 @@ namespace ventrue
 	private:
 
 		//是否初始化过
-		bool isInit = false;
+		bool isInited = false;
 
 		//这个控制器列表仅设置了供内部使用的控制器
 		ModulatorList* insideCtrlModulatorList = nullptr;
 
 		GeneratorList* genList = nullptr;
-		GeneratorList* outGenList = nullptr;
+		GeneratorList* processGenList = nullptr;
 
 		unordered_set<int>* modifyedGenTypes = nullptr;
 

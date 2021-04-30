@@ -11,7 +11,7 @@ namespace ventrue
 
 		inline void Clear()
 		{
-			freq = 0;
+			freq = 10;
 			delay = 0;
 			amp = 1;
 			openSec = 0;

@@ -42,7 +42,7 @@ namespace ventrue
 	{
 		insideCtrlModulatorList = nullptr;
 		genList = nullptr;
-		outGenList = nullptr;
+		processGenList = nullptr;
 		modifyedGenTypes = nullptr;
 		channel = nullptr;
 		instRegion = nullptr;
@@ -50,17 +50,17 @@ namespace ventrue
 		presetRegion = nullptr;
 		presetGlobalRegion = nullptr;
 		modifyedGenList = nullptr;
-		isInit = false;
+		isInited = false;
 
 	}
 
 	//调制
 	void RegionModulation::Modulation()
 	{
-		if (!isInit)
+		if (!isInited)
 		{
 			InitGenList();
-			isInit = true;
+			isInited = true;
 		}
 		else
 		{
@@ -176,105 +176,6 @@ namespace ventrue
 		}
 	}
 
-	//复合算得的乐器生成器列表(instCombGenList)和算的预设生成器列表(presetCombGenList)
-	void RegionModulation::CombInstAndPresetGenList(bool isTestModFlag)
-	{
-		for (int i = 0; i < (int)GeneratorType::EndOper; i++)
-		{
-			switch ((GeneratorType)i)
-			{
-			case GeneratorType::KeyRange:
-			case GeneratorType::VelRange:
-			case GeneratorType::Keynum:
-			case GeneratorType::Velocity:
-			case GeneratorType::ExclusiveClass:
-			case GeneratorType::EndAddrsCoarseOffset:
-			case GeneratorType::EndAddrsOffset:
-			case GeneratorType::EndloopAddrsCoarseOffset:
-			case GeneratorType::EndloopAddrsOffset:
-			case GeneratorType::StartAddrsOffset:
-			case GeneratorType::StartAddrsCoarseOffset:
-			case GeneratorType::StartloopAddrsCoarseOffset:
-			case GeneratorType::StartloopAddrsOffset:
-				continue;
-			}
-
-			CombGenValue((GeneratorType)i, isTestModFlag);
-
-			if (isTestModFlag && isModedInstGenTypes[i])
-			{
-				modifyedGenTypes->insert(i);
-			}
-		}
-	}
-
-	void RegionModulation::CombGenValue(GeneratorType genType, bool isTestModFlag)
-	{
-
-		float instValue = 0;
-		float presetValue = 0;
-		bool isHavPresetValue = false;
-
-		if (isTestModFlag && isModedInstGenTypes[(int)genType]) { instValue = instRegionModGenList->GetAmount(genType); }
-		else { instValue = instCombGenList->GetAmount(genType); }
-
-		if (isTestModFlag && isModedPresetGenTypes[(int)genType]) { presetValue = presetRegionModGenList->GetAmount(genType); isHavPresetValue = true; }
-		else if (!presetCombGenList->IsEmpty(genType)) { presetValue = presetCombGenList->GetAmount(genType); isHavPresetValue = true; }
-
-		if (isHavPresetValue)
-		{
-			switch (genType)
-			{
-			case GeneratorType::InitialFilterFc:
-			case GeneratorType::DelayVolEnv:
-			case GeneratorType::AttackVolEnv:
-			case GeneratorType::HoldVolEnv:
-			case GeneratorType::DecayVolEnv:
-			case GeneratorType::ReleaseVolEnv:
-			case GeneratorType::DelayModEnv:
-			case GeneratorType::AttackModEnv:
-			case GeneratorType::HoldModEnv:
-			case GeneratorType::DecayModEnv:
-			case GeneratorType::ReleaseModEnv:
-			case GeneratorType::DelayVibLFO:
-			case GeneratorType::FreqVibLFO:
-			case GeneratorType::DelayModLFO:
-			case GeneratorType::FreqModLFO:
-			case GeneratorType::SustainVolEnv:
-			case GeneratorType::SustainModEnv:
-				instValue *= presetValue;   //在分或分贝状态下做加法，log转到pow后做乘法
-				break;
-
-			case GeneratorType::SustainPedalOnOff:
-				break;
-
-			case GeneratorType::ChorusEffectsSend:
-			case GeneratorType::ReverbEffectsSend:
-				instValue = presetValue;
-				break;
-
-			default:
-				instValue += presetValue; //在分或分贝状态下做加法
-				break;
-			}
-		}
-
-		//限制新的计算值的范围
-		instValue = modifyedGenList->LimitValueRange(genType, instValue);
-
-		//与旧值比较，判断是否需要修改，如果和旧值相同，将不作修改
-		float oldInstValue = modifyedGenList->GetAmount(genType);
-
-		if (abs(oldInstValue - instValue) < 0.0001f) {
-			isModedInstGenTypes[(int)genType] = false;
-		}
-		else {
-			modifyedGenList->SetAmount(genType, instValue);
-			isModedInstGenTypes[(int)genType] = true;
-		}
-
-	}
-
 
 	//根据初始化时最终复合计算出的生成器列表，设置需要修改的参数类型
 	void RegionModulation::InitNeedModifyGenParamTypes()
@@ -363,10 +264,16 @@ namespace ventrue
 		//最后再复合乐器和预设生成器的对应项，最终结果写入modifyedGenList
 		CombInstAndPresetGenList();
 
-
 		//内部控制器调制
-		SetGenListMods(insideCtrlModulatorList->GetModulators(), modifyedGenList, modifyedGenList);
-		ExecuteGenListMods(insideCtrlModulatorList->GetModulators(), modifyedGenList, isModedInstGenTypes, true);
+		InsideModifyedGenListMods();
+
+		//
+		for (int i = 0; i < 64; i++)
+		{
+			if (isModedInstGenTypes[i])
+				modifyedGenList->SetAmount((GeneratorType)i, modsModGenList->GetAmount((GeneratorType)i));
+		}
+
 	}
 
 
@@ -402,44 +309,22 @@ namespace ventrue
 			}
 
 			//初始化要调制的值为初始输入值
-			if (outGenList != inGenlist)
+			if (outModGenlist != inGenlist)
 				outModGenlist->SetAmount(targetGenType, inGenlist->GetAmount(targetGenType));
 
-			//当targetGenType == GeneratorType::None时，此时的调制器调制目标是另一调制器
-			//此时也是可以通过测试，使用下面的处理来处理数据的链式结果
-			Modulator& mod = *(*mods)[i];
-			size_t portCount = mod.GetInputPortCount();
-			for (int j = 0; j < portCount; j++)
-			{
-				if (mod.GetInputType(j) == ModInputType::MidiController)
-				{
-					//midi控制值通过通道channel获取
-					mod.Input(j, channel->GetControllerComputedValue(mod.GetInputCtrlType(j)));
-				}
-				else if (mod.GetInputType(j) == ModInputType::Preset)
-				{
-					mod.Input(j, channel->GetModPresetValue(mod.GetInputPresetType(j)));
-
-					if (mod.GetInputPresetType(j) == ModInputPreset::PitchWheel)
-						mod.SetAmount(channel->GetPitchBendRange());
-				}
-				else
-				{
-					//mod.Input(j, mod.GetInputValue(j));
-				}
-			}
+			SetModulatorInput(*(*mods)[i]);
 		}
 	}
 
 	//执行区域的Gen项mods调制
 	void RegionModulation::ExecuteGenListMods(
-		ModulatorVec* mods, GeneratorList* modGenlist, bool* isAlreadyModedGenTypes, bool isCheckMod)
+		ModulatorVec* mods, GeneratorList* modGenlist, bool* isAlreadyModedGenTypes)
 	{
 		if (mods == nullptr || isAlreadyModedGenTypes == nullptr)
 			return;
 
 		//
-		SetGenList(modGenlist);
+		SetProcessGenList(modGenlist);
 		GeneratorType targetGenType = GeneratorType::None;
 
 		size_t size = mods->size();
@@ -460,10 +345,212 @@ namespace ventrue
 
 			isAlreadyModedGenTypes[(int)targetGenType] =
 				Process(targetGenType, modValue, mod.GetOutModulationType());
-
-			if (isCheckMod)
-				modifyedGenTypes->insert((int)targetGenType);
 		}
+	}
+
+
+	/// <summary>
+/// 设置调制器输入
+/// </summary>
+/// <param name="mods">用于调制输入生成器的调制器</param>
+	void RegionModulation::SetModsInputs(ModulatorVec* mods)
+	{
+		if (mods == nullptr)
+			return;
+
+		//循环遍历每个调制器的输入项，排除掉非调制Gen的调制器(有的调制器的调制目标时另一个调制器)
+		//对于输入项是外部Midi控制器或内部预设输入的进行值输入操作
+		GeneratorType targetGenType = GeneratorType::None;
+		size_t size = mods->size();
+		for (int i = 0; i < size; i++)
+		{
+			targetGenType = (*mods)[i]->GetOutTargetGeneratorType();
+			SetModulatorInput(*(*mods)[i]);
+		}
+	}
+
+	//执行最终修改区域的Gen项mods调制
+	void RegionModulation::InsideModifyedGenListMods()
+	{
+		ModulatorVec* mods = insideCtrlModulatorList->GetModulators();
+		SetModsInputs(mods);
+
+		//
+		GeneratorType targetGenType = GeneratorType::None;
+		size_t size = mods != nullptr ? mods->size() : 0;
+		float modValue;
+
+		for (int i = 0; i < size; i++)
+		{
+			Modulator& mod = *(*mods)[i];
+			targetGenType = mod.GetOutTargetGeneratorType();
+
+			if (targetGenType == GeneratorType::None ||
+				mod.GetIOState() != ModIOState::Inputed)
+			{
+				continue;
+			}
+
+			//获取调制值，执行调制
+			modValue = mod.Output();
+
+			float oldValue = modifyedGenList->GetAmount(targetGenType);
+			float newValue;
+
+			if (isModedInstGenTypes[(int)targetGenType])
+			{
+				SetProcessGenList(modsModGenList);
+				Process(targetGenType, modValue, mod.GetOutModulationType());
+				newValue = modsModGenList->GetAmount(targetGenType);
+				if (abs(oldValue - newValue) < 0.0001f)
+					modifyedGenTypes->erase((int)targetGenType);
+				else {
+					modifyedGenList->SetAmount(targetGenType, newValue);
+				}
+			}
+			else
+			{
+				SetProcessGenList(modifyedGenList);
+				Process(targetGenType, modValue, mod.GetOutModulationType());
+				newValue = modifyedGenList->GetAmount(targetGenType);
+
+				if (abs(oldValue - newValue) >= 0.0001f)
+					modifyedGenTypes->insert((int)targetGenType);
+			}
+
+			isModedInstGenTypes[(int)targetGenType] = false;
+		}
+	}
+
+	//设置调制器的输入
+	//当targetGenType == GeneratorType::None时，此时的调制器调制目标是另一调制器
+	//此时也是可以通过测试，使用下面的处理来处理数据的链式结果
+	void RegionModulation::SetModulatorInput(Modulator& mod)
+	{
+		size_t portCount = mod.GetInputPortCount();
+		for (int j = 0; j < portCount; j++)
+		{
+			if (mod.GetInputType(j) == ModInputType::MidiController)
+			{
+				//midi控制值通过通道channel获取
+				mod.Input(j, channel->GetControllerComputedValue(mod.GetInputCtrlType(j)));
+			}
+			else if (mod.GetInputType(j) == ModInputType::Preset)
+			{
+				mod.Input(j, channel->GetModPresetValue(mod.GetInputPresetType(j)));
+
+				if (mod.GetInputPresetType(j) == ModInputPreset::PitchWheel)
+					mod.SetAmount(channel->GetPitchBendRange());
+			}
+			else
+			{
+				//mod.Input(j, mod.GetInputValue(j));
+			}
+		}
+	}
+
+
+
+	//复合算得的乐器生成器列表(instCombGenList)和算的预设生成器列表(presetCombGenList)
+	void RegionModulation::CombInstAndPresetGenList(bool isTestModFlag)
+	{
+		for (int i = 0; i < (int)GeneratorType::EndOper; i++)
+		{
+			switch ((GeneratorType)i)
+			{
+			case GeneratorType::KeyRange:
+			case GeneratorType::VelRange:
+			case GeneratorType::Keynum:
+			case GeneratorType::Velocity:
+			case GeneratorType::ExclusiveClass:
+			case GeneratorType::EndAddrsCoarseOffset:
+			case GeneratorType::EndAddrsOffset:
+			case GeneratorType::EndloopAddrsCoarseOffset:
+			case GeneratorType::EndloopAddrsOffset:
+			case GeneratorType::StartAddrsOffset:
+			case GeneratorType::StartAddrsCoarseOffset:
+			case GeneratorType::StartloopAddrsCoarseOffset:
+			case GeneratorType::StartloopAddrsOffset:
+				continue;
+			}
+
+			CombGenValue((GeneratorType)i, isTestModFlag);
+
+			if (isTestModFlag && isModedInstGenTypes[i])
+			{
+				modifyedGenTypes->insert(i);
+			}
+		}
+	}
+
+	void RegionModulation::CombGenValue(GeneratorType genType, bool isTestModFlag)
+	{
+		float instValue = 0;
+		float presetValue = 0;
+		bool isHavPresetValue = false; //参数是否具有预设值
+
+		if (isTestModFlag && isModedInstGenTypes[(int)genType]) { instValue = instRegionModGenList->GetAmount(genType); } //参数被调制过，将使用调制表中的数值
+		else { instValue = instCombGenList->GetAmount(genType); }  //参数未被调制过，将使用原始乐器区域与全局乐器区域的复合值
+
+		if (isTestModFlag && isModedPresetGenTypes[(int)genType]) { presetValue = presetRegionModGenList->GetAmount(genType); isHavPresetValue = true; }  //参数被调制过，将使用调制表中的数值
+		else if (!presetCombGenList->IsEmpty(genType)) { presetValue = presetCombGenList->GetAmount(genType); isHavPresetValue = true; }  //参数未被调制过的，将使用原始预设区域与全局预设区域的复合值
+
+		if (isHavPresetValue)
+		{
+			switch (genType)
+			{
+			case GeneratorType::InitialFilterFc:
+			case GeneratorType::DelayVolEnv:
+			case GeneratorType::AttackVolEnv:
+			case GeneratorType::HoldVolEnv:
+			case GeneratorType::DecayVolEnv:
+			case GeneratorType::ReleaseVolEnv:
+			case GeneratorType::DelayModEnv:
+			case GeneratorType::AttackModEnv:
+			case GeneratorType::HoldModEnv:
+			case GeneratorType::DecayModEnv:
+			case GeneratorType::ReleaseModEnv:
+			case GeneratorType::DelayVibLFO:
+			case GeneratorType::FreqVibLFO:
+			case GeneratorType::DelayModLFO:
+			case GeneratorType::FreqModLFO:
+			case GeneratorType::SustainVolEnv:
+			case GeneratorType::SustainModEnv:
+				instValue *= presetValue;   //在分或分贝状态下做加法，log转到pow后做乘法
+				break;
+
+			case GeneratorType::SustainPedalOnOff:
+				break;
+
+			case GeneratorType::ChorusEffectsSend:
+			case GeneratorType::ReverbEffectsSend:
+				instValue = presetValue;
+				break;
+
+			default:
+				instValue += presetValue; //在分或分贝状态下做加法
+				break;
+			}
+		}
+
+		//限制新的计算值的范围
+		instValue = modifyedGenList->LimitValueRange(genType, instValue);
+
+		//与旧值比较，判断是否需要修改，如果和旧值相同，将不作修改
+		float oldInstValue = modifyedGenList->GetAmount(genType);
+
+		if (abs(oldInstValue - instValue) < 0.0001f) {
+			isModedInstGenTypes[(int)genType] = false;
+		}
+		else {
+			if (isTestModFlag)
+				modsModGenList->SetAmount(genType, instValue);
+			else
+				modifyedGenList->SetAmount(genType, instValue);
+
+			isModedInstGenTypes[(int)genType] = true;
+		}
+
 	}
 
 
@@ -541,6 +628,7 @@ namespace ventrue
 	{
 		if (modType == ModulationType::Unknown)
 			modType = ModulationType::Add;
+
 
 		return ModulationGenType(GeneratorType::FineTune, modValue, modType);
 	}

@@ -845,9 +845,11 @@ namespace ventrue {
 			}
 
 			regionSounders = inst->GetRegionSounders();
+
+
 			for (int j = limitPerElemCount; j < count; j++)
 			{
-				regionSounders[j]->OffKey(127, 0.002f);
+				regionSounders[j]->OffKey(127, 0.003);
 			}
 			limitTotalCount -= limitPerElemCount;
 			limitPerElemCount = limitTotalCount / (instSize - i);

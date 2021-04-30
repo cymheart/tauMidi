@@ -51,6 +51,9 @@ namespace ventrue
 		//开启播放通道
 		void EnablePlayChannel(int n);
 
+		//设置打击乐号
+		void SetPercussionProgramNum(int num);
+
 	public:
 
 		/// <summary>

@@ -462,7 +462,6 @@ namespace ventrue
 		//发声区域最大限制数量
 		int limitRegionSounderCount = 600;
 
-
 		TaskProcesser* taskProcesser = nullptr;
 		TaskProcesser* realtimeKeyOpTaskProcesser = nullptr;
 		RegionSounderThread* regionSounderThreadPool = nullptr;

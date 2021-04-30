@@ -93,17 +93,22 @@ namespace ventrue
 		case GeneratorType::ScaleTuning: return 100;
 		case GeneratorType::InitialAttenuation: return 0;
 
+		case GeneratorType::AttackVolEnv:
+		case GeneratorType::AttackModEnv:
+			//此处需要设置到0.001，比如鼓，吉他，一些需要立即启音的发声，
+			//必须设置非常小的值，不然发音会有杂音
+			if (type == RegionType::Insttrument)
+				return 0.001f;
+			return 1;
+
 		case GeneratorType::ReleaseModEnv:
 		case GeneratorType::ReleaseVolEnv:
 			if (type == RegionType::Insttrument)
 				return 0.01f;
 			return 1;
-			break;
 
-		case GeneratorType::AttackVolEnv:
 		case GeneratorType::DecayVolEnv:
 		case GeneratorType::HoldVolEnv:
-		case GeneratorType::AttackModEnv:
 		case GeneratorType::DecayModEnv:
 		case GeneratorType::HoldModEnv:
 			if (type == RegionType::Insttrument)
@@ -225,9 +230,13 @@ namespace ventrue
 			return value < 0.01f ? 0.01f : value;
 
 		case GeneratorType::AttackVolEnv:
+		case GeneratorType::AttackModEnv:
+			//此处需要设置到0.001，比如鼓，吉他，一些需要立即启音的发声，
+			//必须设置非常小的值，不然发音会有杂音
+			return value < 0.001f ? 0.001f : value;
+
 		case GeneratorType::DecayVolEnv:
 		case GeneratorType::HoldVolEnv:
-		case GeneratorType::AttackModEnv:
 		case GeneratorType::DecayModEnv:
 		case GeneratorType::HoldModEnv:
 			return value < 0.001f ? 0.001f : value;

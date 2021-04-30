@@ -42,6 +42,9 @@ namespace ventrue
 		//设置播放的起始时间点
 		void GotoSec(double gotoSec);
 
+		//设置打击乐号
+		void SetPercussionProgramNum(int num);
+
 	private:
 		void Clear();
 		void TrackPlayCore(double sec);
@@ -75,6 +78,9 @@ namespace ventrue
 
 		//是否快进
 		bool isDirectGoto = false;
+
+		//打击乐号
+		int percussionProgramNum = 0;
 
 	};
 }

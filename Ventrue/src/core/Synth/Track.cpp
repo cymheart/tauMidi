@@ -40,6 +40,13 @@ namespace ventrue
 		channels[9]->SetProgramNum(0);
 	}
 
+	//设置打击乐号
+	void Track::SetPercussionProgramNum(int num)
+	{
+		channels[9]->SetProgramNum(num);
+	}
+
+
 	Channel* Track::operator[] (int n)
 	{
 		return channels[n];

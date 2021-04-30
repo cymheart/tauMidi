@@ -188,6 +188,33 @@ namespace ventrue
 	}
 
 
+	//为midi文件设置打击乐号
+	void VentrueCmd::SetPercussionProgramNum(int midiFileIdx, int num)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->processCallBack = _SetPercussionProgramNum;
+		ev->midiFile = nullptr;
+		ev->midiFileIdx = midiFileIdx;
+		ev->value = num;
+		ventrue->PostTask(ev);
+	}
+
+	//为midi文件设置打击乐号
+	void VentrueCmd::_SetPercussionProgramNum(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		MidiFile* midiFile = nullptr;
+
+		if (ventrue.midiPlayList->size() <= ventrueEvent->midiFileIdx) {
+			return;
+		}
+
+		(*ventrue.midiPlayList)[ventrueEvent->midiFileIdx]->SetPercussionProgramNum(ventrueEvent->value);
+	}
+
+
 	// 禁止播放指定编号Midi文件的轨道
 	void VentrueCmd::DisableMidiTrack(int midiFileIdx, int trackIdx)
 	{

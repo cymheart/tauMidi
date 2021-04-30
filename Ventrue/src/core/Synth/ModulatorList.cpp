@@ -49,6 +49,7 @@ namespace ventrue
 	//生成内置调制器
 	void ModulatorList::CreateInsideModulators()
 	{
+
 		CreateInsidePanModulator();
 		CreateInsideCoarseTuneModulator();
 		CreateInsideFineTuneModulator();

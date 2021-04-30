@@ -56,6 +56,16 @@ namespace ventrue
 		Clear();
 	}
 
+	//设置打击乐号
+	void MidiPlay::SetPercussionProgramNum(int num)
+	{
+		percussionProgramNum = num;
+		for (int i = 0; i < trackList.size(); i++)
+		{
+			trackList[i]->SetPercussionProgramNum(percussionProgramNum);
+		}
+	}
+
 
 	void MidiPlay::Clear()
 	{
@@ -79,7 +89,7 @@ namespace ventrue
 			size_t count = midiTrackList->size() - trackList.size();
 			for (size_t i = 0; i < count; i++)
 			{
-				trackList.push_back(new Track(trackList.size()));
+				trackList.push_back(new Track((int)(trackList.size())));
 			}
 		}
 	}
@@ -174,6 +184,7 @@ namespace ventrue
 				eventList = (*midiTrackList)[i]->GetEventList();
 				trackList[i]->eventOffsetIter = eventList->begin();
 				trackList[i]->baseTickTime = sec;
+				trackList[i]->SetPercussionProgramNum(percussionProgramNum);
 			}
 
 			assistTrack->baseTickTime = sec;
@@ -291,8 +302,6 @@ namespace ventrue
 				if (preset == nullptr)
 					return;
 			}
-
-
 
 			VirInstrument* virInst = ventrue->EnableVirInstrument(preset, &channel);
 			virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1, false);

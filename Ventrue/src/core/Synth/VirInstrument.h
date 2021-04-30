@@ -237,6 +237,11 @@ namespace ventrue
 
 		void PrintOnKeyInfo(int key, float velocity, bool isRealTime);
 
+		//是否可以忽略按键
+		bool CanIgroneOnKey(int key, float velocity, int tickCount, bool isRealTime);
+		//计算按键速度
+		void ComputeOnKeySpeed();
+
 	private:
 
 		//发音结束,包括效果器作用带来的尾音是否结束
@@ -245,7 +250,7 @@ namespace ventrue
 		//效果器
 		EffectList* effects;
 		//是否启用效果器
-		bool isEnableEffect = false;
+		bool isEnableEffect = true;
 
 		//
 		bool isFadeEffectDepth = false;
@@ -302,6 +307,12 @@ namespace ventrue
 		vector<KeySounder*>* onKeySounders = nullptr;
 		unordered_map<int, list<KeyEvent>>* onkeyEventMap = nullptr;
 		unordered_map<int, list<KeyEvent>>* offkeyEventMap = nullptr;
+
+		//按键时间点
+		list<float>* onKeySecHistorys = nullptr;
+		//按键速率
+		float onKeySpeed = 0;
+
 
 		// 左通道已处理采样点
 		float leftChannelSamples[8192 * 10] = { 0 };

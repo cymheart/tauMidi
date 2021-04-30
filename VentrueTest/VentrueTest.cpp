@@ -59,12 +59,13 @@ void art(VentrueCmd* cmd)
 	//	//cmd->OffKey(i, 127, inst);
 	//}
 	Sleep(1555);
-	VirInstrument* inst = cmd->EnableVirInstrument(0, 0, 0, 0);
+	VirInstrument* inst = cmd->EnableVirInstrument(0, 128, 0, 0);
+	//cmd->OnKey(64, 127, inst);
 
-	for (int i = 77; i < 80; i++) {
-		cmd->OnKey(i, 62, inst);
-		Sleep(185);
-		cmd->OffKey(i, 62, inst);
+	for (int i = 0; i <= 3; i++) {
+		cmd->OnKey(64, 127, inst);
+		Sleep(145);
+		cmd->OffKey(64, 127, inst);
 
 	}
 	//cmd->OffKey(64, 127, inst);
@@ -107,7 +108,7 @@ int main(int argc, char* argv[])
 	ventrue->SetLimitRegionSounderCount(600);
 	ventrue->SetTrackChannelMergeMode(AutoMerge);
 	//ventrue->SetRenderQuality(RenderQuality::SuperHigh);
-	//ventrue->SetUseMulThread(true);
+//	ventrue->SetUseMulThread(true);
 	//ventrue->SetChannelOutputMode(ChannelOutputMode::Mono);
 	//ventrue->SetUsePortamento(true);
 	//ventrue->SetPortaTime(0.3f);
@@ -129,8 +130,8 @@ int main(int argc, char* argv[])
 	ventrue->OpenAudio();
 
 	//设置音源
-	//ventrue->ParseSoundFont("SF2", sfPath + "GeneralUser GS MuseScore v1.442.sf2");
-	ventrue->ParseSoundFont("SF2", sfPath + "gnusmas_gm_soundfont_2.01.sf2");
+	ventrue->ParseSoundFont("SF2", sfPath + "GeneralUser GS MuseScore v1.442.sf2");
+	//ventrue->ParseSoundFont("SF2", sfPath + "gnusmas_gm_soundfont_2.01.sf2");
 	//ventrue->ParseSoundFont("VentrueFont", sfPath + "OreSoundFont\\GarageBandPianoH\\GarageBandPianoH.xml");
 
 	//添加需要播放的midi文件
@@ -148,34 +149,44 @@ int main(int argc, char* argv[])
 	//cmd->AppendMidiFile(midiPath + "(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\Brainiac Maniac 2.mid");
 	//cmd->AppendMidiFile(midiPath + "song100\\054.mid");
-	//cmd->AppendMidiFile(midiPath + "song100\\038.mid");
+	cmd->AppendMidiFile(midiPath + "song100\\052.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\剑之心(Heart_Of_Sword).mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\Promise.mid");
-	cmd->AppendMidiFile(midiPath + "笑傲江湖.mid");
+	//cmd->AppendMidiFile(midiPath + "笑傲江湖.mid");
 	//cmd->AppendMidiFile(midiPath + "笑傲江湖3.mid");
 
 	//cmd->AppendMidiFile(midiPath + "test.mid");
 
 	//播放第1个midi文件
 	cmd->PlayMidi(0);
+
+	cmd->SetPercussionProgramNum(0, 26);
+
 	//播放第2个midi文件
 	//cmd->PlayMidi(1);
 
-	//cmd->DisableMidiTrackChannel(0, 0, 3);
+	//cmd->DisableMidiTrackChannel(0, 0, 9);
 
 	//cmd->DisableMidiTrackAllChannels(0, 0);
-	//cmd->EnableMidiTrackChannel(0, 0, 0);
+	//cmd->EnableMidiTrackChannel(0, 0, 9);
 
 	//cmd->DisableAllMidiTrack(0);
-	//cmd->EnableMidiTrack(0, 2);
+	//cmd->EnableMidiTrack(0, 10);
 
+	//cmd->DisableMidiTrack(0, 9);
 	//cmd->DisableMidiTrack(0, 10);
+	//cmd->DisableMidiTrack(0, 8);
+	//cmd->DisableMidiTrack(0, 15);
+	//cmd->DisableMidiTrack(0, 9);
+	//cmd->DisableMidiTrack(0, 12);
+	//cmd->DisableMidiTrack(0, 1);
 	//cmd->DisableMidiTrack(0, 11);
 	//cmd->DisableMidiTrack(0, 6);
 	//cmd->DisableMidiTrack(0, 7);
+	//cmd->DisableMidiTrack(0, 9);
+	//cmd->DisableMidiTrack(0, 8);
 	//cmd->DisableMidiTrack(0, 1);
-	//cmd->DisableMidiTrack(0, 6);
-//	cmd->MidiGotoSec(0, 10);
+	//cmd->MidiGotoSec(0, 120);
 
 
 	//去掉注释,弹奏测试

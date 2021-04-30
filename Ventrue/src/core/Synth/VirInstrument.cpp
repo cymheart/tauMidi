@@ -19,6 +19,7 @@ namespace ventrue
 		onKeySounders = new vector<KeySounder*>;
 		onkeyEventMap = new unordered_map<int, list<KeyEvent>>();
 		offkeyEventMap = new unordered_map<int, list<KeyEvent>>();
+		onKeySecHistorys = new list<float>;
 
 		//
 		effects = new EffectList();
@@ -52,6 +53,7 @@ namespace ventrue
 		DEL(onKeySounders);
 		DEL(onkeyEventMap);
 		DEL(offkeyEventMap);
+		DEL(onKeySecHistorys);
 	}
 
 
@@ -79,6 +81,7 @@ namespace ventrue
 			KeySounder& keySounder = *(*it);
 			keySounder.ModulationParams();
 		}
+
 	}
 
 	/// <summary>
@@ -130,18 +133,75 @@ namespace ventrue
 		return true;
 	}
 
+	//计算按键速度
+	void VirInstrument::ComputeOnKeySpeed()
+	{
+		onKeySecHistorys->push_back(ventrue->sec);
+		float tm = 0;
+		int idx = 0;
+		float size = onKeySecHistorys->size();
+
+		list<float>::iterator it = onKeySecHistorys->begin();
+		list<float>::iterator end = onKeySecHistorys->end();
+		for (; it != end; it++, idx++)
+		{
+			tm = ventrue->sec - *it;
+			if (tm >= 0.1f)
+				break;
+		}
+
+		if (tm < 0.1f)
+			return;
+
+		onKeySecHistorys->erase(onKeySecHistorys->begin());
+		onKeySpeed = (size - idx) / tm / 10.0f;
+
+		//printf("乐器%s:onKeySpeed:%.2f n/s\n", preset->name.c_str(), onKeySpeed);
+	}
+
+	//是否可以忽略按键
+	bool VirInstrument::CanIgroneOnKey(int key, float velocity, int tickCount, bool isRealTime)
+	{
+		//对同时产生的大量发音按键进行忽略
+		//忽略算法:如果当前所有区域发音数量超过极限值的一半
+		//并且当前非实时按键发音....
+		if (ventrue->totalRegionSounderCount > ventrue->limitRegionSounderCount * 0.5f)
+		{
+			if (!isRealTime && tickCount <= 5)
+			{
+				//录制	
+				midiTrackRecord->RecordOffKey(key, velocity, channel->GetChannelNum());
+				return true;
+			}
+
+			//计算按键速度
+			ComputeOnKeySpeed();
+
+			if (onKeySpeed > 800)
+			{
+				//录制	
+				midiTrackRecord->RecordOffKey(key, velocity, channel->GetChannelNum());
+				return true;
+			}
+		}
+		else
+		{
+			//计算按键速度
+			ComputeOnKeySpeed();
+		}
+
+		return false;
+	}
+
 
 	//按键
 	void VirInstrument::OnKey(int key, float velocity, int tickCount, bool isRealTime)
 	{
-		//
-		if (onkeyEventMap->size() > 10 &&
-			(velocity < 10 ||
-				(!isRealTime && tickCount <= 5)))
-		{
+		//判断是否可以忽略按键
+		if (CanIgroneOnKey(key, velocity, tickCount, isRealTime))
 			return;
-		}
 
+		//
 		KeyEvent keyEvent;
 		keyEvent.isOnKey = true;
 		keyEvent.key = key;
@@ -238,7 +298,7 @@ namespace ventrue
 			return;
 
 		//如果keySounder发声没有结束，同时又是保持按键状态，
-		//将对此keySounder设置一个需要松开按键请求，而不理解松开按键
+		//将对此keySounder设置一个需要松开按键请求，而不立即松开按键
 		//引擎将在合适的时机（发声结束时），真正松开这个按键
 		if (!keySounder->IsSoundEnd() &&
 			keySounder->IsHoldDownKey() &&
@@ -397,53 +457,25 @@ namespace ventrue
 	//生成发声keySounders
 	void VirInstrument::CreateKeySounders()
 	{
+		//printf("乐器%s:onKeyEventCount:%d\n", preset->name.c_str(), onkeyEventMap->size());
+
 		if (!onkeyEventMap->empty())
 		{
 			KeySounder* keySounder;
-			//printf("乐器%s:onKeyEventCount:%d\n", preset->name.c_str(), onkeyEventMap->size());
-			if (onkeyEventMap->size() > 150)
+			for (auto iter = onkeyEventMap->begin(); iter != onkeyEventMap->end(); ++iter)
 			{
-				vector<KeyEvent> temp;
-				for (auto iter = onkeyEventMap->begin(); iter != onkeyEventMap->end(); ++iter)
+				list<KeyEvent>& keyEventList = iter->second;
+				list<KeyEvent>::iterator it = keyEventList.begin();
+				list<KeyEvent>::iterator end = keyEventList.end();
+				for (; it != end; it++)
 				{
-					list<KeyEvent>& keyEventList = iter->second;
-					list<KeyEvent>::iterator it = keyEventList.begin();
-					list<KeyEvent>::iterator end = keyEventList.end();
-					for (; it != end; it++)
-					{
-						temp.push_back(*it);
-					}
-				}
-
-				random_shuffle(temp.begin(), temp.end());
-
-				for (int i = 0; i < 150; i++)
-				{
-					KeyEvent& keyEvent = temp[i];
+					KeyEvent& keyEvent = *it;
 					keySounder = OnKeyExecute(keyEvent.key, keyEvent.velocity);
-					keySounder->SetRealtimeControlType(keyEvent.isRealTime);
+					if (keySounder)
+						keySounder->SetRealtimeControlType(keyEvent.isRealTime);
 
 					//
 					//PrintOnKeyInfo(keyEvent.key, keyEvent.velocity, keyEvent.isRealTime);
-				}
-			}
-			else
-			{
-				for (auto iter = onkeyEventMap->begin(); iter != onkeyEventMap->end(); ++iter)
-				{
-					list<KeyEvent>& keyEventList = iter->second;
-					list<KeyEvent>::iterator it = keyEventList.begin();
-					list<KeyEvent>::iterator end = keyEventList.end();
-					for (; it != end; it++)
-					{
-						KeyEvent& keyEvent = *it;
-						keySounder = OnKeyExecute(keyEvent.key, keyEvent.velocity);
-						if (keySounder)
-							keySounder->SetRealtimeControlType(keyEvent.isRealTime);
-
-						//
-						//PrintOnKeyInfo(keyEvent.key, keyEvent.velocity, keyEvent.isRealTime);
-					}
 				}
 			}
 
@@ -505,7 +537,6 @@ namespace ventrue
 			SetRegionReverbDepth(startRegionReverbDepth + (dstRegionReverbDepth - startRegionReverbDepth) * scale);
 			SetRegionChorusDepth(startRegionChorusDepth + (dstRegionChorusDepth - startRegionChorusDepth) * scale);
 		}
-
 
 		//
 		regionSounderCount = 0;

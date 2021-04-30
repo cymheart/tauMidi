@@ -204,26 +204,6 @@ namespace ventrue {
 		regionModulation->SetRegions(instRegion, instGlobalRegion, presetRegion, presetGlobalRegion);
 	}
 
-	// 松开按键
-	void RegionSounder::OffKey(float velocity, float releaseSec)
-	{
-		//没有使用单音模式时才可以保持按键
-		if (isHoldDownKey && !virInst->UseMonoMode()) {
-			isNeedOffKey = true;
-			return;
-		}
-
-		isDownNoteKey = false;
-		isNeedOffKey = false;
-		isHoldDownKey = false;
-		OffKeyEnvs(releaseSec);
-
-		if (loopPlayBack == LoopPlayBackMode::LoopEndContinue)
-			isLoopSample = false;
-	}
-
-
-
 	// 按下对应的键
 	void RegionSounder::OnKey(int key, float velocity)
 	{
@@ -244,6 +224,27 @@ namespace ventrue {
 		OpenLfos();
 		OpenEnvs();
 
+	}
+
+	// 松开按键
+	void RegionSounder::OffKey(float velocity, float releaseSec)
+	{
+		//没有使用单音模式时才可以保持按键
+		if (isHoldDownKey && !virInst->UseMonoMode()) {
+			isNeedOffKey = true;
+			return;
+		}
+
+		if (isSoundEnd)
+			return;
+
+		isDownNoteKey = false;
+		isNeedOffKey = false;
+		isHoldDownKey = false;
+		OffKeyEnvs(releaseSec);
+
+		if (loopPlayBack == LoopPlayBackMode::LoopEndContinue)
+			isLoopSample = false;
 	}
 
 
@@ -1051,7 +1052,7 @@ namespace ventrue {
 	// <param name="sampleAmount">块中采样点数量</param>
 	void RegionSounder::Render()
 	{
-		if (isSampleProcessEnd)
+		if (isSampleProcessEnd || isSoundEnd)
 		{
 			isSoundEnd = true;
 			return;
