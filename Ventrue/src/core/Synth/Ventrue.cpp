@@ -823,11 +823,13 @@ namespace ventrue {
 	void Ventrue::FastReleaseRegionSounders()
 	{
 		int instSize = virInsts->size();
-		if (instSize <= 1)
+		if (instSize <= 0)
 			return;
 
-		//按乐器当前区域发声数量由少到多排列乐器
-		sort(virInsts->begin(), virInsts->end(), SounderCountCompare);
+		if (instSize > 1) {
+			//按乐器当前区域发声数量由少到多排列乐器
+			sort(virInsts->begin(), virInsts->end(), SounderCountCompare);
+		}
 
 		int limitTotalCount = limitRegionSounderCount;
 		int limitPerElemCount = limitTotalCount / instSize;
