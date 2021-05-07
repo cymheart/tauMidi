@@ -90,13 +90,13 @@ namespace task
 	}
 
 	//生成固定帧率定时器
-	TaskTimer* TaskProcesser::CreateTimer(TimerCallBack timerCB, void* data, boolean isRepeat)
+	TaskTimer* TaskProcesser::CreateTimer(TimerCallBack timerCB, void* data, bool isRepeat)
 	{
 		return new TaskTimer(this, timerCB, data, isRepeat);
 	}
 
 	//生成定时器
-	TaskTimer* TaskProcesser::CreateTimer(TimerCallBack timerCB, void* data, int durationMS, boolean isRepeat)
+	TaskTimer* TaskProcesser::CreateTimer(TimerCallBack timerCB, void* data, int durationMS, bool isRepeat)
 	{
 		return new TaskTimer(this, timerCB, data, durationMS, isRepeat);
 	}

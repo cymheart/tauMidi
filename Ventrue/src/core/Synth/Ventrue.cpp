@@ -22,6 +22,7 @@
 #include <Effect\EffectCompressor.h>
 #include<algorithm>
 
+
 using namespace dsignal;
 
 /*
@@ -32,6 +33,7 @@ namespace ventrue {
 
 	Ventrue::Ventrue()
 	{
+		cmd = new VentrueCmd(this);
 		openedAudioTime = new clock::time_point;
 		isFrameRenderCompleted = true;
 		cmdLock = new mutex();
@@ -39,7 +41,8 @@ namespace ventrue {
 		instList = new InstrumentList;
 		presetList = new PresetList;
 		presetBankDict = new PresetMap;
-		virInstList = new VirInstList;
+		presetBankReplaceMap = new unordered_map<uint32_t, uint32_t>;
+		virInstList = new vector<VirInstrument*>;
 		virInsts = new vector<VirInstrument*>;
 		taskProcesser = new TaskProcesser;
 		realtimeKeyOpTaskProcesser = new TaskProcesser;
@@ -84,6 +87,8 @@ namespace ventrue {
 
 	Ventrue::~Ventrue()
 	{
+		DEL(cmd);
+
 		//注意，必须首先停止audio的回调运作
 		DEL(audio);
 		DEL(synthSampleRingBuffer);
@@ -100,6 +105,7 @@ namespace ventrue {
 
 		DEL(virInsts);
 		DEL(presetBankDict);
+		DEL(presetBankReplaceMap);
 		DEL_OBJS_VECTOR(virInstList);
 		DEL(realtimeKeyEventList);
 		DEL(openedAudioTime);
@@ -285,6 +291,13 @@ namespace ventrue {
 		return inst->LinkSamples(sample);
 	}
 
+	// 在虚拟乐器列表中，创建新的指定虚拟乐器
+	VirInstrument* Ventrue::NewVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
+	{
+		uint64_t deviceChannelNum = UniqueID::GetInstance().gen();
+		return EnableVirInstrument(deviceChannelNum, bankSelectMSB, bankSelectLSB, instrumentNum);
+	}
+
 	/// <summary>
 	/// 在虚拟乐器列表中，启用指定的虚拟乐器,如果不存在将在虚拟乐器列表中自动创建它
 	/// </summary>
@@ -293,7 +306,7 @@ namespace ventrue {
 	/// <param name="bankSelectLSB">声音库选择1</param>
 	/// <param name="instrumentNum">乐器编号</param>
 	/// <returns></returns>
-	VirInstrument* Ventrue::EnableVirInstrument(uint32_t deviceChannelNum, int bankSelectMSB, int bankSelectLSB, int instrumentNum)
+	VirInstrument* Ventrue::EnableVirInstrument(uint64_t deviceChannelNum, int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
 		Preset* preset = GetInstrumentPreset(bankSelectMSB, bankSelectLSB, instrumentNum);
 		Channel* channel = GetDeviceChannel(deviceChannelNum);
@@ -327,6 +340,7 @@ namespace ventrue {
 		if (virInst == nullptr)
 		{
 			virInst = new VirInstrument(this, channel, preset);
+			virInst->On(false);
 			SetVirInstRelationValues(virInst);
 			virInstList->push_back(virInst);
 			virInsts->push_back(virInst);
@@ -342,6 +356,90 @@ namespace ventrue {
 		}
 
 		return virInst;
+	}
+
+
+	//移除虚拟乐器
+	void Ventrue::RemoveVirInstrument(VirInstrument* virInst, bool isFade)
+	{
+		if (virInst == nullptr)
+			return;
+
+		try
+		{
+			virInst->Remove(isFade);
+		}
+		catch (exception e)
+		{
+			string error(e.what());
+			cout << "移除乐器错误原因:" << error << endl;
+		}
+	}
+
+	// 删除虚拟乐器
+	void Ventrue::DelVirInstrument(VirInstrument* virInst)
+	{
+		if (virInst == nullptr)
+			return;
+
+		vector<VirInstrument*>::iterator it = virInstList->begin();
+		for (; it != virInstList->end(); it++)
+		{
+			if (*it == virInst) {
+				virInstList->erase(it);
+				break;
+			}
+		}
+
+		it = virInsts->begin();
+		for (; it != virInsts->end(); it++)
+		{
+			if (*it == virInst) {
+				virInsts->erase(it);
+				break;
+			}
+		}
+
+		//移除对应的设备通道
+		Channel* channel = virInst->GetChannel();
+		int64_t num = channel->GetChannelNum();
+
+		auto itc = deviceChannelMap->find(num);
+		if (itc != deviceChannelMap->end())
+		{
+			deviceChannelMap->erase(itc);
+			DEL(channel);
+		}
+
+		//
+		DEL(virInst);
+	}
+
+	//打开虚拟乐器
+	void Ventrue::OnVirInstrument(VirInstrument* virInst, bool isFade)
+	{
+		if (virInst == nullptr)
+			return;
+
+		virInst->On(isFade);
+	}
+
+	//关闭虚拟乐器
+	void Ventrue::OffVirInstrument(VirInstrument* virInst, bool isFade)
+	{
+		if (virInst == nullptr)
+			return;
+
+		virInst->Off(isFade);
+	}
+
+	//获取虚拟乐器列表的备份
+	vector<VirInstrument*>* Ventrue::TakeVirInstrumentList()
+	{
+		vector<VirInstrument*>* virInsts = new vector<VirInstrument*>();
+		for (int i = 0; i < virInstList->size(); i++)
+			virInsts->push_back((*virInstList)[i]);
+		return virInsts;
 	}
 
 	//根据设备通道号获取设备通道
@@ -600,18 +698,40 @@ namespace ventrue {
 		midiFile->SaveMidiFormatMemDataToDist(saveFilePath);
 	}
 
+	//添加替换乐器
+	void Ventrue::AppendReplaceInstrument(
+		int orgBankMSB, int orgBankLSB, int orgInstNum,
+		int repBankMSB, int repBankLSB, int repInstNum)
+	{
+		int orgKey = orgBankMSB << 16 | orgBankLSB << 8 | orgInstNum;
+		int repKey = repBankMSB << 16 | repBankLSB << 8 | repInstNum;
+		(*presetBankReplaceMap)[orgKey] = repKey;
+	}
+
+	//移除替换乐器
+	void Ventrue::RemoveReplaceInstrument(int orgBankMSB, int orgBankLSB, int orgInstNum)
+	{
+		int orgKey = orgBankMSB << 16 | orgBankLSB << 8 | orgInstNum;
+		presetBankReplaceMap->erase(orgKey);
+	}
 
 	// 获取乐器预设
 	Preset* Ventrue::GetInstrumentPreset(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
 		int key = bankSelectMSB << 16 | bankSelectLSB << 8 | instrumentNum;
+
+		auto itReplace = presetBankReplaceMap->find(key);
+		if (itReplace != presetBankReplaceMap->end()) {
+			key = itReplace->second;
+		}
+
 		auto it = presetBankDict->find(key);
 		if (it != presetBankDict->end()) {
 			return it->second;
 		}
 
 		//
-		key = bankSelectMSB << 16 | instrumentNum;
+		key &= 0xff00ff;  //bankSelectMSB << 16 | instrumentNum;
 		it = presetBankDict->find(key);
 		if (it != presetBankDict->end()) {
 			//cout << "使用乐器:"<<instrumentNum<<" " << it->second->name << endl;
@@ -858,6 +978,7 @@ namespace ventrue {
 		}
 	}
 
+
 	bool Ventrue::SounderCountCompare(VirInstrument* a, VirInstrument* b)
 	{
 		int regionCountA = a->GetRegionSounderCount();
@@ -961,10 +1082,16 @@ namespace ventrue {
 	// 移除已完成所有区域发声处理(采样处理)的KeySounder      
 	void Ventrue::RemoveProcessEndedKeySounder()
 	{
+		int n = 0;
 		for (int i = 0; i < virInstList->size(); i++)
 		{
 			(*virInstList)[i]->RemoveProcessEndedKeySounder();
+			if ((*virInstList)[i]->IsSoundEnd())
+				soundEndVirInsts[n++] = (*virInstList)[i];
 		}
+
+		if (soundEndVirInstCallBack != nullptr && n > 0)
+			soundEndVirInstCallBack(this, soundEndVirInsts, n);
 	}
 
 

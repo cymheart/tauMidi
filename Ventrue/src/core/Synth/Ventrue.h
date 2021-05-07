@@ -19,11 +19,15 @@ namespace ventrue
 		Ventrue();
 		~Ventrue();
 
+		inline VentrueCmd* GetCmd()
+		{
+			return cmd;
+		}
+
 		void Close();
 
 		// 开启声音播放引擎
 		void OpenAudio();
-
 
 
 		//设置是否使用多线程
@@ -160,6 +164,12 @@ namespace ventrue
 			limitRegionSounderCount = count;
 		}
 
+		inline int GetTotalRegionSounderCount()
+		{
+			return totalRegionSounderCount;
+		}
+
+
 		// 增加一个样本到样本列表
 		Sample* AddSample(string name, short* samples, size_t size, byte* sm24 = nullptr);
 
@@ -170,7 +180,7 @@ namespace ventrue
 
 		// 增加一个乐器到乐器列表
 		Instrument* AddInstrument(string name);
-
+		//获取乐器列表
 		InstrumentList* GetInstrumentList()
 		{
 			return instList;
@@ -179,6 +189,7 @@ namespace ventrue
 		// 增加一个预设到预设列表
 		Preset* AddPreset(string name, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
+		//获取预设列表
 		inline PresetList* GetPresetList()
 		{
 			return presetList;
@@ -239,7 +250,13 @@ namespace ventrue
 			return useLegato;
 		}
 
+		//添加替换乐器
+		void AppendReplaceInstrument(
+			int orgBankMSB, int orgBankLSB, int orgInstNum,
+			int repBankMSB, int repBankLSB, int repInstNum);
 
+		//移除替换乐器
+		void RemoveReplaceInstrument(int orgBankMSB, int orgBankLSB, int orgInstNum);
 
 		//投递任务
 		void PostTask(TaskCallBack taskCallBack, void* data, int delay = 0);
@@ -255,6 +272,9 @@ namespace ventrue
 		// 获取乐器预设
 		Preset* GetInstrumentPreset(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
+		// 在虚拟乐器列表中，创建新的指定虚拟乐器
+		VirInstrument* NewVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
+
 		/// <summary>
 		/// 在虚拟乐器列表中，启用指定的虚拟乐器,如果不存在，将在虚拟乐器列表中自动创建它
 		/// 注意如果deviceChannelNum已经被使用过，此时会直接修改这个通道上的虚拟乐器的音色到指定音色，
@@ -265,12 +285,27 @@ namespace ventrue
 		/// <param name="bankSelectLSB">声音库选择1</param>
 		/// <param name="instrumentNum">乐器编号</param>
 		/// <returns></returns>
-		VirInstrument* EnableVirInstrument(uint32_t deviceChannelNum, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
+		VirInstrument* EnableVirInstrument(uint64_t deviceChannelNum, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
 		// 在虚拟乐器列表中，启用指定的虚拟乐器,如果不存在，将在虚拟乐器列表中自动创建它
 		// 注意如果channel已经被使用过，此时会直接修改这个通道上的虚拟乐器的音色到指定音色，
 		// 而不会同时在一个通道上创建超过1个的虚拟乐器
 		VirInstrument* EnableVirInstrument(Preset* preset, Channel* channel);
+
+
+		//移除虚拟乐器
+		void RemoveVirInstrument(VirInstrument* virInst, bool isFade = true);
+
+		//删除虚拟乐器
+		void DelVirInstrument(VirInstrument* virInst);
+
+		//打开虚拟乐器
+		void OnVirInstrument(VirInstrument* virInst, bool isFade = true);
+		//关闭虚拟乐器
+		void OffVirInstrument(VirInstrument* virInst, bool isFade = true);
+
+		//获取虚拟乐器列表的备份
+		vector<VirInstrument*>* TakeVirInstrumentList();
 
 		//根据设备通道号获取设备通道
 		Channel* GetDeviceChannel(uint32_t deviceChannelNum);
@@ -386,7 +421,12 @@ namespace ventrue
 		//渲染发音的时间点回调附带数据
 		void* renderTimeCallBackData = nullptr;
 
+		//发声结束的虚拟乐器回调
+		SoundEndVirInstCallBack soundEndVirInstCallBack = nullptr;
+
 	private:
+
+		VentrueCmd* cmd = nullptr;
 
 		//开始音频处理的起始时间
 		clock::time_point* openedAudioTime;
@@ -436,6 +476,9 @@ namespace ventrue
 		PresetList* presetList = nullptr;
 		PresetMap* presetBankDict = nullptr;
 
+		//预设乐器替换
+		unordered_map<uint32_t, uint32_t>* presetBankReplaceMap = nullptr;
+
 		//// 左通道已处理采样点
 		float leftChannelSamples[8192 * 10] = { 0 };
 
@@ -468,9 +511,12 @@ namespace ventrue
 
 
 		//使用中的虚拟乐器列表
-		VirInstList* virInstList = nullptr;
-		//使用中的虚拟乐器列表
+		vector<VirInstrument*>* virInstList = nullptr;
+		//使用中的虚拟乐器列表(此列表用于乐器发声数量排序)
 		vector<VirInstrument*>* virInsts = nullptr;
+		//发声结束的虚拟乐器
+		VirInstrument* soundEndVirInsts[100000] = { nullptr };
+
 
 		//是否启用乐器混响处理
 		bool isEnableInstReverb = false;

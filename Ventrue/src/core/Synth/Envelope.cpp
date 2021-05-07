@@ -300,7 +300,7 @@ namespace ventrue
 			if (attackSec < 0.4f)
 				y = pow(xNormal, 4);
 			else
-				y = 1;
+				y = xNormal;
 
 			break;
 
@@ -313,6 +313,9 @@ namespace ventrue
 			break;
 
 		case EnvStage::Decay:
+			y = xNormal < 1 ? FastPow2(-(xNormal * 15)) : 0;
+			y = range.ymin + y * range.yRangeWidth;
+			break;
 		case EnvStage::Release:
 
 			//y = xNormal < 1 ? pow(10.0f, -(xNormal * 200 * 0.05f)) : 0;

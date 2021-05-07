@@ -15,7 +15,7 @@ namespace ventrue
 		~Channel();
 
 		//获取通道号
-		inline int GetChannelNum()
+		inline int64_t GetChannelNum()
 		{
 			return channelNum;
 		}
@@ -109,7 +109,7 @@ namespace ventrue
 
 	private:
 		//通道号
-		int channelNum = 0;
+		int64_t channelNum = 0;
 		//所在轨道
 		Track* track = nullptr;
 

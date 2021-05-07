@@ -75,10 +75,10 @@ namespace task
 		int Stop();
 
 		//生成固定帧率定时器 
-		TaskTimer* CreateTimer(TimerCallBack timerCB, void* data, boolean isRepeat);
+		TaskTimer* CreateTimer(TimerCallBack timerCB, void* data, bool isRepeat);
 
 		//生成定时器 
-		TaskTimer* CreateTimer(TimerCallBack timerCB, void* data, int durationMS, boolean isRepeat);
+		TaskTimer* CreateTimer(TimerCallBack timerCB, void* data, int durationMS, bool isRepeat);
 
 		int PostTask(TaskCallBack taskCallBack);
 		int PostTask(TaskCallBack taskCallBack, int delay);

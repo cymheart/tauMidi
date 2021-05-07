@@ -59,15 +59,19 @@ void art(VentrueCmd* cmd)
 	//	//cmd->OffKey(i, 127, inst);
 	//}
 	Sleep(1555);
-	VirInstrument* inst = cmd->EnableVirInstrument(0, 128, 0, 0);
-	//cmd->OnKey(64, 127, inst);
+	VirInstrument* inst = cmd->EnableVirInstrument(0, 0, 0, 20);
+	cmd->OnKey(36, 127, inst);
 
-	for (int i = 0; i <= 3; i++) {
-		cmd->OnKey(64, 127, inst);
-		Sleep(145);
-		cmd->OffKey(64, 127, inst);
+	Sleep(2000);
+	cmd->RemoveVirInstrument(inst);
 
-	}
+
+	/*for (int i = 36; i <= 1200; i++) {
+		cmd->OnKey(i, 127, inst);
+		Sleep(45);
+		cmd->OffKey(i, 127, inst);
+
+	}*/
 	//cmd->OffKey(64, 127, inst);
 	//VirInstrument* inst = cmd->EnableVirInstrument(0, 0, 0, 63);
 	//for (int j = 0; j < 13; j++)
@@ -99,8 +103,7 @@ int main(int argc, char* argv[])
 
 	//建立ventrue
 	Ventrue* ventrue = new Ventrue();
-	VentrueCmd* cmd = new VentrueCmd(ventrue);
-
+	VentrueCmd* cmd = ventrue->GetCmd();
 
 	ventrue->SetFrameSampleCount(512);
 	ventrue->SetSampleProcessRate(44100);
@@ -146,10 +149,10 @@ int main(int argc, char* argv[])
 	//cmd->AppendMidiFile(midiPath + "learning\\Sound of Silence-Simon & Garfunkel.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\QianQianQueGe.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\ShiNian.mid");
-	//cmd->AppendMidiFile(midiPath + "(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid");
+	cmd->AppendMidiFile(midiPath + "(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\Brainiac Maniac 2.mid");
 	//cmd->AppendMidiFile(midiPath + "song100\\054.mid");
-	cmd->AppendMidiFile(midiPath + "song100\\052.mid");
+	//cmd->AppendMidiFile(midiPath + "song100\\052.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\剑之心(Heart_Of_Sword).mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\Promise.mid");
 	//cmd->AppendMidiFile(midiPath + "笑傲江湖.mid");
@@ -160,7 +163,7 @@ int main(int argc, char* argv[])
 	//播放第1个midi文件
 	cmd->PlayMidi(0);
 
-	cmd->SetPercussionProgramNum(0, 26);
+	//cmd->SetPercussionProgramNum(0, 26);
 
 	//播放第2个midi文件
 	//cmd->PlayMidi(1);
@@ -171,7 +174,7 @@ int main(int argc, char* argv[])
 	//cmd->EnableMidiTrackChannel(0, 0, 9);
 
 	//cmd->DisableAllMidiTrack(0);
-	//cmd->EnableMidiTrack(0, 10);
+	//cmd->EnableMidiTrack(0, 8);
 
 	//cmd->DisableMidiTrack(0, 9);
 	//cmd->DisableMidiTrack(0, 10);
@@ -186,11 +189,21 @@ int main(int argc, char* argv[])
 	//cmd->DisableMidiTrack(0, 9);
 	//cmd->DisableMidiTrack(0, 8);
 	//cmd->DisableMidiTrack(0, 1);
-	//cmd->MidiGotoSec(0, 120);
+	//cmd->MidiGotoSec(0, 16);
 
 
 	//去掉注释,弹奏测试
 	//art(cmd);
+
+	Sleep(10000);
+
+
+	/*vector<VirInstrument*>* insts = cmd->TakeVirInstrumentList();
+	for (int i = 0; i < 6; i++)
+		cmd->RemoveVirInstrument((*insts)[i]);
+	DEL(insts);*/
+
+
 
 	//
 	Sleep(50000000);

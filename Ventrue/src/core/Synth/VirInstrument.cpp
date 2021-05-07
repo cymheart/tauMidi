@@ -6,6 +6,7 @@
 #include"Preset.h"
 #include"Track.h"
 #include <random>
+#include"VentrueCmd.h"
 
 
 namespace ventrue
@@ -56,6 +57,60 @@ namespace ventrue
 		DEL(onKeySecHistorys);
 	}
 
+	//打开乐器
+	void VirInstrument::On(bool isFade)
+	{
+		if (state == VirInstrumentState::ONING ||
+			state == VirInstrumentState::ONED)
+			return;
+
+
+		state = VirInstrumentState::ONING;
+		startGain = !isFade ? 1 : gain;
+		dstGain = 1;
+		startGainFadeSec = ventrue->sec;
+		totalGainFadeTime = 0.2f;
+
+		//
+		if (virInstStateChangedCB != nullptr)
+			virInstStateChangedCB(this);
+	}
+
+	//关闭乐器
+	void VirInstrument::Off(bool isFade)
+	{
+		if (state == VirInstrumentState::OFFING ||
+			state == VirInstrumentState::OFFED)
+			return;
+
+		state = VirInstrumentState::OFFING;
+		startGain = !isFade ? 0 : gain;
+		dstGain = 0;
+		startGainFadeSec = ventrue->sec;
+		totalGainFadeTime = 1.0f;
+
+		//
+		if (virInstStateChangedCB != nullptr)
+			virInstStateChangedCB(this);
+	}
+
+	//移除乐器
+	void VirInstrument::Remove(bool isFade)
+	{
+		if (state == VirInstrumentState::REMOVING ||
+			state == VirInstrumentState::REMOVED)
+			return;
+
+		state = VirInstrumentState::REMOVING;
+		startGain = !isFade ? 0 : gain;
+		dstGain = 0;
+		startGainFadeSec = ventrue->sec;
+		totalGainFadeTime = 1.0f;
+
+		//
+		if (virInstStateChangedCB != nullptr)
+			virInstStateChangedCB(this);
+	}
 
 	//增加效果器
 	void VirInstrument::AddEffect(VentrueEffect* effect)
@@ -197,6 +252,10 @@ namespace ventrue
 	//按键
 	void VirInstrument::OnKey(int key, float velocity, int tickCount, bool isRealTime)
 	{
+		if (state == VirInstrumentState::OFFED ||
+			state == VirInstrumentState::REMOVED)
+			return;
+
 		//判断是否可以忽略按键
 		if (CanIgroneOnKey(key, velocity, tickCount, isRealTime))
 			return;
@@ -213,6 +272,10 @@ namespace ventrue
 	//执行松开按键
 	void VirInstrument::OffKey(int key, float velocity, bool isRealTime)
 	{
+		if (state == VirInstrumentState::OFFED ||
+			state == VirInstrumentState::REMOVED)
+			return;
+
 		KeyEvent keyEvent;
 		keyEvent.isOnKey = false;
 		keyEvent.key = key;
@@ -302,7 +365,9 @@ namespace ventrue
 		//引擎将在合适的时机（发声结束时），真正松开这个按键
 		if (!keySounder->IsSoundEnd() &&
 			keySounder->IsHoldDownKey() &&
-			!useMonoMode)
+			!useMonoMode &&
+			state != VirInstrumentState::OFFED &&
+			state != VirInstrumentState::REMOVED)
 		{
 			keySounder->NeedOffKey();
 			return;
@@ -578,6 +643,36 @@ namespace ventrue
 			}
 		}
 
+		//
+		//
+		if (state == VirInstrumentState::OFFING ||
+			state == VirInstrumentState::ONING ||
+			state == VirInstrumentState::REMOVING)
+		{
+			float scale = (ventrue->sec - startGainFadeSec) / totalGainFadeTime;
+			if (scale >= 1)
+			{
+				if (state == VirInstrumentState::OFFING)
+					state = VirInstrumentState::OFFED;
+				else if (state == VirInstrumentState::ONING)
+					state = VirInstrumentState::ONED;
+				else
+					state = VirInstrumentState::REMOVED;
+
+				scale = 1;
+
+				if (virInstStateChangedCB != nullptr)
+					virInstStateChangedCB(this);
+
+				if (state == VirInstrumentState::REMOVED) {
+					ventrue->GetCmd()->DelVirInstrument(this);
+				}
+			}
+
+			gain = startGain + (dstGain - startGain) * scale;
+
+		}
+
 		//存在发音时，设置调整混音，和声数值
 		if (idx > startSaveIdx)
 		{
@@ -661,7 +756,7 @@ namespace ventrue
 	//合并区域已处理发音样本
 	void VirInstrument::CombineRegionSounderSamples(RegionSounder* regionSounder)
 	{
-		if (regionSounder->IsSoundEnd() || regionSounder->virInst != this)
+		if (IsSoundEnd() || regionSounder->IsSoundEnd() || regionSounder->virInst != this)
 			return;
 
 		ChannelOutputMode outputMode = ventrue->GetChannelOutputMode();
@@ -670,8 +765,8 @@ namespace ventrue
 		int framePos = ventrue->childFramePos;
 		for (int i = 0; i < ventrue->childFrameSampleCount; i++)
 		{
-			leftChannelSamples[framePos + i] += regionLeftChannelSamples[i];
-			rightChannelSamples[framePos + i] += regionRightChannelSamples[i];
+			leftChannelSamples[framePos + i] += regionLeftChannelSamples[i] * gain;
+			rightChannelSamples[framePos + i] += regionRightChannelSamples[i] * gain;
 		}
 
 
@@ -713,14 +808,17 @@ namespace ventrue
 		for (; it != keySounders->end(); )
 		{
 			KeySounder* keySounder = *it;
-			if (keySounder->IsSoundEnd())
+			if (IsSoundEnd() || keySounder->IsSoundEnd())
 			{
 				if (keySounder->IsOnningKey())
 				{
 					//如果此时keySounder需要松开按键 且不是单音模式
 					//意味着如果有踏板保持控制，说明踏板保持是关闭的，此时需要松开这个按键
-					if (keySounder->IsNeedOffKey() && !useMonoMode)
+					if (state == VirInstrumentState::OFFED || state == VirInstrumentState::REMOVED ||
+						(keySounder->IsNeedOffKey() && !useMonoMode))
+					{
 						offKeySounder[offIdx++] = keySounder;
+					}
 
 					it++;
 					continue;

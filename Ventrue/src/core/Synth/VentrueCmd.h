@@ -16,10 +16,19 @@ namespace ventrue
 	*/
 	class DLL_CLASS VentrueCmd
 	{
-	public:
+	private:
 		VentrueCmd(Ventrue* ventrue);
 
+	public:
 		void ProcessTask(TaskCallBack taskCallBack, void* data, int delay = 0);
+
+		//添加替换乐器
+		void AppendReplaceInstrument(
+			int orgBankMSB, int orgBankLSB, int orgInstNum,
+			int repBankMSB, int repBankLSB, int repInstNum);
+
+		//移除替换乐器
+		void RemoveReplaceInstrument(int orgBankMSB, int orgBankLSB, int orgInstNum);
 
 		// 按下按键
 		void OnKey(int key, float velocity, VirInstrument* virInst);
@@ -74,6 +83,9 @@ namespace ventrue
 		// 设置设备通道Midi控制器值
 		void SetDeviceChannelMidiControllerValue(int deviceChannelNum, MidiControllerType midiController, int value);
 
+		// 在虚拟乐器列表中，创建新的指定虚拟乐器
+		VirInstrument* NewVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
+
 		/// <summary>
 		/// 在虚拟乐器列表中，启用指定的虚拟乐器,如果不存在，将在虚拟乐器列表中自动创建它
 		/// 注意如果deviceChannelNum已经被使用过，此时会直接修改这个通道上的虚拟乐器的音色到指定音色，
@@ -85,6 +97,26 @@ namespace ventrue
 		/// <param name="instrumentNum">乐器编号</param>
 		/// <returns></returns>
 		VirInstrument* EnableVirInstrument(uint32_t deviceChannelNum, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
+
+		/// <summary>
+		/// 移除乐器
+		/// </summary>
+		void RemoveVirInstrument(VirInstrument* virInst, bool isFade = true);
+
+		/// <summary>
+		/// 打开乐器
+		/// </summary>
+		void OnVirInstrument(VirInstrument* virInst, bool isFade = true);
+
+		/// <summary>
+		/// 关闭虚拟乐器
+		/// </summary>
+		void OffVirInstrument(VirInstrument* virInst, bool isFade = true);
+
+		/// <summary>
+		/// 获取虚拟乐器列表的备份
+		/// </summary>
+		vector<VirInstrument*>* TakeVirInstrumentList();
 
 		/// <summary>
 		/// 录制所有乐器弹奏为midi
@@ -138,6 +170,14 @@ namespace ventrue
 		void SaveMidiFileToDisk(MidiFile* midiFile, string saveFilePath);
 
 	private:
+		/// <summary>
+		/// 删除乐器
+		/// </summary>
+		void DelVirInstrument(VirInstrument* virInst);
+
+	private:
+		static void _AppendReplaceInstrument(Task* ev);
+		static void _RemoveReplaceInstrument(Task* ev);
 		static void _OnKey(Task* ev);
 		static void _OffKey(Task* ev);
 		static void _AddEffect(Task* ev);
@@ -152,6 +192,11 @@ namespace ventrue
 		static void _MidiGotoSec(Task* ev);
 		static void _SetDeviceChannelMidiControllerValue(Task* ev);
 		static void _EnableInstrument(Task* ev);
+		static void _RemoveInstrument(Task* ev);
+		static void _DelInstrument(Task* ev);
+		static void _OnInstrument(Task* ev);
+		static void _OffInstrument(Task* ev);
+		static void _TakeVirInstrumentList(Task* ev);
 		static void _RecordMidi(Task* ev);
 		static void _StopRecordMidi(Task* ev);
 		static void _CreateRecordMidiFileObject(Task* ev);
@@ -159,6 +204,9 @@ namespace ventrue
 
 	private:
 		Ventrue* ventrue = nullptr;
+
+		friend class Ventrue;
+		friend class VirInstrument;
 	};
 }
 

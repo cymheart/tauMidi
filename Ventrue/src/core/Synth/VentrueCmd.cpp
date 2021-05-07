@@ -13,6 +13,55 @@ namespace ventrue
 		ventrue->PostTask(taskCallBack, data, delay);
 	}
 
+	//添加替换乐器
+	void VentrueCmd::AppendReplaceInstrument(
+		int orgBankMSB, int orgBankLSB, int orgInstNum,
+		int repBankMSB, int repBankLSB, int repInstNum)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->processCallBack = _AppendReplaceInstrument;
+		ev->exValue[0] = orgBankMSB;
+		ev->exValue[1] = orgBankLSB;
+		ev->exValue[2] = orgInstNum;
+		ev->exValue[3] = repBankMSB;
+		ev->exValue[4] = repBankLSB;
+		ev->exValue[5] = repInstNum;
+		ventrue->PostTask(ev);
+	}
+
+	void VentrueCmd::_AppendReplaceInstrument(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		float* exValue = ventrueEvent->exValue;
+
+		ventrue.AppendReplaceInstrument(
+			exValue[0], exValue[1], exValue[2],
+			exValue[3], exValue[4], exValue[5]);
+	}
+
+	//移除替换乐器
+	void VentrueCmd::RemoveReplaceInstrument(int orgBankMSB, int orgBankLSB, int orgInstNum)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->processCallBack = _RemoveReplaceInstrument;
+		ev->exValue[0] = orgBankMSB;
+		ev->exValue[1] = orgBankLSB;
+		ev->exValue[2] = orgInstNum;
+		ventrue->PostTask(ev);
+	}
+
+	//移除替换乐器
+	void VentrueCmd::_RemoveReplaceInstrument(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		float* exValue = ventrueEvent->exValue;
+		ventrue.RemoveReplaceInstrument(exValue[0], exValue[1], exValue[2]);
+	}
+
 	//// 按下按键
 	void VentrueCmd::OnKey(int key, float velocity, VirInstrument* virInst)
 	{
@@ -425,6 +474,12 @@ namespace ventrue
 		ventrue.ModulationVirInstParams(channel);
 	}
 
+	// 在虚拟乐器列表中，创建新的指定虚拟乐器
+	VirInstrument* VentrueCmd::NewVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
+	{
+		uint64_t deviceChannelNum = UniqueID::GetInstance().gen();
+		return EnableVirInstrument(deviceChannelNum, bankSelectMSB, bankSelectLSB, instrumentNum);
+	}
 
 	/// <summary>
 	/// 在虚拟乐器列表中，启用指定的虚拟乐器,如果不存在将在虚拟乐器列表中自动创建它
@@ -471,6 +526,120 @@ namespace ventrue
 
 		VirInstrument** threadVInst = (VirInstrument**)ventrueEvent->ptr;
 		*threadVInst = vinst;
+		ventrueEvent->sem->set();
+	}
+
+	/// <summary>
+	/// 移除乐器
+	/// </summary>
+	void VentrueCmd::RemoveVirInstrument(VirInstrument* virInst, bool isFade)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->processCallBack = _RemoveInstrument;
+		ev->ptr = (void*)virInst;
+		ev->value = isFade ? 1 : 0;
+		ventrue->PostTask(ev);
+	}
+
+	void VentrueCmd::_RemoveInstrument(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		VirInstrument* virInst = (VirInstrument*)ventrueEvent->ptr;
+		ventrue.RemoveVirInstrument(virInst, ventrueEvent->value);
+	}
+
+	/// <summary>
+	/// 删除乐器
+	/// </summary>
+	void VentrueCmd::DelVirInstrument(VirInstrument* virInst)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->processCallBack = _DelInstrument;
+		ev->ptr = (void*)virInst;
+		ventrue->PostTask(ev);
+	}
+
+	void VentrueCmd::_DelInstrument(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		VirInstrument* virInst = (VirInstrument*)ventrueEvent->ptr;
+		ventrue.DelVirInstrument(virInst);
+	}
+
+	/// <summary>
+	/// 打开虚拟乐器
+	/// </summary>
+	void VentrueCmd::OnVirInstrument(VirInstrument* virInst, bool isFade)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->evType = VentrueEventType::EnableInstrument;
+		ev->processCallBack = _OnInstrument;
+		ev->ptr = (void*)virInst;
+		ev->value = isFade ? 1 : 0;
+		ventrue->PostTask(ev);
+	}
+
+	void VentrueCmd::_OnInstrument(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		VirInstrument* virInst = (VirInstrument*)ventrueEvent->ptr;
+		ventrue.OnVirInstrument(virInst, ventrueEvent->value);
+	}
+
+	/// <summary>
+	/// 关闭虚拟乐器
+	/// </summary>
+	void VentrueCmd::OffVirInstrument(VirInstrument* virInst, bool isFade)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->evType = VentrueEventType::EnableInstrument;
+		ev->processCallBack = _OffInstrument;
+		ev->ptr = (void*)virInst;
+		ev->value = isFade ? 1 : 0;
+		ventrue->PostTask(ev);
+	}
+
+	void VentrueCmd::_OffInstrument(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		VirInstrument* virInst = (VirInstrument*)ventrueEvent->ptr;
+		ventrue.OffVirInstrument(virInst, ventrueEvent->value);
+	}
+
+	/// <summary>
+	/// 获取虚拟乐器列表的备份
+	/// </summary>
+	vector<VirInstrument*>* VentrueCmd::TakeVirInstrumentList()
+	{
+		thread_local vector<VirInstrument*>* insts = 0;
+		thread_local Semaphore waitGetInstsSem;
+
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->processCallBack = _TakeVirInstrumentList;
+		ev->ptr = (void*)&insts;
+		ev->sem = &waitGetInstsSem;
+
+		ventrue->PostTask(ev);
+
+		waitGetInstsSem.wait();
+		return insts;
+	}
+
+	void VentrueCmd::_TakeVirInstrumentList(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		vector<VirInstrument*>** threadVInsts = (vector<VirInstrument*>**)ventrueEvent->ptr;
+		*threadVInsts = ventrue.TakeVirInstrumentList();
 		ventrueEvent->sem->set();
 	}
 

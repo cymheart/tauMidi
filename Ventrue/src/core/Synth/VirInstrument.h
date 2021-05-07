@@ -20,26 +20,42 @@ namespace ventrue
 		VirInstrument(Ventrue* ventrue, Channel* channel, Preset* preset);
 		~VirInstrument();
 
-		//获取乐器所在通道
-		Channel* GetChannel()
-		{
-			return channel;
-		}
-
-
-	private:
-
 		//获取Ventrue
 		Ventrue* GetVentrue()
 		{
 			return ventrue;
 		}
 
+		//获取乐器所在通道
+		Channel* GetChannel()
+		{
+			return channel;
+		}
+
+		//获取状态
+		VirInstrumentState GetState()
+		{
+			return state;
+		}
+
+	private:
+
+
 		//获取乐器的预设
 		Preset* GetPreset()
 		{
 			return preset;
 		}
+
+		//打开乐器
+		void On(bool isFade = true);
+
+		//关闭乐器
+		void Off(bool isFade = true);
+
+		//移除乐器
+		void Remove(bool isFade);
+
 
 		//增加效果器
 		void AddEffect(VentrueEffect* effect);
@@ -62,7 +78,9 @@ namespace ventrue
 		//乐器是否发声结束
 		inline bool IsSoundEnd()
 		{
-			return isSoundEnd;
+			return (isSoundEnd ||
+				state == VirInstrumentState::OFFED ||
+				state == VirInstrumentState::REMOVED);
 		}
 
 		//获取区域发声数量
@@ -242,6 +260,10 @@ namespace ventrue
 		//计算按键速度
 		void ComputeOnKeySpeed();
 
+
+	private:
+		VirInstStateChangedCallBack virInstStateChangedCB = nullptr;
+
 	private:
 
 		//发音结束,包括效果器作用带来的尾音是否结束
@@ -312,6 +334,16 @@ namespace ventrue
 		list<float>* onKeySecHistorys = nullptr;
 		//按键速率
 		float onKeySpeed = 0;
+
+		//状态
+		VirInstrumentState state = VirInstrumentState::OFFED;
+		//gain
+		float gain = 1;
+		float startGain = 0;
+		float dstGain = 0;
+		float startGainFadeSec = 0;
+		float totalGainFadeTime = 0;
+
 
 
 		// 左通道已处理采样点

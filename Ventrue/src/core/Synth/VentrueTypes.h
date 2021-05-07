@@ -9,6 +9,7 @@
 #include "scutils/RingBuffer.h"
 #include "Effect/EffectList.h"
 #include "iir1/iir/Iir1.h"
+#include "scutils/UniqueID.h"
 
 using namespace task;
 using namespace scutils;
@@ -42,6 +43,7 @@ namespace ventrue
 	class VirInstrument;
 	class SoundFontParser;
 	class VentrueEvent;
+	class VentrueCmd;
 
 	struct LfoModInfo;
 	struct EnvModInfo;
@@ -79,7 +81,7 @@ namespace ventrue
 
 
 	using PresetMap = unordered_map<uint32_t, Preset*>;
-	using ChannelMap = unordered_map<uint32_t, Channel*>;
+	using ChannelMap = unordered_map<uint64_t, Channel*>;
 	using SoundFontParserMap = unordered_map<string, SoundFontParser*>;
 
 	typedef uint64_t KeySounderID;
@@ -87,6 +89,8 @@ namespace ventrue
 	using UnitTransformCallBack = float (*)(float value);
 	using ModTransformCallBack = float (*)(float value);
 	using RenderTimeCallBack = void (*)(float sec, void* data);
+	using SoundEndVirInstCallBack = void (*)(Ventrue* ventrue, VirInstrument** virInst, int size);
+	using VirInstStateChangedCallBack = void (*)(VirInstrument* virInst);
 
 #ifdef _WIN32
 	template struct DLL_CLASS atomic<bool>;
@@ -511,6 +515,23 @@ namespace ventrue
 		SustainPedalOnOff = 60,
 
 		EndOper = 61
+	};
+
+	// 虚拟乐器状态
+	enum class VirInstrumentState
+	{
+		//打开中
+		ONING,
+		//已经打开
+		ONED,
+		//关闭中
+		OFFING,
+		//已经关闭
+		OFFED,
+		//移除中
+		REMOVING,
+		//已经移除
+		REMOVED,
 	};
 
 
