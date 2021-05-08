@@ -6,6 +6,16 @@
 
 namespace ventrue
 {
+	// 包络类型
+	enum class EnvelopeType
+	{
+		//调制
+		Mod,
+		//音量
+		Vol
+	};
+
+
 	// 包络线阶段
 	//by cymheart, 2020--2021.
 	enum class EnvStage
@@ -56,10 +66,16 @@ namespace ventrue
 	class Envelope
 	{
 	public:
-		Envelope();
+		Envelope(EnvelopeType envType = EnvelopeType::Vol);
 		~Envelope();
 
 		virtual void Clear();
+
+		//设置包络类型
+		void SetType(EnvelopeType envType)
+		{
+			type = envType;
+		}
 
 		// 启动
 		void OnKey(int noteKey, float sec);
@@ -164,7 +180,8 @@ namespace ventrue
 		float ComputeStageValueY(EnvStage stage, float x);
 
 	public:
-
+		//包络类型
+		EnvelopeType type = EnvelopeType::Vol;
 
 		// 幅值
 		float amp = 1;

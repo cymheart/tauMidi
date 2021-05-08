@@ -21,8 +21,8 @@ namespace ventrue {
 
 		vibLfo = new Lfo();
 		modLfo = new Lfo();
-		volEnv = new Envelope();
-		modEnv = new Envelope();
+		volEnv = new Envelope(EnvelopeType::Vol);
+		modEnv = new Envelope(EnvelopeType::Mod);
 
 		regionModulation = new RegionModulation();
 
@@ -778,7 +778,7 @@ namespace ventrue {
 
 		//校音处理
 		float fineTune = modifyedGenList->GetAmount(GeneratorType::FineTune) + sample->GetCentPitchCorrection();  //一个组合的音分偏移值校正
-		semit += (modifyedGenList->GetAmount(GeneratorType::CoarseTune) + fineTune / 100.0f) * scaleTuning * 0.01f;
+		semit += (modifyedGenList->GetAmount(GeneratorType::CoarseTune) + fineTune / 100.0f);
 
 		//限制了按键相对overridingRootKey之间半音的差值的最大数量
 		if (semit > 72)

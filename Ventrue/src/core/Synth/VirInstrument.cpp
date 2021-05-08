@@ -574,15 +574,21 @@ namespace ventrue
 		if (track) trackNum = track->GetNum();
 		if (isRealTime)
 		{
-			printf("时间%.2f <<<%s>>> 乐器号%d  按键%d 通道%d 实时 \n",
-				ventrue->sec, GetPreset()->name.c_str(),
-				channel->GetProgramNum(), key, channel->GetChannelNum());
+			cout << "时间" << ventrue->sec
+				<< "<<<" << GetPreset()->name.c_str() << ">>> "
+				<< "  乐器号" << channel->GetProgramNum()
+				<< "  按键" << key
+				<< "  通道" << channel->GetChannelNum()
+				<< "  实时 " << endl;
 		}
 		else
 		{
-			printf("时间%.2f <<<%s>>> 乐器号%d  按键%d 轨道%d 通道%d \n",
-				ventrue->sec, GetPreset()->name.c_str(),
-				channel->GetProgramNum(), key, trackNum, channel->GetChannelNum());
+			cout << "时间" << ventrue->sec
+				<< "<<<" << GetPreset()->name.c_str() << ">>> "
+				<< "  乐器号" << channel->GetProgramNum()
+				<< "  按键" << key
+				<< "  轨道" << trackNum
+				<< "  通道" << channel->GetChannelNum() << endl;
 		}
 	}
 

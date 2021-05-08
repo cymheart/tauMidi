@@ -2,9 +2,9 @@
 #include"UnitTransform.h"
 namespace ventrue
 {
-	Envelope::Envelope()
+	Envelope::Envelope(EnvelopeType envType)
+		:type(envType)
 	{
-
 	}
 
 	Envelope::~Envelope()
@@ -313,7 +313,11 @@ namespace ventrue
 			break;
 
 		case EnvStage::Decay:
-			y = xNormal < 1 ? FastPow2(-(xNormal * 15)) : 0;
+			if (type == EnvelopeType::Vol)
+				y = xNormal < 1 ? FastPow2(-(xNormal * 12)) : 0;
+			else
+				y = 1 - pow(xNormal, 0.8);
+
 			y = range.ymin + y * range.yRangeWidth;
 			break;
 		case EnvStage::Release:
