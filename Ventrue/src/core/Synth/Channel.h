@@ -11,11 +11,11 @@ namespace ventrue
 	{
 
 	public:
-		Channel(Track* track, int channelNum);
+		Channel(Track* track, uint64_t channelNum);
 		~Channel();
 
 		//获取通道号
-		inline int64_t GetChannelNum()
+		inline uint64_t GetChannelNum()
 		{
 			return channelNum;
 		}
@@ -109,7 +109,7 @@ namespace ventrue
 
 	private:
 		//通道号
-		int64_t channelNum = 0;
+		uint64_t channelNum = 0;
 		//所在轨道
 		Track* track = nullptr;
 

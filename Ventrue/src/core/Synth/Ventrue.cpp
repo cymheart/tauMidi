@@ -67,6 +67,7 @@ namespace ventrue {
 
 		midiPlayList = new MidiPlayList();
 		midiFileList = new MidiFileList();
+		midiFilePaths = new vector<string>();
 
 		//
 		deviceChannelMap = new ChannelMap();
@@ -102,10 +103,12 @@ namespace ventrue {
 		DEL_OBJS_VECTOR(presetList);
 		DEL_OBJS_VECTOR(midiPlayList);
 		DEL_OBJS_VECTOR(midiFileList);
+		DEL(midiFilePaths);
 
 		DEL(virInsts);
 		DEL(presetBankDict);
 		DEL(presetBankReplaceMap);
+		DEL(deviceChannelMap);
 		DEL_OBJS_VECTOR(virInstList);
 		DEL(realtimeKeyEventList);
 		DEL(openedAudioTime);
@@ -194,6 +197,91 @@ namespace ventrue {
 	void Ventrue::FillAudioSample(void* udata, uint8_t* stream, int len)
 	{
 		((Ventrue*)udata)->FrameRender(stream, len);
+	}
+
+	//添加midi文件
+	void Ventrue::AppendMidiFile(string midiFilePath)
+	{
+		midiFilePaths->push_back(midiFilePath);
+	}
+
+	//载入midi
+	void Ventrue::LoadMidi(int idx)
+	{
+		if (idx >= midiFilePaths->size())
+			return;
+
+		MidiFile* midiFile = new MidiFile();
+		midiFile->SetTrackChannelMergeMode(GetTrackChannelMergeMode());
+		midiFile->Parse((*midiFilePaths)[idx]);
+		midiFileList->push_back(midiFile);
+
+		//
+		MidiPlay* midiPlay = new MidiPlay();
+		midiPlay->SetVentrue(this);
+		midiPlay->SetMidiFile(midiFile);
+		midiPlayList->push_back(midiPlay);
+	}
+
+	//播放midi
+	void Ventrue::PlayMidi(int idx)
+	{
+		if (idx < 0 || idx >= midiPlayList->size())
+			return;
+
+		(*midiPlayList)[idx]->Play();
+	}
+
+	//停止播放midi
+	void Ventrue::StopMidi(int idx)
+	{
+		if (idx < 0 || idx >= midiPlayList->size())
+			return;
+
+		(*midiPlayList)[idx]->Stop();
+	}
+
+	//midi快进到指定位置
+	void Ventrue::MidiGoto(int idx, float sec)
+	{
+		if (idx < 0 || idx >= midiPlayList->size())
+			return;
+
+		(*midiPlayList)[idx]->Goto(sec);
+	}
+
+
+	//移除midi
+	void Ventrue::RemoveMidi(int idx)
+	{
+		if (idx < 0 || idx >= midiPlayList->size())
+			return;
+
+		(*midiPlayList)[idx]->Remove();
+
+		int i = 0;
+		MidiPlayList::iterator it = midiPlayList->begin();
+		for (; it != midiPlayList->end(); it++)
+		{
+			if (i == idx) {
+				DEL(*it);
+				midiPlayList->erase(it);
+				break;
+			}
+			i++;
+		}
+
+		i = 0;
+		MidiFileList::iterator it2 = midiFileList->begin();
+		for (; it2 != midiFileList->end(); it2++)
+		{
+			if (i == idx) {
+				DEL(*it2);
+				midiFileList->erase(it2);
+				break;
+			}
+			i++;
+		}
 	}
 
 	//增加所有soundfont解析器
@@ -330,10 +418,15 @@ namespace ventrue {
 		VirInstrument* virInst = nullptr;
 		for (int i = 0; i < virInstList->size(); i++)
 		{
-			if ((*virInstList)[i]->GetChannel() == channel)
+			virInst = (*virInstList)[i];
+
+			if (!virInst->IsRemove() &&
+				virInst->GetChannel() == channel)
 			{
-				virInst = (*virInstList)[i];
 				break;
+			}
+			else {
+				virInst = nullptr;
 			}
 		}
 
@@ -356,6 +449,27 @@ namespace ventrue {
 		}
 
 		return virInst;
+	}
+
+
+	//根据通道移除虚拟乐器
+	void Ventrue::RemoveVirInstrumentByChannel(Channel* channel, bool isFade)
+	{
+		VirInstrument* virInst = nullptr;
+		for (int i = 0; i < virInstList->size(); i++)
+		{
+			if ((*virInstList)[i]->GetChannel() == channel &&
+				!(*virInstList)[i]->IsRemove())
+			{
+				virInst = (*virInstList)[i];
+				break;
+			}
+		}
+
+		if (virInst == nullptr)
+			return;
+
+		RemoveVirInstrument(virInst, isFade);
 	}
 
 
@@ -402,7 +516,8 @@ namespace ventrue {
 
 		//移除对应的设备通道
 		Channel* channel = virInst->GetChannel();
-		int64_t num = channel->GetChannelNum();
+		uint64_t num = channel->GetChannelNum();
+		channel->SetMidiRecord(nullptr);
 
 		auto itc = deviceChannelMap->find(num);
 		if (itc != deviceChannelMap->end())
@@ -424,6 +539,26 @@ namespace ventrue {
 		virInst->On(isFade);
 	}
 
+	//根据通道打开相关虚拟乐器
+	void Ventrue::OnVirInstrumentByChannel(Channel* channel, bool isFade)
+	{
+		VirInstrument* virInst = nullptr;
+		for (int i = 0; i < virInstList->size(); i++)
+		{
+			if ((*virInstList)[i]->GetChannel() == channel)
+			{
+				virInst = (*virInstList)[i];
+				break;
+			}
+		}
+
+		if (virInst == nullptr)
+			return;
+
+		OnVirInstrument(virInst, isFade);
+	}
+
+
 	//关闭虚拟乐器
 	void Ventrue::OffVirInstrument(VirInstrument* virInst, bool isFade)
 	{
@@ -431,6 +566,25 @@ namespace ventrue {
 			return;
 
 		virInst->Off(isFade);
+	}
+
+	//根据通道关闭相关虚拟乐器
+	void Ventrue::OffVirInstrumentByChannel(Channel* channel, bool isFade)
+	{
+		VirInstrument* virInst = nullptr;
+		for (int i = 0; i < virInstList->size(); i++)
+		{
+			if ((*virInstList)[i]->GetChannel() == channel)
+			{
+				virInst = (*virInstList)[i];
+				break;
+			}
+		}
+
+		if (virInst == nullptr)
+			return;
+
+		OffVirInstrument(virInst, isFade);
 	}
 
 	//获取虚拟乐器列表的备份
@@ -472,7 +626,6 @@ namespace ventrue {
 		virInst->SetUseMonoMode(useMonoMode);
 		virInst->SetPortaTime(portaTime);
 	}
-
 
 	// 设置是否总是使用滑音    
 	void Ventrue::SetAlwaysUsePortamento(bool isAlwaysUse)

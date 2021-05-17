@@ -6,6 +6,18 @@
 
 namespace ventrue
 {
+
+	// MidiPlay状态
+	enum class MidiPlayState
+	{
+		//停止
+		STOP,
+		//播放
+		PLAY,
+		//暂停
+		SUSPEND
+	};
+
 	/// <summary>
 	/// Midi文件播放类
 	/// by cymheart, 2020--2021.
@@ -16,13 +28,29 @@ namespace ventrue
 		MidiPlay();
 		~MidiPlay();
 
-		void Stop();
-
 		/// <summary>
 		/// 设置发音合成器ventrue
 		/// </summary>
 		/// <param name="ventrue"></param>
 		void SetVentrue(Ventrue* ventrue);
+
+		//停止播放
+		void Stop();
+		//移除
+		void Remove();
+
+		//设置播放的起始时间点
+		void Goto(double gotoSec);
+
+		//开始播放
+		void Play();
+
+		//打开轨道通道对应的虚拟乐器
+		void OnVirInstrumentByTrackChannel(int trackIdx, int channelIdx);
+		//关闭轨道通道对应的虚拟乐器
+		void OffVirInstrumentByTrackChannel(int trackIdx, int channelIdx);
+		//移除轨道通道对应的虚拟乐器
+		void RemoveVirInstrumentByTrackChannel(int trackIdx, int channelIdx);
 
 		/// <summary>
 		/// 设置midi文件
@@ -39,8 +67,7 @@ namespace ventrue
 		void DisableTrackAllChannels(int trackIdx);
 		void EnableTrackAllChannels(int trackIdx);
 
-		//设置播放的起始时间点
-		void GotoSec(double gotoSec);
+
 
 		//设置打击乐号
 		void SetPercussionProgramNum(int num);
@@ -52,7 +79,9 @@ namespace ventrue
 		void ProcessTrackEvent(MidiEvent* midEv, int trackIdx, double sec);
 
 	private:
-		int i = 0;
+
+		MidiPlayState state = MidiPlayState::STOP;
+
 		Ventrue* ventrue = nullptr;
 		MidiFile* midiFile = nullptr;
 		MidiTrackList* midiTrackList = nullptr;

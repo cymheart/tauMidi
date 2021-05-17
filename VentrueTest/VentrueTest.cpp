@@ -58,12 +58,12 @@ void art(VentrueCmd* cmd)
 	//	Sleep(355);
 	//	//cmd->OffKey(i, 127, inst);
 	//}
-	Sleep(1555);
-	VirInstrument* inst = cmd->EnableVirInstrument(0, 0, 0, 20);
-	cmd->OnKey(36, 127, inst);
+	//Sleep(1555);
+	VirInstrument* inst = cmd->EnableVirInstrument(0, 0, 0, 0);
+	cmd->OnKey(60, 127, inst);
 
-	Sleep(2000);
-	cmd->RemoveVirInstrument(inst);
+	//Sleep(2000);
+	//cmd->RemoveVirInstrument(inst);
 
 
 	/*for (int i = 36; i <= 1200; i++) {
@@ -133,8 +133,8 @@ int main(int argc, char* argv[])
 	ventrue->OpenAudio();
 
 	//设置音源
-	ventrue->ParseSoundFont("SF2", sfPath + "GeneralUser GS MuseScore v1.442.sf2");
-	//ventrue->ParseSoundFont("SF2", sfPath + "gnusmas_gm_soundfont_2.01.sf2");
+	//ventrue->ParseSoundFont("SF2", sfPath + "GeneralUser GS MuseScore v1.442.sf2");
+	ventrue->ParseSoundFont("SF2", sfPath + "gnusmas_gm_soundfont_2.01.sf2");
 	//ventrue->ParseSoundFont("VentrueFont", sfPath + "OreSoundFont\\GarageBandPianoH\\GarageBandPianoH.xml");
 
 	//添加需要播放的midi文件
@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 	//cmd->AppendMidiFile(midiPath + "learning\\Sound of Silence-Simon & Garfunkel.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\QianQianQueGe.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\ShiNian.mid");
-	cmd->AppendMidiFile(midiPath + "(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid");
+	//cmd->AppendMidiFile(midiPath + "(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid");
 	//cmd->AppendMidiFile(midiPath + "learning\\Brainiac Maniac 2.mid");
 	//cmd->AppendMidiFile(midiPath + "song100\\054.mid");
 	//cmd->AppendMidiFile(midiPath + "song100\\052.mid");
@@ -157,11 +157,22 @@ int main(int argc, char* argv[])
 	//cmd->AppendMidiFile(midiPath + "learning\\Promise.mid");
 	//cmd->AppendMidiFile(midiPath + "笑傲江湖.mid");
 	//cmd->AppendMidiFile(midiPath + "笑傲江湖3.mid");
+	//cmd->AppendMidiFile(midiPath + "learning\\Canon.mid");
+	cmd->AppendMidiFile(midiPath + "横山菁児-英雄たちの夜明け.mid");
+	//cmd->AppendMidiFile(midiPath + "英雄的黎明钢琴版.mid");
+	//cmd->AppendMidiFile(midiPath + "英雄的黎明(人声UTAU).mid");
+	//cmd->AppendMidiFile(midiPath + "Battle Against a True Hero.mid");
 
-	//cmd->AppendMidiFile(midiPath + "test.mid");
+	//for (int i = 0; i < 128; i++)
+	//	cmd->AppendReplaceInstrument(0, 0, i, 8, 0, 4);
+
 
 	//播放第1个midi文件
+	cmd->LoadMidi(0);
 	cmd->PlayMidi(0);
+
+
+	//cmd->LoadMidi(1);
 
 	//cmd->SetPercussionProgramNum(0, 26);
 
@@ -194,10 +205,55 @@ int main(int argc, char* argv[])
 
 	//去掉注释,弹奏测试
 	//art(cmd);
+	/*for (int i = 0; i < 5; i++)
+	{
+		cmd->StopMidi(0);
+		cmd->MidiGoto(0, 30);
+		cmd->PlayMidi(0);
+		Sleep(200);
 
-	Sleep(10000);
+	}*/
+
+	//art(cmd);
+
+	//
+	//Sleep(2000);
+	//cmd->MidiGoto(0, 30);
+	//cmd->AppendReplaceInstrument(0, 0, 0, 0, 0, 52);
+	//cmd->PlayMidi(0);
+	//cmd->PlayMidi(1);
+	//Sleep(15000);
+	//cmd->StopMidi(0);
+
+	////
+	////Sleep(2000);
+	//cmd->MidiGoto(0, 30);
+	//cmd->AppendReplaceInstrument(0, 0, 0, 0, 0, 30);
+	//cmd->PlayMidi(0);
+	//Sleep(15000);
+	//cmd->StopMidi(0);
 
 
+	////Sleep(2000);
+	//cmd->MidiGoto(0, 30);
+	//cmd->AppendReplaceInstrument(0, 0, 0, 0, 0, 40);
+	//cmd->PlayMidi(0);
+	//Sleep(15000);
+	//cmd->StopMidi(0);
+
+	/*cmd->PlayMidi(0);
+	Sleep(5000);
+	cmd->MidiGoto(0, 16);
+	Sleep(5000);
+	cmd->MidiGoto(0, 60);
+	Sleep(5000);
+	cmd->MidiGoto(0, 0);*/
+	//cmd->LoadMidi(1);
+	//cmd->PlayMidi(0);
+	//Sleep(5000);
+	//cmd->MidiGoto(0, 26);
+	//Sleep(5000);
+	//cmd->RemoveMidi(0);
 	/*vector<VirInstrument*>* insts = cmd->TakeVirInstrumentList();
 	for (int i = 0; i < 6; i++)
 		cmd->RemoveVirInstrument((*insts)[i]);

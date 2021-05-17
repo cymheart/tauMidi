@@ -51,10 +51,77 @@ namespace ventrue
 		Clear();
 	}
 
+	//停止播放
 	void MidiPlay::Stop()
 	{
+		if (state == MidiPlayState::STOP)
+			return;
+
+		for (int i = 0; i < trackList.size(); i++)
+		{
+			for (int j = 0; j < 16; j++) {
+				RemoveVirInstrumentByTrackChannel(i, j);
+			}
+		}
+
 		Clear();
+
+		state = MidiPlayState::STOP;
 	}
+
+	//移除
+	void MidiPlay::Remove()
+	{
+		for (int i = 0; i < trackList.size(); i++)
+		{
+			for (int j = 0; j < 16; j++) {
+				RemoveVirInstrumentByTrackChannel(i, j);
+			}
+		}
+
+		Clear();
+		state = MidiPlayState::STOP;
+	}
+
+
+	//设置播放的起始时间点
+	void MidiPlay::Goto(double gotoSec)
+	{
+		MidiPlayState oldState = state;
+		Stop();
+		this->gotoSec = gotoSec;
+		state = oldState;
+	}
+
+	//开始播放
+	void MidiPlay::Play()
+	{
+		state = MidiPlayState::PLAY;
+	}
+
+
+	//打开轨道通道对应的虚拟乐器
+	void MidiPlay::OnVirInstrumentByTrackChannel(int trackIdx, int channelIdx)
+	{
+		Channel* channel = trackList[trackIdx]->channels[channelIdx];
+		ventrue->OnVirInstrumentByChannel(channel);
+	}
+
+	//关闭轨道通道对应的虚拟乐器
+	void MidiPlay::OffVirInstrumentByTrackChannel(int trackIdx, int channelIdx)
+	{
+		Channel* channel = trackList[trackIdx]->channels[channelIdx];
+		ventrue->OffVirInstrumentByChannel(channel);
+	}
+
+	//移除轨道通道对应的虚拟乐器
+	void MidiPlay::RemoveVirInstrumentByTrackChannel(int trackIdx, int channelIdx)
+	{
+		Channel* channel = trackList[trackIdx]->channels[channelIdx];
+		ventrue->RemoveVirInstrumentByChannel(channel);
+	}
+
+
 
 	//设置打击乐号
 	void MidiPlay::SetPercussionProgramNum(int num)
@@ -72,6 +139,7 @@ namespace ventrue
 		isDirectGoto = false;
 		isOpen = false;
 		startTime = 0;
+		gotoSec = 0;
 
 		for (int i = 0; i < assistMidiEvList.size(); i++)
 			DEL(assistMidiEvList[i]);
@@ -93,7 +161,6 @@ namespace ventrue
 			}
 		}
 	}
-
 
 	void MidiPlay::DisableTrack(int trackIdx)
 	{
@@ -165,16 +232,14 @@ namespace ventrue
 			trackList[trackIdx]->EnablePlayChannel(i);
 	}
 
-	//设置播放的起始时间点
-	void MidiPlay::GotoSec(double gotoSec)
-	{
-		Stop();
-		this->gotoSec = gotoSec;
-	}
+
 
 	//轨道播放
 	void MidiPlay::TrackPlay(double sec)
 	{
+		if (state != MidiPlayState::PLAY)
+			return;
+
 		if (isOpen == false)
 		{
 			isOpen = true;
@@ -257,7 +322,7 @@ namespace ventrue
 				break;
 			}
 
-			ProcessTrackEvent(assistMidiEvList[j], i, sec);
+			ProcessTrackEvent(assistMidiEvList[j], 0, sec);
 		}
 	}
 

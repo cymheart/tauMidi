@@ -21,6 +21,7 @@ namespace ventrue
 		onkeyEventMap = new unordered_map<int, list<KeyEvent>>();
 		offkeyEventMap = new unordered_map<int, list<KeyEvent>>();
 		onKeySecHistorys = new list<float>;
+		stateOps = new vector<VirInstrumentStateOp>;
 
 		//
 		effects = new EffectList();
@@ -35,15 +36,10 @@ namespace ventrue
 		//
 		midiTrackRecord = new MidiTrackRecord();
 		channel->SetMidiRecord(midiTrackRecord);
-
-
 	}
 
 	VirInstrument::~VirInstrument()
 	{
-		channel = nullptr;
-		preset = nullptr;
-
 		DEL(effects);
 		DEL(midiTrackRecord);
 
@@ -55,10 +51,67 @@ namespace ventrue
 		DEL(onkeyEventMap);
 		DEL(offkeyEventMap);
 		DEL(onKeySecHistorys);
+		DEL(stateOps);
+
+		channel = nullptr;
+		preset = nullptr;
 	}
 
 	//打开乐器
 	void VirInstrument::On(bool isFade)
+	{
+		if (stateOps->empty())
+			canExecuteStateOp = true;
+
+		VirInstrumentStateOp op = { VirInstrumentStateOpType::ON , isFade };
+		stateOps->push_back(op);
+	}
+
+	//关闭乐器
+	void VirInstrument::Off(bool isFade)
+	{
+		if (stateOps->empty())
+			canExecuteStateOp = true;
+
+		VirInstrumentStateOp op = { VirInstrumentStateOpType::OFF , isFade };
+		stateOps->push_back(op);
+	}
+
+	//移除乐器
+	void VirInstrument::Remove(bool isFade)
+	{
+		isRemove = true;
+
+		if (stateOps->empty())
+			canExecuteStateOp = true;
+
+		VirInstrumentStateOp op = { VirInstrumentStateOpType::OFF , isFade };
+		stateOps->push_back(op);
+		op = { VirInstrumentStateOpType::REMOVE , isFade };
+		stateOps->push_back(op);
+	}
+
+	//状态操作
+	void VirInstrument::StateOp(VirInstrumentStateOp op)
+	{
+		switch (op.opType)
+		{
+		case VirInstrumentStateOpType::ON:
+			OnExecute(op.isFade);
+			break;
+		case VirInstrumentStateOpType::OFF:
+			OffExecute(op.isFade);
+			break;
+		case VirInstrumentStateOpType::REMOVE:
+			ventrue->GetCmd()->DelVirInstrument(this);
+			break;
+		default:
+			break;
+		}
+	}
+
+	//执行打开乐器
+	void VirInstrument::OnExecute(bool isFade)
 	{
 		if (state == VirInstrumentState::ONING ||
 			state == VirInstrumentState::ONED)
@@ -76,8 +129,8 @@ namespace ventrue
 			virInstStateChangedCB(this);
 	}
 
-	//关闭乐器
-	void VirInstrument::Off(bool isFade)
+	//执行关闭乐器
+	void VirInstrument::OffExecute(bool isFade)
 	{
 		if (state == VirInstrumentState::OFFING ||
 			state == VirInstrumentState::OFFED)
@@ -87,30 +140,14 @@ namespace ventrue
 		startGain = !isFade ? 0 : gain;
 		dstGain = 0;
 		startGainFadeSec = ventrue->sec;
-		totalGainFadeTime = 1.0f;
+		totalGainFadeTime = 0.2f;
 
 		//
 		if (virInstStateChangedCB != nullptr)
 			virInstStateChangedCB(this);
 	}
 
-	//移除乐器
-	void VirInstrument::Remove(bool isFade)
-	{
-		if (state == VirInstrumentState::REMOVING ||
-			state == VirInstrumentState::REMOVED)
-			return;
 
-		state = VirInstrumentState::REMOVING;
-		startGain = !isFade ? 0 : gain;
-		dstGain = 0;
-		startGainFadeSec = ventrue->sec;
-		totalGainFadeTime = 1.0f;
-
-		//
-		if (virInstStateChangedCB != nullptr)
-			virInstStateChangedCB(this);
-	}
 
 	//增加效果器
 	void VirInstrument::AddEffect(VentrueEffect* effect)
@@ -252,8 +289,7 @@ namespace ventrue
 	//按键
 	void VirInstrument::OnKey(int key, float velocity, int tickCount, bool isRealTime)
 	{
-		if (state == VirInstrumentState::OFFED ||
-			state == VirInstrumentState::REMOVED)
+		if (state == VirInstrumentState::OFFED)
 			return;
 
 		//判断是否可以忽略按键
@@ -272,8 +308,7 @@ namespace ventrue
 	//执行松开按键
 	void VirInstrument::OffKey(int key, float velocity, bool isRealTime)
 	{
-		if (state == VirInstrumentState::OFFED ||
-			state == VirInstrumentState::REMOVED)
+		if (state == VirInstrumentState::OFFED)
 			return;
 
 		KeyEvent keyEvent;
@@ -366,8 +401,7 @@ namespace ventrue
 		if (!keySounder->IsSoundEnd() &&
 			keySounder->IsHoldDownKey() &&
 			!useMonoMode &&
-			state != VirInstrumentState::OFFED &&
-			state != VirInstrumentState::REMOVED)
+			state != VirInstrumentState::OFFED)
 		{
 			keySounder->NeedOffKey();
 			return;
@@ -610,9 +644,21 @@ namespace ventrue
 		}
 
 		//
-		regionSounderCount = 0;
+		if (canExecuteStateOp && !stateOps->empty())
+		{
+			StateOp((*stateOps)[0]);
+
+			if ((*stateOps)[0].opType != VirInstrumentStateOpType::REMOVE)
+				stateOps->erase(stateOps->begin());
+			else
+				stateOps->clear();
+
+			canExecuteStateOp = false;
+		}
 
 		//
+		regionSounderCount = 0;
+
 		if (IsSoundEnd())
 			return 0;
 
@@ -652,8 +698,7 @@ namespace ventrue
 		//
 		//
 		if (state == VirInstrumentState::OFFING ||
-			state == VirInstrumentState::ONING ||
-			state == VirInstrumentState::REMOVING)
+			state == VirInstrumentState::ONING)
 		{
 			float scale = (ventrue->sec - startGainFadeSec) / totalGainFadeTime;
 			if (scale >= 1)
@@ -662,17 +707,13 @@ namespace ventrue
 					state = VirInstrumentState::OFFED;
 				else if (state == VirInstrumentState::ONING)
 					state = VirInstrumentState::ONED;
-				else
-					state = VirInstrumentState::REMOVED;
 
+				canExecuteStateOp = true;
 				scale = 1;
 
 				if (virInstStateChangedCB != nullptr)
 					virInstStateChangedCB(this);
 
-				if (state == VirInstrumentState::REMOVED) {
-					ventrue->GetCmd()->DelVirInstrument(this);
-				}
 			}
 
 			gain = startGain + (dstGain - startGain) * scale;
@@ -820,7 +861,7 @@ namespace ventrue
 				{
 					//如果此时keySounder需要松开按键 且不是单音模式
 					//意味着如果有踏板保持控制，说明踏板保持是关闭的，此时需要松开这个按键
-					if (state == VirInstrumentState::OFFED || state == VirInstrumentState::REMOVED ||
+					if (state == VirInstrumentState::OFFED ||
 						(keySounder->IsNeedOffKey() && !useMonoMode))
 					{
 						offKeySounder[offIdx++] = keySounder;

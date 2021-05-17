@@ -148,92 +148,111 @@ namespace ventrue
 		VentrueEvent* ev = VentrueEvent::New();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::AppendMidiFile;
-		ev->processCallBack = _AppendMidi;
+		ev->processCallBack = _AppendMidiFile;
 		ev->midiFilePath.assign(midifile);
 		ev->midiFile = nullptr;
 		ventrue->PostTask(ev);
 	}
 
-	void VentrueCmd::_AppendMidi(Task* ev)
+	void VentrueCmd::_AppendMidiFile(Task* ev)
 	{
 		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
 		Ventrue& ventrue = *(ventrueEvent->ventrue);
-		MidiFile* midiFile = new MidiFile();
-		midiFile->SetTrackChannelMergeMode(ventrue.GetTrackChannelMergeMode());
-		midiFile->Parse(ventrueEvent->midiFilePath);
-		ventrue.midiFileList->push_back(midiFile);
+		ventrue.AppendMidiFile(ventrueEvent->midiFilePath);
 	}
 
 
-	// 添加并播放Midi文件
-	void VentrueCmd::PlayMidiFile(string midifile)
+	// 载入Midi
+	void VentrueCmd::LoadMidi(int idx)
 	{
 		VentrueEvent* ev = VentrueEvent::New();
 		ev->ventrue = ventrue;
-		ev->evType = VentrueEventType::PlayMidiFile;
-		ev->processCallBack = _PlayMidi;
-		ev->midiFilePath.assign(midifile);
+		ev->evType = VentrueEventType::AppendMidiFile;
+		ev->processCallBack = _LoadMidi;
 		ev->midiFile = nullptr;
+		ev->midiFileIdx = idx;
 		ventrue->PostTask(ev);
 	}
 
-	// 请求播放Midi文件
-	void VentrueCmd::PlayMidi(MidiFile* midiFile)
+	void VentrueCmd::_LoadMidi(Task* ev)
 	{
-		VentrueEvent* ev = VentrueEvent::New();
-		ev->ventrue = ventrue;
-		ev->evType = VentrueEventType::PlayMidi;
-		ev->processCallBack = _PlayMidi;
-		ev->midiFile = midiFile;
-		ventrue->PostTask(ev);
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		ventrue.LoadMidi(ventrueEvent->midiFileIdx);
 	}
+
 
 	// 播放指定编号的内部Midi文件
-	void VentrueCmd::PlayMidi(int midiFileIdx)
+	void VentrueCmd::PlayMidi(int idx)
 	{
 		VentrueEvent* ev = VentrueEvent::New();
 		ev->ventrue = ventrue;
 		ev->evType = VentrueEventType::PlayMidiIdx;
 		ev->processCallBack = _PlayMidi;
-		ev->midiFile = nullptr;
-		ev->midiFileIdx = midiFileIdx;
+		ev->midiFileIdx = idx;
 		ventrue->PostTask(ev);
 	}
-
 
 	void VentrueCmd::_PlayMidi(Task* ev)
 	{
 		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
 		Ventrue& ventrue = *(ventrueEvent->ventrue);
-		MidiFile* midiFile = nullptr;
+		ventrue.PlayMidi(ventrueEvent->midiFileIdx);
+	}
 
-		if (ventrueEvent->evType == VentrueEventType::PlayMidiFile)
-		{
-			midiFile = new MidiFile();
-			midiFile->Parse(ventrueEvent->midiFilePath);
-			ventrue.midiFileList->push_back(midiFile);
-		}
-		else if (ventrueEvent->evType == VentrueEventType::PlayMidi)
-		{
-			midiFile = ventrueEvent->midiFile;
-		}
-		else if (ventrueEvent->evType == VentrueEventType::PlayMidiIdx)
-		{
-			if (ventrueEvent->midiFileIdx >= 0 &&
-				ventrueEvent->midiFileIdx < ventrue.midiFileList->size())
-			{
-				midiFile = (*ventrue.midiFileList)[ventrueEvent->midiFileIdx];
-			}
-		}
+	// 播放指定编号的内部Midi文件
+	void VentrueCmd::StopMidi(int idx)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->evType = VentrueEventType::PlayMidiIdx;
+		ev->processCallBack = _StopMidi;
+		ev->midiFileIdx = idx;
+		ventrue->PostTask(ev);
+	}
 
-		if (midiFile == nullptr) {
-			return;
-		}
+	void VentrueCmd::_StopMidi(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		ventrue.StopMidi(ventrueEvent->midiFileIdx);
+	}
 
-		MidiPlay* midiPlay = new MidiPlay();
-		midiPlay->SetVentrue(&ventrue);
-		midiPlay->SetMidiFile(midiFile);
-		ventrue.midiPlayList->push_back(midiPlay);
+	// 移除指定编号的内部Midi文件
+	void VentrueCmd::RemoveMidi(int idx)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->evType = VentrueEventType::PlayMidiIdx;
+		ev->processCallBack = _RemoveMidi;
+		ev->midiFileIdx = idx;
+		ventrue->PostTask(ev);
+	}
+
+	void VentrueCmd::_RemoveMidi(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		ventrue.RemoveMidi(ventrueEvent->midiFileIdx);
+	}
+
+	// 指定midi文件播放的起始时间点
+	void VentrueCmd::MidiGoto(int idx, float sec)
+	{
+		VentrueEvent* ev = VentrueEvent::New();
+		ev->ventrue = ventrue;
+		ev->evType = VentrueEventType::PlayMidiGoto;
+		ev->processCallBack = _MidiGoto;
+		ev->midiFileIdx = idx;
+		ev->sec = sec;
+		ventrue->PostTask(ev);
+	}
+
+	void VentrueCmd::_MidiGoto(Task* ev)
+	{
+		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
+		Ventrue& ventrue = *(ventrueEvent->ventrue);
+		ventrue.MidiGoto(ventrueEvent->midiFileIdx, ventrueEvent->sec);
 	}
 
 
@@ -420,30 +439,6 @@ namespace ventrue
 				(*ventrue.midiPlayList)[ventrueEvent->midiFileIdx]->EnableTrackChannel(ventrueEvent->midiTrackIdx, ventrueEvent->value);
 		}
 
-	}
-
-	// 指定midi文件播放的起始时间点
-	void VentrueCmd::MidiGotoSec(int midiFileIdx, float sec)
-	{
-		VentrueEvent* ev = VentrueEvent::New();
-		ev->ventrue = ventrue;
-		ev->evType = VentrueEventType::PlayMidiGoto;
-		ev->processCallBack = _MidiGotoSec;
-		ev->midiFile = nullptr;
-		ev->midiFileIdx = midiFileIdx;
-		ev->sec = sec;
-		ventrue->PostTask(ev);
-	}
-
-	void VentrueCmd::_MidiGotoSec(Task* ev)
-	{
-		VentrueEvent* ventrueEvent = (VentrueEvent*)ev;
-		Ventrue& ventrue = *(ventrueEvent->ventrue);
-
-		if (ventrue.midiPlayList->size() <= ventrueEvent->midiFileIdx)
-			return;
-
-		(*ventrue.midiPlayList)[ventrueEvent->midiFileIdx]->GotoSec(ventrueEvent->sec);
 	}
 
 

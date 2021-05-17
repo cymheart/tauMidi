@@ -41,19 +41,26 @@ namespace ventrue
 		//发送文本
 		void SendText(string text);
 
-		//增加并播放midi文件
-		void PlayMidiFile(string midifile);
-
-		// 播放指定编号的内部Midi文件
-		void PlayMidi(int midiFileIdx);
-
-		void PlayMidi(MidiFile* midiFile);
-
 		// 为midi文件设置打击乐号
 		void SetPercussionProgramNum(int midiFileIdx, int num);
 
 		//添加midi文件
 		void AppendMidiFile(string midifile);
+
+		//载入midi
+		void LoadMidi(int idx);
+
+		//播放midi
+		void PlayMidi(int idx);
+
+		//停止播放midi
+		void StopMidi(int idx);
+
+		//移除midi
+		void RemoveMidi(int idx);
+
+		// 指定midi文件播放的起始时间点
+		void MidiGoto(int idx, float sec);
 
 		// 禁止播放指定编号Midi文件的轨道
 		void DisableMidiTrack(int midiFileIdx, int trackIdx);
@@ -76,9 +83,6 @@ namespace ventrue
 
 		// 启用播放Midi指定轨道上的所有通道
 		void EnableMidiTrackAllChannels(int midiFileIdx, int trackIdx);
-
-		// 指定midi文件播放的起始时间点
-		void MidiGotoSec(int midiFileIdx, float sec);
 
 		// 设置设备通道Midi控制器值
 		void SetDeviceChannelMidiControllerValue(int deviceChannelNum, MidiControllerType midiController, int value);
@@ -181,15 +185,18 @@ namespace ventrue
 		static void _OnKey(Task* ev);
 		static void _OffKey(Task* ev);
 		static void _AddEffect(Task* ev);
-		static void _PlayMidi(Task* ev);
 		static void _SetPercussionProgramNum(Task* ev);
-		static void _AppendMidi(Task* ev);
+		static void _AppendMidiFile(Task* ev);
+		static void _LoadMidi(Task* ev);
+		static void _PlayMidi(Task* ev);
+		static void _StopMidi(Task* ev);
+		static void _RemoveMidi(Task* ev);
+		static void _MidiGoto(Task* ev);
 		static void _SendText(Task* ev);
 		static void _DisableMidiTrack(Task* ev);
 		static void _EnableMidiTrack(Task* ev);
 		static void _DisableMidiTrackChannel(Task* ev);
 		static void _EnableMidiTrackChannel(Task* ev);
-		static void _MidiGotoSec(Task* ev);
 		static void _SetDeviceChannelMidiControllerValue(Task* ev);
 		static void _EnableInstrument(Task* ev);
 		static void _RemoveInstrument(Task* ev);

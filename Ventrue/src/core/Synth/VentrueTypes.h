@@ -517,22 +517,6 @@ namespace ventrue
 		EndOper = 61
 	};
 
-	// 虚拟乐器状态
-	enum class VirInstrumentState
-	{
-		//打开中
-		ONING,
-		//已经打开
-		ONED,
-		//关闭中
-		OFFING,
-		//已经关闭
-		OFFED,
-		//移除中
-		REMOVING,
-		//已经移除
-		REMOVED,
-	};
 
 
 	// 乐器连接到PresetRegion信息

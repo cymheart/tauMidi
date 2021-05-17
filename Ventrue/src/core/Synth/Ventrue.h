@@ -269,6 +269,21 @@ namespace ventrue
 
 	private:
 
+		//添加midi文件
+		void AppendMidiFile(string midiFilePath);
+
+		//载入midi
+		void LoadMidi(int idx);
+		//播放midi
+		void PlayMidi(int idx);
+		//停止播放midi
+		void StopMidi(int idx);
+		//midi快进到指定位置
+		void MidiGoto(int idx, float sec);
+
+		//移除midi
+		void RemoveMidi(int idx);
+
 		// 获取乐器预设
 		Preset* GetInstrumentPreset(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
@@ -292,17 +307,21 @@ namespace ventrue
 		// 而不会同时在一个通道上创建超过1个的虚拟乐器
 		VirInstrument* EnableVirInstrument(Preset* preset, Channel* channel);
 
-
+		//根据通道移除虚拟乐器
+		void RemoveVirInstrumentByChannel(Channel* channel, bool isFade = true);
 		//移除虚拟乐器
 		void RemoveVirInstrument(VirInstrument* virInst, bool isFade = true);
-
 		//删除虚拟乐器
 		void DelVirInstrument(VirInstrument* virInst);
 
 		//打开虚拟乐器
 		void OnVirInstrument(VirInstrument* virInst, bool isFade = true);
+		//根据通道打开相关虚拟乐器
+		void OnVirInstrumentByChannel(Channel* channel, bool isFade = true);
 		//关闭虚拟乐器
 		void OffVirInstrument(VirInstrument* virInst, bool isFade = true);
+		// 根据通道关闭相关虚拟乐器
+		void OffVirInstrumentByChannel(Channel* channel, bool isFade = true);
 
 		//获取虚拟乐器列表的备份
 		vector<VirInstrument*>* TakeVirInstrumentList();
@@ -564,6 +583,7 @@ namespace ventrue
 		RealtimeKeyEventList* realtimeKeyEventList = nullptr;
 		MidiPlayList* midiPlayList = nullptr;
 		MidiFileList* midiFileList = nullptr;
+		vector<string>* midiFilePaths = nullptr;
 
 		//设备通道列表
 		ChannelMap* deviceChannelMap = nullptr;

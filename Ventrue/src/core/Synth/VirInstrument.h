@@ -8,6 +8,34 @@
 
 namespace ventrue
 {
+	// 虚拟乐器状态
+	enum class VirInstrumentState
+	{
+		//打开中
+		ONING,
+		//已经打开
+		ONED,
+		//关闭中
+		OFFING,
+		//已经关闭
+		OFFED,
+	};
+
+	// 虚拟乐器状态操作类型
+	enum class VirInstrumentStateOpType
+	{
+		ON,
+		OFF,
+		REMOVE
+	};
+
+	// 虚拟乐器状态操作
+	struct VirInstrumentStateOp
+	{
+		VirInstrumentStateOpType opType;
+		bool isFade;
+	};
+
 	/*
 	* 虚拟乐器类
 	* 通过指定通道和预设来确认当前乐器所在的演奏空间
@@ -56,6 +84,19 @@ namespace ventrue
 		//移除乐器
 		void Remove(bool isFade);
 
+		inline bool IsRemove()
+		{
+			return isRemove;
+		}
+
+		//状态操作
+		void StateOp(VirInstrumentStateOp op);
+
+		//执行打开乐器
+		void OnExecute(bool isFade = true);
+
+		//执行关闭乐器
+		void OffExecute(bool isFade = true);
 
 		//增加效果器
 		void AddEffect(VentrueEffect* effect);
@@ -78,9 +119,7 @@ namespace ventrue
 		//乐器是否发声结束
 		inline bool IsSoundEnd()
 		{
-			return (isSoundEnd ||
-				state == VirInstrumentState::OFFED ||
-				state == VirInstrumentState::REMOVED);
+			return (isSoundEnd || state == VirInstrumentState::OFFED);
 		}
 
 		//获取区域发声数量
@@ -266,6 +305,8 @@ namespace ventrue
 
 	private:
 
+
+
 		//发音结束,包括效果器作用带来的尾音是否结束
 		bool isSoundEnd = true;
 
@@ -335,16 +376,22 @@ namespace ventrue
 		//按键速率
 		float onKeySpeed = 0;
 
+		//
+		bool isRemove = false;
 		//状态
 		VirInstrumentState state = VirInstrumentState::OFFED;
+		//状态操作
+		vector<VirInstrumentStateOp>* stateOps;
+		//是否可以执行状态操作
+		bool canExecuteStateOp = false;
+
+
 		//gain
 		float gain = 1;
 		float startGain = 0;
 		float dstGain = 0;
 		float startGainFadeSec = 0;
 		float totalGainFadeTime = 0;
-
-
 
 		// 左通道已处理采样点
 		float leftChannelSamples[8192 * 10] = { 0 };
@@ -369,6 +416,8 @@ namespace ventrue
 
 		//midiTrack录制
 		MidiTrackRecord* midiTrackRecord;
+
+
 
 		//
 		friend class Ventrue;

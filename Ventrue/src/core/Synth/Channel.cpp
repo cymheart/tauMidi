@@ -4,7 +4,7 @@
 
 namespace ventrue
 {
-	Channel::Channel(Track* track, int channelNum)
+	Channel::Channel(Track* track, uint64_t channelNum)
 	{
 		Clear();
 		this->track = track;

@@ -70,6 +70,7 @@ namespace ventrue
 		channels[n]->EnablePlay();
 	}
 
+
 	/// <summary>
 	/// 设置轨道速度
 	/// </summary>
