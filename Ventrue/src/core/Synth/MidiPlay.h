@@ -25,25 +25,38 @@ namespace ventrue
 	class MidiPlay
 	{
 	public:
-		MidiPlay();
+		MidiPlay(Ventrue* ventrue);
 		~MidiPlay();
 
-		/// <summary>
-		/// 设置发音合成器ventrue
-		/// </summary>
-		/// <param name="ventrue"></param>
-		void SetVentrue(Ventrue* ventrue);
+		//获取其中的midiFile
+		inline MidiFile* GetMidiFile()
+		{
+			return midiFile;
+		}
+
+		//获取结束时间
+		inline float GetEndSec()
+		{
+			return endSec;
+		}
 
 		//停止播放
 		void Stop();
+		//开始播放
+		void Play();
+		//暂停播放
+		void Suspend();
 		//移除
 		void Remove();
 
 		//设置播放的起始时间点
 		void Goto(double gotoSec);
+		//设置快进到开头
+		void GotoStart();
+		//设置快进到结尾
+		void GotoEnd();
 
-		//开始播放
-		void Play();
+
 
 		//打开轨道通道对应的虚拟乐器
 		void OnVirInstrumentByTrackChannel(int trackIdx, int channelIdx);
@@ -51,13 +64,10 @@ namespace ventrue
 		void OffVirInstrumentByTrackChannel(int trackIdx, int channelIdx);
 		//移除轨道通道对应的虚拟乐器
 		void RemoveVirInstrumentByTrackChannel(int trackIdx, int channelIdx);
-
-		/// <summary>
-		/// 设置midi文件
-		/// </summary>
-		/// <param name="midiFile"></param>
-		void SetMidiFile(MidiFile* midiFile);
-		void TrackPlay(double sec);
+		// 解析MidiFile
+		void ParseMidiFile(string midiFilePath, TrackChannelMergeMode mode);
+		//轨道运行
+		void TrackRun(double sec);
 		void DisableTrack(int trackIdx);
 		void DisableAllTrack();
 		void EnableTrack(int trackIdx);
@@ -96,8 +106,14 @@ namespace ventrue
 		//辅助轨道
 		Track* assistTrack;
 
+		//结束时间点
+		float endSec = 0;
+
 		//快进到指定时间点
 		double gotoSec = 0;
+
+		//是否快进到结尾
+		bool isGotoEnd = false;
 
 		//播放开始时间点
 		double startTime = 0;
@@ -107,6 +123,9 @@ namespace ventrue
 
 		//是否快进
 		bool isDirectGoto = false;
+
+		//是否计算事件时间
+		bool isComputeEventTime = false;
 
 		//打击乐号
 		int percussionProgramNum = 0;

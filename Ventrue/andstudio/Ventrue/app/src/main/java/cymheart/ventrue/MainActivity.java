@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     VirInstrument virInst;
     Equalizer  eq;
     EffectEqualizerCmd  eqCmd;
+    MidiPlay midiPlay;
 
     private static final String[] permissionsGroup=
             new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
@@ -79,6 +80,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    void cb(VirInstrument[] virInst)
+    {
+        //cmd.OnKey(60, 127, virInst[0]);
+
+        int s = virInst.length;
+
+    }
+
     AppCompatActivity activityw;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,29 +98,32 @@ public class MainActivity extends AppCompatActivity {
         Button btn = findViewById(R.id.button);
 
         ventrue = new Ventrue();
-        cmd = new VentrueCmd(ventrue);
+        ventrue.SetSoundEndVirInstCallBack(this::cb);
 
-        eq = new Equalizer();
-        Filter[] filters = eq.GetFilter();
 
-        Bode bode = new Bode();
-        bode.AddFilters(filters);
+        cmd = ventrue.GetCmd();
 
-        bode.SetSampleFreq(44100);
-        bode.SetFreqzSampleCount(500);
+      //  eq = new Equalizer();
+       // Filter[] filters = eq.GetFilter();
 
-        bode.SetPlotAreaHeight(1080);
-        bode.SetPlotAreaWidth(354);
+//        Bode bode = new Bode();
+//        bode.AddFilters(filters);
+//
+//        bode.SetSampleFreq(44100);
+//        bode.SetFreqzSampleCount(500);
+//
+//        bode.SetPlotAreaHeight(1080);
+//        bode.SetPlotAreaWidth(354);
+//
+//        bode.SetPlotFreqAxisStart(0);
+//        bode.SetPlotFreqAxisEnd(44100/2);
+//
+//        bode.SetPlotGainDbRange(30);
+//
+//        bode.Compute();
 
-        bode.SetPlotFreqAxisStart(0);
-        bode.SetPlotFreqAxisEnd(44100/2);
-
-        bode.SetPlotGainDbRange(30);
-
-        bode.Compute();
-
-        float[] xpos = bode.GetPlotFreqAxisPos();
-        float[] ypos = bode.GetPlotGainAxisPos();
+       // float[] xpos = bode.GetPlotFreqAxisPos();
+       // float[] ypos = bode.GetPlotGainAxisPos();
 
 
         //eqCmd = new EffectEqualizerCmd(ventrue, eq);
@@ -120,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
        // eqCmd.SetFreqBandGain(0, 1);
 
          ventrue.SetFrameSampleCount(4096);
-        ventrue.SetChannelCount(1);
+        ventrue.SetChannelCount(2);
         ventrue.OpenAudio();
 
         ButtonListener b = new ButtonListener();
@@ -152,11 +164,15 @@ public class MainActivity extends AppCompatActivity {
                                     if (granted) { // Always true pre-M
                                         // I can control the camera now
                                         ventrue.ParseSoundFont("SF2", "/storage/emulated/0/GeneralUser GS MuseScore v1.442.sf2");
-                                         cmd.AppendMidiFile("/storage/emulated/0/(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid");
 
-                                         cmd.PlayMidi(0);
+                                         //cmd.AppendMidiFile("/storage/emulated/0/(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid");
 
-                                        //virInst = cmd.EnableVirInstrument(0,0,0,0);
+                                        cmd.AppendMidiFile("/storage/emulated/0/英雄的黎明钢琴版.mid");
+                                        midiPlay = cmd.LoadMidi(0, true);
+                                         //cmd.PlayMidi(0);
+
+                                        virInst = cmd.EnableVirInstrument(0,0,0,0);
+                                        //cmd.OnKey(60, 127, virInst);
 
                                         //Ventrue.ndkTest();
 

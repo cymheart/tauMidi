@@ -6,7 +6,7 @@ public class VentrueCmd {
 
     private Ventrue ventrue;
 
-    public VentrueCmd(Ventrue _ventrue)
+    private VentrueCmd(Ventrue _ventrue)
     {
         ventrue = _ventrue;
         ndkVentrueCmd = ndkCreateVentrueCmd(ventrue.GetNdkVentrue());
@@ -17,9 +17,33 @@ public class VentrueCmd {
         ndkAppendMidiFile(ndkVentrueCmd, midifile);
     }
 
-    public void PlayMidi(int midiFileIdx)
+    public MidiPlay LoadMidi(int idx, boolean isShowTips)
     {
-        ndkPlayMidi(ndkVentrueCmd, midiFileIdx);
+        MidiPlay midiPlay = ndkLoadMidi(ndkVentrueCmd, idx, isShowTips);
+        if(isShowTips)
+            ventrue.AddMidiPlay(idx, midiPlay);
+
+        return midiPlay;
+    }
+
+    public void PlayMidi(int idx)
+    {
+        ndkPlayMidi(ndkVentrueCmd, idx);
+    }
+
+    public void StopMidi(int idx)
+    {
+        ndkStopMidi(ndkVentrueCmd, idx);
+    }
+
+    public void RemoveMidi(int idx)
+    {
+        ndkRemoveMidi(ndkVentrueCmd, idx);
+    }
+
+    public void MidiGoto(int idx, float sec)
+    {
+        ndkMidiGoto(ndkVentrueCmd, idx, sec);
     }
 
 
@@ -27,6 +51,25 @@ public class VentrueCmd {
     {
         ndkAddEffect(ndkVentrueCmd, effect.GetNdkEffect());
     }
+
+
+    //添加替换乐器
+    public void AppendReplaceInstrument(
+            int orgBankMSB, int orgBankLSB, int orgInstNum,
+            int repBankMSB, int repBankLSB, int repInstNum)
+    {
+        ndkAppendReplaceInstrument(ndkVentrueCmd,
+                orgBankMSB, orgBankLSB, orgInstNum,
+                repBankMSB, repBankLSB, repInstNum);
+    }
+
+    //移除替换乐器
+    public void RemoveReplaceInstrument(int orgBankMSB, int orgBankLSB, int orgInstNum)
+    {
+        ndkRemoveReplaceInstrument(ndkVentrueCmd,
+                orgBankMSB, orgBankLSB, orgInstNum);
+    }
+
 
     public void OnKey(int key, float velocity, VirInstrument virInst)
     {
@@ -37,6 +80,13 @@ public class VentrueCmd {
     public void OffKey(int key, float velocity, VirInstrument virInst)
     {
         OffKey(ndkVentrueCmd, key, velocity, virInst.GetNdkVirInstrument());
+    }
+
+    public VirInstrument NewVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
+    {
+        VirInstrument virInst = ndkNewVirInstrument(
+                ndkVentrueCmd, bankSelectMSB, bankSelectLSB, instrumentNum);
+        return virInst;
     }
 
     /**
@@ -50,12 +100,36 @@ public class VentrueCmd {
      * */
     public VirInstrument EnableVirInstrument(int deviceChannelNum, int bankSelectMSB, int bankSelectLSB, int instrumentNum)
     {
-        VirInstrument virInst = (VirInstrument)ndkEnableVirInstrument(
+        VirInstrument virInst = ndkEnableVirInstrument(
                 ndkVentrueCmd, deviceChannelNum, bankSelectMSB, bankSelectLSB, instrumentNum);
         return virInst;
     }
 
-        //
+    /// <summary>
+    /// 移除乐器
+    /// </summary>
+    public void RemoveVirInstrument(VirInstrument virInst, boolean isFade)
+    {
+        ndkRemoveVirInstrument(ndkVentrueCmd, virInst.GetNdkVirInstrument(), isFade);
+    }
+
+    /// <summary>
+    /// 打开乐器
+    /// </summary>
+    public void OnVirInstrument(VirInstrument virInst, boolean isFade)
+    {
+        ndkOnVirInstrument(ndkVentrueCmd, virInst.GetNdkVirInstrument(), isFade);
+    }
+
+    /// <summary>
+    /// 关闭虚拟乐器
+    /// </summary>
+    public void OffVirInstrument(VirInstrument virInst, boolean isFade)
+    {
+        ndkOffVirInstrument(ndkVentrueCmd, virInst.GetNdkVirInstrument(), isFade);
+    }
+
+    //
     private long ndkVentrueCmd;
     public long GetNdkVentrueCmd()
     {
@@ -64,9 +138,20 @@ public class VentrueCmd {
     //
     private static native long ndkCreateVentrueCmd(long ndkVentrue);
     private static native void ndkAppendMidiFile(long ndkVentrueCmd, String midifile);
-    private static native void ndkPlayMidi(long ndkVentrueCmd, int midiFileIdx);
+    private static native MidiPlay ndkLoadMidi(long ndkVentrueCmd, int idx, boolean isShowTips);
+    private static native void ndkPlayMidi(long ndkVentrueCmd, int idx);
+    private static native void ndkStopMidi(long ndkVentrueCmd, int idx);
+    private static native void ndkRemoveMidi(long ndkVentrueCmd, int idx);
+    private static native void ndkMidiGoto(long ndkVentrueCmd, int idx, float sec);
 
     private static native void ndkAddEffect(long ndkVentrueCmd, long ndkEffect);
+
+    private static native void ndkAppendReplaceInstrument(long ndkVentrueCmd,
+            int orgBankMSB, int orgBankLSB, int orgInstNum,
+            int repBankMSB, int repBankLSB, int repInstNum);
+
+    private static native void ndkRemoveReplaceInstrument(long ndkVentrueCmd,
+                                                          int orgBankMSB, int orgBankLSB, int orgInstNum);
 
     private static native void OnKey(long ndkVentrueCmd,
                                      int key, float velocity, long ndkVirInst);
@@ -74,7 +159,14 @@ public class VentrueCmd {
     private static native void OffKey(long ndkVentrueCmd,
                                      int key, float velocity, long ndkVirInst);
 
-    private static native Object ndkEnableVirInstrument(
+    private static native VirInstrument ndkNewVirInstrument(
+            long ndkVentrueCmd, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
+
+    private static native VirInstrument ndkEnableVirInstrument(
             long ndkVentrueCmd,
             int deviceChannelNum, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
+
+    private static native void ndkRemoveVirInstrument(long ndkVentrueCmd, long ndkVirInstrument, boolean isFade);
+    private static native void ndkOnVirInstrument(long ndkVentrueCmd, long ndkVirInstrument, boolean isFade);
+    private static native void ndkOffVirInstrument(long ndkVentrueCmd, long ndkVirInstrument, boolean isFade);
 }

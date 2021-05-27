@@ -28,17 +28,17 @@ namespace ventrue
 
 		void Clear();
 
-		int GetBankSelectMSB()
+		inline int GetBankSelectMSB()
 		{
 			return bankMSB;
 		}
 
-		int GetBankSelectLSB()
+		inline int GetBankSelectLSB()
 		{
 			return bankLSB;
 		}
 
-		int GetProgramNum()
+		inline int GetProgramNum()
 		{
 			return programNum;
 		}
@@ -64,31 +64,31 @@ namespace ventrue
 		void SetPitchBend(int value);
 
 		//获取滑音范围
-		float GetPitchBendRange()
+		inline float GetPitchBendRange()
 		{
 			return pitchBendRange;
 		}
 
 		//设置midi录制类
-		void SetMidiRecord(MidiTrackRecord* midiTrackRecord)
+		inline void SetMidiRecord(MidiTrackRecord* midiTrackRecord)
 		{
 			this->midiTrackRecord = midiTrackRecord;
 		}
 
 		//是否禁止播放
-		bool IsDisablePaly()
+		inline bool IsDisablePlay()
 		{
 			return isDisablePlay;
 		}
 
 		//禁止播放
-		void DiablePlay()
+		inline void DiablePlay()
 		{
 			isDisablePlay = true;
 		}
 
 		//开启播放
-		void EnablePlay()
+		inline void EnablePlay()
 		{
 			isDisablePlay = false;
 		}

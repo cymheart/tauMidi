@@ -19,6 +19,12 @@ namespace ventrue
 		/// </summary>
 		uint32_t startTick = 0;
 
+		//起始时间点(单位:秒)
+		float startSec = 0;
+
+		//结束时间点(单位:秒)
+		float endSec = 0;
+
 		/// <summary>
 		/// 事件相关通道
 		/// </summary>

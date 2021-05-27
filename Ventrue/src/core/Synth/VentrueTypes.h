@@ -10,6 +10,7 @@
 #include "Effect/EffectList.h"
 #include "iir1/iir/Iir1.h"
 #include "scutils/UniqueID.h"
+#include <queue>
 
 using namespace task;
 using namespace scutils;
@@ -50,10 +51,8 @@ namespace ventrue
 	struct SamplesLinkToInstRegionInfo;
 	struct InstLinkToPresetRegionInfo;
 	struct LineEquationInfo;
-	struct NoteOnEvOnKeyInfo;
 	struct RealtimeKeyEvent;
 
-	using NoteOnEvOnKeyInfoList = vector<NoteOnEvOnKeyInfo>;
 
 	using SampleList = vector<Sample*>;
 	using InstrumentList = vector<Instrument*>;

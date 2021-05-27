@@ -1,6 +1,7 @@
 ﻿#include"Track.h"
 #include"Channel.h"
 
+
 namespace ventrue
 {
 	Track::Track(int num)
@@ -32,9 +33,15 @@ namespace ventrue
 		baseTickTime = 0;
 		isEnded = false;
 
+		//
+		queue<TempoSetting> empty;
+		swap(empty, tempoSettingQue);
+
+		//
 		for (int i = 0; i < 16; i++)
 			channels[i]->Clear();
 
+		//
 		channels[9]->SetControllerValue(MidiControllerType::BankSelectMSB, 128);
 		channels[9]->SetControllerValue(MidiControllerType::BankSelectLSB, 0);
 		channels[9]->SetProgramNum(0);
@@ -83,6 +90,44 @@ namespace ventrue
 		msPerTick = microTempo / tickForQuarterNote * 0.001f;
 		BPM = 60000000 / microTempo;  //60000000: 1分钟的微秒数
 		baseTickCount = startTickCount;
+	}
+
+	//是否需要设置速度
+	bool Track::NeedSettingTempo()
+	{
+		return !tempoSettingQue.empty();
+	}
+
+	int Track::GetSettingStartTickCount()
+	{
+		TempoSetting& tempoSetting = tempoSettingQue.front();
+		return tempoSetting.startTickCount;
+	}
+
+	/// <summary>
+	/// 添加轨道速度的配置
+	/// </summary>
+	/// <param name="microTempo">一个四分音符的微秒数</param>
+	/// <param name="tickForQuarterNote">一个四分音符的tick数</param>
+	/// <param name="startTick">开始设置速度的tick数</param>
+	void Track::AddTempoSetting(float microTempo, float tickForQuarterNote, int startTickCount)
+	{
+		TempoSetting tempoSetting;
+		tempoSetting.microTempo = microTempo;
+		tempoSetting.tickForQuarterNote = tickForQuarterNote;
+		tempoSetting.startTickCount = startTickCount;
+		tempoSettingQue.push(tempoSetting);
+	}
+
+	//根据配置设置轨道速度
+	void Track::SetTempoBySetting()
+	{
+		TempoSetting& tempoSetting = tempoSettingQue.front();
+		baseTickTime = GetTickSec(tempoSetting.startTickCount);
+		msPerTick = tempoSetting.microTempo / tempoSetting.tickForQuarterNote * 0.001f;
+		BPM = 60000000 / tempoSetting.microTempo;  //60000000: 1分钟的微秒数
+		baseTickCount = tempoSetting.startTickCount;
+		tempoSettingQue.pop();
 	}
 
 	/// <summary>  

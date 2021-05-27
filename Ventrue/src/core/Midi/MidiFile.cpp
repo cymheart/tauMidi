@@ -322,6 +322,8 @@ namespace ventrue
 			if (velocity == 0)
 			{
 				noteOnEvent = track.FindNoteOnEvent(note, lastParseEventChannel);
+				if (noteOnEvent == nullptr)
+					break;
 
 				//
 				NoteOffEvent* noteOffEvent = new NoteOffEvent();
@@ -331,11 +333,9 @@ namespace ventrue
 				noteOffEvent->channel = lastParseEventChannel;
 				noteOffEvent->noteOnEvent = noteOnEvent;
 
-
-				if (noteOnEvent != nullptr) {
-					noteOnEvent->endTick = curtParseTickCount;
-					noteOnEvent->noteOffEvent = noteOffEvent;
-				}
+				//
+				noteOnEvent->endTick = curtParseTickCount;
+				noteOnEvent->noteOffEvent = noteOffEvent;
 
 				track.AddEvent(noteOffEvent);
 			}
@@ -356,6 +356,9 @@ namespace ventrue
 			int note = midiReader->read<byte>();
 			int velocity = midiReader->read<byte>();
 			NoteOnEvent* noteOnEvent = track.FindNoteOnEvent(note, lastParseEventChannel);
+			if (noteOnEvent == nullptr)
+				break;
+
 			NoteOffEvent* noteOffEvent = new NoteOffEvent();
 			noteOffEvent->startTick = curtParseTickCount;
 			noteOffEvent->note = note;
@@ -363,10 +366,9 @@ namespace ventrue
 			noteOffEvent->channel = lastParseEventChannel;
 			noteOffEvent->noteOnEvent = noteOnEvent;
 
-			if (noteOnEvent != nullptr) {
-				noteOnEvent->endTick = curtParseTickCount;
-				noteOnEvent->noteOffEvent = noteOffEvent;
-			}
+			//
+			noteOnEvent->endTick = curtParseTickCount;
+			noteOnEvent->noteOffEvent = noteOffEvent;
 
 			track.AddEvent(noteOffEvent);
 		}

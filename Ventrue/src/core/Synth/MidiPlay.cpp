@@ -11,14 +11,16 @@
 
 namespace ventrue
 {
-	MidiPlay::MidiPlay()
+	MidiPlay::MidiPlay(Ventrue* ventrue)
 	{
-		//noteOnEvOnKeyInfos = new NoteOnEvOnKeyInfoList;
+		this->ventrue = ventrue;
 		assistTrack = new Track(0);
 	}
 
 	MidiPlay::~MidiPlay()
 	{
+		DEL(midiFile);
+
 		for (int i = 0; i < trackList.size(); i++)
 			DEL(trackList[i]);
 
@@ -26,48 +28,74 @@ namespace ventrue
 			DEL(assistMidiEvList[i]);
 
 		DEL(assistTrack);
-		//DEL(noteOnEvOnKeyInfos);
 	}
 
-	/// <summary>
-	/// 设置发音合成器ventrue
-	/// </summary>
-	/// <param name="ventrue"></param>
-	void MidiPlay::SetVentrue(Ventrue* ventrue)
+	// 解析MidiFile
+	void MidiPlay::ParseMidiFile(string midiFilePath, TrackChannelMergeMode mode)
 	{
-		this->ventrue = ventrue;
-	}
+		midiFile = new MidiFile();
+		midiFile->SetTrackChannelMergeMode(mode);
+		midiFile->Parse(midiFilePath);
 
-
-
-	/// <summary>
-	/// 设置MidiFile
-	/// </summary>
-	/// <param name="midiFile"></param>
-	void MidiPlay::SetMidiFile(MidiFile* midiFile)
-	{
-		this->midiFile = midiFile;
+		//
 		midiTrackList = midiFile->GetTrackList();
 		Clear();
+
+		//
+		state = MidiPlayState::PLAY;
+		isComputeEventTime = true;
+		GotoEnd();
+		TrackRun(0);
+		isComputeEventTime = false;
+		state = MidiPlayState::STOP;
+		GotoStart();
+
+		//
+		//printf("midi文件总时长:%.2f秒 \n", endSec);
 	}
+
 
 	//停止播放
 	void MidiPlay::Stop()
 	{
-		if (state == MidiPlayState::STOP)
-			return;
-
 		for (int i = 0; i < trackList.size(); i++)
 		{
 			for (int j = 0; j < 16; j++) {
-				RemoveVirInstrumentByTrackChannel(i, j);
+				OffVirInstrumentByTrackChannel(i, j);
 			}
 		}
 
 		Clear();
-
 		state = MidiPlayState::STOP;
 	}
+
+	//开始播放
+	void MidiPlay::Play()
+	{
+		for (int i = 0; i < trackList.size(); i++)
+		{
+			for (int j = 0; j < 16; j++) {
+				OnVirInstrumentByTrackChannel(i, j);
+			}
+		}
+		state = MidiPlayState::PLAY;
+	}
+
+	//暂停播放
+	void MidiPlay::Suspend()
+	{
+		for (int i = 0; i < trackList.size(); i++)
+		{
+			for (int j = 0; j < 16; j++) {
+				OffVirInstrumentByTrackChannel(i, j);
+			}
+		}
+
+		Clear();
+		this->gotoSec = ventrue->sec;
+		state = MidiPlayState::SUSPEND;
+	}
+
 
 	//移除
 	void MidiPlay::Remove()
@@ -84,20 +112,42 @@ namespace ventrue
 	}
 
 
+
+
 	//设置播放的起始时间点
 	void MidiPlay::Goto(double gotoSec)
 	{
 		MidiPlayState oldState = state;
-		Stop();
+
+		Channel* channel;
+		for (int i = 0; i < trackList.size(); i++)
+		{
+			for (int j = 0; j < 16; j++) {
+				channel = trackList[i]->channels[j];
+				ventrue->OffVirInstrumentAllKeysByChannel(channel, false);
+			}
+		}
+
+		Clear();
+		isGotoEnd = false;
 		this->gotoSec = gotoSec;
 		state = oldState;
 	}
 
-	//开始播放
-	void MidiPlay::Play()
+	//设置快进到开头
+	void MidiPlay::GotoStart()
 	{
-		state = MidiPlayState::PLAY;
+		Goto(0);
 	}
+
+	//设置快进到结尾
+	void MidiPlay::GotoEnd()
+	{
+		Goto(9999999);
+		isGotoEnd = true;
+	}
+
+
 
 
 	//打开轨道通道对应的虚拟乐器
@@ -136,6 +186,7 @@ namespace ventrue
 
 	void MidiPlay::Clear()
 	{
+		isGotoEnd = false;
 		isDirectGoto = false;
 		isOpen = false;
 		startTime = 0;
@@ -234,8 +285,8 @@ namespace ventrue
 
 
 
-	//轨道播放
-	void MidiPlay::TrackPlay(double sec)
+	//轨道运行
+	void MidiPlay::TrackRun(double sec)
 	{
 		if (state != MidiPlayState::PLAY)
 			return;
@@ -259,6 +310,7 @@ namespace ventrue
 				isDirectGoto = true;
 				TrackPlayCore(gotoSec + sec);
 				isDirectGoto = false;
+				isGotoEnd = false;
 			}
 		}
 
@@ -270,11 +322,14 @@ namespace ventrue
 	{
 		list<MidiEvent*>* eventList;
 		MidiEvent* ev;
+		int trackEndCount = 0;
 
 		for (int i = 0; i < trackList.size(); i++)
 		{
-			if (trackList[i]->isEnded)
+			if (trackList[i]->isEnded) {
+				trackEndCount++;
 				continue;
+			}
 
 			trackList[i]->CalCurtTicksCount(sec);
 
@@ -285,11 +340,21 @@ namespace ventrue
 			{
 				ev = *it;
 
-				if (ev->startTick > trackList[i]->curtTickCount)
+				//
+				while (trackList[i]->NeedSettingTempo() &&
+					ev->startTick >= trackList[i]->GetSettingStartTickCount())
+				{
+					trackList[i]->SetTempoBySetting();
+					trackList[i]->CalCurtTicksCount(sec);
+				}
+
+				//
+				if (!isGotoEnd && ev->startTick > trackList[i]->curtTickCount)
 				{
 					trackList[i]->eventOffsetIter = it;
 					break;
 				}
+
 
 				ProcessTrackEvent(ev, i, sec);
 			}
@@ -310,13 +375,36 @@ namespace ventrue
 			}
 		}
 
+		//检测播放是否结束
+		if (!isComputeEventTime && trackEndCount == trackList.size())
+		{
+			bool isEnd = true;
+			for (int i = 0; i < trackList.size(); i++)
+			{
+				for (int j = 0; j < 16; j++) {
+					Channel* channel = trackList[i]->channels[j];
+					VirInstrument* inst = ventrue->GetVirInstrumentByChannel(channel);
+					if (inst == nullptr || inst->IsSoundEnd())
+						continue;
+
+					isEnd = false;
+					break;
+				}
+			}
+
+			if (isEnd) {
+				//printf("播放结束! \n");
+				Stop();
+			}
+		}
+
 
 		//处理辅助播放轨道的midi事件
 		assistTrack->CalCurtTicksCount(sec);
 		int j = assistTrack->eventOffsetIdx;
 		for (; j < assistMidiEvList.size(); j++)
 		{
-			if (assistMidiEvList[j]->startTick > assistTrack->curtTickCount)
+			if (!isGotoEnd && assistMidiEvList[j]->startTick > assistTrack->curtTickCount)
 			{
 				assistTrack->eventOffsetIdx = j;
 				break;
@@ -329,6 +417,17 @@ namespace ventrue
 	//处理轨道事件
 	void MidiPlay::ProcessTrackEvent(MidiEvent* midEv, int trackIdx, double sec)
 	{
+		if (isComputeEventTime &&
+			midEv->type != MidiEventType::NoteOn)
+		{
+			midEv->endSec = midEv->startSec =
+				trackList[trackIdx]->GetTickSec(midEv->startTick);
+
+			if (midEv->endSec > endSec)
+				endSec = midEv->endSec;
+		}
+
+		//
 		switch (midEv->type)
 		{
 		case MidiEventType::Tempo:
@@ -341,10 +440,12 @@ namespace ventrue
 
 			if (midiFile->GetFormat() == MidiFileFormat::SyncTracks)
 			{
-				for (int i = 1; i < trackList.size(); i++)
+				for (int i = 0; i < trackList.size(); i++)
 				{
-					trackList[i]->SetTempo(tempoEv->microTempo, midiFile->GetTickForQuarterNote(), tempoEv->startTick);
-					trackList[i]->CalCurtTicksCount(sec);
+					if (i == trackIdx)
+						continue;
+
+					trackList[i]->AddTempoSetting(tempoEv->microTempo, midiFile->GetTickForQuarterNote(), tempoEv->startTick);
 				}
 			}
 		}
@@ -352,12 +453,16 @@ namespace ventrue
 
 		case MidiEventType::NoteOn:
 		{
+			NoteOnEvent* noteOnEv = (NoteOnEvent*)midEv;
+
+			if (isComputeEventTime)
+				noteOnEv->startSec = trackList[trackIdx]->GetTickSec(noteOnEv->startTick);
+
 			if (isDirectGoto || trackList[trackIdx]->isDisablePlay)
 				break;
 
-			NoteOnEvent* noteOnEv = (NoteOnEvent*)midEv;
 			Channel& channel = *(*trackList[trackIdx])[noteOnEv->channel];
-			if (channel.IsDisablePaly())
+			if (channel.IsDisablePlay())
 				break;
 
 			Preset* preset = ventrue->GetInstrumentPreset(channel.GetBankSelectMSB(), channel.GetBankSelectLSB(), channel.GetProgramNum());
@@ -369,7 +474,9 @@ namespace ventrue
 			}
 
 			VirInstrument* virInst = ventrue->EnableVirInstrument(preset, &channel);
+			virInst->SetType(VirInstrumentType::MidiTrackType);
 			virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1, false);
+			//printf("开始:%.2f秒 - 结束:%.2f秒 \n", noteOnEv->startSec, noteOnEv->endSec);
 
 			//对缺少对应关闭音符事件的NoteOn，在辅助轨道上添加一个0.5s后关闭的事件
 			if (noteOnEv->noteOffEvent == nullptr)
@@ -382,18 +489,28 @@ namespace ventrue
 				noteOffEvent->noteOnEvent = noteOnEv;
 				assistMidiEvList.push_back(noteOffEvent);
 			}
-
 		}
 		break;
 
 		case MidiEventType::NoteOff:
 		{
+			NoteOffEvent* noteOffEv = (NoteOffEvent*)midEv;
+			if (noteOffEv->noteOnEvent == nullptr)
+				break;
+
+			if (isComputeEventTime) {
+				noteOffEv->noteOnEvent->endSec = midEv->endSec;
+
+				if (midEv->endSec > endSec)
+					endSec = midEv->endSec;
+			}
+
 			if (isDirectGoto || trackList[trackIdx]->isDisablePlay)
 				break;
 
-			NoteOffEvent* noteOffEv = (NoteOffEvent*)midEv;
+
 			Channel& channel = *(*trackList[trackIdx])[noteOffEv->channel];
-			if (channel.IsDisablePaly())
+			if (channel.IsDisablePlay())
 				break;
 
 			Preset* preset = ventrue->GetInstrumentPreset(channel.GetBankSelectMSB(), channel.GetBankSelectLSB(), channel.GetProgramNum());

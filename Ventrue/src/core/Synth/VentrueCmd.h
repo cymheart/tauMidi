@@ -20,6 +20,14 @@ namespace ventrue
 		VentrueCmd(Ventrue* ventrue);
 
 	public:
+
+		inline Ventrue* GetVentrue()
+		{
+			return ventrue;
+		}
+
+		MidiPlay* GetMidiPlay(int midiFileIdx);
+
 		void ProcessTask(TaskCallBack taskCallBack, void* data, int delay = 0);
 
 		//添加替换乐器
@@ -55,6 +63,9 @@ namespace ventrue
 
 		//停止播放midi
 		void StopMidi(int idx);
+
+		//暂停播放midi
+		void SuspendMidi(int idx);
 
 		//移除midi
 		void RemoveMidi(int idx);
@@ -190,6 +201,7 @@ namespace ventrue
 		static void _LoadMidi(Task* ev);
 		static void _PlayMidi(Task* ev);
 		static void _StopMidi(Task* ev);
+		static void _SuspendMidi(Task* ev);
 		static void _RemoveMidi(Task* ev);
 		static void _MidiGoto(Task* ev);
 		static void _SendText(Task* ev);

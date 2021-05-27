@@ -62,9 +62,12 @@ namespace ventrue
 	{
 		if (stateOps->empty())
 			canExecuteStateOp = true;
+		else if (stateOps->back().opType == VirInstrumentStateOpType::ON)
+			return;
 
 		VirInstrumentStateOp op = { VirInstrumentStateOpType::ON , isFade };
 		stateOps->push_back(op);
+
 	}
 
 	//关闭乐器
@@ -72,6 +75,8 @@ namespace ventrue
 	{
 		if (stateOps->empty())
 			canExecuteStateOp = true;
+		else if (stateOps->back().opType == VirInstrumentStateOpType::OFF)
+			return;
 
 		VirInstrumentStateOp op = { VirInstrumentStateOpType::OFF , isFade };
 		stateOps->push_back(op);
@@ -262,7 +267,9 @@ namespace ventrue
 			if (!isRealTime && tickCount <= 5)
 			{
 				//录制	
-				midiTrackRecord->RecordOffKey(key, velocity, channel->GetChannelNum());
+				if (channel != nullptr)
+					midiTrackRecord->RecordOffKey(key, velocity, channel->GetChannelNum());
+
 				return true;
 			}
 
@@ -272,7 +279,9 @@ namespace ventrue
 			if (onKeySpeed > 800)
 			{
 				//录制	
-				midiTrackRecord->RecordOffKey(key, velocity, channel->GetChannelNum());
+				if (channel != nullptr)
+					midiTrackRecord->RecordOffKey(key, velocity, channel->GetChannelNum());
+
 				return true;
 			}
 		}
@@ -305,7 +314,7 @@ namespace ventrue
 		(*onkeyEventMap)[key].push_back(keyEvent);
 	}
 
-	//执行松开按键
+	//松开按键
 	void VirInstrument::OffKey(int key, float velocity, bool isRealTime)
 	{
 		if (state == VirInstrumentState::OFFED)
@@ -319,12 +328,33 @@ namespace ventrue
 		(*offkeyEventMap)[key].push_back(keyEvent);
 	}
 
+	//松开所有按键
+	void VirInstrument::OffAllKeys(bool isRealTime)
+	{
+		if (state == VirInstrumentState::OFFED)
+			return;
+
+		onkeyEventMap->clear();
+
+		KeySounder* keySounder = nullptr;
+		for (int i = 0; i < onKeySounders->size(); i++)
+		{
+			(*onKeySounders)[i]->SetForceOffKey(true);
+			KeyEvent keyEvent;
+			keyEvent.isOnKey = false;
+			keyEvent.key = (*onKeySounders)[i]->GetOnKey();
+			keyEvent.velocity = 127;
+			keyEvent.isRealTime = isRealTime;
+			(*offkeyEventMap)[keyEvent.key].push_back(keyEvent);
+		}
+	}
 
 	//执行按键
 	KeySounder* VirInstrument::OnKeyExecute(int key, float velocity)
 	{
 		//录制
-		midiTrackRecord->RecordOnKey(key, velocity, channel->GetChannelNum());
+		if (channel != nullptr)
+			midiTrackRecord->RecordOnKey(key, velocity, channel->GetChannelNum());
 
 		KeySounder* keySounder = KeySounder::New();
 		_OnKey(keySounder, key, velocity);
@@ -349,19 +379,18 @@ namespace ventrue
 	void VirInstrument::OffKeyExecute(int key, float velocity)
 	{
 		//录制	
-		midiTrackRecord->RecordOffKey(key, velocity, channel->GetChannelNum());
+		if (channel != nullptr)
+			midiTrackRecord->RecordOffKey(key, velocity, channel->GetChannelNum());
 
 		//
 		KeySounder* keySounder = nullptr;
-		vector<KeySounder*>::iterator it = onKeySounders->begin();
-		vector<KeySounder*>::iterator end = onKeySounders->end();
-		for (; it != end; it++)
+		for (int i = 0; i < onKeySounders->size(); i++)
 		{
 			//如果在已按键状态表中查到一个对应的key的keySounder，
 			//同时还需要判断这个keySounder有没有被请求松开过，如果没有被请求松开过，
 			//才可以对应此刻的松开按键
-			if ((*it)->IsOnningKey(key) && !(*it)->IsNeedOffKey()) {
-				keySounder = *it;
+			if ((*onKeySounders)[i]->IsOnningKey(key) && !(*onKeySounders)[i]->IsNeedOffKey()) {
+				keySounder = (*onKeySounders)[i];
 				break;
 			}
 		}
@@ -400,6 +429,7 @@ namespace ventrue
 		//引擎将在合适的时机（发声结束时），真正松开这个按键
 		if (!keySounder->IsSoundEnd() &&
 			keySounder->IsHoldDownKey() &&
+			!keySounder->IsForceOffKey() &&
 			!useMonoMode &&
 			state != VirInstrumentState::OFFED)
 		{
@@ -606,9 +636,11 @@ namespace ventrue
 		int trackNum = 0;
 		Track* track = channel->GetTrack();
 		if (track) trackNum = track->GetNum();
+		float sec = floor(ventrue->sec * 100) / 100;
+
 		if (isRealTime)
 		{
-			cout << "时间" << ventrue->sec
+			cout << "时间" << sec
 				<< "<<<" << GetPreset()->name.c_str() << ">>> "
 				<< "  乐器号" << channel->GetProgramNum()
 				<< "  按键" << key
@@ -617,7 +649,7 @@ namespace ventrue
 		}
 		else
 		{
-			cout << "时间" << ventrue->sec
+			cout << "时间" << sec
 				<< "<<<" << GetPreset()->name.c_str() << ">>> "
 				<< "  乐器号" << channel->GetProgramNum()
 				<< "  按键" << key

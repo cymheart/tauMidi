@@ -32,7 +32,7 @@ namespace ventrue
 		isNeedOffKey = false;
 		isSoundEnd = false;
 		virInst = nullptr;
-
+		isForceOffKey = false;
 	}
 
 	void KeySounder::Release()

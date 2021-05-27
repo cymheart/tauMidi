@@ -278,14 +278,37 @@ namespace ventrue
 		void PlayMidi(int idx);
 		//停止播放midi
 		void StopMidi(int idx);
+		//暂停播放midi
+		void SuspendMidi(int idx);
 		//midi快进到指定位置
 		void MidiGoto(int idx, float sec);
 
 		//移除midi
 		void RemoveMidi(int idx);
 
+		// 禁止播放指定编号Midi文件的轨道
+		void DisableMidiTrack(int idx, int trackIdx);
+
+		// 启用播放指定编号Midi文件的轨道
+		void EnableMidiTrack(int idx, int trackIdx);
+
+		// 禁止播放指定编号Midi文件的轨道通道
+		void DisableMidiTrackChannel(int idx, int trackIdx, int channelIdx);
+
+		// 启用播放指定编号Midi文件的轨道通道
+		void EnableMidiTrackChannel(int idx, int trackIdx, int channelIdx);
+
+		//为midi文件设置打击乐号
+		void SetPercussionProgramNum(int idx, int num);
+
+		MidiPlay* GetMidiPlay(int idx);
+
 		// 获取乐器预设
 		Preset* GetInstrumentPreset(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
+
+
+		// 根据指定通道获取关连虚拟乐器
+		VirInstrument* GetVirInstrumentByChannel(Channel* channel);
 
 		// 在虚拟乐器列表中，创建新的指定虚拟乐器
 		VirInstrument* NewVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
@@ -322,6 +345,9 @@ namespace ventrue
 		void OffVirInstrument(VirInstrument* virInst, bool isFade = true);
 		// 根据通道关闭相关虚拟乐器
 		void OffVirInstrumentByChannel(Channel* channel, bool isFade = true);
+
+		//根据通道关闭相关虚拟乐器所有按键
+		void OffVirInstrumentAllKeysByChannel(Channel* channel, bool isRealTime = true);
 
 		//获取虚拟乐器列表的备份
 		vector<VirInstrument*>* TakeVirInstrumentList();
@@ -581,14 +607,15 @@ namespace ventrue
 		Audio* audio = nullptr;
 
 		RealtimeKeyEventList* realtimeKeyEventList = nullptr;
-		MidiPlayList* midiPlayList = nullptr;
-		MidiFileList* midiFileList = nullptr;
+
+		unordered_map<int32_t, MidiPlay*>* midiPlayMap = nullptr;
 		vector<string>* midiFilePaths = nullptr;
 
 		//设备通道列表
 		ChannelMap* deviceChannelMap = nullptr;
 
 		mutex* cmdLock;
+		Semaphore* waitSem;
 
 		/// <summary>
 		/// 在音乐中我们一般用BPM来表述乐曲的速度，BPM(Beat per Minute)的意思是每分钟的拍子数。

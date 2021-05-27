@@ -5,6 +5,13 @@
 
 namespace ventrue
 {
+	struct TempoSetting
+	{
+		float microTempo = 0;
+		float tickForQuarterNote = 0;
+		int startTickCount = 0;
+	};
+
 	// 演奏音轨
 	//by cymheart, 2020--2021.
 	class Track
@@ -37,6 +44,22 @@ namespace ventrue
 		/// <param name="startTick">开始设置速度的tick数</param>
 		void SetTempo(float microTempo, float tickForQuarterNote, int startTickCount);
 
+		/// <summary>
+		/// 添加轨道速度的配置
+		/// </summary>
+		/// <param name="microTempo">一个四分音符的微秒数</param>
+		/// <param name="tickForQuarterNote">一个四分音符的tick数</param>
+		/// <param name="startTick">开始设置速度的tick数</param>
+		void AddTempoSetting(float microTempo, float tickForQuarterNote, int startTickCount);
+
+		//根据配置设置轨道速度
+		void SetTempoBySetting();
+
+		//是否需要设置速度
+		bool NeedSettingTempo();
+		int GetSettingStartTickCount();
+
+
 		//根据当前时间点,计算已经过的tick的数量   
 		void CalCurtTicksCount(double sec);
 
@@ -53,6 +76,7 @@ namespace ventrue
 
 		//设置打击乐号
 		void SetPercussionProgramNum(int num);
+
 
 	public:
 
@@ -106,6 +130,8 @@ namespace ventrue
 		/// </summary>
 		Channel* channels[16];
 
+		//
+		queue<TempoSetting> tempoSettingQue;
 
 	};
 

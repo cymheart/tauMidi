@@ -82,6 +82,18 @@ namespace ventrue
 		//是否保持按键状态
 		bool IsHoldDownKey();
 
+		//是否强制释放按键
+		inline bool IsForceOffKey()
+		{
+			return isForceOffKey;
+		}
+
+		//设置是否强制释放按键
+		inline void SetForceOffKey(bool isForceOffKey)
+		{
+			this->isForceOffKey = isForceOffKey;
+		}
+
 
 		// 获取按键
 		inline int GetOnKey()
@@ -158,6 +170,9 @@ namespace ventrue
 
 		//发声是否结束
 		bool isSoundEnd = false;
+
+		//是否强制释放按键
+		bool isForceOffKey = false;
 
 
 

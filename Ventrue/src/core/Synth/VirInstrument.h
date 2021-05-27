@@ -8,6 +8,14 @@
 
 namespace ventrue
 {
+
+	// 虚拟乐器类型
+	enum class VirInstrumentType
+	{
+		MidiTrackType,
+		DeviceType
+	};
+
 	// 虚拟乐器状态
 	enum class VirInstrumentState
 	{
@@ -68,9 +76,18 @@ namespace ventrue
 
 	private:
 
+		inline void SetType(VirInstrumentType type)
+		{
+			this->type = type;
+		}
+
+		inline VirInstrumentType GetType()
+		{
+			return type;
+		}
 
 		//获取乐器的预设
-		Preset* GetPreset()
+		inline Preset* GetPreset()
 		{
 			return preset;
 		}
@@ -116,7 +133,7 @@ namespace ventrue
 		//所有keySounder发音是否结束
 		bool IsAllKeySoundEnd();
 
-		//乐器是否发声结束
+		//乐器是否发声结束,包括效果器作用带来的尾音是否结束
 		inline bool IsSoundEnd()
 		{
 			return (isSoundEnd || state == VirInstrumentState::OFFED);
@@ -252,6 +269,9 @@ namespace ventrue
 		//松开按键
 		void OffKey(int key, float velocity = 127.0f, bool isRealTime = true);
 
+		//松开所有按键
+		void OffAllKeys(bool isRealTime = true);
+
 
 		//执行按键
 		KeySounder* OnKeyExecute(int key, float velocity);
@@ -305,7 +325,7 @@ namespace ventrue
 
 	private:
 
-
+		VirInstrumentType type = VirInstrumentType::DeviceType;
 
 		//发音结束,包括效果器作用带来的尾音是否结束
 		bool isSoundEnd = true;

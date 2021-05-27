@@ -37,6 +37,7 @@ namespace ventrue {
 		openedAudioTime = new clock::time_point;
 		isFrameRenderCompleted = true;
 		cmdLock = new mutex();
+		waitSem = new Semaphore();
 		sampleList = new SampleList;
 		instList = new InstrumentList;
 		presetList = new PresetList;
@@ -65,9 +66,9 @@ namespace ventrue {
 		sfParserMap = new SoundFontParserMap();
 		AddSoundFontParsers();
 
-		midiPlayList = new MidiPlayList();
-		midiFileList = new MidiFileList();
+		//
 		midiFilePaths = new vector<string>();
+		midiPlayMap = new unordered_map<int32_t, MidiPlay*>;
 
 		//
 		deviceChannelMap = new ChannelMap();
@@ -101,8 +102,6 @@ namespace ventrue {
 		DEL_OBJS_VECTOR(sampleList);
 		DEL_OBJS_VECTOR(instList);
 		DEL_OBJS_VECTOR(presetList);
-		DEL_OBJS_VECTOR(midiPlayList);
-		DEL_OBJS_VECTOR(midiFileList);
 		DEL(midiFilePaths);
 
 		DEL(virInsts);
@@ -122,6 +121,14 @@ namespace ventrue {
 		DEL(effects);
 
 		DEL(cmdLock);
+		DEL(waitSem);
+
+		//
+		for (auto iter = midiPlayMap->begin(); iter != midiPlayMap->end(); ++iter)
+		{
+			DEL(iter->second);
+		}
+		DEL(midiPlayMap);
 
 		//
 		SoundFontParserMap::iterator it = sfParserMap->begin();
@@ -211,78 +218,134 @@ namespace ventrue {
 		if (idx >= midiFilePaths->size())
 			return;
 
-		MidiFile* midiFile = new MidiFile();
-		midiFile->SetTrackChannelMergeMode(GetTrackChannelMergeMode());
-		midiFile->Parse((*midiFilePaths)[idx]);
-		midiFileList->push_back(midiFile);
+		auto it = midiPlayMap->find(idx);
+		if (it != midiPlayMap->end())
+			return;
 
 		//
-		MidiPlay* midiPlay = new MidiPlay();
-		midiPlay->SetVentrue(this);
-		midiPlay->SetMidiFile(midiFile);
-		midiPlayList->push_back(midiPlay);
+		MidiPlay* midiPlay = new MidiPlay(this);
+		midiPlay->ParseMidiFile((*midiFilePaths)[idx], GetTrackChannelMergeMode());
+		(*midiPlayMap)[idx] = midiPlay;
 	}
 
 	//播放midi
 	void Ventrue::PlayMidi(int idx)
 	{
-		if (idx < 0 || idx >= midiPlayList->size())
-			return;
-
-		(*midiPlayList)[idx]->Play();
+		auto it = midiPlayMap->find(idx);
+		if (it != midiPlayMap->end()) {
+			it->second->Play();
+		}
 	}
 
 	//停止播放midi
 	void Ventrue::StopMidi(int idx)
 	{
-		if (idx < 0 || idx >= midiPlayList->size())
+		auto it = midiPlayMap->find(idx);
+		if (it != midiPlayMap->end()) {
+			it->second->Stop();
+		}
+	}
+
+	//暂停播放midi
+	void Ventrue::SuspendMidi(int idx)
+	{
+		auto it = midiPlayMap->find(idx);
+		if (it != midiPlayMap->end()) {
+			it->second->Suspend();
+		}
+	}
+
+	//移除midi
+	void Ventrue::RemoveMidi(int idx)
+	{
+		auto it = midiPlayMap->find(idx);
+		if (it == midiPlayMap->end())
 			return;
 
-		(*midiPlayList)[idx]->Stop();
+		it->second->Remove();
+		DEL(it->second);
+		midiPlayMap->erase(idx);
 	}
 
 	//midi快进到指定位置
 	void Ventrue::MidiGoto(int idx, float sec)
 	{
-		if (idx < 0 || idx >= midiPlayList->size())
-			return;
-
-		(*midiPlayList)[idx]->Goto(sec);
+		auto it = midiPlayMap->find(idx);
+		if (it != midiPlayMap->end()) {
+			it->second->Goto(sec);
+		}
 	}
 
-
-	//移除midi
-	void Ventrue::RemoveMidi(int idx)
+	// 禁止播放指定编号Midi文件的轨道
+	void Ventrue::DisableMidiTrack(int idx, int trackIdx)
 	{
-		if (idx < 0 || idx >= midiPlayList->size())
+		auto it = midiPlayMap->find(idx);
+		if (it == midiPlayMap->end())
 			return;
 
-		(*midiPlayList)[idx]->Remove();
-
-		int i = 0;
-		MidiPlayList::iterator it = midiPlayList->begin();
-		for (; it != midiPlayList->end(); it++)
-		{
-			if (i == idx) {
-				DEL(*it);
-				midiPlayList->erase(it);
-				break;
-			}
-			i++;
-		}
-
-		i = 0;
-		MidiFileList::iterator it2 = midiFileList->begin();
-		for (; it2 != midiFileList->end(); it2++)
-		{
-			if (i == idx) {
-				DEL(*it2);
-				midiFileList->erase(it2);
-				break;
-			}
-			i++;
-		}
+		if (trackIdx == -1)
+			it->second->DisableAllTrack();
+		else
+			it->second->DisableTrack(trackIdx);
 	}
+
+	// 启用播放指定编号Midi文件的轨道
+	void Ventrue::EnableMidiTrack(int idx, int trackIdx)
+	{
+		auto it = midiPlayMap->find(idx);
+		if (it == midiPlayMap->end())
+			return;
+
+		if (trackIdx == -1)
+			it->second->EnableAllTrack();
+		else
+			it->second->EnableTrack(trackIdx);
+	}
+
+	// 禁止播放指定编号Midi文件的轨道通道
+	void Ventrue::DisableMidiTrackChannel(int idx, int trackIdx, int channelIdx)
+	{
+		auto it = midiPlayMap->find(idx);
+		if (it == midiPlayMap->end())
+			return;
+
+		if (channelIdx == -1)
+			it->second->DisableTrackAllChannels(trackIdx);
+		else
+			it->second->DisableTrackChannel(trackIdx, channelIdx);
+	}
+
+	// 启用播放指定编号Midi文件的轨道通道
+	void Ventrue::EnableMidiTrackChannel(int idx, int trackIdx, int channelIdx)
+	{
+		auto it = midiPlayMap->find(idx);
+		if (it == midiPlayMap->end())
+			return;
+
+		if (channelIdx == -1)
+			it->second->EnableTrackAllChannels(trackIdx);
+		else
+			it->second->EnableTrackChannel(trackIdx, channelIdx);
+	}
+
+	//为midi文件设置打击乐号
+	void Ventrue::SetPercussionProgramNum(int idx, int num)
+	{
+		auto it = midiPlayMap->find(idx);
+		if (it == midiPlayMap->end())
+			return;
+
+		it->second->SetPercussionProgramNum(num);
+	}
+
+	MidiPlay* Ventrue::GetMidiPlay(int idx)
+	{
+		auto it = midiPlayMap->find(idx);
+		if (it != midiPlayMap->end())
+			return it->second;
+		return nullptr;
+	}
+
 
 	//增加所有soundfont解析器
 	void Ventrue::AddSoundFontParsers()
@@ -379,6 +442,26 @@ namespace ventrue {
 		return inst->LinkSamples(sample);
 	}
 
+	// 根据指定通道获取关连虚拟乐器
+	VirInstrument* Ventrue::GetVirInstrumentByChannel(Channel* channel)
+	{
+		if (channel == nullptr)
+			return nullptr;
+
+		VirInstrument* virInst = nullptr;
+		for (int i = 0; i < virInstList->size(); i++)
+		{
+			if ((*virInstList)[i]->GetChannel() == channel)
+			{
+				virInst = (*virInstList)[i];
+				break;
+			}
+		}
+
+		return virInst;
+	}
+
+
 	// 在虚拟乐器列表中，创建新的指定虚拟乐器
 	VirInstrument* Ventrue::NewVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
@@ -433,7 +516,7 @@ namespace ventrue {
 		if (virInst == nullptr)
 		{
 			virInst = new VirInstrument(this, channel, preset);
-			virInst->On(false);
+			virInst->OnExecute(false);
 			SetVirInstRelationValues(virInst);
 			virInstList->push_back(virInst);
 			virInsts->push_back(virInst);
@@ -514,16 +597,20 @@ namespace ventrue {
 			}
 		}
 
-		//移除对应的设备通道
-		Channel* channel = virInst->GetChannel();
-		uint64_t num = channel->GetChannelNum();
-		channel->SetMidiRecord(nullptr);
 
-		auto itc = deviceChannelMap->find(num);
-		if (itc != deviceChannelMap->end())
+		//移除对应的设备通道
+		if (virInst->GetType() == VirInstrumentType::DeviceType)
 		{
-			deviceChannelMap->erase(itc);
-			DEL(channel);
+			Channel* channel = virInst->GetChannel();
+			uint64_t num = channel->GetChannelNum();
+			channel->SetMidiRecord(nullptr);
+
+			auto itc = deviceChannelMap->find(num);
+			if (itc != deviceChannelMap->end())
+			{
+				deviceChannelMap->erase(itc);
+				DEL(channel);
+			}
 		}
 
 		//
@@ -586,6 +673,27 @@ namespace ventrue {
 
 		OffVirInstrument(virInst, isFade);
 	}
+
+
+	//根据通道关闭相关虚拟乐器所有按键
+	void Ventrue::OffVirInstrumentAllKeysByChannel(Channel* channel, bool isRealTime)
+	{
+		VirInstrument* virInst = nullptr;
+		for (int i = 0; i < virInstList->size(); i++)
+		{
+			if ((*virInstList)[i]->GetChannel() == channel)
+			{
+				virInst = (*virInstList)[i];
+				break;
+			}
+		}
+
+		if (virInst == nullptr)
+			return;
+
+		virInst->OffAllKeys(isRealTime);
+	}
+
 
 	//获取虚拟乐器列表的备份
 	vector<VirInstrument*>* Ventrue::TakeVirInstrumentList()
@@ -1024,9 +1132,12 @@ namespace ventrue {
 	// 处理播放midi文件事件
 	void Ventrue::ProcessMidiEvents()
 	{
-		for (int i = 0; i < midiPlayList->size(); i++)
+		MidiPlay* midiPlay;
+		auto end = midiPlayMap->end();
+		for (auto iter = midiPlayMap->begin(); iter != end; ++iter)
 		{
-			(*midiPlayList)[i]->TrackPlay(sec);
+			midiPlay = iter->second;
+			midiPlay->TrackRun(sec);
 		}
 	}
 
