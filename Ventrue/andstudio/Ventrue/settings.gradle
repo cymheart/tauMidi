@@ -1,3 +1,0 @@
-include ':testventrue'
-include ':app'
-rootProject.name = "Ventrue"
