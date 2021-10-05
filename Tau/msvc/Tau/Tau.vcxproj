@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\core\Audio\AudioOboe\Audio_oboe.cpp" />
+    <ClCompile Include="..\..\src\core\Audio\AudioPa\Audio_pa.cpp" />
+    <ClCompile Include="..\..\src\core\Audio\AudioRt\Audio_Rt.cpp" />
+    <ClCompile Include="..\..\src\core\Audio\AudioSDL\Audio_SDL.cpp" />
+    <ClCompile Include="..\..\src\core\FX\Autowah.cpp" />
+    <ClCompile Include="..\..\src\core\FX\AutowahTask.cpp" />
+    <ClCompile Include="..\..\src\core\FX\Chorus.cpp" />
+    <ClCompile Include="..\..\src\core\FX\ChorusTask.cpp" />
+    <ClCompile Include="..\..\src\core\FX\Compressor.cpp" />
+    <ClCompile Include="..\..\src\core\FX\CompressorTask.cpp" />
+    <ClCompile Include="..\..\src\core\FX\Delay.cpp" />
+    <ClCompile Include="..\..\src\core\FX\DelayTask.cpp" />
+    <ClCompile Include="..\..\src\core\FX\Distortion.cpp" />
+    <ClCompile Include="..\..\src\core\FX\DistortionTask.cpp" />
+    <ClCompile Include="..\..\src\core\FX\Equalizer.cpp" />
+    <ClCompile Include="..\..\src\core\FX\EqualizerTask.cpp" />
+    <ClCompile Include="..\..\src\core\FX\EffectList.cpp" />
+    <ClCompile Include="..\..\src\core\FX\Reverb.cpp" />
+    <ClCompile Include="..\..\src\core\FX\ReverbTask.cpp" />
+    <ClCompile Include="..\..\src\core\FX\Tremolo.cpp" />
+    <ClCompile Include="..\..\src\core\FX\TremoloTask.cpp" />
+    <ClCompile Include="..\..\src\core\FX\TauEffectTask.cpp" />
+    <ClCompile Include="..\..\src\core\Midi\MidiEvent.cpp" />
+    <ClCompile Include="..\..\src\core\Midi\MidiFile.cpp" />
+    <ClCompile Include="..\..\src\core\Midi\MidiTrack.cpp" />
+    <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2.cpp" />
+    <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2Chunks.cpp" />
+    <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2Parser.cpp" />
+    <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2Structs.cpp" />
+    <ClCompile Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.cpp" />
+    <ClCompile Include="..\..\src\core\SoundFormat\Wav\WavReader.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Channel.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Editor\Editor.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Editor\InstFragment.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Editor\MidiEditor.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Editor\MidiMarker.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Editor\MidiMarkerList.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Editor\Tempo.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Editor\Track.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Envelope.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Generator.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\MidiTrackRecord.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\RegionModulation.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Instrument.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\KeySounder.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Lfo.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Modulator.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\ModulatorList.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Preset.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Region.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\RegionSounder.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\RegionSounderThread.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Sample.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\SoundFont.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Synther\MidiEditorSynther.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Synther\MidiEditorSyntherTask.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Synther\RealtimeSynther.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Synther\RealtimeSyntherTask.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Synther\Synther.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Synther\SyntherTask.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\TauEditor.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\UnitTransform.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\SyntherEvent.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Tau.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\TauPool.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\VirInstrument.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Control\adenv.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Control\adsr.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Control\line.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Control\phasor.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Drums\analogbassdrum.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Drums\analogsnaredrum.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Drums\hihat.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Drums\synthbassdrum.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Drums\synthsnaredrum.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Dynamics\balance.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Dynamics\compressor.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Dynamics\crossfade.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Dynamics\limiter.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\autowah.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\bitcrush.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\chorus.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\decimator.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\flanger.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\fold.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\overdrive.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\phaser.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\reverbsc.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\sampleratereducer.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\tremolo.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\allpass.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\atone.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\biquad.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\comb.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\mode.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\moogladder.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\nlfilt.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\svf.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\tone.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Noise\clockednoise.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Noise\grainlet.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Noise\particle.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\drip.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\KarplusString.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\modalvoice.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\pluck.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\resonator.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\stringvoice.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\blosc.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\fm2.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\formantosc.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\oscillator.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\oscillatorbank.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\variablesawosc.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\variableshapeosc.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\vosim.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\zoscillator.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Utility\dcblock.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Utility\jitter.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Utility\metro.cpp" />
+    <ClCompile Include="..\..\src\thrids\DaisySP\Utility\port.cpp" />
+    <ClCompile Include="..\..\src\thrids\dsignal\Biquad.cpp" />
+    <ClCompile Include="..\..\src\thrids\dsignal\Bode.cpp" />
+    <ClCompile Include="..\..\src\thrids\dsignal\CascadeBiquad.cpp" />
+    <ClCompile Include="..\..\src\thrids\dsignal\Compressor.cpp" />
+    <ClCompile Include="..\..\src\thrids\dsignal\Distortion.cpp" />
+    <ClCompile Include="..\..\src\thrids\dsignal\Dsignal.cpp" />
+    <ClCompile Include="..\..\src\thrids\dsignal\MorphLBHFilter.cpp" />
+    <ClCompile Include="..\..\src\thrids\dsignal\FilterTest.cpp" />
+    <ClCompile Include="..\..\src\thrids\dsignal\GraphEqualizer.cpp" />
+    <ClCompile Include="..\..\src\thrids\dsignal\Filter.cpp" />
+    <ClCompile Include="..\..\src\thrids\dsignal\ParameterEqualizer.cpp" />
+    <ClCompile Include="..\..\src\thrids\iir\Biquad.cpp" />
+    <ClCompile Include="..\..\src\thrids\iir\Butterworth.cpp" />
+    <ClCompile Include="..\..\src\thrids\iir\Cascade.cpp" />
+    <ClCompile Include="..\..\src\thrids\iir\ChebyshevI.cpp" />
+    <ClCompile Include="..\..\src\thrids\iir\ChebyshevII.cpp" />
+    <ClCompile Include="..\..\src\thrids\iir\Custom.cpp" />
+    <ClCompile Include="..\..\src\thrids\iir\PoleFilter.cpp" />
+    <ClCompile Include="..\..\src\thrids\iir\RBJ.cpp" />
+    <ClCompile Include="..\..\src\thrids\scutils\ByteStream.cpp" />
+    <ClCompile Include="..\..\src\thrids\scutils\MathUtils.cpp" />
+    <ClCompile Include="..\..\src\thrids\scutils\RingBuffer.cpp" />
+    <ClCompile Include="..\..\src\thrids\scutils\Semaplore.cpp" />
+    <ClCompile Include="..\..\src\thrids\scutils\UniqueID.cpp" />
+    <ClCompile Include="..\..\src\thrids\scutils\Utils.cpp" />
+    <ClCompile Include="..\..\src\thrids\stk\Chorus.cpp" />
+    <ClCompile Include="..\..\src\thrids\stk\Delay.cpp" />
+    <ClCompile Include="..\..\src\thrids\stk\DelayL.cpp" />
+    <ClCompile Include="..\..\src\thrids\stk\FreeVerb.cpp" />
+    <ClCompile Include="..\..\src\thrids\stk\Iir.cpp" />
+    <ClCompile Include="..\..\src\thrids\stk\OnePole.cpp" />
+    <ClCompile Include="..\..\src\thrids\stk\SineWave.cpp" />
+    <ClCompile Include="..\..\src\thrids\stk\Stk.cpp" />
+    <ClCompile Include="..\..\src\thrids\task\Task.cpp" />
+    <ClCompile Include="..\..\src\thrids\task\TaskProcesser.cpp" />
+    <ClCompile Include="..\..\src\thrids\task\TaskQueue.cpp" />
+    <ClCompile Include="..\..\src\thrids\task\TaskTimer.cpp" />
+    <ClCompile Include="..\..\src\thrids\tinyxml2\tinyxml2.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\core\Audio\Audio.h" />
+    <ClInclude Include="..\..\src\core\Audio\AudioOboe\Audio_oboe.h" />
+    <ClInclude Include="..\..\src\core\Audio\AudioPa\Audio_pa.h" />
+    <ClInclude Include="..\..\src\core\Audio\AudioRt\Audio_Rt.h" />
+    <ClInclude Include="..\..\src\core\Audio\AudioSDL\Audio_SDL.h" />
+    <ClInclude Include="..\..\src\core\FX\Autowah.h" />
+    <ClInclude Include="..\..\src\core\FX\Chorus.h" />
+    <ClInclude Include="..\..\src\core\FX\Compressor.h" />
+    <ClInclude Include="..\..\src\core\FX\Delay.h" />
+    <ClInclude Include="..\..\src\core\FX\Distortion.h" />
+    <ClInclude Include="..\..\src\core\FX\Equalizer.h" />
+    <ClInclude Include="..\..\src\core\FX\EffectList.h" />
+    <ClInclude Include="..\..\src\core\FX\Reverb.h" />
+    <ClInclude Include="..\..\src\core\FX\EffectTask.h" />
+    <ClInclude Include="..\..\src\core\FX\Tremolo.h" />
+    <ClInclude Include="..\..\src\core\FX\TauEffect.h" />
+    <ClInclude Include="..\..\src\core\Midi\MidiEvent.h" />
+    <ClInclude Include="..\..\src\core\Midi\MidiFile.h" />
+    <ClInclude Include="..\..\src\core\Midi\MidiTrack.h" />
+    <ClInclude Include="..\..\src\core\Midi\MidiTypes.h" />
+    <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2.h" />
+    <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2Chunks.h" />
+    <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2Parser.h" />
+    <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2Structs.h" />
+    <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2Types.h" />
+    <ClInclude Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.h" />
+    <ClInclude Include="..\..\src\core\SoundFormat\Wav\WavReader.h" />
+    <ClInclude Include="..\..\src\core\Synth\Channel.h" />
+    <ClInclude Include="..\..\src\core\Synth\Editor\Editor.h" />
+    <ClInclude Include="..\..\src\core\Synth\Editor\EditorTypes.h" />
+    <ClInclude Include="..\..\src\core\Synth\Editor\InstFragment.h" />
+    <ClInclude Include="..\..\src\core\Synth\Editor\MidiEditor.h" />
+    <ClInclude Include="..\..\src\core\Synth\Editor\MidiMarker.h" />
+    <ClInclude Include="..\..\src\core\Synth\Editor\MidiMarkerList.h" />
+    <ClInclude Include="..\..\src\core\Synth\Editor\Tempo.h" />
+    <ClInclude Include="..\..\src\core\Synth\Editor\Track.h" />
+    <ClInclude Include="..\..\src\core\Synth\Envelope.h" />
+    <ClInclude Include="..\..\src\core\Synth\Generator.h" />
+    <ClInclude Include="..\..\src\core\Synth\MidiTrackRecord.h" />
+    <ClInclude Include="..\..\src\core\Synth\RegionModulation.h" />
+    <ClInclude Include="..\..\src\core\Synth\Instrument.h" />
+    <ClInclude Include="..\..\src\core\Synth\KeySounder.h" />
+    <ClInclude Include="..\..\src\core\Synth\Lfo.h" />
+    <ClInclude Include="..\..\src\core\Synth\Modulator.h" />
+    <ClInclude Include="..\..\src\core\Synth\ModulatorList.h" />
+    <ClInclude Include="..\..\src\core\Synth\SoundFont.h" />
+    <ClInclude Include="..\..\src\core\Synth\SyntherEvent.h" />
+    <ClInclude Include="..\..\src\core\Synth\Synther\MidiEditorSynther.h" />
+    <ClInclude Include="..\..\src\core\Synth\Synther\RealtimeSynther.h" />
+    <ClInclude Include="..\..\src\core\Synth\Synther\Synther.h" />
+    <ClInclude Include="..\..\src\core\Synth\Tau.h" />
+    <ClInclude Include="..\..\src\core\Synth\TauPool.h" />
+    <ClInclude Include="..\..\src\core\Synth\TauTypes.h" />
+    <ClInclude Include="..\..\src\core\Synth\Preset.h" />
+    <ClInclude Include="..\..\src\core\Synth\Region.h" />
+    <ClInclude Include="..\..\src\core\Synth\RegionSounder.h" />
+    <ClInclude Include="..\..\src\core\Synth\RegionSounderThread.h" />
+    <ClInclude Include="..\..\src\core\Synth\Sample.h" />
+    <ClInclude Include="..\..\src\core\Synth\SoundFontParser.h" />
+    <ClInclude Include="..\..\src\core\Synth\UnitTransform.h" />
+    <ClInclude Include="..\..\src\core\Synth\VirInstrument.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Control\adenv.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Control\adsr.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Control\line.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Control\phasor.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\daisysp.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Drums\analogbassdrum.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Drums\analogsnaredrum.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Drums\hihat.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Drums\synthbassdrum.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Drums\synthsnaredrum.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Dynamics\balance.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Dynamics\compressor.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Dynamics\crossfade.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Dynamics\limiter.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\autowah.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\bitcrush.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\chorus.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\decimator.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\flanger.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\fold.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\overdrive.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\phaser.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\pitchshifter.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\reverbsc.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\sampleratereducer.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\tremolo.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\allpass.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\atone.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\biquad.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\comb.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\fir.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\mode.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\moogladder.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\nlfilt.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\svf.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\tone.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\clockednoise.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\dust.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\fractal_noise.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\grainlet.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\particle.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\whitenoise.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\drip.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\KarplusString.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\modalvoice.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\pluck.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\PolyPluck.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\resonator.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\stringvoice.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\blosc.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\fm2.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\formantosc.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\harmonic_osc.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\oscillator.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\oscillatorbank.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\variablesawosc.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\variableshapeosc.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\vosim.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\zoscillator.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\dcblock.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\delayline.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\dsp.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\jitter.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\maytrig.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\metro.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\port.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\samplehold.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\smooth_random.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\Biquad.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\Bode.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\CascadeBiquad.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\Compressor.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\Distortion.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\Dsignal.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\DsignalTypes.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\MorphLBHFilter.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\FilterTest.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\GraphEqualizer.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\Filter.h" />
+    <ClInclude Include="..\..\src\thrids\dsignal\ParameterEqualizer.h" />
+    <ClInclude Include="..\..\src\thrids\iir\Biquad.h" />
+    <ClInclude Include="..\..\src\thrids\iir\Butterworth.h" />
+    <ClInclude Include="..\..\src\thrids\iir\Cascade.h" />
+    <ClInclude Include="..\..\src\thrids\iir\ChebyshevI.h" />
+    <ClInclude Include="..\..\src\thrids\iir\ChebyshevII.h" />
+    <ClInclude Include="..\..\src\thrids\iir\Common.h" />
+    <ClInclude Include="..\..\src\thrids\iir\Custom.h" />
+    <ClInclude Include="..\..\src\thrids\iir\Iir1.h" />
+    <ClInclude Include="..\..\src\thrids\iir\Layout.h" />
+    <ClInclude Include="..\..\src\thrids\iir\MathSupplement.h" />
+    <ClInclude Include="..\..\src\thrids\iir\PoleFilter.h" />
+    <ClInclude Include="..\..\src\thrids\iir\RBJ.h" />
+    <ClInclude Include="..\..\src\thrids\iir\State.h" />
+    <ClInclude Include="..\..\src\thrids\iir\Types.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\ByteStream.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\MathUtils.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\ObjectPool.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\RingBuffer.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\Semaphore.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\SingletonDefine.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\UniqueID.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\Utils.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\Vec2.h" />
+    <ClInclude Include="..\..\src\thrids\stk\Chorus.h" />
+    <ClInclude Include="..\..\src\thrids\stk\Delay.h" />
+    <ClInclude Include="..\..\src\thrids\stk\DelayL.h" />
+    <ClInclude Include="..\..\src\thrids\stk\Effect.h" />
+    <ClInclude Include="..\..\src\thrids\stk\Filter.h" />
+    <ClInclude Include="..\..\src\thrids\stk\FreeVerb.h" />
+    <ClInclude Include="..\..\src\thrids\stk\Generator.h" />
+    <ClInclude Include="..\..\src\thrids\stk\Iir.h" />
+    <ClInclude Include="..\..\src\thrids\stk\OnePole.h" />
+    <ClInclude Include="..\..\src\thrids\stk\SineWave.h" />
+    <ClInclude Include="..\..\src\thrids\stk\Stk.h" />
+    <ClInclude Include="..\..\src\thrids\task\Task.h" />
+    <ClInclude Include="..\..\src\thrids\task\TaskProcesser.h" />
+    <ClInclude Include="..\..\src\thrids\task\TaskQueue.h" />
+    <ClInclude Include="..\..\src\thrids\task\TaskTimer.h" />
+    <ClInclude Include="..\..\src\thrids\task\TaskTypes.h" />
+    <ClInclude Include="..\..\src\thrids\tinyxml2\tinyxml2.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{337c2ca6-c5cd-464d-8e2c-80567b3e958b}</ProjectGuid>
+    <RootNamespace>Tau</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Tau</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;TAU_EXPORT;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>winmm.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;TAU_EXPORT;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\src\core;..\..\..\SDL2-master\include;..\..\src\thrids</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>..\..\..\$(Platform)\$(Configuration)\;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winmm.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;TAU_EXPORT;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\src\core;..\..\src\thrids;..\..\src\thrids\DaisySP</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)Obj\tmp\tmp\%(RelativeDir)</ObjectFileName>
+      <DisableSpecificWarnings>26812;26495;4244;4305;4267;26451</DisableSpecificWarnings>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>winmm.lib;SDL2.lib;portaudio_x64.lib;rtaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\$(Platform)\$(Configuration)\;</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;TAU_EXPORT;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\src\core;..\..\src\thrids;..\..\src\thrids\DaisySP</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>26812;26495;4244;4305;4267;26451</DisableSpecificWarnings>
+      <ObjectFileName>$(IntDir)Obj\tmp\tmp\%(RelativeDir)</ObjectFileName>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>..\..\..\$(Platform)\$(Configuration)\;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winmm.lib;SDL2.lib;portaudio_x64.lib;rtaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

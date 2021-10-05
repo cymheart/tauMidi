@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+  <component name="SvnBranchConfigurationManager">
+    <option name="myConfigurationMap">
+      <map>
+        <entry key="$PROJECT_DIR$">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/andstudio/Tau" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src/core/Audio/AudioOboe">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/core/Audio/AudioOboe" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src/core/Audio/AudioSDL">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/core/Audio/AudioSDL" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src/core/Midi">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/core/Midi" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src/core/SoundFontFormat/SF2">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/core/SoundFontFormat/SF2" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src/core/SoundFormat/Wav">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/core/SoundFormat/Wav" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src/core/Synth">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/core/Synth" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src/thrids/dsignal">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/thrids/dsignal" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src/thrids/scutils">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/thrids/scutils" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src/thrids/stk">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/thrids/stk" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src/thrids/task">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/thrids/task" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../src/thrids/tinyxml2">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/thrids/tinyxml2" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/core/SoundFontFormat/SF2/SF2Parser.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/core/Synth/Channel.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/core/Synth/MidiTrackRecord.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/core/Synth/RegionSounder.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/core/Synth/RegionSounderThread.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/core/Synth/Ventrue.cpp" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/core/Synth/VirInstrument.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/thrids/scutils/MathUtils.cpp" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/thrids/task/Task.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/thrids/task/TaskProcesser.cpp" charset="GBK" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+</project>

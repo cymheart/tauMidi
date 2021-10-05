@@ -1,0 +1,1152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="core">
+      <UniqueIdentifier>{f1462b10-d08e-4c92-9976-519fa028fd06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\Audio">
+      <UniqueIdentifier>{f8851927-fe11-4c49-bd72-5a93f7d344d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\Midi">
+      <UniqueIdentifier>{804312d2-c65a-4107-aa40-2d70280f674c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\SoundFontFormat">
+      <UniqueIdentifier>{28dd9b5a-8292-428e-bbe1-5576b964872a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\SoundFormat">
+      <UniqueIdentifier>{49fb9ebe-1111-480c-ab0a-9933f9bce083}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\Synth">
+      <UniqueIdentifier>{9fafc8fc-15c1-4349-af54-a4454a54e75d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\SoundFormat\Wav">
+      <UniqueIdentifier>{84eef630-f288-49fa-8ac5-af8fb531d9ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\SoundFontFormat\SF2">
+      <UniqueIdentifier>{fe66b5f3-4d57-46d8-b42b-61d3d9c0d9b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids">
+      <UniqueIdentifier>{c0764f9b-fb88-4559-8c17-e073635a9f2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\scutils">
+      <UniqueIdentifier>{f8862251-952d-490a-b7b8-e51ff288fb09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\tinyxml2">
+      <UniqueIdentifier>{0a1e17c8-ebd2-4b1e-b248-29d1bcf44ff4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\task">
+      <UniqueIdentifier>{e82904aa-cfc9-4ff5-a517-6f9c68946a48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\Audio\AudioOboe">
+      <UniqueIdentifier>{535cde91-d3b4-4d88-a88e-b2df09e7b005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\Audio\AudioPa">
+      <UniqueIdentifier>{d0671077-5a0b-4bec-854e-801a428d5881}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\Audio\AudioSDL">
+      <UniqueIdentifier>{1b17d670-7be5-4223-a528-8fb81d3c909a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\Synth\Synther">
+      <UniqueIdentifier>{60afeaff-6421-4bcd-b306-3d587b179ec1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\SoundFontFormat\TauFont">
+      <UniqueIdentifier>{30d1c8c1-8386-4e84-9fe6-c460211bfeee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\Audio\AudioRt">
+      <UniqueIdentifier>{1fbdef70-8c78-4a25-99a8-7d61e5446bf7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\DaisySP">
+      <UniqueIdentifier>{bb190132-ac81-42a6-95d2-beb0d1be7278}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\DaisySP\Control">
+      <UniqueIdentifier>{21a784e9-d149-4682-a3a3-94a17354f323}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\DaisySP\Drums">
+      <UniqueIdentifier>{cf7e73b8-ca38-4ead-b051-d03590871ae3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\DaisySP\Dynamics">
+      <UniqueIdentifier>{1e072d97-cd85-4dd2-b4e3-b90f7e675fe6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\DaisySP\Effects">
+      <UniqueIdentifier>{c6fc7d01-af50-48fa-9194-9aab421f67c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\DaisySP\Filters">
+      <UniqueIdentifier>{230a9fee-9585-475f-b6ea-a6992ba9b866}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\DaisySP\Noise">
+      <UniqueIdentifier>{988b389b-75c3-4494-89f9-38ff40044e54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\DaisySP\PhysicalModeling">
+      <UniqueIdentifier>{90317666-1fc4-4e3b-956d-27d4ff705493}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\DaisySP\Synthesis">
+      <UniqueIdentifier>{901d64a7-c6ca-431f-aa18-02beaffe9b0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\DaisySP\Utility">
+      <UniqueIdentifier>{e2cab934-f64a-4b59-98df-21f64c09429c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\stk">
+      <UniqueIdentifier>{b9a7276c-5dcb-4ae5-8e73-6316de782560}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\iir">
+      <UniqueIdentifier>{89347cd5-8997-48e7-a093-6cd5c66040b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\FX">
+      <UniqueIdentifier>{f7a7bd44-3bb1-47ca-9800-929b36a6c745}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\FX\AutoWah">
+      <UniqueIdentifier>{818b6c60-da77-4d51-acb8-c82deb9249a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\FX\Chorus">
+      <UniqueIdentifier>{edb4d351-cb08-45c8-9857-a3535a2bccdb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\FX\Compressor">
+      <UniqueIdentifier>{0d39cf4b-209f-4690-9f68-81bf3f879722}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\FX\Delay">
+      <UniqueIdentifier>{8d6f2721-6b50-4f17-9e5c-f0eaeeca20bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\FX\Eq">
+      <UniqueIdentifier>{2d1562c2-fc47-4af7-b32d-b1582ee17771}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\FX\Reverb">
+      <UniqueIdentifier>{0f0c8c08-47a8-4822-8978-51e3cdc02d47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\FX\Tremolo">
+      <UniqueIdentifier>{e5ed4edb-f080-450f-ab39-b33c4c0c22e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\FX\Distortion">
+      <UniqueIdentifier>{32ffc104-5e45-4c8c-9779-08c2802be09e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\dsignal">
+      <UniqueIdentifier>{8cd7d44a-8c46-4697-a82b-dff6e23ae284}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\Synth\Editor">
+      <UniqueIdentifier>{e7c0b1d2-fbf4-440d-b5b5-c3c7911b6ece}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\core\Synth\Envelope.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Generator.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Instrument.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\KeySounder.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Lfo.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Modulator.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Preset.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Region.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\RegionSounder.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Sample.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\UnitTransform.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\SoundFormat\Wav\WavReader.cpp">
+      <Filter>core\SoundFormat\Wav</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Midi\MidiEvent.cpp">
+      <Filter>core\Midi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Midi\MidiFile.cpp">
+      <Filter>core\Midi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Midi\MidiTrack.cpp">
+      <Filter>core\Midi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\scutils\ByteStream.cpp">
+      <Filter>thrids\scutils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\scutils\MathUtils.cpp">
+      <Filter>thrids\scutils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\scutils\UniqueID.cpp">
+      <Filter>thrids\scutils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\scutils\Utils.cpp">
+      <Filter>thrids\scutils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\tinyxml2\tinyxml2.cpp">
+      <Filter>thrids\tinyxml2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\ModulatorList.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2.cpp">
+      <Filter>core\SoundFontFormat\SF2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2Chunks.cpp">
+      <Filter>core\SoundFontFormat\SF2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2Parser.cpp">
+      <Filter>core\SoundFontFormat\SF2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2Structs.cpp">
+      <Filter>core\SoundFontFormat\SF2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\RegionModulation.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\RegionSounderThread.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\task\TaskProcesser.cpp">
+      <Filter>thrids\task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\task\Task.cpp">
+      <Filter>thrids\task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\task\TaskQueue.cpp">
+      <Filter>thrids\task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\task\TaskTimer.cpp">
+      <Filter>thrids\task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\scutils\Semaplore.cpp">
+      <Filter>thrids\scutils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\scutils\RingBuffer.cpp">
+      <Filter>thrids\scutils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Audio\AudioOboe\Audio_oboe.cpp">
+      <Filter>core\Audio\AudioOboe</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\Dsignal.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\Filter.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\Bode.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\ParameterEqualizer.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\GraphEqualizer.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\CascadeBiquad.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Audio\AudioPa\Audio_pa.cpp">
+      <Filter>core\Audio\AudioPa</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Audio\AudioSDL\Audio_SDL.cpp">
+      <Filter>core\Audio\AudioSDL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Synther\RealtimeSynther.cpp">
+      <Filter>core\Synth\Synther</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Synther\RealtimeSyntherTask.cpp">
+      <Filter>core\Synth\Synther</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Synther\Synther.cpp">
+      <Filter>core\Synth\Synther</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Synther\SyntherTask.cpp">
+      <Filter>core\Synth\Synther</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\SyntherEvent.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Tau.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\TauPool.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.cpp">
+      <Filter>core\SoundFontFormat\TauFont</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Audio\AudioRt\Audio_Rt.cpp">
+      <Filter>core\Audio\AudioRt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\SoundFont.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Control\adenv.cpp">
+      <Filter>thrids\DaisySP\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Control\adsr.cpp">
+      <Filter>thrids\DaisySP\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Control\line.cpp">
+      <Filter>thrids\DaisySP\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Control\phasor.cpp">
+      <Filter>thrids\DaisySP\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Drums\analogbassdrum.cpp">
+      <Filter>thrids\DaisySP\Drums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Drums\analogsnaredrum.cpp">
+      <Filter>thrids\DaisySP\Drums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Drums\hihat.cpp">
+      <Filter>thrids\DaisySP\Drums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Drums\synthbassdrum.cpp">
+      <Filter>thrids\DaisySP\Drums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Drums\synthsnaredrum.cpp">
+      <Filter>thrids\DaisySP\Drums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Dynamics\balance.cpp">
+      <Filter>thrids\DaisySP\Dynamics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Dynamics\compressor.cpp">
+      <Filter>thrids\DaisySP\Dynamics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Dynamics\crossfade.cpp">
+      <Filter>thrids\DaisySP\Dynamics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Dynamics\limiter.cpp">
+      <Filter>thrids\DaisySP\Dynamics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\autowah.cpp">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\bitcrush.cpp">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\chorus.cpp">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\decimator.cpp">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\flanger.cpp">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\fold.cpp">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\overdrive.cpp">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\phaser.cpp">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\reverbsc.cpp">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\sampleratereducer.cpp">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Effects\tremolo.cpp">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\allpass.cpp">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\atone.cpp">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\comb.cpp">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\mode.cpp">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\moogladder.cpp">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\nlfilt.cpp">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\svf.cpp">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\tone.cpp">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Noise\clockednoise.cpp">
+      <Filter>thrids\DaisySP\Noise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Noise\grainlet.cpp">
+      <Filter>thrids\DaisySP\Noise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Noise\particle.cpp">
+      <Filter>thrids\DaisySP\Noise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\drip.cpp">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\KarplusString.cpp">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\modalvoice.cpp">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\pluck.cpp">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\resonator.cpp">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\PhysicalModeling\stringvoice.cpp">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\blosc.cpp">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\fm2.cpp">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\formantosc.cpp">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\oscillator.cpp">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\oscillatorbank.cpp">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\variablesawosc.cpp">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\variableshapeosc.cpp">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\vosim.cpp">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Synthesis\zoscillator.cpp">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Utility\dcblock.cpp">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Utility\jitter.cpp">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Utility\metro.cpp">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Utility\port.cpp">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\stk\Delay.cpp">
+      <Filter>thrids\stk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\stk\DelayL.cpp">
+      <Filter>thrids\stk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\stk\FreeVerb.cpp">
+      <Filter>thrids\stk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\stk\Iir.cpp">
+      <Filter>thrids\stk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\stk\OnePole.cpp">
+      <Filter>thrids\stk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\stk\SineWave.cpp">
+      <Filter>thrids\stk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\stk\Stk.cpp">
+      <Filter>thrids\stk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\DaisySP\Filters\biquad.cpp">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\Compressor.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\Biquad.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir\Biquad.cpp">
+      <Filter>thrids\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir\Butterworth.cpp">
+      <Filter>thrids\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir\Cascade.cpp">
+      <Filter>thrids\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir\ChebyshevI.cpp">
+      <Filter>thrids\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir\ChebyshevII.cpp">
+      <Filter>thrids\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir\Custom.cpp">
+      <Filter>thrids\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir\PoleFilter.cpp">
+      <Filter>thrids\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\iir\RBJ.cpp">
+      <Filter>thrids\iir</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\EffectList.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\TauEffectTask.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\stk\Chorus.cpp">
+      <Filter>thrids\stk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Autowah.cpp">
+      <Filter>core\FX\AutoWah</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\AutowahTask.cpp">
+      <Filter>core\FX\AutoWah</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Chorus.cpp">
+      <Filter>core\FX\Chorus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\ChorusTask.cpp">
+      <Filter>core\FX\Chorus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Compressor.cpp">
+      <Filter>core\FX\Compressor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\CompressorTask.cpp">
+      <Filter>core\FX\Compressor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Delay.cpp">
+      <Filter>core\FX\Delay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\DelayTask.cpp">
+      <Filter>core\FX\Delay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Equalizer.cpp">
+      <Filter>core\FX\Eq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\EqualizerTask.cpp">
+      <Filter>core\FX\Eq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Reverb.cpp">
+      <Filter>core\FX\Reverb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\ReverbTask.cpp">
+      <Filter>core\FX\Reverb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Tremolo.cpp">
+      <Filter>core\FX\Tremolo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\TremoloTask.cpp">
+      <Filter>core\FX\Tremolo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Distortion.cpp">
+      <Filter>core\FX\Distortion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\DistortionTask.cpp">
+      <Filter>core\FX\Distortion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\Distortion.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\FilterTest.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\MorphLBHFilter.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Channel.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\VirInstrument.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\MidiTrackRecord.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Editor\Editor.cpp">
+      <Filter>core\Synth\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Editor\InstFragment.cpp">
+      <Filter>core\Synth\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Editor\MidiEditor.cpp">
+      <Filter>core\Synth\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Editor\MidiMarker.cpp">
+      <Filter>core\Synth\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Editor\MidiMarkerList.cpp">
+      <Filter>core\Synth\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Editor\Tempo.cpp">
+      <Filter>core\Synth\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Editor\Track.cpp">
+      <Filter>core\Synth\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Synther\MidiEditorSynther.cpp">
+      <Filter>core\Synth\Synther</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Synther\MidiEditorSyntherTask.cpp">
+      <Filter>core\Synth\Synther</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\TauEditor.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\core\Synth\Envelope.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Generator.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Instrument.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\KeySounder.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Lfo.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Modulator.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Preset.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Region.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\RegionSounder.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Sample.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\SoundFontParser.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\UnitTransform.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\SoundFormat\Wav\WavReader.h">
+      <Filter>core\SoundFormat\Wav</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Midi\MidiEvent.h">
+      <Filter>core\Midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Midi\MidiFile.h">
+      <Filter>core\Midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Midi\MidiTrack.h">
+      <Filter>core\Midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Midi\MidiTypes.h">
+      <Filter>core\Midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\ByteStream.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\MathUtils.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\ObjectPool.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\Semaphore.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\UniqueID.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\Utils.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\Vec2.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\tinyxml2\tinyxml2.h">
+      <Filter>thrids\tinyxml2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\ModulatorList.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2.h">
+      <Filter>core\SoundFontFormat\SF2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2Chunks.h">
+      <Filter>core\SoundFontFormat\SF2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2Parser.h">
+      <Filter>core\SoundFontFormat\SF2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2Structs.h">
+      <Filter>core\SoundFontFormat\SF2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2Types.h">
+      <Filter>core\SoundFontFormat\SF2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\RegionModulation.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\RegionSounderThread.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\task\TaskProcesser.h">
+      <Filter>thrids\task</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\task\Task.h">
+      <Filter>thrids\task</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\task\TaskTypes.h">
+      <Filter>thrids\task</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\task\TaskQueue.h">
+      <Filter>thrids\task</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\task\TaskTimer.h">
+      <Filter>thrids\task</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Audio\Audio.h">
+      <Filter>core\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\RingBuffer.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Audio\AudioOboe\Audio_oboe.h">
+      <Filter>core\Audio\AudioOboe</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\Dsignal.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\Filter.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\Bode.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\ParameterEqualizer.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\GraphEqualizer.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\CascadeBiquad.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\SingletonDefine.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Audio\AudioPa\Audio_pa.h">
+      <Filter>core\Audio\AudioPa</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Audio\AudioSDL\Audio_SDL.h">
+      <Filter>core\Audio\AudioSDL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Synther\RealtimeSynther.h">
+      <Filter>core\Synth\Synther</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\SyntherEvent.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Tau.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\TauPool.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\TauTypes.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.h">
+      <Filter>core\SoundFontFormat\TauFont</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Audio\AudioRt\Audio_Rt.h">
+      <Filter>core\Audio\AudioRt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\SoundFont.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Control\adenv.h">
+      <Filter>thrids\DaisySP\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Control\adsr.h">
+      <Filter>thrids\DaisySP\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Control\line.h">
+      <Filter>thrids\DaisySP\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Control\phasor.h">
+      <Filter>thrids\DaisySP\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Drums\analogbassdrum.h">
+      <Filter>thrids\DaisySP\Drums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Drums\analogsnaredrum.h">
+      <Filter>thrids\DaisySP\Drums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Drums\hihat.h">
+      <Filter>thrids\DaisySP\Drums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Drums\synthbassdrum.h">
+      <Filter>thrids\DaisySP\Drums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Drums\synthsnaredrum.h">
+      <Filter>thrids\DaisySP\Drums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Dynamics\balance.h">
+      <Filter>thrids\DaisySP\Dynamics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Dynamics\compressor.h">
+      <Filter>thrids\DaisySP\Dynamics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Dynamics\crossfade.h">
+      <Filter>thrids\DaisySP\Dynamics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Dynamics\limiter.h">
+      <Filter>thrids\DaisySP\Dynamics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\autowah.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\bitcrush.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\chorus.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\decimator.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\flanger.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\fold.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\overdrive.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\phaser.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\pitchshifter.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\reverbsc.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\sampleratereducer.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Effects\tremolo.h">
+      <Filter>thrids\DaisySP\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\allpass.h">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\atone.h">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\comb.h">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\fir.h">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\mode.h">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\moogladder.h">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\nlfilt.h">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\svf.h">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\tone.h">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\clockednoise.h">
+      <Filter>thrids\DaisySP\Noise</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\dust.h">
+      <Filter>thrids\DaisySP\Noise</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\fractal_noise.h">
+      <Filter>thrids\DaisySP\Noise</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\grainlet.h">
+      <Filter>thrids\DaisySP\Noise</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\particle.h">
+      <Filter>thrids\DaisySP\Noise</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Noise\whitenoise.h">
+      <Filter>thrids\DaisySP\Noise</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\drip.h">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\KarplusString.h">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\modalvoice.h">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\pluck.h">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\PolyPluck.h">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\resonator.h">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\PhysicalModeling\stringvoice.h">
+      <Filter>thrids\DaisySP\PhysicalModeling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\blosc.h">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\fm2.h">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\formantosc.h">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\harmonic_osc.h">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\oscillator.h">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\oscillatorbank.h">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\variablesawosc.h">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\variableshapeosc.h">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\vosim.h">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Synthesis\zoscillator.h">
+      <Filter>thrids\DaisySP\Synthesis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\dcblock.h">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\delayline.h">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\dsp.h">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\jitter.h">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\maytrig.h">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\metro.h">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\port.h">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\samplehold.h">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\smooth_random.h">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\daisysp.h">
+      <Filter>thrids\DaisySP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\stk\Delay.h">
+      <Filter>thrids\stk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\stk\DelayL.h">
+      <Filter>thrids\stk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\stk\Effect.h">
+      <Filter>thrids\stk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\stk\Filter.h">
+      <Filter>thrids\stk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\stk\FreeVerb.h">
+      <Filter>thrids\stk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\stk\Generator.h">
+      <Filter>thrids\stk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\stk\Iir.h">
+      <Filter>thrids\stk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\stk\OnePole.h">
+      <Filter>thrids\stk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\stk\SineWave.h">
+      <Filter>thrids\stk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\stk\Stk.h">
+      <Filter>thrids\stk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Filters\biquad.h">
+      <Filter>thrids\DaisySP\Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\Compressor.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\Biquad.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\Biquad.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\Butterworth.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\Cascade.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\ChebyshevI.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\ChebyshevII.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\Common.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\Custom.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\Iir1.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\Layout.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\MathSupplement.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\PoleFilter.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\RBJ.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\State.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\iir\Types.h">
+      <Filter>thrids\iir</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\EffectList.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\EffectTask.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\TauEffect.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\stk\Chorus.h">
+      <Filter>thrids\stk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Autowah.h">
+      <Filter>core\FX\AutoWah</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Chorus.h">
+      <Filter>core\FX\Chorus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Compressor.h">
+      <Filter>core\FX\Compressor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Delay.h">
+      <Filter>core\FX\Delay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Equalizer.h">
+      <Filter>core\FX\Eq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Reverb.h">
+      <Filter>core\FX\Reverb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Tremolo.h">
+      <Filter>core\FX\Tremolo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Distortion.h">
+      <Filter>core\FX\Distortion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\Distortion.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\FilterTest.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\MorphLBHFilter.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\DsignalTypes.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Channel.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\VirInstrument.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\MidiTrackRecord.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Editor\Editor.h">
+      <Filter>core\Synth\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Editor\InstFragment.h">
+      <Filter>core\Synth\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Editor\MidiEditor.h">
+      <Filter>core\Synth\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Editor\MidiMarker.h">
+      <Filter>core\Synth\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Editor\MidiMarkerList.h">
+      <Filter>core\Synth\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Editor\Tempo.h">
+      <Filter>core\Synth\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Editor\Track.h">
+      <Filter>core\Synth\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Editor\EditorTypes.h">
+      <Filter>core\Synth\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Synther\MidiEditorSynther.h">
+      <Filter>core\Synth\Synther</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Synther\Synther.h">
+      <Filter>core\Synth\Synther</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

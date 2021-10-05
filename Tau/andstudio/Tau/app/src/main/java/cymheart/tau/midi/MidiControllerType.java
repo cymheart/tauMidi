@@ -1,0 +1,158 @@
+package cymheart.tau.midi;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/// Midi控制器类型
+/// </summary>
+public enum MidiControllerType
+{
+    CC_None(-1),
+    BankSelectMSB(0),
+    ModulationWheelMSB(1),
+    BreathControlMSB(2),
+    CC_003(3),
+    FootControllerMSB(4),
+    PortamentoTimeMSB(5),
+    DataEntryMSB(6),
+    ChannelVolumeMSB(7),
+    BalanceMSB(8),
+    CC_009(9),
+    PanMSB(10),
+    ExpressionControllerMSB(11),
+    EffectControl1MSB(12),
+    EffectControl2MSB(13),
+    CC_014(14),
+    CC_015(15),
+    GeneralPurposeController1MSB(16),
+    GeneralPurposeController2MSB(17),
+    GeneralPurposeController3MSB(18),
+    GeneralPurposeController4MSB(19),
+    CC_020(20),
+    CC_021(21),
+    CC_022(22),
+    CC_023(23),
+    CC_024(24),
+    CC_025(25),
+    CC_026(26),
+    CC_027(27),
+    CC_028(28),
+    CC_029(29),
+    CC_030(30),
+    CC_031(31),
+    BankSelectLSB(32),
+    ModulationWheelLSB(33),
+    BreathControlLSB(34),
+    CC_035(35),
+    FootControllerLSB(36),
+    PortamentoTimeLSB(37),
+    DataEntryLSB(38),
+    ChannelVolumeLSB(39),
+    BalanceLSB(40),
+    CC_041(41),
+    PanLSB(42),
+    ExpressionControllerLSB(43),
+    EffectControl1LSB(44),
+    EffectControl2LSB(45),
+    CC_046(46),
+    CC_047(47),
+    GeneralPurposeController1LSB(48),
+    GeneralPurposeController2LSB(49),
+    GeneralPurposeController3LSB(50),
+    GeneralPurposeController4LSB(51),
+    CC_052(52),
+    CC_053(53),
+    CC_054(54),
+    CC_055(55),
+    CC_056(56),
+    CC_057(57),
+    CC_058(58),
+    CC_059(59),
+    CC_060(60),
+    CC_061(61),
+    CC_062(62),
+    CC_063(63),
+    SustainPedalOnOff(64),
+    PortamentoOnOff(65),
+    SustenutoOnOff(66),
+    SoftPedalOnOff(67),
+    LegatoFootSwitch(68),
+    Hold2(69),
+    SoundController1Variation(70),
+    SoundController2Timbre(71),
+    SoundController3ReleaseTime(72),
+    SoundController4AttackTime(73),
+    SoundController5Brightness(74),
+    SoundController6(75),
+    SoundController7(76),
+    SoundController8(77),
+    SoundController9(78),
+    SoundController10(79),
+    GeneralPurposeController5LSB(80),
+    GeneralPurposeController6LSB(81),
+    GeneralPurposeController7LSB(82),
+    GeneralPurposeController8LSB(83),
+    PortamentoControl(84),
+    CC_085(85),
+    CC_086(86),
+    CC_087(87),
+    CC_088(88),
+    CC_089(89),
+    CC_090(90),
+    Effects1DepthReverbSend(91),
+    Effects2DepthTremoloDepth(92),
+    Effects3DepthChorusSend(93),
+    Effects4DepthCelesteDepth(94),
+    Effects5DepthPhaserDepth(95),
+    DataEntryInc(96),
+    DataEntryDec(97),
+    NRPNLSB(98),
+    NRPNMSB(99),
+    RPNLSB(100),
+    RPNMSB(101),
+    CC_102(102),
+    CC_103(103),
+    CC_104(104),
+    CC_105(105),
+    CC_106(106),
+    CC_107(107),
+    CC_108(108),
+    CC_109(109),
+    CC_110(110),
+    CC_111(111),
+    CC_112(112),
+    CC_113(113),
+    CC_114(114),
+    CC_115(115),
+    CC_116(116),
+    CC_117(117),
+    CC_118(118),
+    CC_119(119),
+    AllSoundOff(120),
+    ResetAllControllers(121),
+    LocalControlOnOff(122),
+    AllNotesOff(123),
+    OmniModeOff(124),
+    OmniModeOn(125),
+    PolyModeOff(126),
+    PolyModeOn(127);
+
+    private int id; // Could be other data type besides int
+    private MidiControllerType(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return this.id;
+    }
+
+    public static Map<Integer, MidiControllerType> buildMap() {
+        Map<Integer, MidiControllerType> map = new HashMap<Integer, MidiControllerType>();
+        MidiControllerType[] values = MidiControllerType.values();
+        for (MidiControllerType value : values) {
+            map.put(value.getId(), value);
+        }
+
+        return map;
+    }
+};

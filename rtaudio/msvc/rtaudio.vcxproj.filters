@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{f35863ca-88fa-4b90-a09b-b794090086af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{f34132f3-326a-4d04-957a-784f825580c7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\asio.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\asiodrivers.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\asiolist.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\iasiothiscallresolver.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RtAudio.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\asio.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\asiodrivers.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\asiodrvr.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\asiolist.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\asiosys.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ginclude.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\iasiodrv.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\iasiothiscallresolver.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\RtAudio.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
