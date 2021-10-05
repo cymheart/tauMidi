@@ -67,10 +67,10 @@ namespace tau
 		void EnableAllTrackTask(Semaphore* waitSem);
 
 		// 禁止播放指定编号通道
-		void DisableChannelTask(int channelIdx);
+		void DisableChannelTask(Semaphore* waitSem, int channelIdx);
 
 		// 启用播放指定编号通道
-		void EnableChannelTask(int channelIdx);
+		void EnableChannelTask(Semaphore* waitSem, int channelIdx);
 
 		// 设置对应轨道的乐器
 		void SetVirInstrumentTask(

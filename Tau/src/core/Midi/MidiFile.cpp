@@ -62,11 +62,58 @@ namespace tau
 		midiReader->clear();
 	}
 
+	//是否两个通道可以具有相同的乐器改变事件
+	//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
+	bool MidiFile::IsSameProgramChannel(vector<MidiEvent*>* eventListA, vector<MidiEvent*>* eventListB)
+	{
+		programChangeA = -1;
+		programChangeB = -1;
 
-	//合并轨道通道
+		vector<MidiEvent*>::iterator itA = eventListA->begin();
+		MidiEvent* evA;
+		bool isHavProgramChangeA = false;
+		for (; itA != eventListA->end(); itA++)
+		{
+			evA = *itA;
+			if (evA->type == MidiEventType::NoteOn)
+				break;
+
+			if (evA->type == MidiEventType::ProgramChange) {
+				isHavProgramChangeA = true;
+				programChangeA = ((ProgramChangeEvent*)evA)->value;
+				break;
+			}
+
+		}
+
+		vector<MidiEvent*>::iterator itB = eventListB->begin();
+		MidiEvent* evB;
+		bool isHavProgramChangeB = false;
+		for (; itB != eventListB->end(); itB++)
+		{
+			evB = *itB;
+			if (evB->type == MidiEventType::NoteOn)
+				break;
+
+			if (evB->type == MidiEventType::ProgramChange) {
+				isHavProgramChangeB = true;
+				programChangeB = ((ProgramChangeEvent*)evB)->value;
+				break;
+			}
+		}
+
+		//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
+		if ((isHavProgramChangeA && isHavProgramChangeB) ||
+			(!isHavProgramChangeA && !isHavProgramChangeB))
+			return false;
+
+		return true;
+	}
+
+	//是否两个通道具有相同的乐器改变事件
 	//即合并任何多个轨道上相同的通道事件到一个轨道，删除被合并轨道上对应通道的事件
 	//如果一个轨道上所有通道事件都被合并完了，那这个轨道也会被相应删除
-	void MidiFile::MergeTrackChannels()
+	void MidiFile::SetChannelSameProgram()
 	{
 		MidiEventList* eventListAtChannelA;
 		MidiEventList* eventListAtChannelB;
@@ -99,98 +146,26 @@ namespace tau
 					//是否可以合并轨道通道事件的标准是:两个轨道通道事件，
 					//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
 					if (mergeMode == AutoMerge &&
-						!CanMergeTrackChannels(midiTrackList[i]->GetEventListAtChannel(), midiTrackList[j]->GetEventListAtChannel()))
+						!IsSameProgramChannel(&(midiTrackList[i]->GetEventListAtChannel())[n], &(midiTrackList[j]->GetEventListAtChannel())[n]))
 						continue;
 
-					//插入通道n的事件B到同样通道的事件A中
-					for (int m = 0; m < eventListAtChannelB[n].size(); m++)
+					if (programChangeA >= 0)
 					{
-						eventListAtChannelA[n].push_back(eventListAtChannelB[n][m]);
+						ProgramChangeEvent* pcev = new ProgramChangeEvent();
+						pcev->value = programChangeA;
+						eventListAtChannelB[n].insert(eventListAtChannelB[n].begin(), pcev);
 					}
-
-					sort(eventListAtChannelA[n].begin(), eventListAtChannelA[n].end(), MidiEventTickCompare);
-					eventListAtChannelB[n].clear();
-				}
-			}
-		}
-
-		//
-		MidiTrackList tmp;
-		for (int i = 0; i < midiTrackList.size(); i++)
-		{
-			list<MidiEvent*>* eventList = midiTrackList[i]->GetEventList();
-			vector<MidiEvent*>* eventListAtChannel = midiTrackList[i]->GetEventListAtChannel();
-			list<MidiEvent*>* golbalEventList = midiTrackList[i]->GetGolbalEventList();
-
-			if (eventList->empty() && golbalEventList->empty())
-			{
-				bool isEmptyChannel = true;
-				for (int n = 0; n < 16; n++) {
-					if (!eventListAtChannel[n].empty()) {
-						isEmptyChannel = false;
-						break;
+					else
+					{
+						ProgramChangeEvent* pcev = new ProgramChangeEvent();
+						pcev->value = programChangeB;
+						eventListAtChannelA[n].insert(eventListAtChannelA[n].begin(), pcev);
 					}
 				}
-				if (isEmptyChannel)
-				{
-					delete midiTrackList[i];
-					continue;
-				}
 			}
-
-			tmp.push_back(midiTrackList[i]);
 		}
-
-		if (tmp.size() == midiTrackList.size())
-			return;
-
-		midiTrackList.clear();
-		for (int i = 0; i < tmp.size(); i++)
-			midiTrackList.push_back(tmp[i]);
 	}
 
-	//是否可以合并轨道通道事件的标准是:两个轨道通道事件，
-	//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
-	bool MidiFile::CanMergeTrackChannels(vector<MidiEvent*>* eventListA, vector<MidiEvent*>* eventListB)
-	{
-		vector<MidiEvent*>::iterator itA = eventListA->begin();
-		MidiEvent* evA;
-		bool isHavProgramChangeA = false;
-		for (; itA != eventListA->end(); itA++)
-		{
-			evA = *itA;
-			if (evA->type == MidiEventType::NoteOn)
-				break;
-
-			if (evA->type == MidiEventType::ProgramChange) {
-				isHavProgramChangeA = true;
-				break;
-			}
-
-		}
-
-		vector<MidiEvent*>::iterator itB = eventListB->begin();
-		MidiEvent* evB;
-		bool isHavProgramChangeB = false;
-		for (; itB != eventListB->end(); itB++)
-		{
-			evB = *itB;
-			if (evB->type == MidiEventType::NoteOn)
-				break;
-
-			if (evB->type == MidiEventType::ProgramChange) {
-				isHavProgramChangeB = true;
-				break;
-			}
-		}
-
-		//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
-		if ((isHavProgramChangeA && isHavProgramChangeB) ||
-			(!isHavProgramChangeA && !isHavProgramChangeB))
-			return false;
-
-		return true;
-	}
 
 	//每个通道midi事件分配到每一个轨道
 	void MidiFile::PerChannelMidiEventToPerTrack()
@@ -222,17 +197,37 @@ namespace tau
 				}
 				else
 				{
-					MidiTrack* channelTrack = new MidiTrack();
+					bool isHavKey = false;
+					for (int i = 0; i < eventListAtChannel[n].size(); i++)
+					{
+						if (eventListAtChannel[n][i]->type == MidiEventType::NoteOn) {
+							isHavKey = true;
+							break;
+						}
+					}
 
-					channelTrack->AppendMidiEvents(eventListAtChannel[n]);
-
-					channelTrack->SetChannelNum(n);
-					midiTrackList.push_back(channelTrack);
+					if (isHavKey)
+					{
+						MidiTrack* channelTrack = new MidiTrack();
+						channelTrack->AppendMidiEvents(eventListAtChannel[n]);
+						channelTrack->SetChannelNum(n);
+						midiTrackList.push_back(channelTrack);
+					}
 				}
 
 				eventListAtChannel[n].clear();
 				isHavChannelMidiEvents = true;
 			}
+		}
+	}
+
+	//寻找轨道默认乐器改变事件
+	void MidiFile::FindTracksDefaultProgramChangeEvent()
+	{
+		int len = midiTrackList.size();
+		for (int j = 0; j < len; j++)
+		{
+			midiTrackList[j]->FindDefaultProgramChangeEvent();
 		}
 	}
 
@@ -285,28 +280,121 @@ namespace tau
 		//有些midi文件的格式明明是SyncTracks，但速度设置却没有放在全局0轨道中，而把速度设置放在了其他轨道，
 		//此时通过把速度设置事件迁移到0轨道来适配标准格式
 		//当所以事件解析完成后，重新排序0轨道所有事件
-		if (format == MidiFileFormat::SyncTracks && tempoEvents.size() != 0)
+		if (format == MidiFileFormat::SyncTracks && golbalEvents.size() != 0)
 		{
 			list<MidiEvent*>* globalMidiEvents = midiTrackList[0]->GetGolbalEventList();
-			auto it = tempoEvents.begin();
-			for (; it != tempoEvents.end(); it++)
+			auto it = golbalEvents.begin();
+			for (; it != golbalEvents.end(); it++)
 			{
 				globalMidiEvents->push_back(*it);
 			}
 
 			globalMidiEvents->sort(MidiEventTickCompare);
+
+			//去除前后值相同,以及后值覆盖前值的全局事件
+			RemoveSameAndOverrideGlobalEvents(globalMidiEvents);
 		}
 
 		//合并任何多个轨道上相同的通道事件到一个轨道，删除被合并轨道上对应通道的事件
 		//如果一个轨道上所有通道事件都被合并完了，那这个轨道也会被相应删除
 		if (mergeMode == AutoMerge || mergeMode == AlwaysMerge)
-			MergeTrackChannels();
+			SetChannelSameProgram();
 
 
 		//每个通道midi事件分配到每一个轨道
 		PerChannelMidiEventToPerTrack();
 
+		FindTracksDefaultProgramChangeEvent();
+
 		return true;
+	}
+
+	//去除前后值相同,以及后值覆盖前值的全局事件
+	void MidiFile::RemoveSameAndOverrideGlobalEvents(list<MidiEvent*>* globalMidiEvents)
+	{
+		TempoEvent* prevTempo = nullptr;
+		KeySignatureEvent* prevKeySig = nullptr;
+		TimeSignatureEvent* prevTimeSig = nullptr;
+
+		auto iter = globalMidiEvents->begin();
+		for (; iter != globalMidiEvents->end(); )
+		{
+			switch ((*iter)->type)
+			{
+			case MidiEventType::Tempo:
+			{
+				TempoEvent* tempo = (TempoEvent*)*iter;
+				if (prevTempo != nullptr)
+				{
+					if (prevTempo->microTempo == tempo->microTempo) {
+						iter = globalMidiEvents->erase(iter);
+						continue;
+					}
+					else if (prevTempo->startTick == tempo->startTick)
+					{
+						globalMidiEvents->remove(prevTempo);
+					}
+				}
+
+				prevTempo = tempo;
+				iter++;
+
+			}
+			break;
+
+			case MidiEventType::KeySignature:
+			{
+				KeySignatureEvent* keySig = (KeySignatureEvent*)*iter;
+				if (prevKeySig != nullptr)
+				{
+					if (prevKeySig->mi == keySig->mi &&
+						prevKeySig->sf == keySig->sf) {
+						iter = globalMidiEvents->erase(iter);
+						continue;
+					}
+					else if (prevKeySig->startTick == keySig->startTick)
+					{
+						globalMidiEvents->remove(prevKeySig);
+					}
+				}
+
+				prevKeySig = keySig;
+				iter++;
+			}
+
+			break;
+
+			case MidiEventType::TimeSignature:
+			{
+				TimeSignatureEvent* timeSig = (TimeSignatureEvent*)*iter;
+				if (prevTimeSig != nullptr)
+				{
+					if (prevTimeSig->denominator == timeSig->denominator &&
+						prevTimeSig->numerator == timeSig->numerator &&
+						prevTimeSig->metronomeCount == timeSig->metronomeCount &&
+						prevTimeSig->nCount32ndNotesPerQuarterNote == timeSig->nCount32ndNotesPerQuarterNote) {
+						iter = globalMidiEvents->erase(iter);
+						continue;
+					}
+					else if (prevTimeSig->startTick == timeSig->startTick)
+					{
+						globalMidiEvents->remove(prevTimeSig);
+					}
+				}
+
+				prevTimeSig = timeSig;
+				iter++;
+
+			}
+			break;
+
+			default:
+				iter++;
+				break;
+
+			}
+
+		}
 	}
 
 	bool MidiFile::MidiEventTickCompare(MidiEvent* a, MidiEvent* b)
@@ -600,8 +688,7 @@ namespace tau
 					midiTrackList[0] != nullptr &&
 					format == MidiFileFormat::SyncTracks)
 				{
-					tempoEventSet.insert(tempoEvent);
-					tempoEvents.push_back(tempoEvent);
+					golbalEvents.push_back(tempoEvent);
 				}
 				else
 				{
@@ -619,7 +706,19 @@ namespace tau
 				timeSignatureEvent->denominator = midiReader->read<byte>();
 				timeSignatureEvent->metronomeCount = midiReader->read<byte>();
 				timeSignatureEvent->nCount32ndNotesPerQuarterNote = midiReader->read<byte>();
-				track.AddEvent(timeSignatureEvent);
+
+				//有些midi文件的格式明明是SyncTracks，但全局设置却没有放在全局0轨道中，而把全局设置放在了其他轨道，
+				//此时通过把全局设置事件迁移到0轨道来适配标准格式
+				if (midiTrackList.size() != 0 &&
+					midiTrackList[0] != nullptr &&
+					format == MidiFileFormat::SyncTracks)
+				{
+					golbalEvents.push_back(timeSignatureEvent);
+				}
+				else
+				{
+					track.AddEvent(timeSignatureEvent);
+				}
 			}
 			break;
 
@@ -630,7 +729,19 @@ namespace tau
 				keySignatureEvent->startTick = curtParseTickCount;
 				keySignatureEvent->sf = midiReader->read<byte>();
 				keySignatureEvent->mi = midiReader->read<byte>();
-				track.AddEvent(keySignatureEvent);
+
+				//有些midi文件的格式明明是SyncTracks，但全局设置却没有放在全局0轨道中，而把全局设置放在了其他轨道，
+				//此时通过把全局设置事件迁移到0轨道来适配标准格式
+				if (midiTrackList.size() != 0 &&
+					midiTrackList[0] != nullptr &&
+					format == MidiFileFormat::SyncTracks)
+				{
+					golbalEvents.push_back(keySignatureEvent);
+				}
+				else
+				{
+					track.AddEvent(keySignatureEvent);
+				}
 			}
 			break;
 
@@ -662,357 +773,4 @@ namespace tau
 
 		return 0; //继续解析当前音轨数据
 	}
-
-	//保存midi格式内存数据到文件
-	void MidiFile::SaveMidiFormatMemDataToDist(string saveFilePath)
-	{
-		try
-		{
-			ofstream outFile;
-			outFile.open(saveFilePath, ios::out | ios::binary);
-			outFile.write((const char*)midiWriter->begin(), midiWriter->getWriteCursor());
-			outFile.close();
-		}
-		catch (exception)
-		{
-			cout << saveFilePath << "midi文件写入出错!" << endl;
-		}
-	}
-
-
-	//生成midi格式内存数据
-	void MidiFile::CreateMidiFormatMemData()
-	{
-		midiWriter->clear();
-		midiWriter->write(nullptr, 1024 * 50);
-
-		CreateHeaderChunk();
-
-		for (int i = 0; i < midiTrackList.size(); i++)
-		{
-			curtParseTickCount = 0;
-			CreateTrackChuck(i);
-		}
-	}
-
-	//生成头块
-	bool MidiFile::CreateHeaderChunk()
-	{
-		//
-		byte headerType[5] = { 'M','T','h','d' };
-		midiWriter->write(headerType, 4);
-
-		uint32_t size = 6;
-		if (isLittleEndianSystem)
-			size = to_big_endian(size);
-		midiWriter->write(size);
-
-		//
-		short formatVal = (short)format;
-		if (isLittleEndianSystem)
-			formatVal = to_big_endian(formatVal);
-		midiWriter->write(formatVal);
-
-		//
-		short trackCountVal = trackCount;
-		if (isLittleEndianSystem)
-			trackCountVal = to_big_endian(trackCountVal);
-		midiWriter->write(trackCountVal);
-
-		//
-		short tickForQuarterNoteVal = tickForQuarterNote;
-		if (isLittleEndianSystem)
-			tickForQuarterNoteVal = to_big_endian(tickForQuarterNoteVal);
-		midiWriter->write(tickForQuarterNoteVal);
-
-		return true;
-	}
-
-
-	//生成轨道块
-	int MidiFile::CreateTrackChuck(int trackIdx)
-	{
-		MidiTrack& track = *midiTrackList[trackIdx];
-
-		//
-		byte headerType[4] = { 'M','T','r','k' };
-		midiWriter->write(headerType, 4);
-
-		//len
-		size_t writeLenPos = midiWriter->getWriteCursor();
-		midiWriter->write((int)0);
-
-		list<MidiEvent*>* midiEvents = track.GetEventList();
-		list<MidiEvent*>::iterator it = midiEvents->begin();
-		list<MidiEvent*>::iterator end = midiEvents->end();
-		for (; it != end; it++)
-		{
-			CreateEventData(*(*it));
-		}
-
-		//结尾: 00FF2F00
-		WriteDynamicValue(*midiWriter, 0); //tick
-		midiWriter->write((byte)0xFF);
-		midiWriter->write((byte)0x2F);
-		midiWriter->write((byte)0x00);
-
-		size_t endpos = midiWriter->getWriteCursor();
-		int32_t len = (int32_t)(endpos - writeLenPos - 4);
-		midiWriter->setWriteCursor(writeLenPos);
-
-		if (isLittleEndianSystem)
-			len = to_big_endian(len);
-
-		midiWriter->write((int32_t)len);
-
-		midiWriter->setWriteCursor(endpos);
-
-		return 0;
-	}
-
-	int MidiFile::CreateEventData(MidiEvent& midiEvent)
-	{
-		WriteDynamicValue(*midiWriter, midiEvent.startTick - curtParseTickCount);
-		curtParseTickCount = midiEvent.startTick;
-
-		switch (midiEvent.type)
-		{
-		case MidiEventType::NoteOn:
-		{
-			NoteOnEvent& noteOnEvent = (NoteOnEvent&)midiEvent;
-			byte type = 9 << 4 | midiEvent.channel;
-			midiWriter->write(type);
-			midiWriter->write((byte)noteOnEvent.note);
-			midiWriter->write((byte)noteOnEvent.velocity);
-		}
-		break;
-
-		case MidiEventType::NoteOff:
-		{
-			NoteOffEvent& noteOffEvent = (NoteOffEvent&)midiEvent;
-			byte type = 8 << 4 | midiEvent.channel;
-			midiWriter->write(type);
-			midiWriter->write((byte)noteOffEvent.note);
-			midiWriter->write((byte)noteOffEvent.velocity);
-		}
-		break;
-
-		case MidiEventType::KeyPressure:
-		{
-			KeyPressureEvent& keyPressureEvent = (KeyPressureEvent&)midiEvent;
-			byte type = 0xA << 4 | midiEvent.channel;
-			midiWriter->write(type);
-			midiWriter->write((byte)keyPressureEvent.note);
-			midiWriter->write((byte)keyPressureEvent.value);
-		}
-		break;
-
-		case MidiEventType::Controller:
-		{
-			ControllerEvent& ctrlEvent = (ControllerEvent&)midiEvent;
-			byte type = 0xB << 4 | midiEvent.channel;
-			midiWriter->write(type);
-			midiWriter->write((byte)ctrlEvent.ctrlType);
-			midiWriter->write((byte)ctrlEvent.value);
-		}
-		break;
-
-		case MidiEventType::ProgramChange:
-		{
-			ProgramChangeEvent& programEvent = (ProgramChangeEvent&)midiEvent;
-			byte type = 0xC << 4 | midiEvent.channel;
-			midiWriter->write(type);
-			midiWriter->write((byte)programEvent.value);
-		}
-		break;
-
-		case MidiEventType::ChannelPressure:
-		{
-			ChannelPressureEvent& channelPressureEvent = (ChannelPressureEvent&)midiEvent;
-			byte type = 0xD << 4 | midiEvent.channel;
-			midiWriter->write(type);
-			midiWriter->write((byte)channelPressureEvent.value);
-		}
-		break;
-
-		case MidiEventType::PitchBend:
-		{
-			PitchBendEvent& pitchBendEvent = (PitchBendEvent&)midiEvent;
-			byte type = 0xE << 4 | midiEvent.channel;
-			midiWriter->write(type);
-
-			byte ff, nn;
-			if (isLittleEndianSystem)
-			{
-				ff = pitchBendEvent.value & 0x7f;
-				nn = (pitchBendEvent.value >> 7) & 0x7f;
-			}
-			else
-			{
-				ff = (pitchBendEvent.value >> 7) & 0x7f;
-				nn = pitchBendEvent.value & 0x7f;
-			}
-
-			midiWriter->write(ff);
-			midiWriter->write(nn);
-		}
-		break;
-
-		case MidiEventType::Sysex:
-		{
-			SysexEvent& sysexEvent = (SysexEvent&)midiEvent;
-			midiWriter->write((byte)0xF0);
-			midiWriter->write(sysexEvent.data, sysexEvent.size);
-		}
-		break;
-
-		case MidiEventType::Tempo:
-		{
-			TempoEvent& tempoEvent = (TempoEvent&)midiEvent;
-			midiWriter->write((byte)0xff);  //事件类型
-			midiWriter->write((byte)0x51);  //种类
-			midiWriter->write((byte)0x3);  //len
-			WriteInt32To3Btyes(*midiWriter, (int32_t)(tempoEvent.microTempo));
-		}
-
-		break;
-
-		case MidiEventType::TimeSignature:
-		{
-			TimeSignatureEvent& timeSignatureEvent = (TimeSignatureEvent&)midiEvent;
-			midiWriter->write((byte)0xff);  //事件类型
-			midiWriter->write((byte)0x58);  //种类
-			midiWriter->write((byte)0x4);  //len
-			midiWriter->write((byte)timeSignatureEvent.numerator);
-			midiWriter->write((byte)timeSignatureEvent.numerator);
-			midiWriter->write((byte)timeSignatureEvent.metronomeCount);
-			midiWriter->write((byte)timeSignatureEvent.nCount32ndNotesPerQuarterNote);
-		}
-
-		break;
-
-		case MidiEventType::KeySignature:
-		{
-			KeySignatureEvent& keySignatureEvent = (KeySignatureEvent&)midiEvent;
-			midiWriter->write((byte)0xff);  //事件类型
-			midiWriter->write((byte)0x59);  //种类
-			midiWriter->write((byte)0x2);  //len
-			midiWriter->write((byte)keySignatureEvent.sf);
-			midiWriter->write((byte)keySignatureEvent.mi);
-		}
-
-		case MidiEventType::Unknown:
-		{
-			UnknownEvent& unknownEvent = (UnknownEvent&)midiEvent;
-			midiWriter->write((byte)0xff);  //事件类型
-			midiWriter->write((byte)0x59);  //种类
-			WriteDynamicValue(*midiReader, (int32_t)unknownEvent.size); //len
-			midiWriter->write(unknownEvent.data, unknownEvent.size);
-		}
-
-		break;
-		}
-
-		return 0; //继续解析当前音轨数据
-	}
-
-	//读取变长值
-	uint32_t MidiFile::ReadDynamicValue(ByteStream& reader, int maxByteCount)
-	{
-		uint32_t val = 0;
-		for (int i = 0; i < maxByteCount; i++)
-		{
-			uint32_t b = reader.read<byte>();
-			val = (val << 7) | (b & 0x7f);
-			if ((b & 0x80) == 0)
-				break;
-		}
-
-		if (!isLittleEndianSystem)
-		{
-			byte* v = (byte*)(&val);
-			swap(v[0], v[3]);
-			swap(v[1], v[2]);
-		}
-
-		return val;
-	}
-
-	//写入变长值
-	void MidiFile::WriteDynamicValue(ByteStream& writer, int32_t value)
-	{
-		if (!isLittleEndianSystem)
-			value = to_little_endian(value);
-
-		uint8_t byteValue[4] = { 0 };
-		int i = 0;
-		for (; i < 4; i++)
-		{
-			byteValue[i] = value & 0x7f;
-			value >>= 7;
-			if (value == 0)
-				break;
-		}
-
-		for (; i > 0; i--)
-			writer.write((uint8_t)(byteValue[i] | 0x80));
-		writer.write(byteValue[0]);
-	}
-
-
-	short MidiFile::ReadInt16(ByteStream& reader)
-	{
-		byte dataBtyes[2] = { 0 };
-		reader.read(dataBtyes, 0, 2);
-		if (isLittleEndianSystem)
-			swap(dataBtyes[0], dataBtyes[1]);
-		return *((short*)dataBtyes);
-	}
-
-	uint32_t MidiFile::ReadInt32(ByteStream& reader)
-	{
-		byte dataBtyes[4] = { 0 };
-		reader.read(dataBtyes, 0, 4);
-
-		if (isLittleEndianSystem) {
-			swap(dataBtyes[0], dataBtyes[3]);
-			swap(dataBtyes[1], dataBtyes[2]);
-		}
-
-		return *((uint32_t*)dataBtyes);
-	}
-
-	uint32_t MidiFile::Read3BtyesToInt32(ByteStream& reader)
-	{
-		byte dataBtyes[4] = { 0 };
-		reader.read(dataBtyes, 1, 3);
-
-		if (isLittleEndianSystem) {
-			swap(dataBtyes[0], dataBtyes[3]);
-			swap(dataBtyes[1], dataBtyes[2]);
-		}
-
-		return *((uint32_t*)dataBtyes);
-	}
-
-
-	void MidiFile::WriteInt32To3Btyes(ByteStream& writer, int32_t value)
-	{
-		byte* v = (byte*)&value;
-
-		if (isLittleEndianSystem)
-		{
-			writer.write(v[2]);
-			writer.write(v[1]);
-			writer.write(v[0]);
-		}
-		else
-		{
-			writer.write(v[1]);
-			writer.write(v[2]);
-			writer.write(v[3]);
-		}
-	}
-
-
 }

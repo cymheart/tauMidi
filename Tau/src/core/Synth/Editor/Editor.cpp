@@ -151,16 +151,26 @@ namespace tau
 	// 禁止播放指定编号的轨道
 	void Editor::DisableTrack(int trackIdx)
 	{
-		if (trackIdx >= tracks.size())
+		if (trackIdx < 0 || trackIdx >= tracks.size())
 			return;
 
-		MidiEditorSynther* synther = tracks[trackIdx]->GetMidiEditor()->GetSynther();
-
-		waitSem.reset(0);
-		synther->DisableTrackTask(&waitSem, tracks[trackIdx]);
-		waitSem.wait();
+		vector<int> trackIdxs;
+		trackIdxs.push_back(trackIdx);
+		DisableTracks(trackIdxs);
 	}
 
+	// 禁止播放指定编号的轨道
+	void Editor::DisableTracks(vector<int>& trackIdxs)
+	{
+		waitSem.reset(trackIdxs.size() - 1);
+		MidiEditorSynther* synther;
+		for (int i = 0; i < trackIdxs.size(); i++)
+		{
+			synther = tracks[trackIdxs[i]]->GetMidiEditor()->GetSynther();
+			synther->DisableTrackTask(&waitSem, tracks[trackIdxs[i]]);
+		}
+		waitSem.wait();
+	}
 
 	// 禁止播放所有轨道
 	void Editor::DisableAllTrack()
@@ -176,12 +186,24 @@ namespace tau
 	// 启用播放指定编号的轨道
 	void Editor::EnableTrack(int trackIdx)
 	{
-		if (trackIdx >= tracks.size())
+		if (trackIdx < 0 || trackIdx >= tracks.size())
 			return;
 
-		MidiEditorSynther* synther = tracks[trackIdx]->GetMidiEditor()->GetSynther();
-		waitSem.reset(0);
-		synther->EnableTrackTask(&waitSem, tracks[trackIdx]);
+		vector<int> trackIdxs;
+		trackIdxs.push_back(trackIdx);
+		EnableTracks(trackIdxs);
+	}
+
+	// 启用播放指定编号的轨道
+	void Editor::EnableTracks(vector<int>& trackIdxs)
+	{
+		waitSem.reset(trackIdxs.size() - 1);
+		MidiEditorSynther* synther;
+		for (int i = 0; i < trackIdxs.size(); i++)
+		{
+			synther = tracks[trackIdxs[i]]->GetMidiEditor()->GetSynther();
+			synther->EnableTrackTask(&waitSem, tracks[trackIdxs[i]]);
+		}
 		waitSem.wait();
 	}
 
@@ -200,20 +222,40 @@ namespace tau
 	// 禁止播放指定编号通道
 	void Editor::DisableChannel(int channelIdx)
 	{
-
-		for (int i = 0; i < tau->syntherCount; i++)
+		vector<MidiEditorSynther*> synhter;
+		for (int i = 0; i < tracks.size(); i++)
 		{
-			tau->midiEditorSynthers[i]->DisableChannelTask(channelIdx);
+			if (tracks[i]->GetChannelNum() == channelIdx)
+				syntherSet.insert(tracks[i]->GetMidiEditor()->GetSynther());
 		}
+
+		waitSem.reset(syntherSet.size() - 1);
+		for (auto it = syntherSet.begin(); it != syntherSet.end(); ++it) {
+			(*it)->DisableChannelTask(&waitSem, channelIdx);
+		}
+		waitSem.wait();
+
+		syntherSet.clear();
 	}
+
 
 	// 启用播放指定编号通道
 	void Editor::EnableChannel(int channelIdx)
 	{
-		for (int i = 0; i < tau->syntherCount; i++)
+		vector<MidiEditorSynther*> synhter;
+		for (int i = 0; i < tracks.size(); i++)
 		{
-			tau->midiEditorSynthers[i]->EnableChannelTask(channelIdx);
+			if (tracks[i]->GetChannelNum() == channelIdx)
+				syntherSet.insert(tracks[i]->GetMidiEditor()->GetSynther());
 		}
+
+		waitSem.reset(syntherSet.size() - 1);
+		for (auto it = syntherSet.begin(); it != syntherSet.end(); ++it) {
+			(*it)->EnableChannelTask(&waitSem, channelIdx);
+		}
+		waitSem.wait();
+
+		syntherSet.clear();
 	}
 
 	// 设置对应轨道的乐器
@@ -221,7 +263,7 @@ namespace tau
 		int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
 		MidiEditorSynther* synther = tracks[trackIdx]->GetMidiEditor()->GetSynther();
-		waitSem.reset(tau->syntherCount - 1);
+		waitSem.reset(0);
 		synther->SetVirInstrumentTask(&waitSem, tracks[trackIdx], bankSelectMSB, bankSelectLSB, instrumentNum);
 		waitSem.wait();
 	}
@@ -274,7 +316,29 @@ namespace tau
 
 		int startPos = tracks.size();
 		if (dstFirstTrack == nullptr) {
+
+			int trackIdx = tracks.size();
 			NewTracks(instFragments.size());
+
+			//给轨道设置默认乐器
+			for (int i = start; i <= end; i++)
+			{
+				tracks[trackIdx]->SetChannelNum(midiTracks[i]->GetChannelNum());
+
+				auto program = midiTracks[i]->GetDefaultProgramChangeEvent();
+				if (midiTracks[i]->GetChannelNum() == 9) {
+
+					SetVirInstrument(trackIdx, 128, 0, 0);
+				}
+				else if (program == nullptr) {
+					SetVirInstrument(trackIdx, 0, 0, 0);
+				}
+				else {
+					SetVirInstrument(trackIdx, 0, 0, program->value);
+				}
+
+				trackIdx++;
+			}
 
 			int endSize = min(tracks.size(), startPos + instFragments.size());
 			for (int i = startPos; i < endSize; i++)
@@ -296,7 +360,7 @@ namespace tau
 				if (!isFind && tracks[i] != dstFirstTrack)
 					continue;
 
-				for (int j = dstFirstBranchIdx; j > tracks[i]->GetBranchCount(); j++)
+				for (int j = dstFirstBranchIdx; j < tracks[i]->GetBranchCount(); j++)
 				{
 					dstTracks.push_back(tracks[i]);
 					dstBranchIdxs.push_back(j);

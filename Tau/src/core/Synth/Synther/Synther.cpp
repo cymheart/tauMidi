@@ -238,7 +238,7 @@ namespace tau
 			usleep(1000);
 #endif
 		}
-		}
+	}
 
 	//投递任务
 	void Synther::PostTask(TaskCallBack taskCallBack, void* data, int delay)
@@ -832,11 +832,29 @@ namespace tau
 	void Synther::ApplyEffectsToChannelBuffer()
 	{
 		if (isSoundEnd)
-			return;
+		{
+			for (int i = 0; i < assistSynthers.size(); i++) {
+				isSoundEnd &= assistSynthers[i]->isSoundEnd;
+				if (!isSoundEnd)
+					break;
+			}
 
+			if (isSoundEnd)
+				return;
+		}
 
 		//对声道应用效果器
 		effects->Process();
+
+		if (isVirInstSoundEnd)
+		{
+			for (int i = 0; i < assistSynthers.size(); i++)
+			{
+				isVirInstSoundEnd &= assistSynthers[i]->isVirInstSoundEnd;
+				if (!isVirInstSoundEnd)
+					break;
+			}
+		}
 
 		if (isVirInstSoundEnd)
 		{
@@ -990,4 +1008,4 @@ namespace tau
 	}
 
 
-	}
+}

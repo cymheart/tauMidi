@@ -79,36 +79,36 @@ namespace tau
 	}
 
 	// 启用播放Midi的所有轨道
-	void Tau::EnableAllMidiTrack()
+	void Tau::EnableAllTrack()
 	{
-
+		editor->EnableAllTrack();
 	}
 
 
 	// 禁止播放指定编号Midi文件通道
-	void Tau::DisableMidiChannel(int channelIdx)
+	void Tau::DisableChannel(int channelIdx)
 	{
-
+		editor->DisableChannel(channelIdx);
 	}
 
 	// 启用播放指定编号Midi文件通道
-	void Tau::EnableMidiChannel(int channelIdx)
+	void Tau::EnableChannel(int channelIdx)
 	{
-
+		editor->EnableChannel(channelIdx);
 	}
 
 	// 设置midi对应轨道的乐器
 	void Tau::SetMidiVirInstrument(int trackIdx,
 		int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
-
+		editor->SetVirInstrument(trackIdx, bankSelectMSB, bankSelectLSB, instrumentNum);
 	}
 
 
 	//为midi文件设置打击乐号
 	void Tau::SetMidiBeatVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
-
+		editor->SetMidiBeatVirInstrument(bankSelectMSB, bankSelectLSB, instrumentNum);
 	}
 
 	/// <summary>

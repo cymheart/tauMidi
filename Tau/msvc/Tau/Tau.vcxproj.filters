@@ -603,6 +603,9 @@
     <ClCompile Include="..\..\src\core\Synth\TauEditor.cpp">
       <Filter>core\Synth</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\Midi\MidiFileCreate.cpp">
+      <Filter>core\Midi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\Synth\Envelope.h">

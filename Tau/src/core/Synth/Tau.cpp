@@ -185,10 +185,7 @@ namespace tau {
 	//增加效果器
 	void Tau::AddEffect(TauEffect* effect)
 	{
-		for (int i = 0; i < syntherCount; i++)
-		{
-			midiEditorSynthers[i]->AddEffectTask(effect);
-		}
+		mainEditorSynther->AddEffectTask(effect);
 	}
 
 	// 按下按键

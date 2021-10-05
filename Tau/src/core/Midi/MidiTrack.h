@@ -31,6 +31,9 @@ namespace tau
 		//添加midi事件
 		void AppendMidiEvents(vector<MidiEvent*>& midiEvents);
 
+		//寻找默认乐器改变事件
+		void FindDefaultProgramChangeEvent();
+
 		/// <summary>
 		/// 增加一个事件
 		/// </summary>
@@ -84,6 +87,11 @@ namespace tau
 			return channelNum;
 		}
 
+		inline ProgramChangeEvent* GetDefaultProgramChangeEvent()
+		{
+			return defaultProgramChangeEvent;
+		}
+
 		/// <summary>
 		/// 寻找匹配的NoteOnEvent
 		/// </summary>
@@ -101,6 +109,8 @@ namespace tau
 		list<MidiEvent*> midiEventList;
 		list<MidiEvent*> midiGolbalEventList;
 		MidiEventList midiEventListAtChannel[16];
+		ProgramChangeEvent* defaultProgramChangeEvent = nullptr;
+
 
 		//一个四分音符所要弹奏的tick数,默认值120
 		float tickForQuarterNote = 120;

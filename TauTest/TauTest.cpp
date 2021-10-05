@@ -154,11 +154,11 @@ int main(int argc, char* argv[])
 //	tau->AddEffect(eq);
 
 	Reverb* reverb = new Reverb();
-	reverb->SetRoomSize(0.2);
+	reverb->SetRoomSize(0.8);
 	reverb->SetWidth(0.5f);
 	reverb->SetDamping(0.5f);
 	reverb->SetEffectMix(0.5f);
-	//tau->AddEffect(reverb);
+	tau->AddEffect(reverb);
 
 	//Chorus* chorus = new Chorus();
 	//chorus->SetModDepth(0.2);

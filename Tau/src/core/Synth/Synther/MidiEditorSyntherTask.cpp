@@ -253,12 +253,13 @@ namespace tau
 	}
 
 	// 禁止播放指定编号轨道通道
-	void MidiEditorSynther::DisableChannelTask(int channelIdx)
+	void MidiEditorSynther::DisableChannelTask(Semaphore* waitSem, int channelIdx)
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
 		ev->processCallBack = _DisableChannelTask;
 		ev->value = channelIdx;
+		ev->sem = waitSem;
 		PostTask(ev);
 	}
 
@@ -267,25 +268,27 @@ namespace tau
 		SyntherEvent* se = (SyntherEvent*)ev;
 		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
 		midiSynther.DisableChannel(se->value);
-
+		se->sem->set();
 	}
 
 	// 启用播放指定编号轨道通道
-	void MidiEditorSynther::EnableChannelTask(int channelIdx)
+	void MidiEditorSynther::EnableChannelTask(Semaphore* waitSem, int channelIdx)
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
 		ev->processCallBack = _EnableChannelTask;
 		ev->value = channelIdx;
+		ev->sem = waitSem;
 		PostTask(ev);
-	}
 
+	}
 
 	void MidiEditorSynther::_EnableChannelTask(Task* ev)
 	{
 		SyntherEvent* se = (SyntherEvent*)ev;
 		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
 		midiSynther.EnableChannel(se->value);
+		se->sem->set();
 	}
 
 	// 设置对应轨道的乐器

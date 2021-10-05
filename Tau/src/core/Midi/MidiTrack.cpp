@@ -24,6 +24,9 @@ namespace tau
 		midiGolbalEventList.clear();
 
 		//
+		defaultProgramChangeEvent = nullptr;
+
+		//
 		noteOnEventMap.clear();
 	}
 
@@ -213,6 +216,25 @@ namespace tau
 			midiEventList.push_back(midiEvents[i]);
 	}
 
+	//寻找默认乐器改变事件
+	void MidiTrack::FindDefaultProgramChangeEvent()
+	{
+		list<MidiEvent*>::iterator it = midiEventList.begin();
+		list<MidiEvent*>::iterator end = midiEventList.end();
+		for (; it != end; it++)
+		{
+			MidiEvent* midiEvent = *it;
+			if (midiEvent->type == MidiEventType::ProgramChange)
+			{
+				defaultProgramChangeEvent = (ProgramChangeEvent*)midiEvent;
+				break;
+			}
+			else if (midiEvent->type == MidiEventType::NoteOn)
+			{
+				break;
+			}
+		}
+	}
 
 	/// <summary>
 	/// 增加一个事件

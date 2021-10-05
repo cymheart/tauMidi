@@ -43,6 +43,7 @@
     <ClCompile Include="..\..\src\core\FX\TauEffectTask.cpp" />
     <ClCompile Include="..\..\src\core\Midi\MidiEvent.cpp" />
     <ClCompile Include="..\..\src\core\Midi\MidiFile.cpp" />
+    <ClCompile Include="..\..\src\core\Midi\MidiFileCreate.cpp" />
     <ClCompile Include="..\..\src\core\Midi\MidiTrack.cpp" />
     <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2.cpp" />
     <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2Chunks.cpp" />

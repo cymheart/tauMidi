@@ -234,7 +234,7 @@ namespace tau
 		//移除
 		void Remove();
 
-		// 指定midi文件播放的起始时间点
+		// 指定播放的起始时间点
 		void Goto(float sec);
 
 		//获取midi状态
@@ -250,14 +250,14 @@ namespace tau
 
 		// 启用播放指定编号的轨道
 		void EnableTrack(int trackIdx);
-		// 启用播放Midi的所有轨道
-		void EnableAllMidiTrack();
+		// 启用播放所有轨道
+		void EnableAllTrack();
 
-		// 禁止播放指定编号Midi文件通道
-		void DisableMidiChannel(int channelIdx);
+		// 禁止播放指定编号通道
+		void DisableChannel(int channelIdx);
 
-		// 启用播放指定编号Midi文件通道
-		void EnableMidiChannel(int channelIdx);
+		// 启用播放指定编号通道
+		void EnableChannel(int channelIdx);
 
 		// 设置乐器Bend值
 		void SetVirInstrumentPitchBend(VirInstrument* virInst, int value);

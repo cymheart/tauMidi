@@ -33,8 +33,7 @@ namespace tau
 		tempTracks.push_back(track);
 		trackCount++;
 
-		VirInstrument* vinst = ((Synther*)midiSynther)->EnableVirInstrument(track->GetChannel(), 0, 0, 0);
-		vinst->SetRealtime(false);
+		SetVirInstrument(track, 0, 0, 0);
 	}
 
 	//删除轨道

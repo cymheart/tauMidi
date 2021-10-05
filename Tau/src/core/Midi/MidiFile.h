@@ -75,16 +75,23 @@ namespace tau
 
 	private:
 
-		//合并轨道通道
+		// 是否两个通道具有相同的乐器改变事件
 		//即合并任何多个轨道上相同的通道事件到一个轨道，删除被合并轨道上对应通道的事件
 		//如果一个轨道上所有通道事件都被合并完了，那这个轨道也会被相应删除
-		void MergeTrackChannels();
+		void SetChannelSameProgram();
 
-		//是否可以合并轨道通道事件的标准是:两个轨道通道事件，只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
-		bool CanMergeTrackChannels(vector<MidiEvent*>* eventListA, vector<MidiEvent*>* eventListB);
+		//是否两个通道可以具有相同的乐器改变事件
+		//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
+		bool IsSameProgramChannel(vector<MidiEvent*>* eventListA, vector<MidiEvent*>* eventListB);
 
 		//每个通道midi事件分配到每一个轨道
 		void PerChannelMidiEventToPerTrack();
+
+		//寻找轨道默认乐器改变事件
+		void FindTracksDefaultProgramChangeEvent();
+
+		//去除前后值相同,以及后值覆盖前值的全局事件
+		void RemoveSameAndOverrideGlobalEvents(list<MidiEvent*>* globalMidiEvents);
 
 		//解析内核
 		bool ParseCore();
@@ -142,8 +149,10 @@ namespace tau
 
 
 		MidiTrackList midiTrackList;
-		unordered_set<MidiEvent*> tempoEventSet;
-		list<MidiEvent*> tempoEvents;
+		list<MidiEvent*> golbalEvents;
+
+		int programChangeA = 0;
+		int programChangeB = 0;
 
 
 	};

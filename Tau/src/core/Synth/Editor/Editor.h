@@ -48,11 +48,17 @@ namespace tau
 		// 禁止播放指定编号的轨道
 		void DisableTrack(int trackIdx);
 
+		// 禁止播放指定编号的轨道
+		void DisableTracks(vector<int>& trackIdxs);
+
 		// 禁止播放所有轨道
 		void DisableAllTrack();
 
 		// 启用播放指定编号的轨道
 		void EnableTrack(int trackIdx);
+
+		// 启用播放指定编号的轨道
+		void EnableTracks(vector<int>& trackIdxs);
 
 		// 启用播放所有轨道
 		void EnableAllTrack();
@@ -125,6 +131,7 @@ namespace tau
 		list<InstFragmentToTrackInfo> orgList;
 		unordered_map<MidiEditorSynther*, vector<InstFragmentToTrackInfo>> dataGroup;
 		unordered_map<MidiEditorSynther*, unordered_set<Track*>> modifyTrackMap;
+		unordered_set<MidiEditorSynther*> syntherSet;
 		Semaphore waitSem;
 	};
 }
