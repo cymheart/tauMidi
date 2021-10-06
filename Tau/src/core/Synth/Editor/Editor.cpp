@@ -17,6 +17,7 @@ namespace tau
 	Editor::Editor(Tau* tau)
 	{
 		this->tau = tau;
+		computedPerSyntherLimitTrackCount = tau->perSyntherLimitTrackCount;
 	}
 
 	Editor::~Editor()
@@ -45,10 +46,17 @@ namespace tau
 		midiFile->ClearMidiTrackList();
 		DEL(midiFile);
 
-		//
-		printf("midi文件总时长:%.2f秒 \n", endSec);
+		//打印工程信息
+		PrintProjectInfo();
 	}
 
+	void Editor::PrintProjectInfo()
+	{
+		printf("\n=================================== \n");
+		printf("synther总数:%d \n", tau->syntherCount);
+		printf("midi文件总时长:%.2f秒 \n", endSec);
+		printf("midi轨道总数:%zd \n", tracks.size());
+	}
 
 	//移除
 	void Editor::Remove()
@@ -76,7 +84,7 @@ namespace tau
 
 		DelEmptyTrackRealtimeSynther();
 
-
+		computedPerSyntherLimitTrackCount = tau->perSyntherLimitTrackCount;
 		tracks.clear();
 		midiMarkerList.Clear();
 	}
@@ -404,11 +412,34 @@ namespace tau
 				break;
 		}
 
+		if (count != 0 && tau->syntherCount >= tau->limitSyntherCount)
+			count = ResetTrackCountNewTracks(count);
+
 		while (count != 0)
 		{
 			synther = tau->CreateMidiEditorSynther();
 			count = _NewTracks(synther, count);
+
+			if (count != 0 && tau->syntherCount >= tau->limitSyntherCount)
+				count = ResetTrackCountNewTracks(count);
 		}
+	}
+
+	int Editor::ResetTrackCountNewTracks(int count)
+	{
+		int needTrackCount = count + tracks.size();
+		computedPerSyntherLimitTrackCount = needTrackCount / tau->syntherCount;
+		if (needTrackCount % tau->syntherCount != 0)
+			computedPerSyntherLimitTrackCount++;
+
+		for (int i = 0; i < tau->syntherCount; i++)
+		{
+			count = _NewTracks(tau->midiEditorSynthers[i], count);
+			if (count == 0)
+				break;
+		}
+
+		return count;
 	}
 
 	int Editor::_NewTracks(MidiEditorSynther* synther, int count)
@@ -421,9 +452,9 @@ namespace tau
 			isNewMidiEditor = true;
 		}
 
-		if (midiEditor->GetTrackCount() < tau->unitProcessMidiTrackCount)
+		if (midiEditor->GetTrackCount() < computedPerSyntherLimitTrackCount)
 		{
-			int n = min(count - midiEditor->GetTrackCount(), tau->unitProcessMidiTrackCount);
+			int n = min(count, computedPerSyntherLimitTrackCount - midiEditor->GetTrackCount());
 			count -= n;
 			if (isNewMidiEditor) { waitCount = n; }
 			else { waitCount = n - 1; }

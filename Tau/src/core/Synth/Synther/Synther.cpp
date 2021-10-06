@@ -17,8 +17,9 @@ namespace tau
 	{
 		this->tau = tau;
 		isFrameRenderCompleted = true;
+		isReqDelete = false;
 		computedFrameBufSyntherCount = 0;
-		isSoundEnd = false;
+		isSoundEnd = true;
 
 		//
 		presetBankReplaceMap = new unordered_map<uint32_t, uint32_t>;
@@ -833,7 +834,8 @@ namespace tau
 	{
 		if (isSoundEnd)
 		{
-			for (int i = 0; i < assistSynthers.size(); i++) {
+			for (int i = 0; i < assistSynthers.size(); i++)
+			{
 				isSoundEnd &= assistSynthers[i]->isSoundEnd;
 				if (!isSoundEnd)
 					break;

@@ -171,13 +171,14 @@ namespace tau
 	// 渲染每帧音频
 	void RealtimeSynther::Render()
 	{
+
 		if (isReqDelete && isSoundEnd)
 		{
 			if (isMainSynther)
 			{
-				computedFrameBufSyntherCount--;
-				if (computedFrameBufSyntherCount == 0)
-					isFrameRenderCompleted = true;
+				//	computedFrameBufSyntherCount--;
+				//	if (computedFrameBufSyntherCount == 0)
+				isFrameRenderCompleted = true;
 			}
 			else
 			{

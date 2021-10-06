@@ -129,20 +129,17 @@ int main(int argc, char* argv[])
 	tau->SetChildFrameSampleCount(64);
 	tau->SetLimitRegionSounderCount(500);
 	tau->SetLimitOnKeySpeed(600);
-	tau->SetUnitProcessMidiTrackCount(20);
+	tau->SetPerSyntherLimitTrackCount(20);
+	tau->SetLimitSyntherCount(12);
 	tau->SetSoundFont(&sf);
-	//tau->SetOnlyUseOneMainSynther(false);
-	//tau->SetChannelOutputMode(ChannelOutputMode::Mono);
-
-	tau->SetUseRegionInnerChorusEffect(true);
-	tau->SetEnableAllVirInstEffects(true);
-
+	tau->SetOnlyUseOneMainSynther(true);
+	tau->SetUseRegionInnerChorusEffect(false);
+	tau->SetEnableAllVirInstEffects(false);
 	//tau->SetAudioEngine(Audio::EngineType::PortAudio);
 	//tau->SetAudioEngine(Audio::EngineType::RtAudio);
 	//tau->SetTrackChannelMergeMode(AutoMerge);
 	//tau->SetRenderQuality(RenderQuality::SuperHigh);
 	//tau->SetUseMulThread(true);
-	//tau->SetChannelOutputMode(ChannelOutputMode::Mono);
 
 	//添加压缩器效果
 //	Compressor* compressor = new Compressor();
@@ -158,7 +155,7 @@ int main(int argc, char* argv[])
 	reverb->SetWidth(0.5f);
 	reverb->SetDamping(0.5f);
 	reverb->SetEffectMix(0.5f);
-	tau->AddEffect(reverb);
+	//tau->AddEffect(reverb);
 
 	//Chorus* chorus = new Chorus();
 	//chorus->SetModDepth(0.2);

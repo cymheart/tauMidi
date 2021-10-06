@@ -54,12 +54,6 @@ namespace tau
 			isMainSynther = isMain;
 		}
 
-		void CombineSynthersFrameBufsTask();
-		void AddAssistSyntherTask(Semaphore* waitSem, Synther* assistSynther);
-		void RemoveAssistSyntherTask(Semaphore* waitSem, Synther* assistSynther);
-
-		// 请求删除合成器
-		void ReqDeleteTask();
 
 		//添加替换乐器
 		void AppendReplaceInstrumentTask(
@@ -131,6 +125,15 @@ namespace tau
 
 		// 获取录制的midi轨道
 		vector<MidiTrack*>* TakeRecordMidiTracksTask(VirInstrument** virInst, int size, float recordMidiTickForQuarterNote, vector<RecordTempo>* tempos);
+
+	protected:
+		void CombineSynthersFrameBufsTask();
+		void AddAssistSyntherTask(Semaphore* waitSem, Synther* assistSynther);
+		void RemoveAssistSyntherTask(Semaphore* waitSem, Synther* assistSynther);
+
+		// 请求删除合成器
+		void ReqDeleteTask();
+
 
 	private:
 		static void FillAudioSample(void* udata, uint8_t* stream, int len);
@@ -348,6 +351,8 @@ namespace tau
 		//由于多线程同时会检测和修改这个量，会导致检测不准确，声音渲染会有几率触发不正常停止
 		atomic_bool isFrameRenderCompleted;
 
+
+
 		//使用多线程渲染处理声音
 		//多线程渲染在childFrameSampleCount比较小的情况下(比如小于64时)，由于在一大帧中线程调用太过频繁，线程切换的消耗大于声音渲染的时间
 		//当childFrameSampleCount >= 256时，多线程效率会比较高
@@ -431,9 +436,11 @@ namespace tau
 		//所有乐器发音是否结束
 		bool isVirInstSoundEnd = true;
 		//所有发音是否结束
-		bool isSoundEnd;
+		bool isSoundEnd = true;
+
 		//是否请求删除合成器
 		bool isReqDelete = false;
+
 		Semaphore waitDelSem;
 
 		int instSoundCount[1000];

@@ -80,10 +80,16 @@ namespace tau
 			return channelOutputMode;
 		}
 
-		//设置单位处理midi轨道数量
-		inline void SetUnitProcessMidiTrackCount(int count)
+		//设置每个合成器中最大轨道数量
+		inline void SetPerSyntherLimitTrackCount(int count)
 		{
-			unitProcessMidiTrackCount = count;
+			perSyntherLimitTrackCount = count;
+		}
+
+		//设置最大合成器数量(默认值:12)
+		inline void SetLimitSyntherCount(int count)
+		{
+			limitSyntherCount = count;
 		}
 
 		//设置渲染品质
@@ -406,9 +412,11 @@ namespace tau
 		//按键速率最大限制
 		float limitOnKeySpeed = 600;
 
-		//单位处理midi轨道数量
-		int unitProcessMidiTrackCount = 20;
+		//每个合成器中最大轨道数量
+		int perSyntherLimitTrackCount = 20;
 
+		//最大合成器数量
+		int limitSyntherCount = 12;
 
 		//是否开启乐器效果器
 		bool isEnableVirInstEffects = true;
@@ -449,7 +457,7 @@ namespace tau
 
 
 		MidiEditorSynther* mainEditorSynther = nullptr;
-		MidiEditorSynther* midiEditorSynthers[5000] = { nullptr };
+		MidiEditorSynther* midiEditorSynthers[500] = { nullptr };
 		int syntherCount = 1;
 
 		friend class SyntherCmd;

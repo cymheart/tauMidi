@@ -111,10 +111,15 @@ namespace tau
 	private:
 		//删除空轨实时RealtimeSynther
 		void DelEmptyTrackRealtimeSynther();
+
+		int ResetTrackCountNewTracks(int count);
 		int _NewTracks(MidiEditorSynther* synther, int count);
 
 		//重新给每个MidiEditor设置相同的最大结束时间
 		void SetMidiEditorMaxSec();
+
+		//打印工程信息
+		void PrintProjectInfo();
 
 	private:
 
@@ -126,6 +131,9 @@ namespace tau
 
 		//结束时间点
 		float endSec = 0;
+
+		//计算的每个合成器中最大轨道数量
+		int computedPerSyntherLimitTrackCount = 20;
 
 		//
 		list<InstFragmentToTrackInfo> orgList;
