@@ -1275,8 +1275,10 @@ namespace tau {
 					renderQuality == RenderQuality::Fast)
 				{
 					//通过一个采样位置的平缓过渡处理，来平缓精度不足带来的数据阶梯跳跃
-					volGain = startVolGain * (1 - a) + endVolGain * a;
-					a += invSampleProcessBlockSize;
+					if (startVolGain != endVolGain) {
+						volGain = startVolGain * (1 - a) + endVolGain * a;
+						a += invSampleProcessBlockSize;
+					}
 				}
 				else
 				{
@@ -1398,7 +1400,9 @@ namespace tau {
 			return 0;
 		}
 
-		lastSamplePos = lastSamplePos + sampleSpeed;
+		//注意，此处为保证累加精度，必须使用double类型
+		//不然变调声音会不平滑
+		lastSamplePos += sampleSpeed;
 
 		while (lastSamplePos > sampleEndLoopIdx && isComputedLoopSample)
 			lastSamplePos -= (sampleEndLoopIdx - sampleStartLoopIdx);
@@ -1417,7 +1421,7 @@ namespace tau {
 		}
 
 		//计算采样点插值
-		float a = (float)(lastSamplePos - prevIntPos);
+		double a = lastSamplePos - prevIntPos;
 		return (input[prevIntPos] * (1.0f - a) + input[nextIntPos] * a);
 
 	}

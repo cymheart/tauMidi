@@ -53,7 +53,7 @@ namespace tau
 		void LeaveStepPlayMode();
 
 		//移动到指定时间点
-		void Moveto(double sec);
+		void Runto(double sec);
 
 		//设置播放时间点
 		void Goto(double sec);

@@ -148,14 +148,10 @@ namespace tau
 	}
 
 	//移动到指定时间点
-	void Editor::Moveto(double sec)
+	void Editor::Runto(double sec)
 	{
-		waitSem.reset(tau->syntherCount - 1);
-
 		for (int i = 0; i < tau->syntherCount; i++)
-			tau->midiEditorSynthers[i]->MovetoTask(&waitSem, sec);
-
-		waitSem.wait();
+			tau->midiEditorSynthers[i]->RuntoTask(nullptr, sec);
 	}
 
 

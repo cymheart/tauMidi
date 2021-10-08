@@ -89,7 +89,7 @@ namespace tau
 		void LeaveStepPlayMode();
 
 		//移动到指定时间点
-		void Moveto(double sec);
+		void Runto(double sec);
 		//设置播放的起始时间点
 		void Goto(double sec);
 		//设置快进到开头
@@ -115,8 +115,6 @@ namespace tau
 		//移动乐器片段到目标轨道分径的指定时间点
 		void MoveInstFragment(InstFragment* instFragment, Track* dstTrack, int dstBranchIdx, float sec);
 
-
-		void StepRun(double sec);
 		//运行
 		void Run(double sec, bool isStepOp = false);
 		void DisableTrack(Track* track);

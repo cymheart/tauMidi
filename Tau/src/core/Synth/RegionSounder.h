@@ -437,7 +437,8 @@ namespace tau
 
 		//最后在原始源中定位的采样位置
 		//即已采样处理到此处
-		float lastSamplePos = -1;
+		//注意，此处为保证累加精度，必须使用double类型，不然变调声音会不平滑
+		double lastSamplePos = -1;
 
 		// 样本起始点位置
 		int sampleStartIdx = 0;

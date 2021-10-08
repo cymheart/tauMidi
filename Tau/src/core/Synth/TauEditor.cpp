@@ -54,9 +54,9 @@ namespace tau
 	}
 
 	//移动到指定时间点
-	void Tau::Moveto(double sec)
+	void Tau::Runto(double sec)
 	{
-		editor->Moveto(sec);
+		editor->Runto(sec);
 	}
 
 	// 指定midi文件播放的起始时间点

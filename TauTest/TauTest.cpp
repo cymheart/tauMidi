@@ -267,17 +267,17 @@ int main(int argc, char* argv[])
 		Sleep(200);
 		t += 0.2;
 
-		tau->Moveto(t);
+		tau->Runto(t);
 	}
 
-	tau->Moveto(0);
+	tau->Runto(0);
 	t = 0;
 	for (int i = 0; i < 50; i++)
 	{
 		Sleep(200);
 		t += 0.2;
 
-		tau->Moveto(t);
+		tau->Runto(t);
 	}
 
 	tau->LeaveStepPlayMode();

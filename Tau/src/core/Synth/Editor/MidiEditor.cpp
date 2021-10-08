@@ -165,7 +165,7 @@ namespace tau
 	}
 
 	//移动到指定时间点
-	void MidiEditor::Moveto(double sec)
+	void MidiEditor::Runto(double sec)
 	{
 		if (state != EditorState::PLAY || !isStepPlayMode) {
 			Goto(sec);
@@ -173,7 +173,7 @@ namespace tau
 		}
 
 		if (sec >= curtPlaySec) {
-			StepRun((sec - curtPlaySec) / speed);
+			Run((sec - curtPlaySec) / speed, true);
 		}
 		else {
 			Goto(sec);
@@ -183,8 +183,6 @@ namespace tau
 	//设置播放的起始时间点
 	void MidiEditor::Goto(double sec)
 	{
-		EditorState oldState = state;
-
 		for (int i = 0; i < trackList.size(); i++)
 			midiSynther->OffVirInstrumentAllKeys(trackList[i]->GetChannel());
 
@@ -193,7 +191,6 @@ namespace tau
 		isGotoEnd = false;
 		gotoSec = sec;
 		curtPlaySec = sec;
-		state = oldState;
 	}
 
 	//设置快进到开头
@@ -350,11 +347,6 @@ namespace tau
 			if (trackList[i]->endSec > endSec)
 				endSec = trackList[i]->endSec;
 		}
-	}
-
-	void MidiEditor::StepRun(double sec)
-	{
-		Run(sec, true);
 	}
 
 	//运行

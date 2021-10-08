@@ -286,7 +286,7 @@ namespace tau
 		void LeaveStepPlayMode();
 
 		//移动到指定时间点
-		void Moveto(double sec);
+		void Runto(double sec);
 
 		// 指定播放的起始时间点
 		void Goto(float sec);

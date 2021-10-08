@@ -44,7 +44,7 @@ namespace tau
 		void EnterStepPlayModeTask(Semaphore* waitSem);
 		void LeaveStepPlayModeTask(Semaphore* waitSem);
 
-		void MovetoTask(Semaphore* waitSem, double sec);
+		void RuntoTask(Semaphore* waitSem, double sec);
 
 		//指定播放的起始时间点
 		void GotoTask(Semaphore* waitSem, double sec);
@@ -101,7 +101,7 @@ namespace tau
 		static void _RemoveTask(Task* ev);
 		static void _EnterStepPlayModeTask(Task* ev);
 		static void _LeaveStepPlayModeTask(Task* ev);
-		static void _MovetoTask(Task* ev);
+		static void _RuntoTask(Task* ev);
 		static void _GotoTask(Task* ev);
 		static void _GetStateTask(Task* ev);
 		static void _GetEndSecTask(Task* ev);
@@ -142,7 +142,7 @@ namespace tau
 		void EnterStepPlayMode();
 		void LeaveStepPlayMode();
 
-		void Moveto(double sec);
+		void Runto(double sec);
 
 		//midi快进到指定位置
 		void Goto(double sec);

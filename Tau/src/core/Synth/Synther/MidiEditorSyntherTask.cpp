@@ -116,22 +116,24 @@ namespace tau
 		se->sem->set();
 	}
 
-	void MidiEditorSynther::MovetoTask(Semaphore* waitSem, double sec)
+	void MidiEditorSynther::RuntoTask(Semaphore* waitSem, double sec)
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
-		ev->processCallBack = _MovetoTask;
+		ev->processCallBack = _RuntoTask;
 		ev->exValue[0] = sec;
 		ev->sem = waitSem;
 		PostTask(ev);
 	}
 
-	void MidiEditorSynther::_MovetoTask(Task* ev)
+	void MidiEditorSynther::_RuntoTask(Task* ev)
 	{
 		SyntherEvent* se = (SyntherEvent*)ev;
 		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
-		midiSynther.Moveto(se->exValue[0]);
-		se->sem->set();
+		midiSynther.Runto(se->exValue[0]);
+
+		if (se->sem)
+			se->sem->set();
 	}
 
 

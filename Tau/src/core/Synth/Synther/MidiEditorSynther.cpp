@@ -94,12 +94,12 @@ namespace tau
 		midiEditor->LeaveStepPlayMode();
 	}
 
-	void MidiEditorSynther::Moveto(double sec)
+	void MidiEditorSynther::Runto(double sec)
 	{
 		if (midiEditor == nullptr)
 			return;
 
-		midiEditor->Moveto(sec);
+		midiEditor->Runto(sec);
 	}
 
 	//快进到指定位置
