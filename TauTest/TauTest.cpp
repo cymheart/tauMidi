@@ -258,7 +258,7 @@ int main(int argc, char* argv[])
 	tau->Play();
 
 	//步进播放模式
-	/*Sleep(6000);
+	Sleep(6000);
 
 	tau->EnterStepPlayMode();
 	float t = 6;
@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
 		tau->Moveto(t);
 	}
 
-	tau->LeaveStepPlayMode();*/
+	tau->LeaveStepPlayMode();
 
 	//Sleep(1000);
 	//tau->Moveto(8);
