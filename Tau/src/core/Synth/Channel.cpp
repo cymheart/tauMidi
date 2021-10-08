@@ -5,10 +5,9 @@
 
 namespace tau
 {
-	Channel::Channel(Track* track, int channelNum)
+	Channel::Channel(int channelNum)
 	{
 		Clear();
-		this->track = track;
 		this->channelNum = channelNum;
 	}
 

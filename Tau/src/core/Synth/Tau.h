@@ -36,6 +36,9 @@ namespace tau
 		//设置SoundFont
 		inline void SetSoundFont(SoundFont* sf)
 		{
+			if (isOpened)
+				return;
+
 			soundFont = sf;
 		}
 
@@ -44,12 +47,21 @@ namespace tau
 			return soundFont;
 		}
 
+		//获取编辑器
+		Editor* GetEditor()
+		{
+			return editor;
+		}
+
 		//设置是否仅使用1个主合成器	(默认值:true, 仅使用1个)
 		//合成器模式:
 		// 1.一主合成器，带多个从合成器模式，从合成器每帧的framebuf将会被同步到主合成其中，最后推送到audio流中
 		// 2.全部都是主合成器模式， 每个合成器都将单独合成帧流到audio流中，之间互不相关，好处是效率高，缺点是，最后不能应用总通道效果器
 		inline void SetOnlyUseOneMainSynther(bool isUseOnlyOne)
 		{
+			if (isOpened)
+				return;
+
 			onlyUseOneMainSynther = isUseOnlyOne;
 		}
 
@@ -64,6 +76,9 @@ namespace tau
 		//设置Audio引擎
 		inline void SetAudioEngine(Audio::EngineType type)
 		{
+			if (isOpened)
+				return;
+
 			audioEngineType = type;
 		}
 
@@ -83,18 +98,27 @@ namespace tau
 		//设置每个合成器中最大轨道数量
 		inline void SetPerSyntherLimitTrackCount(int count)
 		{
+			if (isOpened)
+				return;
+
 			perSyntherLimitTrackCount = count;
 		}
 
 		//设置最大合成器数量(默认值:12)
 		inline void SetLimitSyntherCount(int count)
 		{
+			if (isOpened)
+				return;
+
 			limitSyntherCount = count;
 		}
 
 		//设置渲染品质
 		inline void SetRenderQuality(RenderQuality quality)
 		{
+			if (isOpened)
+				return;
+
 			renderQuality = quality;
 		}
 
@@ -107,6 +131,9 @@ namespace tau
 		//设置轨道通道合并模式
 		inline void SetTrackChannelMergeMode(TrackChannelMergeMode mode)
 		{
+			if (isOpened)
+				return;
+
 			midiFileMergeMode = mode;
 		}
 
@@ -146,6 +173,9 @@ namespace tau
 		//这个值最好固定在64
 		inline void SetChildFrameSampleCount(int count)
 		{
+			if (isOpened)
+				return;
+
 			childFrameSampleCount = count;
 			if (childFrameSampleCount > frameSampleCount) childFrameSampleCount = frameSampleCount;
 			else if (childFrameSampleCount < 1)childFrameSampleCount = 1;
@@ -167,6 +197,9 @@ namespace tau
 		//当播放有卡顿现象时，把这个值调小，会提高声音的流畅度
 		inline void SetLimitRegionSounderCount(int count)
 		{
+			if (isOpened)
+				return;
+
 			limitRegionSounderCount = count;
 		}
 
@@ -174,6 +207,9 @@ namespace tau
 		//当播放有卡顿现象时，把这个值调小，会提高声音的流畅度
 		inline void SetLimitOnKeySpeed(float speed)
 		{
+			if (isOpened)
+				return;
+
 			limitOnKeySpeed = speed;
 		}
 
@@ -186,6 +222,9 @@ namespace tau
 		//设置是否使用区域内部和声效果
 		inline void SetUseRegionInnerChorusEffect(bool use)
 		{
+			if (isOpened)
+				return;
+
 			useRegionInnerChorusEffect = use;
 		}
 
@@ -239,6 +278,15 @@ namespace tau
 
 		//移除
 		void Remove();
+
+		//进入到步进播放模式
+		void EnterStepPlayMode();
+
+		//离开步进播放模式
+		void LeaveStepPlayMode();
+
+		//移动到指定时间点
+		void Moveto(double sec);
 
 		// 指定播放的起始时间点
 		void Goto(float sec);
@@ -435,6 +483,9 @@ namespace tau
 		//采样率的倒数，表示1个采样点所花费的时间
 		float invSampleProcessRate = 1.0f / 44100.0f;
 
+		//单位采样时间
+		double unitSampleSec = 0;
+
 		/// <summary>
 		/// 在音乐中我们一般用BPM来表述乐曲的速度，BPM(Beat per Minute)的意思是每分钟的拍子数。
 		/// 例如，BPM=100，表示该歌曲的速度是每分钟100拍。注意，对于音乐家来说，BPM中的一拍是指一个四分音符所发音的时间，
@@ -460,7 +511,7 @@ namespace tau
 		MidiEditorSynther* midiEditorSynthers[500] = { nullptr };
 		int syntherCount = 1;
 
-		friend class SyntherCmd;
+		friend class MidiEditorSynther;
 		friend class VirInstrument;
 		friend class MidiEditor;
 		friend class RegionSounderThread;

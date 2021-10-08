@@ -53,15 +53,34 @@ namespace tau {
 
 	}
 
+	// 设置样本处理采样率
+	void Tau::SetSampleProcessRate(int rate)
+	{
+		if (isOpened)
+			return;
+
+		sampleProcessRate = (float)rate;
+		invSampleProcessRate = 1 / sampleProcessRate;
+		stk::Stk::setSampleRate(44100);
+
+		unitSampleSec = invSampleProcessRate * childFrameSampleCount;
+	}
+
+
 	//设置帧样本数量
 	//这个值越小，声音的实时性越高（在实时演奏时，值最好在1024以下，最合适的值为512）,
 	//当这个值比较小时，cpu内耗增加
 	void Tau::SetFrameSampleCount(int count)
 	{
+		if (isOpened)
+			return;
+
 		frameSampleCount = count;
 		if (frameSampleCount < 256) frameSampleCount = 256;
 		if (childFrameSampleCount > frameSampleCount) childFrameSampleCount = frameSampleCount;
 		else if (childFrameSampleCount < 1)childFrameSampleCount = 1;
+
+		unitSampleSec = invSampleProcessRate * childFrameSampleCount;
 
 		//
 		for (int i = 0; i < syntherCount; i++)
@@ -76,6 +95,9 @@ namespace tau {
 	//但在测试同时发音数量很高的midi音乐时，多线程的效率非常高，播放也稳定
 	void Tau::SetUseMulThread(bool use)
 	{
+		if (isOpened)
+			return;
+
 		useMulThreads = use;
 
 		//
@@ -83,13 +105,6 @@ namespace tau {
 			midiEditorSynthers[i]->SetUseMulThread(useMulThreads);
 	}
 
-	// 设置样本处理采样率
-	void Tau::SetSampleProcessRate(int rate)
-	{
-		sampleProcessRate = (float)rate;
-		invSampleProcessRate = 1 / sampleProcessRate;
-		stk::Stk::setSampleRate(44100);
-	}
 
 
 	// 获取乐器预设
@@ -275,6 +290,9 @@ namespace tau {
 	//设置是否开启所有乐器效果器
 	void Tau::SetEnableAllVirInstEffects(bool isEnable)
 	{
+		if (isOpened)
+			return;
+
 		isEnableVirInstEffects = isEnable;
 		for (int i = 0; i < syntherCount; i++)
 		{

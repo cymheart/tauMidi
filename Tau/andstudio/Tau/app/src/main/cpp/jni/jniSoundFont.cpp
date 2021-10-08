@@ -47,7 +47,6 @@ Java_cymheart_tau_SoundFont_ndkGetPresetList(JNIEnv *env, jclass clazz, jlong nk
     jmethodID id = env->GetMethodID(jPresetClass, "<init>", "()V");
 
 
-    //env->PushLocalFrame(presetList->size());
     jobjectArray jPresetArray = (jobjectArray)env->NewObjectArray(presetList->size(), jPresetClass, NULL);
 
     jfieldID nameField = env->GetFieldID(jPresetClass, "name", "Ljava/lang/String;");
@@ -68,10 +67,12 @@ Java_cymheart_tau_SoundFont_ndkGetPresetList(JNIEnv *env, jclass clazz, jlong nk
 
         //
         env->SetObjectArrayElement(jPresetArray, i, jPreset);
+
+        env->DeleteLocalRef(jstr);
+        env->DeleteLocalRef(jPreset);
     }
 
 
-    //env->PopLocalFrame(jPresetArray);
     env->DeleteLocalRef(jPresetClass);
     return jPresetArray;
 

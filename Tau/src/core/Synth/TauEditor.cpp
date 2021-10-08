@@ -40,6 +40,25 @@ namespace tau
 	}
 
 
+	//进入到步进播放模式
+	void Tau::EnterStepPlayMode()
+	{
+		editor->EnterStepPlayMode();
+	}
+
+	//离开步进播放模式
+	void Tau::LeaveStepPlayMode()
+	{
+		editor->LeaveStepPlayMode();
+
+	}
+
+	//移动到指定时间点
+	void Tau::Moveto(double sec)
+	{
+		editor->Moveto(sec);
+	}
+
 	// 指定midi文件播放的起始时间点
 	void Tau::Goto(float sec)
 	{

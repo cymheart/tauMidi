@@ -82,8 +82,61 @@ namespace tau
 		se->sem->set();
 	}
 
+	void MidiEditorSynther::EnterStepPlayModeTask(Semaphore* waitSem)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _EnterStepPlayModeTask;
+		ev->sem = waitSem;
+		PostTask(ev);
+	}
+
+	void MidiEditorSynther::_EnterStepPlayModeTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.EnterStepPlayMode();
+		se->sem->set();
+	}
+
+	void MidiEditorSynther::LeaveStepPlayModeTask(Semaphore* waitSem)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _LeaveStepPlayModeTask;
+		ev->sem = waitSem;
+		PostTask(ev);
+	}
+
+	void MidiEditorSynther::_LeaveStepPlayModeTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.LeaveStepPlayMode();
+		se->sem->set();
+	}
+
+	void MidiEditorSynther::MovetoTask(Semaphore* waitSem, double sec)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _MovetoTask;
+		ev->exValue[0] = sec;
+		ev->sem = waitSem;
+		PostTask(ev);
+	}
+
+	void MidiEditorSynther::_MovetoTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.Moveto(se->exValue[0]);
+		se->sem->set();
+	}
+
+
 	// 指定播放的起始时间点
-	void MidiEditorSynther::GotoTask(Semaphore* waitSem, float sec)
+	void MidiEditorSynther::GotoTask(Semaphore* waitSem, double sec)
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
@@ -160,7 +213,7 @@ namespace tau
 
 
 	//设置结束时间(单位:秒)
-	void MidiEditorSynther::SetEndSecTask(Semaphore* waitSem, float sec)
+	void MidiEditorSynther::SetEndSecTask(Semaphore* waitSem, double sec)
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;

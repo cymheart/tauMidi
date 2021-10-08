@@ -1,0 +1,7 @@
+syntax = "proto3";
+package cymheart.tau;
+option java_outer_classname = "LoginInfo";
+message Login {
+  string account = 1;
+  string password = 2;
+}

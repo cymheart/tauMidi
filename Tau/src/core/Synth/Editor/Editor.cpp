@@ -124,8 +124,43 @@ namespace tau
 		waitSem.wait();
 	}
 
+
+	//进入到步进播放模式
+	void Editor::EnterStepPlayMode()
+	{
+		waitSem.reset(tau->syntherCount - 1);
+
+		for (int i = 0; i < tau->syntherCount; i++)
+			tau->midiEditorSynthers[i]->EnterStepPlayModeTask(&waitSem);
+
+		waitSem.wait();
+	}
+
+	//离开步进播放模式
+	void Editor::LeaveStepPlayMode()
+	{
+		waitSem.reset(tau->syntherCount - 1);
+
+		for (int i = 0; i < tau->syntherCount; i++)
+			tau->midiEditorSynthers[i]->LeaveStepPlayModeTask(&waitSem);
+
+		waitSem.wait();
+	}
+
+	//移动到指定时间点
+	void Editor::Moveto(double sec)
+	{
+		waitSem.reset(tau->syntherCount - 1);
+
+		for (int i = 0; i < tau->syntherCount; i++)
+			tau->midiEditorSynthers[i]->MovetoTask(&waitSem, sec);
+
+		waitSem.wait();
+	}
+
+
 	// 设置播放时间点
-	void Editor::Goto(float sec)
+	void Editor::Goto(double sec)
 	{
 		waitSem.reset(tau->syntherCount - 1);
 
@@ -499,7 +534,7 @@ namespace tau
 		DelEmptyTrackRealtimeSynther();
 
 		//重新给每个MidiEditor设置相同的最大结束时间
-		SetMidiEditorMaxSec();
+		ComputeMidiEditorMaxSec();
 	}
 
 
@@ -654,7 +689,7 @@ namespace tau
 
 
 		//7.重新给每个MidiEditor设置相同的最大结束时间
-		SetMidiEditorMaxSec();
+		ComputeMidiEditorMaxSec();
 
 		//
 		orgList.clear();
@@ -719,7 +754,7 @@ namespace tau
 
 
 	//重新给每个MidiEditor设置相同的最大结束时间
-	void Editor::SetMidiEditorMaxSec()
+	void Editor::ComputeMidiEditorMaxSec()
 	{
 		MidiEditor* midiEditor;
 		endSec = 0;

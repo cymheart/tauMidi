@@ -20,6 +20,16 @@ namespace tau
 			startTick = tick;
 		}
 
+		int GetStartTick()
+		{
+			return (int)startTick;
+		}
+
+		float GetStartSec()
+		{
+			return startSec;
+		}
+
 		Track* GetTrack()
 		{
 			return track;
@@ -38,12 +48,18 @@ namespace tau
 
 		void AddMidiEvents(list<MidiEvent*>& midiEvents_);
 
+		const list<MidiEvent*>& GetMidiEvents()
+		{
+			return midiEvents;
+		}
+
 	private:
 
 		//是否播放结束
 		bool isEnded = false;
 
 		uint32_t startTick = 0;
+		float startSec = 0;
 
 		Track* track = nullptr;
 		int branchIdx = 0;

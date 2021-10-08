@@ -41,8 +41,13 @@ namespace tau
 		//移除
 		void RemoveTask(Semaphore* waitSem);
 
+		void EnterStepPlayModeTask(Semaphore* waitSem);
+		void LeaveStepPlayModeTask(Semaphore* waitSem);
+
+		void MovetoTask(Semaphore* waitSem, double sec);
+
 		//指定播放的起始时间点
-		void GotoTask(Semaphore* waitSem, float sec);
+		void GotoTask(Semaphore* waitSem, double sec);
 
 		//获取状态
 		EditorState GetStateTask();
@@ -51,7 +56,7 @@ namespace tau
 		float GetEndSecTask();
 
 		//设置结束时间(单位:秒)
-		void SetEndSecTask(Semaphore* waitSem, float sec);
+		void SetEndSecTask(Semaphore* waitSem, double sec);
 
 		// 设定播放速度
 		void SetSpeedTask(Semaphore* waitSem, float speed);
@@ -94,6 +99,9 @@ namespace tau
 		static void _StopTask(Task* ev);
 		static void _PauseTask(Task* ev);
 		static void _RemoveTask(Task* ev);
+		static void _EnterStepPlayModeTask(Task* ev);
+		static void _LeaveStepPlayModeTask(Task* ev);
+		static void _MovetoTask(Task* ev);
 		static void _GotoTask(Task* ev);
 		static void _GetStateTask(Task* ev);
 		static void _GetEndSecTask(Task* ev);
@@ -131,8 +139,13 @@ namespace tau
 		//移除midiEditor
 		void Remove();
 
+		void EnterStepPlayMode();
+		void LeaveStepPlayMode();
+
+		void Moveto(double sec);
+
 		//midi快进到指定位置
-		void Goto(float sec);
+		void Goto(double sec);
 
 		//获取midi播放时间
 		float GetPlaySec();
@@ -144,7 +157,7 @@ namespace tau
 		float GetEndSec();
 
 		//设置midi结束时间(单位:秒)
-		void SetEndSec(float sec);
+		void SetEndSec(double sec);
 
 		//设置midi播放速度
 		void SetSpeed(float speed);

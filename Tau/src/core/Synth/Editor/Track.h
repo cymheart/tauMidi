@@ -25,6 +25,11 @@ namespace tau
 			return channel;
 		}
 
+		inline float GetEndSec()
+		{
+			return endSec;
+		}
+
 		void SetChannelNum(int channelNum);
 		int GetChannelNum();
 
@@ -37,9 +42,14 @@ namespace tau
 		void AddInstFragment(InstFragment* instFragment, int branchIdx = 0);
 		void RemoveInstFragment(InstFragment* instFragment);
 
-	public:
+		const vector<list<InstFragment*>*>& GetInstFragments()
+		{
+			return instFragments;
+		}
 
-		MidiEditor* midiEditor;
+	protected:
+
+		MidiEditor* midiEditor = nullptr;
 
 		//是否播放结束
 		bool isEnded = false;
@@ -48,12 +58,14 @@ namespace tau
 		bool isDisablePlay = false;
 
 		// 通道
-		Channel* channel;
+		Channel* channel = nullptr;
 
 		vector<list<InstFragment*>*> instFragments;
 
 		//结束时间点
-		float endSec;
+		float endSec = 0;
+
+		friend class MidiEditor;
 	};
 
 

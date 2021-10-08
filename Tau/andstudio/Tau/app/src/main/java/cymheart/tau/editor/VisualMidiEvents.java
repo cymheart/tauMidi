@@ -1,4 +1,4 @@
-package cymheart.tau;
+package cymheart.tau.editor;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -7,7 +7,7 @@ import java.util.Set;
 
 import cymheart.tau.midi.NoteOnEvent;
 
-public class VisualKeyEvents
+public class VisualMidiEvents
 {
     protected List<List<NoteOnEvent>> noteOnEvents = new ArrayList<>();
     public List<List<NoteOnEvent>> GetAllKeyEvents()
@@ -23,7 +23,7 @@ public class VisualKeyEvents
     }
 
 
-    public VisualKeyEvents()
+    public VisualMidiEvents()
     {
         for(int i=0; i<128; i++)
             noteOnEvents.add(new ArrayList<NoteOnEvent>());

@@ -109,7 +109,6 @@ namespace tau
 			midiSynther->OnVirInstrument(trackList[i]->GetChannel());
 
 		state = EditorState::PLAY;
-		playStartSec = midiSynther->sec;
 
 	}
 
@@ -153,9 +152,36 @@ namespace tau
 		state = EditorState::STOP;
 	}
 
+	//进入到步进播放模式
+	void MidiEditor::EnterStepPlayMode()
+	{
+		isStepPlayMode = true;
+	}
+
+	//离开步进播放模式
+	void MidiEditor::LeaveStepPlayMode()
+	{
+		isStepPlayMode = false;
+	}
+
+	//移动到指定时间点
+	void MidiEditor::Moveto(double sec)
+	{
+		if (state != EditorState::PLAY || !isStepPlayMode) {
+			Goto(sec);
+			return;
+		}
+
+		if (sec >= curtPlaySec) {
+			StepRun((sec - curtPlaySec) / speed);
+		}
+		else {
+			Goto(sec);
+		}
+	}
 
 	//设置播放的起始时间点
-	void MidiEditor::Goto(double gotoSec_)
+	void MidiEditor::Goto(double sec)
 	{
 		EditorState oldState = state;
 
@@ -165,10 +191,8 @@ namespace tau
 		isDirectGoto = false;
 		isOpen = false;
 		isGotoEnd = false;
-		gotoSec = gotoSec_;
-		playStartSec = midiSynther->sec;
-		curtPlaySec = 0;
-		baseSpeedSec = 0;
+		gotoSec = sec;
+		curtPlaySec = sec;
 		state = oldState;
 	}
 
@@ -246,7 +270,6 @@ namespace tau
 	//设置播放速率(相对于正常播放速率1.0的倍率)
 	void MidiEditor::SetSpeed(float speed_)
 	{
-		baseSpeedSec = baseSpeedSec + speed * (midiSynther->sec - playStartSec - baseSpeedSec);
 		speed = speed_;
 	}
 
@@ -293,14 +316,18 @@ namespace tau
 			for (; frag_it != frag_end; frag_it++)
 			{
 				instFrag = *frag_it;
+				tempo = midiMarkerList.GetTempo((int)instFrag->startTick);
+				instFrag->startSec = (float)tempo->GetTickSec(instFrag->startTick);
+
 				eventList = &(instFrag->midiEvents);
 				list<MidiEvent*>::iterator it = eventList->begin();
 				list<MidiEvent*>::iterator end = eventList->end();
 				for (; it != end; it++)
 				{
 					ev = *it;
-					tempo = midiMarkerList.GetTempo((int)ev->startTick);
-					ev->endSec = ev->startSec = (float)tempo->GetTickSec(ev->startTick);
+					int evStartTick = ev->startTick + instFrag->startTick;
+					tempo = midiMarkerList.GetTempo(evStartTick);
+					ev->endSec = ev->startSec = (float)tempo->GetTickSec(evStartTick);
 
 					if (ev->type == MidiEventType::NoteOff)
 					{
@@ -325,9 +352,17 @@ namespace tau
 		}
 	}
 
-	//运行
-	void MidiEditor::Run(double sec)
+	void MidiEditor::StepRun(double sec)
 	{
+		Run(sec, true);
+	}
+
+	//运行
+	void MidiEditor::Run(double sec, bool isStepOp)
+	{
+		if (isStepPlayMode && !isStepOp)
+			return;
+
 		if (state != EditorState::PLAY)
 			return;
 
@@ -343,29 +378,27 @@ namespace tau
 			if (gotoSec > 0)
 			{
 				isDirectGoto = true;
+				curtPlaySec = 0;
 				RunCore(gotoSec / speed);
 				isDirectGoto = false;
 				isGotoEnd = false;
 			}
 		}
 
-		//
-		RunCore(gotoSec / speed + sec - playStartSec);
+		RunCore(sec);
 	}
 
 
 	void MidiEditor::RunCore(double sec)
 	{
-
 		list<MidiEvent*>* eventList;
 		InstFragment* instFrag;
 		MidiEvent* ev;
 		int orgInstFragCount = 0;
 		int trackEndCount = 0;
 		int instFragCount = 0;
-		curtPlaySec = baseSpeedSec + (sec - baseSpeedSec) * speed;
-		Tempo* tempo = midiMarkerList.GetTempo(curtPlaySec);
-		uint32_t curtEndTick = tempo->GetTickCount(curtPlaySec);
+
+		curtPlaySec += sec * speed;
 
 		for (int i = 0; i < trackList.size(); i++)
 		{
@@ -397,13 +430,13 @@ namespace tau
 						ev = *it;
 
 						//
-						if (!isGotoEnd && ev->startTick + instFrag->startTick > curtEndTick)
+						if (!isGotoEnd && ev->startSec > curtPlaySec)
 						{
 							instFrag->eventOffsetIter = it;
 							break;
 						}
 
-						ProcessEvent(ev, i, tempo);
+						ProcessEvent(ev, i);
 					}
 
 					if (it == end)
@@ -435,7 +468,7 @@ namespace tau
 	}
 
 	//处理轨道事件
-	void MidiEditor::ProcessEvent(MidiEvent* midEv, int trackIdx, Tempo* tempo)
+	void MidiEditor::ProcessEvent(MidiEvent* midEv, int trackIdx)
 	{
 		Channel* channel = trackList[trackIdx]->GetChannel();
 		VirInstrument* virInst = channel->GetVirInstrument();
@@ -445,7 +478,8 @@ namespace tau
 		{
 		case MidiEventType::NoteOn:
 		{
-			if (isDirectGoto || trackList[trackIdx]->isDisablePlay)
+			if (isDirectGoto ||
+				trackList[trackIdx]->isDisablePlay)
 				break;
 
 			NoteOnEvent* noteOnEv = (NoteOnEvent*)midEv;
@@ -455,7 +489,8 @@ namespace tau
 
 		case MidiEventType::NoteOff:
 		{
-			if (isDirectGoto || trackList[trackIdx]->isDisablePlay)
+			if (isDirectGoto ||
+				trackList[trackIdx]->isDisablePlay)
 				break;
 
 			NoteOffEvent* noteOffEv = (NoteOffEvent*)midEv;

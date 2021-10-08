@@ -4,8 +4,7 @@ import android.content.Context;
 import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiManager;
 
-import java.util.HashMap;
-
+import cymheart.tau.editor.Editor;
 import cymheart.tau.effect.Effect;
 import cymheart.tau.midi.MidiControllerType;
 import cymheart.tau.mididevice.MidiFramer;
@@ -20,22 +19,22 @@ public class Tau
 //    }
 
     protected Context context;
-    MidiManager midiManager;
+    protected MidiManager midiManager;
     protected TauMidiReceiver midiReceiver;
     protected MidiOutputPortSelector outputPortSelector;
-
-    protected HashMap<String, MidiEditor> midiEditorMap = new HashMap<>();
-    public void AddMidiPlay(String midifile, MidiEditor midiPlay)
-    {
-        midiEditorMap.put(midifile, midiPlay);
-    }
     protected VirInstrument midiDeviceConnectedInst;
     protected BaseMidiDeviceEventProcesser midiDeviceEventProcesser = new BaseMidiDeviceEventProcesser();
+
+    //
+    protected Editor editor = new Editor();
+    public Editor GetEditor() {
+        return editor;
+    }
 
     public Tau(Context context)
     {
         this.context = context;
-        ndkTau = ndkCreateTau(this);
+        ndkTau = ndkCreateTau(this, editor);
 
         // Setup MIDI
         midiDeviceEventProcesser.SetTau(this);
@@ -153,69 +152,77 @@ public class Tau
         ndkSetSetLimitOnKeySpeed(ndkTau, speed);
     }
 
-    public String GetMidiFilePath()
-    {
-        return ndkGetMidiFilePath(ndkTau);
-    }
 
-    public MidiEditor LoadMidi(String midifile, boolean isShowTips)
+    public void Load(String midifile, boolean isShowTips)
     {
-        MidiEditor midiPlay = ndkLoad(ndkTau, midifile, isShowTips);
-        if(isShowTips)
-            AddMidiPlay(midifile, midiPlay);
-
-        return midiPlay;
+        editor.Load(midifile);
     }
 
     public void Play()
     {
-        ndkPlay(ndkTau);
+//        //创建对象，及属性赋值
+//        LoginInfo.Login.Builder builder = LoginInfo.Login.newBuilder();
+//
+//        builder.setAccount("Mrzhang")
+//                .setPassword("18");
+//
+//        LoginInfo.Login login = builder.build();
+//
+////序列化(通过protobuf生成的java类的内部方法进行序列化)
+//        byte[] bytes = login.toByteArray();
+//
+////反序列化(通过protobuf生成的java类的内部方法进行反序列化)
+//        try {
+//            LoginInfo.Login parseFrom = LoginInfo.Login.parseFrom(bytes);
+//        } catch (InvalidProtocolBufferException e) {
+//            e.printStackTrace();
+//        }
+
     }
 
     public void Pause()
     {
-        ndkPause(ndkTau);
+
     }
 
     public void Stop()
     {
-        ndkStop(ndkTau);
+
     }
 
     public void Remove()
     {
-        ndkRemove(ndkTau);
+
     }
 
     public void Goto(float sec)
     {
-        ndkGoto(ndkTau, sec);
     }
 
     public int GetState()
     {
-        return ndkGetState(ndkTau);
+        return 0;
     }
 
     // 禁止播放指定编号Midi文件的轨道
-    public void DisableTrack(int trackIdx) {
-        ndkDisableTrack(ndkTau, trackIdx);
+    public void DisableTrack(int trackIdx)
+    {
     }
 
     // 禁止播放Midi的所有轨道
     public void DisableAllTrack() {
-        ndkDisableAllTrack(ndkTau);
+
     }
 
     // 启用播放指定编号Midi文件的轨道
     public void EnableTrack(int trackIdx) {
-        ndkEnableTrack(ndkTau, trackIdx);
+
     }
 
     // 启用播放Midi的所有轨道
     public void EnableAllTrack()
     {
-        ndkEnableAllTrack(ndkTau);
+
     }
 
 
@@ -346,10 +353,8 @@ public class Tau
         return ndkTau;
     }
 
-    private long ndkSoundEndCB;
-
     //
-    private static native long ndkCreateTau(Tau tau);
+    private static native long ndkCreateTau(Tau tau, Editor editor);
     private static native void ndkOpen(long ndkTau);
     private static native void ndkClose(long ndkTau);
     private static native void ndkSetSoundFont(long ndkTau, long ndkSoundFont);
@@ -360,22 +365,6 @@ public class Tau
     private static native void ndkSetUnitProcessMidiTrackCount(long ndkTau, int count);
     private static native void ndkSetLimitRegionSounderCount(long ndkTau, int count);
     private static native void ndkSetSetLimitOnKeySpeed(long ndkTau, float speed);
-
-    //
-    private static native String ndkGetMidiFilePath(long ndkTau);
-    private static native MidiEditor ndkLoad(long ndkTau, String midifile, boolean isShowTips);
-    private static native void ndkPlay(long ndkTau);
-    private static native void ndkPause(long ndkTau);
-    private static native void ndkStop(long ndkTau);
-    private static native void ndkRemove(long ndkTau);
-
-    private static native void ndkGoto(long ndkTau, float sec);
-    private static native int ndkGetState(long ndkTau);
-
-    private static native void ndkDisableTrack(long ndkTau, int trackIdx);
-    private static native void ndkDisableAllTrack(long ndkTau);
-    private static native void ndkEnableTrack(long ndkTau, int trackIdx);
-    private static native void ndkEnableAllTrack(long ndkTau);
 
     private static native void ndkAddEffect(long ndkTau, long ndkEffect);
     private static native void ndkSetEnableAllVirInstEffects(long ndkTau, boolean isEnable);

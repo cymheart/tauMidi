@@ -3,7 +3,6 @@
 
 #include"TauTypes.h"
 #include"Midi/MidiTypes.h"
-#include"MidiTrackRecord.h"
 
 namespace tau
 {
@@ -11,7 +10,7 @@ namespace tau
 	{
 
 	public:
-		Channel(Track* track, int channelNum);
+		Channel(int channelNum);
 		~Channel();
 
 		//获取通道号
@@ -33,13 +32,6 @@ namespace tau
 		inline VirInstrument* GetVirInstrument()
 		{
 			return inst;
-		}
-
-
-		//获取通道所在轨道
-		inline Track* GetTrack()
-		{
-			return track;
 		}
 
 		void Clear();
@@ -106,11 +98,9 @@ namespace tau
 	private:
 		//通道号
 		int channelNum = 0;
-		//所在轨道
-		Track* track = nullptr;
 
 		//所在乐器
-		VirInstrument* inst;
+		VirInstrument* inst = nullptr;
 
 		//
 		int bankMSB = 0;

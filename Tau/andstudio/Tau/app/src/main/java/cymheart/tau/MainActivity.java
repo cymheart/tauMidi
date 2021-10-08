@@ -16,7 +16,6 @@ public class MainActivity extends AppCompatActivity {
     Tau tau;
     VirInstrument virInst;
     Equalizer eq;
-    MidiEditor midiPlay;
 
     private static final String[] permissionsGroup=
             new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
@@ -166,9 +165,8 @@ public class MainActivity extends AppCompatActivity {
                                        // tau.OnKey(60, 127, inst);
 
 
-                                        tau.AppendMidiFile("/storage/emulated/0/紅蓮の弓矢.mid");
-                                        midiPlay = tau.LoadMidi("/storage/emulated/0/紅蓮の弓矢.mid", true);
-                                        tau.PlayMidi();
+                                        tau.Load("/storage/emulated/0/紅蓮の弓矢.mid", true);
+                                       // tau.PlayMidi();
 //                                        int s = tau.GetMidiState();
 //                                        Log.d("state", s+"");
 //                                        tau.PauseMidi();

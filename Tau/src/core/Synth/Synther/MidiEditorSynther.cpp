@@ -5,6 +5,7 @@
 #include"Synth/Channel.h"
 #include"Synth/Preset.h"
 #include"Synth/SyntherEvent.h"
+#include"Synth/Tau.h"
 
 namespace tau
 {
@@ -26,7 +27,7 @@ namespace tau
 		if (midiEditor == nullptr)
 			return;
 
-		midiEditor->Run(sec);
+		midiEditor->Run(tau->unitSampleSec);
 	}
 
 	//建立MidiEditor
@@ -77,9 +78,32 @@ namespace tau
 		DEL(midiEditor);
 	}
 
+	void MidiEditorSynther::EnterStepPlayMode()
+	{
+		if (midiEditor == nullptr)
+			return;
+
+		midiEditor->EnterStepPlayMode();
+	}
+
+	void MidiEditorSynther::LeaveStepPlayMode()
+	{
+		if (midiEditor == nullptr)
+			return;
+
+		midiEditor->LeaveStepPlayMode();
+	}
+
+	void MidiEditorSynther::Moveto(double sec)
+	{
+		if (midiEditor == nullptr)
+			return;
+
+		midiEditor->Moveto(sec);
+	}
 
 	//快进到指定位置
-	void MidiEditorSynther::Goto(float sec)
+	void MidiEditorSynther::Goto(double sec)
 	{
 		if (midiEditor == nullptr)
 			return;
@@ -112,7 +136,7 @@ namespace tau
 	}
 
 	//设置结束时间(单位:秒)
-	void MidiEditorSynther::SetEndSec(float sec)
+	void MidiEditorSynther::SetEndSec(double sec)
 	{
 		if (midiEditor == nullptr)
 			return;

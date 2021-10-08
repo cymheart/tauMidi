@@ -66,7 +66,7 @@ namespace tau
 		Channel* channel = GetDeviceChannel(deviceChannelNum);
 		if (channel == nullptr)
 		{
-			channel = new Channel(nullptr, deviceChannelNum);
+			channel = new Channel(deviceChannelNum);
 			deviceChannelMap[deviceChannelNum] = channel;
 		}
 
@@ -176,9 +176,9 @@ namespace tau
 		{
 			if (isMainSynther)
 			{
-				//	computedFrameBufSyntherCount--;
-				//	if (computedFrameBufSyntherCount == 0)
-				isFrameRenderCompleted = true;
+				computedFrameBufSyntherCount--;
+				if (computedFrameBufSyntherCount == 0)
+					isFrameRenderCompleted = true;
 			}
 			else
 			{
@@ -192,16 +192,14 @@ namespace tau
 			return;
 		}
 
-		childFrameSampleCount = tau->childFrameSampleCount;
-		invSampleProcessRate = tau->invSampleProcessRate;
 
 		//清除通道buffer
 		ClearChannelBuffer();
 
-		for (childFramePos = 0; childFramePos < frameSampleCount; childFramePos += childFrameSampleCount)
+		for (childFramePos = 0; childFramePos < frameSampleCount; childFramePos += tau->childFrameSampleCount)
 		{
-			curtSampleCount += childFrameSampleCount;
-			sec = invSampleProcessRate * curtSampleCount;
+			curtSampleCount += tau->childFrameSampleCount;
+			sec = tau->invSampleProcessRate * curtSampleCount;
 
 			if (!isReqDelete)
 			{

@@ -38,13 +38,13 @@ namespace tau
 		}
 
 		//获取结束时间
-		inline float GetEndSec()
+		inline double GetEndSec()
 		{
 			return endSec;
 		}
 
 		//设置结束时间
-		inline void SetEndSec(float sec)
+		inline void SetEndSec(double sec)
 		{
 			endSec = sec;
 		}
@@ -83,8 +83,15 @@ namespace tau
 		//移除
 		void Remove();
 
+		//进入到步进播放模式
+		void EnterStepPlayMode();
+		//离开步进播放模式
+		void LeaveStepPlayMode();
+
+		//移动到指定时间点
+		void Moveto(double sec);
 		//设置播放的起始时间点
-		void Goto(double gotoSec_);
+		void Goto(double sec);
 		//设置快进到开头
 		void GotoStart();
 		//设置快进到结尾
@@ -108,8 +115,10 @@ namespace tau
 		//移动乐器片段到目标轨道分径的指定时间点
 		void MoveInstFragment(InstFragment* instFragment, Track* dstTrack, int dstBranchIdx, float sec);
 
+
+		void StepRun(double sec);
 		//运行
-		void Run(double sec);
+		void Run(double sec, bool isStepOp = false);
 		void DisableTrack(Track* track);
 		void DisableAllTrack();
 		void EnableTrack(Track* track);
@@ -133,7 +142,7 @@ namespace tau
 
 		void RunCore(double sec);
 		//处理轨道事件
-		void ProcessEvent(MidiEvent* midEv, int trackIdx, Tempo* tempo);
+		void ProcessEvent(MidiEvent* midEv, int trackIdx);
 
 	private:
 
@@ -155,7 +164,7 @@ namespace tau
 		vector<Track*> tempTracks;
 
 		//结束时间点
-		float endSec = 0;
+		double endSec = 0;
 
 		//快进到指定时间点
 		double gotoSec = 0;
@@ -165,7 +174,6 @@ namespace tau
 
 		//播放速率(相对于正常播放速率1.0的倍率)
 		float speed = 1;
-		double baseSpeedSec = 0;
 
 		//是否首次播放
 		bool isOpen = false;
@@ -173,11 +181,11 @@ namespace tau
 		//是否快进
 		bool isDirectGoto = false;
 
-		//播放开始时间点
-		float playStartSec = 0;
+		//是否是步进播放模式
+		bool isStepPlayMode = false;
 
 		//当前播放时间
-		float curtPlaySec = 0;
+		double curtPlaySec = 0;
 
 
 		friend class Editor;

@@ -21,6 +21,17 @@ namespace tau
 		Editor(Tau* tau);
 		~Editor();
 
+		inline const vector<Track*>& GetTracks()
+		{
+			return tracks;
+		}
+
+		//获取结束时间
+		inline float GetEndSec()
+		{
+			return endSec;
+		}
+
 		//载入
 		void Load(string& midiFilePath);
 
@@ -36,8 +47,16 @@ namespace tau
 		//暂停
 		void Pause();
 
+		//进入到步进播放模式
+		void EnterStepPlayMode();
+		//离开步进播放模式
+		void LeaveStepPlayMode();
+
+		//移动到指定时间点
+		void Moveto(double sec);
+
 		//设置播放时间点
-		void Goto(float sec);
+		void Goto(double sec);
 
 		//获取状态
 		EditorState GetState();
@@ -108,6 +127,7 @@ namespace tau
 		//移动乐器片段到指定时间点
 		void MoveInstFragment(InstFragment* instFragment, float sec);
 
+
 	private:
 		//删除空轨实时RealtimeSynther
 		void DelEmptyTrackRealtimeSynther();
@@ -116,7 +136,7 @@ namespace tau
 		int _NewTracks(MidiEditorSynther* synther, int count);
 
 		//重新给每个MidiEditor设置相同的最大结束时间
-		void SetMidiEditorMaxSec();
+		void ComputeMidiEditorMaxSec();
 
 		//打印工程信息
 		void PrintProjectInfo();

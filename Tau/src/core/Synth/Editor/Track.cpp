@@ -7,7 +7,7 @@ namespace tau
 	Track::Track(MidiEditor* midiEditor)
 	{
 		this->midiEditor = midiEditor;
-		channel = new Channel(this, 0);
+		channel = new Channel(0);
 
 		instFragments.push_back(new list<InstFragment*>);
 	}

@@ -13,8 +13,16 @@ using namespace tau;
 
 extern "C"
 JNIEXPORT jlong JNICALL
-Java_cymheart_tau_Tau_ndkCreateTau(JNIEnv *env, jclass clazz, jobject tau) {
+Java_cymheart_tau_Tau_ndkCreateTau(JNIEnv *env, jclass clazz, jobject tau, jobject jeditor) {
     Tau* v = new Tau();
+    Editor* editor = v->GetEditor();
+
+    jclass jEditorClass = env->GetObjectClass(jeditor);
+    jfieldID ndkEditorField = env->GetFieldID(jEditorClass, "ndkEditor", "J");
+    env->SetLongField(jeditor, ndkEditorField, (jlong)editor);
+
+    env->DeleteLocalRef(jEditorClass);
+
     return (int64_t)v;
 }
 
@@ -79,7 +87,7 @@ JNIEXPORT void JNICALL
 Java_cymheart_tau_Tau_ndkSetUnitProcessMidiTrackCount(JNIEnv *env, jclass clazz, jlong ndk_tau,
                                                       jint count) {
     Tau* tau = (Tau*)ndk_tau;
-    tau->SetUnitProcessMidiTrackCount(count);
+    tau->SetPerSyntherLimitTrackCount(count);
 }
 
 
@@ -154,6 +162,8 @@ Java_cymheart_tau_Tau_ndkEnableVirInstrument(JNIEnv *env, jclass clazz,
     jobject jVirInst = env->NewObject(jVirInstClass, id);
     jfieldID intPtrField = env->GetFieldID(jVirInstClass, "ndkVirInstrument", "J");
     env->SetLongField(jVirInst, intPtrField, (int64_t)virInst);
+
+    env->DeleteLocalRef(jVirInstClass);
 
     return jVirInst;
 }

@@ -151,10 +151,10 @@ int main(int argc, char* argv[])
 //	tau->AddEffect(eq);
 
 	Reverb* reverb = new Reverb();
-	reverb->SetRoomSize(0.8);
+	reverb->SetRoomSize(0.8f);
 	reverb->SetWidth(0.5f);
 	reverb->SetDamping(0.5f);
-	reverb->SetEffectMix(0.5f);
+	reverb->SetEffectMix(0.3f);
 	//tau->AddEffect(reverb);
 
 	//Chorus* chorus = new Chorus();
@@ -188,10 +188,6 @@ int main(int argc, char* argv[])
 
 	//打开音频
 	tau->Open();
-
-
-
-
 
 
 
@@ -257,29 +253,65 @@ int main(int argc, char* argv[])
 	//{
 		//tau->RemoveMidi();
 
-	string path = midiPath + "吻别.mid";  // midiPath + "BA.DECIMATIONMODE.mid.OR.mid"; // midiPath + "venture.mid";   //midiPath + "tau2.5.9.mid"; // midiPath + "笑傲江湖.mid";
+	string path = midiPath + "venture.mid"; // midiPath + "BA.DECIMATIONMODE.mid.OR.mid"; // midiPath + "venture.mid";   //midiPath + "tau2.5.9.mid"; // midiPath + "笑傲江湖.mid";
 	tau->Load(path);
 	tau->Play();
+
+	//步进播放模式
+	/*Sleep(6000);
+
+	tau->EnterStepPlayMode();
+	float t = 6;
+	for (int i = 0; i < 50; i++)
+	{
+		Sleep(200);
+		t += 0.2;
+
+		tau->Moveto(t);
+	}
+
+	tau->Moveto(0);
+	t = 0;
+	for (int i = 0; i < 50; i++)
+	{
+		Sleep(200);
+		t += 0.2;
+
+		tau->Moveto(t);
+	}
+
+	tau->LeaveStepPlayMode();*/
+
+	//Sleep(1000);
+	//tau->Moveto(8);
+	//Sleep(1000);
+	//tau->Moveto(12);
+
+
+	//tau->SetSpeed(0.3);
+
+	//	tau->DisableChannel(3);
+		//Sleep(2000);
+		//tau->EnableTrack(3);
+
+		//tau->SetSpeed(0.5);
+
+
+	//tau->SetSpeed(2);
 	//Sleep(3000);
-	//tau->DisableTrack(3);
-	//Sleep(2000);
-	//tau->EnableTrack(3);
-
 	//tau->SetSpeed(0.5);
-
-	/*
-	tau->SetSpeed(2);
-	Sleep(1000);
-	tau->SetSpeed(0.5);
-	Sleep(6000);
-	tau->SetSpeed(1);
-	tau->Pause();
-	Sleep(2000);
-	tau->SetSpeed(0.3);
-	tau->Play();
-	Sleep(4000);
-	tau->Goto(0);
-	tau->SetSpeed(1);*/
+	//Sleep(6000);
+	//tau->SetSpeed(1);
+	//tau->Pause();
+	//Sleep(2000);
+	//tau->SetSpeed(0.3);
+	//tau->Play();
+	//Sleep(4000);
+	//tau->Goto(0);
+	//tau->SetSpeed(1);
+	//Sleep(4000);
+	//tau->Goto(20);
+	//tau->SetSpeed(2);
 
 	//tau->DisableAllMidiTrack();
 	//tau->PlayMidi();

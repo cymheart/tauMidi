@@ -370,12 +370,6 @@ namespace tau
 		// 帧采样数量
 		int frameSampleCount = 1024;
 
-		//子帧细分采样数量,会影响midi发音的流畅度和每个按键播放时间的精度
-		int childFrameSampleCount = 64;
-
-		//采样率的倒数，表示1个采样点所花费的时间
-		float invSampleProcessRate = 1.0f / 44100.0f;
-
 		// 左通道已处理采样点
 		float leftChannelSamples[8192 * 10] = { 0 };
 		// 右通道已处理采样点

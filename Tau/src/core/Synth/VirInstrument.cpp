@@ -6,7 +6,6 @@
 #include"Channel.h"
 #include"Preset.h"
 #include <random>
-#include"Editor/Track.h"
 using namespace tauFX;
 
 
@@ -872,7 +871,6 @@ namespace tau
 	{
 		//
 		int trackNum = 0;
-		Track* track = channel->GetTrack();
 		float sec = floor(synther->sec * 100) / 100;
 
 		if (isRealTime)

@@ -161,9 +161,6 @@ namespace tau
 		frameSampleCount = count;
 		if (frameSampleCount < 256) frameSampleCount = 256;
 
-		if (childFrameSampleCount > frameSampleCount) childFrameSampleCount = frameSampleCount;
-		else if (childFrameSampleCount < 1)childFrameSampleCount = 1;
-
 		effects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
 		innerEffects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
 	}
@@ -778,9 +775,7 @@ namespace tau
 		{
 			computedFrameBufSyntherCount--;
 			if (computedFrameBufSyntherCount == 0)
-			{
 				_CombineSynthersFrameBufs();
-			}
 		}
 		else
 		{
@@ -1010,4 +1005,4 @@ namespace tau
 	}
 
 
-}
+		}

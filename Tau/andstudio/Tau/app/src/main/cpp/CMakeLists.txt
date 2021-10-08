@@ -11,6 +11,7 @@ set(PROJECT_NAME tau)
 project(${PROJECT_NAME})
 set(SRC_DIR ../../../../../../src)
 set (JNI_UTILS_SRC_DIR JniUtils)
+set (JNI_EDITOR_SRC_DIR Editor)
 
 set (OBOE_DIR ../../../../thrids/oboe)
 add_subdirectory(${OBOE_DIR} ./oboe-bin)
@@ -36,7 +37,7 @@ include_directories( "${SRC_DIR}/thrids/DaisySP/" )
 #        jni/jniMorphLBHFilter.cpp)
 
 
-file(GLOB_RECURSE cpp_src "${SRC_DIR}/*.cpp" "jni/*.cpp"  "${JNI_UTILS_SRC_DIR}/*.cpp")  #指定当前目录下的所有.cpp文件（包括子目录）
+file(GLOB_RECURSE cpp_src "${SRC_DIR}/*.cpp" "jni/*.cpp"  "${JNI_UTILS_SRC_DIR}/*.cpp" "${JNI_EDITOR_SRC_DIR}/*.cpp")  #指定当前目录下的所有.cpp文件（包括子目录）
 add_library( ${PROJECT_NAME} SHARED ${tau_sources}  ${cpp_src} )
 
 
