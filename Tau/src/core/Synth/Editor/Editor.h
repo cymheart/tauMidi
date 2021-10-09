@@ -61,6 +61,9 @@ namespace tau
 		//获取状态
 		EditorState GetState();
 
+		//获取当前播放时间点
+		double GetPlaySec();
+
 		// 设定速度
 		void SetSpeed(float speed);
 

@@ -321,15 +321,21 @@ namespace tau
 			y = range.ymin + y * range.yRangeWidth;
 			break;
 		case EnvStage::Release:
+		{
 
 			//y = xNormal < 1 ? pow(10.0f, -(xNormal * 200 * 0.05f)) : 0;
 			//if (!isFastRelease)
 			//	y = xNormal < 1 ? FastPow2(-(xNormal * 20)) : 0;
 			//else
-			//	y = 1 - xNormal;
-			y = xNormal < 1 ? FastPow2(-(xNormal * 15)) : 0;
+			//y = 1 - xNormal;
+			y = xNormal < 1 ? powf(2, -(xNormal * 15)) : 0;
+
+			//float x = 2 * xNormal - 1;
+			//y = (-(6 * x) / (1 + 5 * abs(x)) - 1) * 0.5f + 1;
 			y = range.ymin + y * range.yRangeWidth;
-			break;
+
+		}
+		break;
 
 
 		default:

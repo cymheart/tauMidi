@@ -298,6 +298,9 @@ namespace tau
 		// 重设低通滤波器
 		void ResetLowPassFilter(float computedSec);
 
+		//过渡设置低通滤波
+		void FadeSetLowPassFilter();
+
 		// lfos, envs调制
 		float LfosAndEnvsModulation(LfoEnvTarget modTarget, float computedSec);
 
@@ -425,6 +428,11 @@ namespace tau
 		// 和声深度衰减过渡信息
 		ValueFadeInfo chorusDepthFadeInfo;
 
+
+		// 低频滤波截至频率(计算值)
+		float fcCompute = -1;
+		// 低频滤波截至频率(计算值)过渡信息
+		ValueFadeInfo fcComputeFadeInfo;
 
 		// 低频滤波截至频率
 		float fc = 0;

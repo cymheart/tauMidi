@@ -183,7 +183,7 @@ namespace tau
 		bool isStepPlayMode = false;
 
 		//当前播放时间
-		double curtPlaySec = 0;
+		atomic<double>  curtPlaySec;
 
 
 		friend class Editor;

@@ -294,6 +294,9 @@ namespace tau
 		//获取midi状态
 		EditorState GetEditorState();
 
+		//获取当前播放时间点
+		double GetPlaySec();
+
 		// 设定播放速度
 		void SetSpeed(float speed);
 
@@ -472,7 +475,7 @@ namespace tau
 		//声音处理时的采样周期，不同于样本采样率
 		//样本采样率和声音处理采样率的频率矫正倍率计算为: rateAdjustMul = sampleRate / sampleProcessRate
 		//如每秒钟处理采样点44100个采样点
-		float sampleProcessRate = 44100;
+		float sampleProcessRate = 48000;
 
 		// 帧采样数量(默认值:512)
 		int frameSampleCount = 512;
@@ -481,7 +484,7 @@ namespace tau
 		int childFrameSampleCount = 64;
 
 		//采样率的倒数，表示1个采样点所花费的时间
-		float invSampleProcessRate = 1.0f / 44100.0f;
+		float invSampleProcessRate = 1.0f / 48000.0f;
 
 		//单位采样时间
 		double unitSampleSec = 0;

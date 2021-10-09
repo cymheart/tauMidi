@@ -71,6 +71,11 @@ namespace tau
 		return editor->GetState();
 	}
 
+	//获取当前播放时间点
+	double Tau::GetPlaySec()
+	{
+		return editor->GetPlaySec();
+	}
 
 	// 设定播放速度
 	void Tau::SetSpeed(float speed)

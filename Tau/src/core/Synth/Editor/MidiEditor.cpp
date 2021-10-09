@@ -17,6 +17,7 @@ namespace tau
 	{
 		this->midiSynther = midiSynther;
 		tau = midiSynther->tau;
+		curtPlaySec = 0;
 	}
 
 	MidiEditor::~MidiEditor()
@@ -390,7 +391,7 @@ namespace tau
 		int trackEndCount = 0;
 		int instFragCount = 0;
 
-		curtPlaySec += sec * speed;
+		curtPlaySec = curtPlaySec + sec * speed;
 
 		for (int i = 0; i < trackList.size(); i++)
 		{

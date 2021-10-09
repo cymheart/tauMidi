@@ -26,9 +26,9 @@ namespace tau {
 		syntherCount = 1;
 
 		SetFrameSampleCount(frameSampleCount);
+		SetSampleProcessRate(48000);
 
 		editor = new Editor(this);
-
 
 	}
 
@@ -61,7 +61,7 @@ namespace tau {
 
 		sampleProcessRate = (float)rate;
 		invSampleProcessRate = 1 / sampleProcessRate;
-		stk::Stk::setSampleRate(44100);
+		stk::Stk::setSampleRate(rate);
 
 		unitSampleSec = invSampleProcessRate * childFrameSampleCount;
 	}

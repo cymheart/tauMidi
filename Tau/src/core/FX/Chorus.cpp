@@ -12,7 +12,7 @@ namespace tauFX
 		leftChannelChorus = new daisysp::Chorus();
 		rightChannelChorus = new daisysp::Chorus();
 
-		float sampleRate = 44100;
+		float sampleRate = 48000;
 		if (synther != nullptr)
 			sampleRate = synther->GetSampleProcessRate();
 

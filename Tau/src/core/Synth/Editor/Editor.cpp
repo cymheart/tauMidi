@@ -173,6 +173,16 @@ namespace tau
 		return tau->midiEditorSynthers[0]->GetStateTask();
 	}
 
+	//获取当前播放时间点
+	double Editor::GetPlaySec()
+	{
+		MidiEditor* midiEditor = tau->midiEditorSynthers[0]->GetMidiEditor();
+		if (midiEditor == nullptr)
+			return 0;
+
+		return midiEditor->GetPlaySec();
+	}
+
 
 	// 设定速度
 	void Editor::SetSpeed(float speed)

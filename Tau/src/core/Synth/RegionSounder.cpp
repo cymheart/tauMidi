@@ -119,6 +119,9 @@ namespace tau {
 		chorusDepth = -1;
 		chorusDepthFadeInfo = initFadeInfo;
 
+		fcCompute = -1;
+		fcComputeFadeInfo = initFadeInfo;
+
 		//
 		lastSamplePos = -1;
 		sampleStartIdx = 0;
@@ -1240,8 +1243,11 @@ namespace tau {
 
 
 			//重设低通滤波器
-			if (isActiveLowPass)
+			if (isActiveLowPass) {
+				FadeSetLowPassFilter();
 				ResetLowPassFilter(endSec);
+
+			}
 
 			//采样音调处理
 			pitchOffsetMul = LfosAndEnvsModulation(LfoEnvTarget::ModPitch, endSec);
@@ -1268,8 +1274,9 @@ namespace tau {
 				sampleValue = NextAdjustPitchSample(curtPitchMul);
 
 				//低通滤波处理
-				if (isActiveLowPass)
+				if (isActiveLowPass) {
 					sampleValue = biquad->filter(sampleValue);
+				}
 
 				if (renderQuality == RenderQuality::Good ||
 					renderQuality == RenderQuality::Fast)
@@ -1448,16 +1455,56 @@ namespace tau {
 		float fcResult = fc * fcMul;
 		if (fcResult > 19912) { fcResult = 19912; }
 		else if (fcResult < 0) { fcResult = 0; }
+		if (fcCompute == -1)
+			fcCompute = fc;
+
+		fcComputeFadeInfo.dstValue = fcResult;
+
+		//衰减的过渡处理
+	   //当fcCompute 改变到 fcComputeFadeInfo.dstValue时，如果两者之间的差值过大，将会
+	   //造成不连续断音的违和感，此时通过一个时间上的过渡处理，来平滑这种改变
+		if (abs(fcCompute - fcComputeFadeInfo.dstValue) > 500)
+		{
+			//预设总量为0.2的衰减通过0.02s来平滑改变，其它平滑改变按此比例调整平滑总时间
+			fcComputeFadeInfo.totalFadeTime = 0.02f / 1000 * abs(fcCompute - fcComputeFadeInfo.dstValue);
+			fcComputeFadeInfo.orgValue = fcCompute;
+			fcComputeFadeInfo.totalFadeValue = fcComputeFadeInfo.dstValue - fcComputeFadeInfo.orgValue;
+			fcComputeFadeInfo.fadeComputedValue = fcComputeFadeInfo.totalFadeValue / fcComputeFadeInfo.totalFadeTime;
+			fcComputeFadeInfo.startFadeSec = sec;
+		}
+		else
+		{
+			fcCompute = fcComputeFadeInfo.dstValue;
+		}
 
 		double qDiff = biquadQ - Q;
-		if (fcResult != biquadCutoffFrequency ||
+		if (fcCompute != biquadCutoffFrequency ||
 			(qDiff < -0.0001f || qDiff > 0.0001f))
 		{
-			biquadCutoffFrequency = fcResult;
+			biquadCutoffFrequency = fcCompute;
 			biquadQ = Q;
 			biquad->setup(biquadSampleRate, biquadCutoffFrequency, biquadQ);
 		}
 	}
+
+	//过渡设置低通滤波
+	void RegionSounder::FadeSetLowPassFilter()
+	{
+		if (fcCompute == fcComputeFadeInfo.dstValue)
+			return;
+
+		fcCompute = FadeValue(fcCompute, fcComputeFadeInfo);
+
+		double qDiff = biquadQ - Q;
+		if (fcCompute != biquadCutoffFrequency ||
+			(qDiff < -0.0001f || qDiff > 0.0001f))
+		{
+			biquadCutoffFrequency = fcCompute;
+			biquadQ = Q;
+			biquad->setup(biquadSampleRate, biquadCutoffFrequency, biquadQ);
+		}
+	}
+
 
 	// lfos, envs调制
 	float RegionSounder::LfosAndEnvsModulation(LfoEnvTarget modTarget, float computedSec)

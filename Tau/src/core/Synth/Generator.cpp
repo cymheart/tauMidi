@@ -102,6 +102,10 @@ namespace tau
 			return 1;
 
 		case GeneratorType::ReleaseModEnv:
+			if (type == RegionType::Insttrument)
+				return 0.01f;
+			return 1;
+
 		case GeneratorType::ReleaseVolEnv:
 			if (type == RegionType::Insttrument)
 				return 0.01f;
@@ -229,6 +233,8 @@ namespace tau
 
 
 		case GeneratorType::ReleaseVolEnv:
+			return value < 0.01f ? 0.01f : value;
+
 		case GeneratorType::ReleaseModEnv:
 			return value < 0.01f ? 0.01f : value;
 
