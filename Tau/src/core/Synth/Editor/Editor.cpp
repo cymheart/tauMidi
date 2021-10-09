@@ -147,6 +147,28 @@ namespace tau
 		waitSem.wait();
 	}
 
+	//等待(区别于暂停，等待相当于在原始位置播放)
+	void Editor::Wait()
+	{
+		waitSem.reset(tau->syntherCount - 1);
+
+		for (int i = 0; i < tau->syntherCount; i++)
+			tau->midiEditorSynthers[i]->WaitTask(&waitSem);
+
+		waitSem.wait();
+	}
+
+	//继续，相对于等待命令
+	void Editor::Continue()
+	{
+		waitSem.reset(tau->syntherCount - 1);
+
+		for (int i = 0; i < tau->syntherCount; i++)
+			tau->midiEditorSynthers[i]->ContinueTask(&waitSem);
+
+		waitSem.wait();
+	}
+
 	//移动到指定时间点
 	void Editor::Runto(double sec)
 	{

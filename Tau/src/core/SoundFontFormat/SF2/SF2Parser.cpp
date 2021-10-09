@@ -453,7 +453,7 @@ namespace tau
 			case SF2Generator::Velocity:  genList.SetAmount(GeneratorType::Velocity, val); break;
 
 			case SF2Generator::InitialAttenuation:
-				genList.SetAmount(GeneratorType::InitialAttenuation, -val * 0.1f * 0.35f); //设置实际衰减值为原来的0.25倍
+				genList.SetAmount(GeneratorType::InitialAttenuation, -val * 0.1f * 0.4f); //设置实际衰减值为原来的0.25倍
 				break;
 
 			case SF2Generator::EndloopAddrsCoarseOffset:genList.SetAmount(GeneratorType::EndloopAddrsCoarseOffset, val); break;

@@ -10,6 +10,76 @@
 namespace tau
 {
 
+	void MidiEditorSynther::EnterStepPlayModeTask(Semaphore* waitSem)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _EnterStepPlayModeTask;
+		ev->sem = waitSem;
+		PostTask(ev);
+	}
+
+	void MidiEditorSynther::_EnterStepPlayModeTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.EnterStepPlayMode();
+		se->sem->set();
+	}
+
+	void MidiEditorSynther::LeaveStepPlayModeTask(Semaphore* waitSem)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _LeaveStepPlayModeTask;
+		ev->sem = waitSem;
+		PostTask(ev);
+	}
+
+	void MidiEditorSynther::_LeaveStepPlayModeTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.LeaveStepPlayMode();
+		se->sem->set();
+	}
+
+
+	void MidiEditorSynther::WaitTask(Semaphore* waitSem)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _WaitTask;
+		ev->sem = waitSem;
+		PostTask(ev);
+	}
+
+	void MidiEditorSynther::_WaitTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.Wait();
+		se->sem->set();
+	}
+
+	void MidiEditorSynther::ContinueTask(Semaphore* waitSem)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _ContinueTask;
+		ev->sem = waitSem;
+		PostTask(ev);
+	}
+
+	void MidiEditorSynther::_ContinueTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.Continue();
+		se->sem->set();
+	}
+
+
 	// 播放
 	void MidiEditorSynther::PlayTask(Semaphore* waitSem)
 	{
@@ -79,40 +149,6 @@ namespace tau
 		SyntherEvent* se = (SyntherEvent*)ev;
 		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
 		midiSynther.Remove();
-		se->sem->set();
-	}
-
-	void MidiEditorSynther::EnterStepPlayModeTask(Semaphore* waitSem)
-	{
-		SyntherEvent* ev = SyntherEvent::New();
-		ev->synther = this;
-		ev->processCallBack = _EnterStepPlayModeTask;
-		ev->sem = waitSem;
-		PostTask(ev);
-	}
-
-	void MidiEditorSynther::_EnterStepPlayModeTask(Task* ev)
-	{
-		SyntherEvent* se = (SyntherEvent*)ev;
-		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
-		midiSynther.EnterStepPlayMode();
-		se->sem->set();
-	}
-
-	void MidiEditorSynther::LeaveStepPlayModeTask(Semaphore* waitSem)
-	{
-		SyntherEvent* ev = SyntherEvent::New();
-		ev->synther = this;
-		ev->processCallBack = _LeaveStepPlayModeTask;
-		ev->sem = waitSem;
-		PostTask(ev);
-	}
-
-	void MidiEditorSynther::_LeaveStepPlayModeTask(Task* ev)
-	{
-		SyntherEvent* se = (SyntherEvent*)ev;
-		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
-		midiSynther.LeaveStepPlayMode();
 		se->sem->set();
 	}
 

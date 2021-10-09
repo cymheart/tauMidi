@@ -39,7 +39,6 @@ namespace tau
 		editor->Remove();
 	}
 
-
 	//进入到步进播放模式
 	void Tau::EnterStepPlayMode()
 	{
@@ -51,6 +50,17 @@ namespace tau
 	{
 		editor->LeaveStepPlayMode();
 
+	}
+
+	//等待(区别于暂停，等待相当于在原始位置播放)
+	void Tau::Wait()
+	{
+		editor->Wait();
+	}
+	//继续，相对于等待命令
+	void Tau::Continue()
+	{
+		editor->Continue();
 	}
 
 	//移动到指定时间点

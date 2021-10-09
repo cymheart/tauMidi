@@ -73,6 +73,34 @@ namespace tau
 			return trackCount;
 		}
 
+		//进入到步进播放模式
+		inline void EnterStepPlayMode()
+		{
+			isStepPlayMode = true;
+			isWait = false;
+		}
+
+		//离开步进播放模式
+		void LeaveStepPlayMode()
+		{
+			isStepPlayMode = false;
+		}
+
+
+		//等待
+		inline void Wait()
+		{
+			if (isStepPlayMode)
+				return;
+			isWait = true;
+		}
+
+		//继续
+		inline void Continue()
+		{
+			isWait = false;
+		}
+
 
 		//停止播放
 		void Stop();
@@ -82,11 +110,6 @@ namespace tau
 		void Pause();
 		//移除
 		void Remove();
-
-		//进入到步进播放模式
-		void EnterStepPlayMode();
-		//离开步进播放模式
-		void LeaveStepPlayMode();
 
 		//移动到指定时间点
 		void Runto(double sec);
@@ -181,6 +204,9 @@ namespace tau
 
 		//是否是步进播放模式
 		bool isStepPlayMode = false;
+
+		//是否等待
+		bool isWait = false;
 
 		//当前播放时间
 		atomic<double>  curtPlaySec;

@@ -29,6 +29,12 @@ namespace tau
 		//建立MidiEditor
 		MidiEditor* CreateMidiEditor();
 
+		void EnterStepPlayModeTask(Semaphore* waitSem);
+		void LeaveStepPlayModeTask(Semaphore* waitSem);
+
+		void WaitTask(Semaphore* waitSem);
+		void ContinueTask(Semaphore* waitSem);
+
 		//播放
 		void PlayTask(Semaphore* waitSem);
 
@@ -40,9 +46,6 @@ namespace tau
 
 		//移除
 		void RemoveTask(Semaphore* waitSem);
-
-		void EnterStepPlayModeTask(Semaphore* waitSem);
-		void LeaveStepPlayModeTask(Semaphore* waitSem);
 
 		void RuntoTask(Semaphore* waitSem, double sec);
 
@@ -95,12 +98,16 @@ namespace tau
 
 	private:
 		//
+		static void _EnterStepPlayModeTask(Task* ev);
+		static void _LeaveStepPlayModeTask(Task* ev);
+
+		static void _WaitTask(Task* ev);
+		static void _ContinueTask(Task* ev);
+
 		static void _PlayTask(Task* ev);
 		static void _StopTask(Task* ev);
 		static void _PauseTask(Task* ev);
 		static void _RemoveTask(Task* ev);
-		static void _EnterStepPlayModeTask(Task* ev);
-		static void _LeaveStepPlayModeTask(Task* ev);
 		static void _RuntoTask(Task* ev);
 		static void _GotoTask(Task* ev);
 		static void _GetStateTask(Task* ev);
@@ -127,6 +134,11 @@ namespace tau
 		// 处理播放midi文件事件
 		virtual void ProcessMidiEvents();
 
+		void EnterStepPlayMode();
+		void LeaveStepPlayMode();
+		void Wait();
+		void Continue();
+
 		//播放midi
 		void Play();
 
@@ -138,9 +150,6 @@ namespace tau
 
 		//移除midiEditor
 		void Remove();
-
-		void EnterStepPlayMode();
-		void LeaveStepPlayMode();
 
 		void Runto(double sec);
 

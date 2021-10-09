@@ -253,14 +253,24 @@ int main(int argc, char* argv[])
 	//{
 		//tau->RemoveMidi();
 
-	string path = midiPath + "喜剧之王.mid"; // midiPath + "BA.DECIMATIONMODE.mid.OR.mid"; // midiPath + "venture.mid";   //midiPath + "tau2.5.9.mid"; // midiPath + "笑傲江湖.mid";
+	string path = midiPath + "venture.mid"; // midiPath + "BA.DECIMATIONMODE.mid.OR.mid"; // midiPath + "venture.mid";   //midiPath + "tau2.5.9.mid"; // midiPath + "笑傲江湖.mid";
 	tau->Load(path);
 	tau->Play();
 
-	//步进播放模式
-	/*
 	Sleep(6000);
 
+	//等待继续功能测试
+	tau->Wait();
+	Sleep(3000);
+	tau->Continue();
+	Sleep(2000);
+	tau->Wait();
+	Sleep(3000);
+	tau->Continue();
+
+	//
+	Sleep(1000);
+	//步进播放模式
 	tau->EnterStepPlayMode();
 	float t = 6;
 	for (int i = 0; i < 50; i++)
@@ -282,7 +292,7 @@ int main(int argc, char* argv[])
 	}
 
 	tau->LeaveStepPlayMode();
-	*/
+
 
 	//Sleep(1000);
 	//tau->Moveto(8);

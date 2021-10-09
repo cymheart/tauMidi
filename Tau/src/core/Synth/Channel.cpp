@@ -225,7 +225,7 @@ namespace tau
 		{
 			float val = ccComputedValue[(int)MidiControllerType::ChannelVolumeMSB] *
 				ccComputedValue[(int)MidiControllerType::ExpressionControllerMSB];
-			val = powf(val, 1.6f);
+			val = powf(val, 3.0f);
 			return val;
 		}
 		break;

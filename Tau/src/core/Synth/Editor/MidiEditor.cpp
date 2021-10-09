@@ -153,17 +153,6 @@ namespace tau
 		state = EditorState::STOP;
 	}
 
-	//进入到步进播放模式
-	void MidiEditor::EnterStepPlayMode()
-	{
-		isStepPlayMode = true;
-	}
-
-	//离开步进播放模式
-	void MidiEditor::LeaveStepPlayMode()
-	{
-		isStepPlayMode = false;
-	}
 
 	//移动到指定时间点
 	void MidiEditor::Runto(double sec)
@@ -355,6 +344,9 @@ namespace tau
 	{
 		if (isStepPlayMode && !isStepOp)
 			return;
+
+		if (isWait)
+			sec = 0;
 
 		if (state != EditorState::PLAY)
 			return;
