@@ -49,7 +49,18 @@ namespace tau
 	void Tau::LeaveStepPlayMode()
 	{
 		editor->LeaveStepPlayMode();
+	}
 
+	//进入到等待播放模式
+	void Tau::EnterWaitPlayMode()
+	{
+		editor->EnterStepPlayMode();
+	}
+
+	//离开等待播放模式
+	void Tau::LeaveWaitPlayMode()
+	{
+		editor->LeaveStepPlayMode();
 	}
 
 	//等待(区别于暂停，等待相当于在原始位置播放)
@@ -61,6 +72,18 @@ namespace tau
 	void Tau::Continue()
 	{
 		editor->Continue();
+	}
+
+	//发送编辑器按键信号
+	void Tau::EditorOnKeySignal(int key)
+	{
+		editor->OnKeySignal(key);
+	}
+
+	//发送编辑器松开按键信号
+	void Tau::EditorOffKeySignal(int key)
+	{
+		editor->OffKeySignal(key);
 	}
 
 	//移动到指定时间点

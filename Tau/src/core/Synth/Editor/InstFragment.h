@@ -55,11 +55,13 @@ namespace tau
 
 	private:
 
+
 		//是否播放结束
 		bool isEnded = false;
 
 		uint32_t startTick = 0;
 		float startSec = 0;
+		float endSec = 0;
 
 		Track* track = nullptr;
 		int branchIdx = 0;
@@ -69,6 +71,7 @@ namespace tau
 
 		list<MidiEvent*> midiEvents;
 
+		friend class Track;
 		friend class MidiEditor;
 	};
 }

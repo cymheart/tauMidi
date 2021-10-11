@@ -9,6 +9,7 @@
 #include"Midi/MidiFile.h"
 #include"Synth/VirInstrument.h"
 #include"Synth/Preset.h"
+#include"Synth/Editor/Editor.h"
 
 
 namespace tau
@@ -17,13 +18,26 @@ namespace tau
 	{
 		this->midiSynther = midiSynther;
 		tau = midiSynther->tau;
-		curtPlaySec = 0;
+		editor = tau->editor;
+
+		//初始化值
+		curtPlaySec = editor->GetPlaySec();
+		speed = editor->GetSpeed();
+		isWaitPlayMode = editor->isWaitPlayMode;
+		state = editor->GetState();
+		midiMarkerList.Copy(editor->midiMarkerList);
 	}
 
 	MidiEditor::~MidiEditor()
 	{
 		for (int i = 0; i < trackList.size(); i++)
 			DEL(trackList[i]);
+	}
+
+	//设置标记
+	void MidiEditor::SetMarkerList(MidiMarkerList* mrklist)
+	{
+		midiMarkerList.Copy(*mrklist);
 	}
 
 	//新建轨道，空轨道
@@ -59,52 +73,141 @@ namespace tau
 	}
 
 
-	//设置标记
-	void MidiEditor::SetMarkerList(MidiMarkerList* mrklist)
-	{
-		midiMarkerList.Copy(*mrklist);
-	}
+
 
 
 	//移除乐器片段
 	void MidiEditor::RemoveInstFragment(InstFragment* instFragment)
 	{
 		Track* track = instFragment->GetTrack();
-		if (track != nullptr)
-			track->RemoveInstFragment(instFragment);
+		if (track == nullptr)
+			return;
+
+		track->RemoveInstFragment(instFragment);
+
+		//计算更新位置
+		if (instFragment->startSec <= curtPlaySec &&
+			instFragment->endSec >= curtPlaySec)
+			track->_isUpdatePlayPos = true;
+		else if (instFragment->startSec < curtPlaySec)
+			track->_isUpdatePlayPrevPos = true;
 	}
 
 
 	//移动乐器片段到目标轨道分径的指定时间点
 	void MidiEditor::MoveInstFragment(InstFragment* instFragment, Track* dstTrack, int dstBranchIdx, float sec)
 	{
+		bool isAdd = false;
 		if (dstTrack != nullptr && (
 			instFragment->GetTrack() != dstTrack ||
 			(instFragment->GetTrack() == dstTrack && instFragment->GetBranchIdx() != dstBranchIdx)))
 		{
 			RemoveInstFragment(instFragment);
+			isAdd = true;
 		}
 
-		//
 		Tempo* tempo = midiMarkerList.GetTempo(sec);
 		uint32_t tickCount = tempo->GetTickCount(sec);
 		instFragment->SetStartTick(tickCount);
 
-		//
-		if (dstTrack != nullptr && (
-			instFragment->GetTrack() != dstTrack ||
-			(instFragment->GetTrack() == dstTrack && instFragment->GetBranchIdx() != dstBranchIdx)))
-		{
+		if (isAdd)
 			dstTrack->AddInstFragment(instFragment, dstBranchIdx);
+
+		dstTrack = instFragment->track;
+		if (dstTrack == nullptr)
+			return;
+
+		//计算更新位置
+		dstTrack->_updateInstFrags.push_back(instFragment);
+		if (!isAdd &&
+			instFragment->startSec <= curtPlaySec &&
+			instFragment->endSec >= curtPlaySec) {
+			dstTrack->_isUpdatePlayPos = true;
 		}
+		if (sec < curtPlaySec)
+			dstTrack->_isUpdatePlayPrevPos = true;
+
 	}
 
+
+	//计算指定轨道所有事件的实际时间点
+	void MidiEditor::ComputeTrackEventsTime(Track* track)
+	{
+		Tempo* tempo;
+		list<MidiEvent*>* eventList;
+		InstFragment* instFrag;
+		MidiEvent* ev;
+
+		auto& instFragments = track->_updateInstFrags;
+		for (int i = 0; i < instFragments.size(); i++)
+		{
+			instFrag = instFragments[i];
+			instFrag->Clear();
+			tempo = midiMarkerList.GetTempo((int)instFrag->startTick);
+			instFrag->startSec = (float)tempo->GetTickSec(instFrag->startTick);
+
+			eventList = &(instFrag->midiEvents);
+			list<MidiEvent*>::iterator it = eventList->begin();
+			list<MidiEvent*>::iterator end = eventList->end();
+			for (; it != end; it++)
+			{
+				ev = *it;
+				int evStartTick = ev->startTick + instFrag->startTick;
+				tempo = midiMarkerList.GetTempo(evStartTick);
+				ev->endSec = ev->startSec = (float)tempo->GetTickSec(evStartTick);
+
+				if (ev->type == MidiEventType::NoteOff)
+					((NoteOffEvent*)ev)->noteOnEvent->endSec = ev->endSec;
+
+				if (ev->endSec > instFrag->endSec)
+					instFrag->endSec = ev->endSec;
+
+				if (ev->endSec > track->endSec)
+					track->endSec = ev->endSec;
+			}
+
+			if (instFrag->startSec < curtPlaySec)
+				track->_isUpdatePlayPrevPos = true;
+		}
+
+		//
+		if (track->_isUpdatePlayPos || track->_isUpdatePlayPrevPos)
+		{
+			if (track->_isUpdatePlayPos)
+				midiSynther->OffVirInstrumentAllKeys(track->GetChannel());
+
+			track->Clear();
+			RunTrack(track, true);
+		}
+
+		track->_isUpdatePlayPos = false;
+		track->_isUpdatePlayPrevPos = false;
+		track->_updateInstFrags.clear();
+	}
+
+
+	//计算结束时间点
+	void MidiEditor::ComputeEndSec()
+	{
+		endSec = 0;
+		for (int i = 0; i < trackList.size(); i++)
+		{
+			if (trackList[i]->endSec > endSec)
+				endSec = trackList[i]->endSec;
+		}
+	}
 
 	//开始播放
 	void MidiEditor::Play()
 	{
 		if (state == EditorState::PLAY)
 			return;
+
+
+		if (state == EditorState::STOP) {
+			for (int i = 0; i < trackList.size(); i++)
+				trackList[i]->Clear();
+		}
 
 		for (int i = 0; i < trackList.size(); i++)
 			midiSynther->OnVirInstrument(trackList[i]->GetChannel());
@@ -129,13 +232,11 @@ namespace tau
 		if (state == EditorState::STOP)
 			return;
 
-		for (int i = 0; i < trackList.size(); i++)
+		for (int i = 0; i < trackList.size(); i++) {
 			midiSynther->OffVirInstrument(trackList[i]->GetChannel());
+			trackList[i]->Clear();
+		}
 
-		isGotoEnd = false;
-		isDirectGoto = false;
-		isOpen = false;
-		gotoSec = 0;
 		state = EditorState::STOP;
 	}
 
@@ -143,13 +244,11 @@ namespace tau
 	//移除
 	void MidiEditor::Remove()
 	{
-		for (int i = 0; i < trackList.size(); i++)
+		for (int i = 0; i < trackList.size(); i++) {
 			midiSynther->RemoveVirInstrument(trackList[i]->GetChannel());
+			trackList[i]->Clear();
+		}
 
-		isGotoEnd = false;
-		isDirectGoto = false;
-		isOpen = false;
-		gotoSec = 0;
 		state = EditorState::STOP;
 	}
 
@@ -157,7 +256,7 @@ namespace tau
 	//移动到指定时间点
 	void MidiEditor::Runto(double sec)
 	{
-		if (state != EditorState::PLAY || !isStepPlayMode) {
+		if (state != EditorState::PLAY || !editor->isStepPlayMode) {
 			Goto(sec);
 			return;
 		}
@@ -173,15 +272,16 @@ namespace tau
 	//设置播放的起始时间点
 	void MidiEditor::Goto(double sec)
 	{
-		for (int i = 0; i < trackList.size(); i++)
-			midiSynther->OffVirInstrumentAllKeys(trackList[i]->GetChannel());
 
-		isDirectGoto = false;
-		isOpen = false;
-		isGotoEnd = false;
-		gotoSec = sec;
-		curtPlaySec = sec;
+		for (int i = 0; i < trackList.size(); i++) {
+			midiSynther->OffVirInstrumentAllKeys(trackList[i]->GetChannel());
+			trackList[i]->Clear();
+		}
+
+		curtPlaySec = 0;
+		RunCore(sec / speed, true);
 	}
+
 
 	//设置快进到开头
 	void MidiEditor::GotoStart()
@@ -192,8 +292,7 @@ namespace tau
 	//设置快进到结尾
 	void MidiEditor::GotoEnd()
 	{
-		Goto(9999999);
-		isGotoEnd = true;
+		Goto(endSec + 1);
 	}
 
 	void MidiEditor::DisableTrack(Track* track)
@@ -287,161 +386,30 @@ namespace tau
 	}
 
 
-	//计算指定轨道所有事件的实际时间点
-	void MidiEditor::ComputeTrackEventsTime(Track* track)
-	{
-		Tempo* tempo;
-		list<MidiEvent*>* eventList;
-		InstFragment* instFrag;
-		MidiEvent* ev;
-
-		auto& instFragments = track->instFragments;
-		for (int i = 0; i < instFragments.size(); i++)
-		{
-			list<InstFragment*>::iterator frag_it = instFragments[i]->begin();
-			list<InstFragment*>::iterator frag_end = instFragments[i]->end();
-			for (; frag_it != frag_end; frag_it++)
-			{
-				instFrag = *frag_it;
-				tempo = midiMarkerList.GetTempo((int)instFrag->startTick);
-				instFrag->startSec = (float)tempo->GetTickSec(instFrag->startTick);
-
-				eventList = &(instFrag->midiEvents);
-				list<MidiEvent*>::iterator it = eventList->begin();
-				list<MidiEvent*>::iterator end = eventList->end();
-				for (; it != end; it++)
-				{
-					ev = *it;
-					int evStartTick = ev->startTick + instFrag->startTick;
-					tempo = midiMarkerList.GetTempo(evStartTick);
-					ev->endSec = ev->startSec = (float)tempo->GetTickSec(evStartTick);
-
-					if (ev->type == MidiEventType::NoteOff)
-					{
-						((NoteOffEvent*)ev)->noteOnEvent->endSec = ev->endSec;
-
-						if (ev->endSec > track->endSec)
-							track->endSec = ev->endSec;
-					}
-				}
-			}
-		}
-	}
-
-	//计算结束时间点
-	void MidiEditor::ComputeEndSec()
-	{
-		endSec = 0;
-		for (int i = 0; i < trackList.size(); i++)
-		{
-			if (trackList[i]->endSec > endSec)
-				endSec = trackList[i]->endSec;
-		}
-	}
-
 	//运行
 	void MidiEditor::Run(double sec, bool isStepOp)
 	{
-		if (isStepPlayMode && !isStepOp)
+		if (editor->isStepPlayMode && !isStepOp)
 			return;
 
-		if (isWait)
+		if (editor->isWait)
 			sec = 0;
 
 		if (state != EditorState::PLAY)
 			return;
 
-		if (isOpen == false)
-		{
-			isOpen = true;
-
-			for (int i = 0; i < trackList.size(); i++)
-			{
-				trackList[i]->Clear();
-			}
-
-			if (gotoSec > 0)
-			{
-				isDirectGoto = true;
-				curtPlaySec = 0;
-				RunCore(gotoSec / speed);
-				isDirectGoto = false;
-				isGotoEnd = false;
-			}
-		}
-
 		RunCore(sec);
 	}
 
 
-	void MidiEditor::RunCore(double sec)
+	void MidiEditor::RunCore(double sec, bool isDirectGoto)
 	{
-		list<MidiEvent*>* eventList;
-		InstFragment* instFrag;
-		MidiEvent* ev;
-		int orgInstFragCount = 0;
 		int trackEndCount = 0;
-		int instFragCount = 0;
-
 		curtPlaySec = curtPlaySec + sec * speed;
 
 		for (int i = 0; i < trackList.size(); i++)
 		{
-			if (trackList[i]->isEnded) {
-				trackEndCount++;
-				continue;
-			}
-
-			instFragCount = 0;
-			auto& instFragments = trackList[i]->instFragments;
-			for (int j = 0; j < instFragments.size(); j++)
-			{
-				orgInstFragCount += instFragments[j]->size();
-				list<InstFragment*>::iterator frag_it = instFragments[j]->begin();
-				list<InstFragment*>::iterator frag_end = instFragments[j]->end();
-				for (; frag_it != frag_end; frag_it++)
-				{
-					instFrag = *frag_it;
-					if (instFrag->isEnded) {
-						instFragCount++;
-						continue;
-					}
-
-					eventList = &(instFrag->midiEvents);
-					list<MidiEvent*>::iterator it = instFrag->eventOffsetIter;
-					list<MidiEvent*>::iterator end = eventList->end();
-					for (; it != end; it++)
-					{
-						ev = *it;
-
-						//
-						if (!isGotoEnd && ev->startSec > curtPlaySec)
-						{
-							instFrag->eventOffsetIter = it;
-							break;
-						}
-
-						ProcessEvent(ev, i);
-					}
-
-					if (it == end)
-					{
-						instFrag->isEnded = true;
-					}
-				}
-			}
-
-			if (instFragCount == orgInstFragCount)
-			{
-				trackList[i]->isEnded = true;
-
-				//轨道播发结束后，清除相关设置
-				Channel* channel = trackList[i]->GetChannel();
-				if (channel != nullptr) {
-					channel->SetControllerValue(MidiControllerType::SustainPedalOnOff, 0);
-					midiSynther->ModulationVirInstParams(channel);
-				}
-			}
+			trackEndCount += RunTrack(trackList[i], isDirectGoto);
 		}
 
 		//检测播放是否结束
@@ -452,10 +420,74 @@ namespace tau
 		}
 	}
 
-	//处理轨道事件
-	void MidiEditor::ProcessEvent(MidiEvent* midEv, int trackIdx)
+	int MidiEditor::RunTrack(Track* track, bool isDirectGoto)
 	{
-		Channel* channel = trackList[trackIdx]->GetChannel();
+		list<MidiEvent*>* eventList;
+		InstFragment* instFrag;
+		MidiEvent* ev;
+		int orgInstFragCount = 0;
+		int instFragCount = 0;
+
+		if (track->isEnded)
+			return 1;
+
+		auto& instFragments = track->instFragments;
+		for (int j = 0; j < instFragments.size(); j++)
+		{
+			orgInstFragCount += instFragments[j]->size();
+			list<InstFragment*>::iterator frag_it = instFragments[j]->begin();
+			list<InstFragment*>::iterator frag_end = instFragments[j]->end();
+			for (; frag_it != frag_end; frag_it++)
+			{
+				instFrag = *frag_it;
+				if (instFrag->isEnded) {
+					instFragCount++;
+					continue;
+				}
+
+				eventList = &(instFrag->midiEvents);
+				list<MidiEvent*>::iterator it = instFrag->eventOffsetIter;
+				list<MidiEvent*>::iterator end = eventList->end();
+				for (; it != end; it++)
+				{
+					ev = *it;
+
+					//
+					if (ev->startSec > curtPlaySec)
+					{
+						instFrag->eventOffsetIter = it;
+						break;
+					}
+
+					ProcessEvent(ev, track, isDirectGoto);
+				}
+
+				if (it == end)
+				{
+					instFrag->isEnded = true;
+				}
+			}
+		}
+
+		if (instFragCount == orgInstFragCount)
+		{
+			track->isEnded = true;
+
+			//轨道播发结束后，清除相关设置
+			Channel* channel = track->GetChannel();
+			if (channel != nullptr) {
+				channel->SetControllerValue(MidiControllerType::SustainPedalOnOff, 0);
+				midiSynther->ModulationVirInstParams(channel);
+			}
+		}
+
+		return 0;
+	}
+
+	//处理轨道事件
+	void MidiEditor::ProcessEvent(MidiEvent* midEv, Track* track, bool isDirectGoto)
+	{
+		Channel* channel = track->GetChannel();
 		VirInstrument* virInst = channel->GetVirInstrument();
 
 		//
@@ -464,25 +496,32 @@ namespace tau
 		case MidiEventType::NoteOn:
 		{
 			if (isDirectGoto ||
-				trackList[trackIdx]->isDisablePlay)
+				track->isDisablePlay)
 				break;
 
 			NoteOnEvent* noteOnEv = (NoteOnEvent*)midEv;
-			virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1);
+
+			if (!isWaitPlayMode)
+				virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1);
+			else
+				editor->NeedOnKeySignal(noteOnEv->note);
 		}
 		break;
 
 		case MidiEventType::NoteOff:
 		{
 			if (isDirectGoto ||
-				trackList[trackIdx]->isDisablePlay)
+				track->isDisablePlay)
 				break;
 
 			NoteOffEvent* noteOffEv = (NoteOffEvent*)midEv;
 			if (noteOffEv->noteOnEvent == nullptr)
 				break;
 
-			virInst->OffKey(noteOffEv->note, (float)noteOffEv->velocity);
+			if (!isWaitPlayMode)
+				virInst->OffKey(noteOffEv->note, (float)noteOffEv->velocity);
+			else
+				editor->NeedOffKeySignal(noteOffEv->note);
 		}
 		break;
 

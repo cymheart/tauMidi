@@ -19,6 +19,7 @@ namespace tau
 		PAUSE
 	};
 
+
 	struct InstFragmentToTrackInfo
 	{
 		InstFragment* instFragment;

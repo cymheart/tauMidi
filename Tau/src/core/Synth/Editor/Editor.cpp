@@ -128,21 +128,76 @@ namespace tau
 	//进入到步进播放模式
 	void Editor::EnterStepPlayMode()
 	{
-		waitSem.reset(tau->syntherCount - 1);
+		if (isWaitPlayMode)
+			return;
 
-		for (int i = 0; i < tau->syntherCount; i++)
-			tau->midiEditorSynthers[i]->EnterStepPlayModeTask(&waitSem);
-
-		waitSem.wait();
+		isStepPlayMode = true;
+		isWait = false;
+		//		
 	}
 
 	//离开步进播放模式
 	void Editor::LeaveStepPlayMode()
 	{
-		waitSem.reset(tau->syntherCount - 1);
+		if (isWaitPlayMode)
+			return;
 
+		isStepPlayMode = false;
+	}
+
+	//进入到等待播放模式
+	void Editor::EnterWaitPlayMode()
+	{
+		if (isStepPlayMode)
+			return;
+
+		isWaitPlayMode = true;
+		isWait = false;
+		memset(onkey, 0, sizeof(int) * 128);
+		memset(needOnkey, 0, sizeof(int) * 128);
+		memset(needOffkey, 0, sizeof(int) * 128);
+		needOnKeyCount = 0;
+		needOffKeyCount = 0;
+
+		waitSem.reset(tau->syntherCount - 1);
 		for (int i = 0; i < tau->syntherCount; i++)
-			tau->midiEditorSynthers[i]->LeaveStepPlayModeTask(&waitSem);
+			tau->midiEditorSynthers[i]->EnterWaitPlayModeTask(&waitSem);
+
+		waitSem.wait();
+
+	}
+
+	//离开等待播放模式
+	void Editor::LeaveWaitPlayMode()
+	{
+		if (isStepPlayMode)
+			return;
+
+		isWaitPlayMode = false;
+
+		waitSem.reset(tau->syntherCount - 1);
+		for (int i = 0; i < tau->syntherCount; i++)
+			tau->midiEditorSynthers[i]->LeaveWaitPlayModeTask(&waitSem);
+
+		waitSem.wait();
+	}
+
+
+	//移动到指定时间点
+	void Editor::Runto(double sec)
+	{
+		//
+		if (isWaitPlayMode) {
+			memset(onkey, 0, sizeof(int) * 128);
+			memset(needOnkey, 0, sizeof(int) * 128);
+			memset(needOffkey, 0, sizeof(int) * 128);
+			needOnKeyCount = 0;
+			needOffKeyCount = 0;
+		}
+
+		waitSem.reset(tau->syntherCount - 1);
+		for (int i = 0; i < tau->syntherCount; i++)
+			tau->midiEditorSynthers[i]->RuntoTask(&waitSem, sec);
 
 		waitSem.wait();
 	}
@@ -150,30 +205,124 @@ namespace tau
 	//等待(区别于暂停，等待相当于在原始位置播放)
 	void Editor::Wait()
 	{
-		waitSem.reset(tau->syntherCount - 1);
+		if (isStepPlayMode)
+			return;
 
-		for (int i = 0; i < tau->syntherCount; i++)
-			tau->midiEditorSynthers[i]->WaitTask(&waitSem);
-
-		waitSem.wait();
+		isWait = true;
 	}
 
 	//继续，相对于等待命令
 	void Editor::Continue()
 	{
-		waitSem.reset(tau->syntherCount - 1);
-
-		for (int i = 0; i < tau->syntherCount; i++)
-			tau->midiEditorSynthers[i]->ContinueTask(&waitSem);
-
-		waitSem.wait();
+		isWait = false;
 	}
 
-	//移动到指定时间点
-	void Editor::Runto(double sec)
+	//需要按键信号
+	void Editor::NeedOnKeySignal(int key)
 	{
-		for (int i = 0; i < tau->syntherCount; i++)
-			tau->midiEditorSynthers[i]->RuntoTask(nullptr, sec);
+		waitOnKeyLock.lock();
+
+		needOnkey[key]++;
+
+		if (needOnkey[key] > 0)
+			needOnKeyCount++;
+
+		if (needOnKeyCount > 0)
+		{
+			isWait = true;
+			printf("等待按键:%d \n", key);
+		}
+
+		waitOnKeyLock.unlock();
+	}
+
+	//需要松开按键信号
+	void Editor::NeedOffKeySignal(int key)
+	{
+		waitOnKeyLock.lock();
+
+		if (onkey[key] == 0) {
+			waitOnKeyLock.unlock();
+			return;
+		}
+
+		needOffkey[key]++;
+
+		if (needOffkey[key] > 0)
+			needOffKeyCount++;
+
+		if (needOffKeyCount > 0) {
+			isWait = true;
+			printf("等待松开键:%d \n", key);
+		}
+
+
+		waitOnKeyLock.unlock();
+	}
+
+	//按键信号
+	void Editor::OnKeySignal(int key)
+	{
+		waitOnKeyLock.lock();
+
+		needOnkey[key]--;
+		onkey[key]++;
+
+		if (needOnkey[key] >= 0)
+			needOnKeyCount--;
+
+		if (needOnKeyCount <= 0 && needOffKeyCount <= 0) {
+			isWait = false;
+			printf("按下按键,继续:%d \n", key);
+		}
+
+		waitOnKeyLock.unlock();
+	}
+
+	//松开按键信号
+	void Editor::OffKeySignal(int key)
+	{
+		waitOnKeyLock.lock();
+
+		if (onkey[key] > 0 && needOffkey[key] == 0 && needOnkey[key] == 0)
+		{
+			needOnkey[key]++;
+			needOnKeyCount++;
+			onkey[key]--;
+
+			if (needOnKeyCount > 0) {
+				isWait = true;
+				printf("等待按键:%d \n", key);
+			}
+
+			waitOnKeyLock.unlock();
+			return;
+		}
+
+
+		if (needOffkey[key] == 0)
+		{
+			if (onkey[key] > 0)
+				onkey[key]--;
+
+			waitOnKeyLock.unlock();
+			return;
+		}
+
+		needOffkey[key]--;
+
+		if (onkey[key] > 0)
+			onkey[key]--;
+
+		if (needOffkey[key] >= 0)
+			needOffKeyCount--;
+
+		if (needOnKeyCount <= 0 && needOffKeyCount <= 0) {
+			isWait = false;
+			printf("松开按键，继续:%d \n", key);
+		}
+
+		waitOnKeyLock.unlock();
 	}
 
 
@@ -192,6 +341,10 @@ namespace tau
 	//获取状态
 	EditorState Editor::GetState()
 	{
+		MidiEditor* midiEditor = tau->midiEditorSynthers[0]->GetMidiEditor();
+		if (midiEditor == nullptr)
+			return EditorState::STOP;
+
 		return tau->midiEditorSynthers[0]->GetStateTask();
 	}
 
@@ -207,8 +360,10 @@ namespace tau
 
 
 	// 设定速度
-	void Editor::SetSpeed(float speed)
+	void Editor::SetSpeed(float speed_)
 	{
+		speed = speed_;
+
 		waitSem.reset(tau->syntherCount - 1);
 
 		for (int i = 0; i < tau->syntherCount; i++)
@@ -507,7 +662,6 @@ namespace tau
 
 	int Editor::_NewTracks(MidiEditorSynther* synther, int count)
 	{
-		int waitCount = 0;
 		bool isNewMidiEditor = false;
 		MidiEditor* midiEditor = synther->GetMidiEditor();
 		if (midiEditor == nullptr) {
@@ -519,13 +673,7 @@ namespace tau
 		{
 			int n = min(count, computedPerSyntherLimitTrackCount - midiEditor->GetTrackCount());
 			count -= n;
-			if (isNewMidiEditor) { waitCount = n; }
-			else { waitCount = n - 1; }
-
-			waitSem.reset(waitCount);
-			if (isNewMidiEditor)
-				synther->SetMarkerListTask(&waitSem, &midiMarkerList);
-
+			waitSem.reset(n - 1);
 			for (int i = 0; i < n; i++) {
 				synther->NewTrackTask(&waitSem);
 			}
@@ -650,7 +798,7 @@ namespace tau
 			InstFragmentToTrackInfo& a = *it;
 			frag = a.instFragment;
 			synther1 = frag->GetTrack()->GetMidiEditor()->GetSynther();
-			synther1->RemoveInstFragmentTask(&waitSem, a.instFragment);
+			synther1->RemoveInstFragmentTask(&waitSem, frag);
 
 			//收集被修改的的轨道
 			modifyTrackMap[synther1].insert(frag->GetTrack());

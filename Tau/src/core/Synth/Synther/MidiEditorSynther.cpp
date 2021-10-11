@@ -78,36 +78,20 @@ namespace tau
 		DEL(midiEditor);
 	}
 
-	void MidiEditorSynther::EnterStepPlayMode()
+	void MidiEditorSynther::EnterWaitPlayMode()
 	{
 		if (midiEditor == nullptr)
 			return;
 
-		midiEditor->EnterStepPlayMode();
+		midiEditor->EnterWaitPlayMode();
 	}
 
-	void MidiEditorSynther::LeaveStepPlayMode()
+	void MidiEditorSynther::LeaveWaitPlayMode()
 	{
 		if (midiEditor == nullptr)
 			return;
 
-		midiEditor->LeaveStepPlayMode();
-	}
-
-	void MidiEditorSynther::Wait()
-	{
-		if (midiEditor == nullptr)
-			return;
-
-		midiEditor->Wait();
-	}
-
-	void MidiEditorSynther::Continue()
-	{
-		if (midiEditor == nullptr)
-			return;
-
-		midiEditor->Continue();
+		midiEditor->LeaveWaitPlayMode();
 	}
 
 

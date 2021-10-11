@@ -65,6 +65,13 @@ namespace tau
 		//结束时间点
 		float endSec = 0;
 
+		//
+
+	private:
+		vector<InstFragment*> _updateInstFrags;
+		bool _isUpdatePlayPos = false;
+		bool _isUpdatePlayPrevPos = false;
+
 		friend class MidiEditor;
 	};
 

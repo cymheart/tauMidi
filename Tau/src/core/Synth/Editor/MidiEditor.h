@@ -26,11 +26,6 @@ namespace tau
 			return midiSynther;
 		}
 
-		//获取midi文件路径
-		inline string& GetMidiFilePath()
-		{
-			return filePath;
-		}
 
 		inline EditorState GetState()
 		{
@@ -49,11 +44,6 @@ namespace tau
 			endSec = sec;
 		}
 
-		//获取goto时间
-		inline float GetGotoSec()
-		{
-			return (float)gotoSec;
-		}
 
 		//获取播放时间
 		inline float GetPlaySec()
@@ -73,34 +63,17 @@ namespace tau
 			return trackCount;
 		}
 
-		//进入到步进播放模式
-		inline void EnterStepPlayMode()
+		//进入到等待播放模式
+		void EnterWaitPlayMode()
 		{
-			isStepPlayMode = true;
-			isWait = false;
+			isWaitPlayMode = true;
 		}
 
-		//离开步进播放模式
-		void LeaveStepPlayMode()
+		//离开等待播放模式
+		void LeaveWaitPlayMode()
 		{
-			isStepPlayMode = false;
+			isWaitPlayMode = false;
 		}
-
-
-		//等待
-		inline void Wait()
-		{
-			if (isStepPlayMode)
-				return;
-			isWait = true;
-		}
-
-		//继续
-		inline void Continue()
-		{
-			isWait = false;
-		}
-
 
 		//停止播放
 		void Stop();
@@ -138,6 +111,12 @@ namespace tau
 		//移动乐器片段到目标轨道分径的指定时间点
 		void MoveInstFragment(InstFragment* instFragment, Track* dstTrack, int dstBranchIdx, float sec);
 
+		//计算指定轨道所有事件的实际时间点
+		void ComputeTrackEventsTime(Track* track);
+
+		//计算结束时间点
+		void ComputeEndSec();
+
 		//运行
 		void Run(double sec, bool isStepOp = false);
 		void DisableTrack(Track* track);
@@ -153,29 +132,24 @@ namespace tau
 		//设置打击乐器
 		void SetBeatVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
-		//计算指定轨道所有事件的实际时间点
-		void ComputeTrackEventsTime(Track* track);
 
-		//计算结束时间点
-		void ComputeEndSec();
 
 	private:
 
-		void RunCore(double sec);
+		void RunCore(double sec, bool isDirectGoto = false);
+		int RunTrack(Track* track, bool isDirectGoto);
+
 		//处理轨道事件
-		void ProcessEvent(MidiEvent* midEv, int trackIdx);
+		void ProcessEvent(MidiEvent* midEv, Track* track, bool isDirectGoto);
 
 	private:
-
-		EditorState state = EditorState::STOP;
 
 		Tau* tau;
+		Editor* editor;
 		MidiEditorSynther* midiSynther;
 		MidiMarkerList midiMarkerList;
 
-		string filePath;
-
-		float midiTrackTickForQuarterNote = 0;
+		EditorState state = EditorState::STOP;
 
 		// 轨道
 		vector<Track*> trackList;
@@ -187,32 +161,19 @@ namespace tau
 		//结束时间点
 		double endSec = 0;
 
-		//快进到指定时间点
-		double gotoSec = 0;
-
-		//是否快进到结尾
-		bool isGotoEnd = false;
-
 		//播放速率(相对于正常播放速率1.0的倍率)
 		float speed = 1;
 
-		//是否首次播放
-		bool isOpen = false;
+		//是否是等待播放模式
+		bool isWaitPlayMode = false;
 
-		//是否快进
-		bool isDirectGoto = false;
-
-		//是否是步进播放模式
-		bool isStepPlayMode = false;
-
-		//是否等待
-		bool isWait = false;
 
 		//当前播放时间
-		atomic<double>  curtPlaySec;
+		atomic<double> curtPlaySec;
 
 
 		friend class Editor;
+		friend class Track;
 	};
 }
 

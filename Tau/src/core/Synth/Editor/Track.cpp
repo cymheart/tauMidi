@@ -1,5 +1,6 @@
 ﻿#include"Track.h"
 #include"Synth/Channel.h"
+#include"MidiEditor.h"
 
 
 namespace tau

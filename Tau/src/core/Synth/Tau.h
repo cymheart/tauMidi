@@ -285,10 +285,21 @@ namespace tau
 		//离开步进播放模式
 		void LeaveStepPlayMode();
 
+		//进入到等待播放模式
+		void EnterWaitPlayMode();
+
+		//离开等待播放模式
+		void LeaveWaitPlayMode();
+
 		//等待(区别于暂停，等待相当于在原始位置播放)
 		void Wait();
 		//继续，相对于等待命令
 		void Continue();
+
+		//发送编辑器按键信号
+		void EditorOnKeySignal(int key);
+		//发送编辑器松开按键信号
+		void EditorOffKeySignal(int key);
 
 		//移动到指定时间点
 		void Runto(double sec);

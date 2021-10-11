@@ -32,6 +32,12 @@ namespace tau
 			return endSec;
 		}
 
+		//获取播放速率(相对于正常播放速率1.0的倍率)
+		inline float GetSpeed()
+		{
+			return speed;
+		}
+
 		//载入
 		void Load(string& midiFilePath);
 
@@ -52,10 +58,21 @@ namespace tau
 		//离开步进播放模式
 		void LeaveStepPlayMode();
 
+		//进入到等待播放模式
+		void EnterWaitPlayMode();
+
+		//离开等待播放模式
+		void LeaveWaitPlayMode();
+
 		//等待(区别于暂停，等待相当于在原始位置播放)
 		void Wait();
 		//继续，相对于等待命令
 		void Continue();
+
+		//按键信号
+		void OnKeySignal(int key);
+		//松开按键信号
+		void OffKeySignal(int key);
 
 		//移动到指定时间点
 		void Runto(double sec);
@@ -70,7 +87,7 @@ namespace tau
 		double GetPlaySec();
 
 		// 设定速度
-		void SetSpeed(float speed);
+		void SetSpeed(float speed_);
 
 		// 禁止播放指定编号的轨道
 		void DisableTrack(int trackIdx);
@@ -137,6 +154,13 @@ namespace tau
 
 
 	private:
+
+		//需要按键信号
+		void NeedOnKeySignal(int key);
+
+		//需要松开按键信号
+		void NeedOffKeySignal(int key);
+
 		//删除空轨实时RealtimeSynther
 		void DelEmptyTrackRealtimeSynther();
 
@@ -160,8 +184,28 @@ namespace tau
 		//结束时间点
 		float endSec = 0;
 
+		//播放速率(相对于正常播放速率1.0的倍率)
+		float speed = 1;
+
 		//计算的每个合成器中最大轨道数量
 		int computedPerSyntherLimitTrackCount = 20;
+
+		//是否是步进播放模式
+		atomic_bool isStepPlayMode = false;
+		//是否为等待播放模式
+		bool isWaitPlayMode = false;
+
+		//是否等待
+		atomic_bool isWait = false;
+
+		mutex waitOnKeyLock;
+		int onkey[128] = { 0 };
+
+		int needOnkey[128] = { 0 };
+		int needOnKeyCount = 0;
+
+		int needOffkey[128] = { 0 };
+		int needOffKeyCount = 0;
 
 		//
 		list<InstFragmentToTrackInfo> orgList;
@@ -169,6 +213,10 @@ namespace tau
 		unordered_map<MidiEditorSynther*, unordered_set<Track*>> modifyTrackMap;
 		unordered_set<MidiEditorSynther*> syntherSet;
 		Semaphore waitSem;
+
+
+		friend class MidiEditor;
+
 	};
 }
 
