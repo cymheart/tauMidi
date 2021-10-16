@@ -13,6 +13,11 @@ namespace tau
 		editor->Load(midiFilePath);
 	}
 
+	//新建轨道
+	void Tau::NewTracks(int count)
+	{
+		editor->NewTracks(count);
+	}
 
 	//播放
 	void Tau::Play()
@@ -54,13 +59,13 @@ namespace tau
 	//进入到等待播放模式
 	void Tau::EnterWaitPlayMode()
 	{
-		editor->EnterStepPlayMode();
+		editor->EnterWaitPlayMode();
 	}
 
 	//离开等待播放模式
 	void Tau::LeaveWaitPlayMode()
 	{
-		editor->LeaveStepPlayMode();
+		editor->LeaveWaitPlayMode();
 	}
 
 	//等待(区别于暂停，等待相当于在原始位置播放)
@@ -153,6 +158,45 @@ namespace tau
 	{
 		editor->EnableChannel(channelIdx);
 	}
+
+
+	void Tau::SetSelectInstFragMode(SelectInstFragMode mode)
+	{
+		editor->SetSelectInstFragMode(mode);
+	}
+
+	void Tau::SelectInstFragment(int trackIdx, int branchIdx, int instFragIdx)
+	{
+		editor->SelectInstFragment(trackIdx, branchIdx, instFragIdx);
+	}
+	void Tau::UnSelectInstFragment(int trackIdx, int branchIdx, int instFragIdx)
+	{
+		editor->UnSelectInstFragment(trackIdx, branchIdx, instFragIdx);
+	}
+
+	void Tau::UnSelectAllInstFragment()
+	{
+		editor->UnSelectAllInstFragment();
+	}
+
+	//移动乐器片段到目标轨道分径的指定时间点
+	void Tau::MoveSelectedInstFragment(int dstTrack, int dstBranchIdx, float sec)
+	{
+		editor->MoveSelectedInstFragment(dstTrack, dstBranchIdx, sec);
+	}
+
+	//移动乐器片段到目标轨道分径的指定时间点
+	void Tau::MoveSelectedInstFragments(vector<int>& dstTracks, vector<int>& dstBranchIdx, vector<float>& secs)
+	{
+		editor->MoveSelectedInstFragments(dstTracks, dstBranchIdx, secs);
+	}
+
+	//设置轨道事件演奏方式
+	void Tau::SetTrackPlayType(int trackIdx, MidiEventPlayType playType)
+	{
+		editor->SetTrackPlayType(trackIdx, playType);
+	}
+
 
 	// 设置midi对应轨道的乐器
 	void Tau::SetMidiVirInstrument(int trackIdx,

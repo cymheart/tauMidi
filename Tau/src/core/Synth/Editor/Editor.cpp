@@ -128,8 +128,10 @@ namespace tau
 	//进入到步进播放模式
 	void Editor::EnterStepPlayMode()
 	{
-		if (isWaitPlayMode)
+		if (isWaitPlayMode) {
+			printf("当前模式为:等待播放模式，需要离开等待播放模式! \n");
 			return;
+		}
 
 		isStepPlayMode = true;
 		isWait = false;
@@ -148,8 +150,10 @@ namespace tau
 	//进入到等待播放模式
 	void Editor::EnterWaitPlayMode()
 	{
-		if (isStepPlayMode)
+		if (isStepPlayMode) {
+			printf("当前模式为:步进播放模式，需要离开步进播放模式! \n");
 			return;
+		}
 
 		isWaitPlayMode = true;
 		isWait = false;
@@ -186,13 +190,14 @@ namespace tau
 	//移动到指定时间点
 	void Editor::Runto(double sec)
 	{
-		//
+		//如果是等待播放模式，将清空等待播放模式的数据
 		if (isWaitPlayMode) {
 			memset(onkey, 0, sizeof(int) * 128);
 			memset(needOnkey, 0, sizeof(int) * 128);
 			memset(needOffkey, 0, sizeof(int) * 128);
 			needOnKeyCount = 0;
 			needOffKeyCount = 0;
+			isWait = false;
 		}
 
 		waitSem.reset(tau->syntherCount - 1);
@@ -205,7 +210,7 @@ namespace tau
 	//等待(区别于暂停，等待相当于在原始位置播放)
 	void Editor::Wait()
 	{
-		if (isStepPlayMode)
+		if (isStepPlayMode || isWaitPlayMode)
 			return;
 
 		isWait = true;
@@ -214,6 +219,9 @@ namespace tau
 	//继续，相对于等待命令
 	void Editor::Continue()
 	{
+		if (isStepPlayMode || isWaitPlayMode)
+			return;
+
 		isWait = false;
 	}
 
@@ -275,6 +283,10 @@ namespace tau
 			isWait = false;
 			printf("按下按键,继续:%d \n", key);
 		}
+		else
+		{
+			printf("按下按键:%d \n", key);
+		}
 
 		waitOnKeyLock.unlock();
 	}
@@ -320,6 +332,10 @@ namespace tau
 		if (needOnKeyCount <= 0 && needOffKeyCount <= 0) {
 			isWait = false;
 			printf("松开按键，继续:%d \n", key);
+		}
+		else
+		{
+			printf("松开按键:%d \n", key);
 		}
 
 		waitOnKeyLock.unlock();
@@ -482,6 +498,15 @@ namespace tau
 		waitSem.wait();
 
 		syntherSet.clear();
+	}
+
+	//设置轨道事件演奏方式
+	void Editor::SetTrackPlayType(int trackIdx, MidiEventPlayType playType)
+	{
+		waitSem.reset(0);
+		MidiEditorSynther* synther = tracks[trackIdx]->GetMidiEditor()->GetSynther();
+		synther->SetTrackPlayTypeTask(&waitSem, tracks[trackIdx], playType);
+		waitSem.wait();
 	}
 
 	// 设置对应轨道的乐器
@@ -714,10 +739,90 @@ namespace tau
 	}
 
 
+	void Editor::SelectInstFragment(int trackIdx, int branchIdx, int instFragIdx)
+	{
+		if (selectInstFragMode == SelectInstFragMode::SingleSelect)
+		{
+			selectedInstFrags.clear();
+		}
+		else
+		{
+			for (int i = 0; i < selectedInstFrags.size(); i++)
+			{
+				if (selectedInstFrags[i].trackIdx == trackIdx &&
+					selectedInstFrags[i].branchIdx == branchIdx &&
+					selectedInstFrags[i].instFragmentIdx == instFragIdx)
+					return;
+			}
+		}
+
+		SelectInstFragmentInfo info = { trackIdx, branchIdx, instFragIdx };
+		selectedInstFrags.push_back(info);
+	}
+
+	void Editor::UnSelectInstFragment(int trackIdx, int branchIdx, int instFragIdx)
+	{
+		for (int i = 0; i < selectedInstFrags.size(); i++)
+		{
+			if (selectedInstFrags[i].trackIdx == trackIdx &&
+				selectedInstFrags[i].branchIdx == branchIdx &&
+				selectedInstFrags[i].instFragmentIdx == instFragIdx)
+			{
+				selectedInstFrags.erase(selectedInstFrags.begin() + i);
+				return;
+			}
+		}
+	}
+
+	InstFragment* Editor::GetInstFragment(int trackIdx, int branchIdx, int instFragIdx)
+	{
+		return tracks[trackIdx]->GetInstFragment(branchIdx, instFragIdx);
+	}
+
+	//移动乐器片段到目标轨道分径的指定时间点
+	void Editor::MoveSelectedInstFragment(int dstTrack, int dstBranchIdx, float sec)
+	{
+		vector<int> dstTracks;
+		vector<int> dstBranchIdxs;
+		vector<float> secs;
+
+		dstTracks.push_back(dstTrack);
+		dstBranchIdxs.push_back(dstBranchIdx);
+		secs.push_back(sec);
+
+		MoveSelectedInstFragments(dstTracks, dstBranchIdxs, secs);
+	}
+
+
+	//移动乐器片段到目标轨道分径的指定时间点
+	void Editor::MoveSelectedInstFragments(vector<int>& dstTracks, vector<int>& dstBranchIdxs, vector<float>& secs)
+	{
+		vector<InstFragment*> instFragments;
+		for (int i = 0; i < selectedInstFrags.size(); i++)
+		{
+			InstFragment* instFrag = GetInstFragment(
+				selectedInstFrags[i].trackIdx,
+				selectedInstFrags[i].branchIdx,
+				selectedInstFrags[i].instFragmentIdx);
+
+			if (instFrag != nullptr)
+				instFragments.push_back(instFrag);
+		}
+
+		vector<Track*> dstTrackPtrs;
+		for (int i = 0; i < dstTracks.size(); i++)
+		{
+			dstTrackPtrs.push_back(tracks[dstTracks[i]]);
+		}
+
+		MoveInstFragments(instFragments, dstTrackPtrs, dstBranchIdxs, secs);
+	}
+
+
 	//移动乐器片段到目标轨道的指定时间点
 	void Editor::MoveInstFragments(
 		vector<InstFragment*>& instFragments,
-		vector<Track*>& dstTracks, vector<int>& dstBranchIdx, vector<float>& secs)
+		vector<Track*>& dstTracks, vector<int>& dstBranchIdxs, vector<float>& secs)
 	{
 		//1.数据组合缓存到list中
 		orgList.clear();
@@ -726,7 +831,7 @@ namespace tau
 			InstFragmentToTrackInfo data;
 			data.instFragment = instFragments[i];
 			data.track = dstTracks[min(i, dstTracks.size() - 1)];
-			data.branchIdx = dstBranchIdx[min(i, dstBranchIdx.size() - 1)];
+			data.branchIdx = dstBranchIdxs[min(i, dstBranchIdxs.size() - 1)];
 			data.sec = secs[min(i, secs.size() - 1)];
 			orgList.push_back(data);
 		}
@@ -784,7 +889,8 @@ namespace tau
 				//收集被修改的的轨道
 				if (a[i].track != nullptr)
 					modifyTrackMap[synther].insert(a[i].track);
-				else
+
+				if (a[i].instFragment->GetTrack() != nullptr)
 					modifyTrackMap[synther].insert(a[i].instFragment->GetTrack());
 			}
 			waitSem.wait();
@@ -871,6 +977,18 @@ namespace tau
 		orgList.clear();
 		dataGroup.clear();
 		modifyTrackMap.clear();
+
+
+		//如果是等待播放模式，将清空等待播放模式的数据
+		if (isWaitPlayMode) {
+			memset(onkey, 0, sizeof(int) * 128);
+			memset(needOnkey, 0, sizeof(int) * 128);
+			memset(needOffkey, 0, sizeof(int) * 128);
+			needOnKeyCount = 0;
+			needOffKeyCount = 0;
+			isWait = false;
+		}
+
 	}
 
 	//移动乐器片段到目标轨道的指定时间点

@@ -203,6 +203,14 @@ namespace tau
 			midiEditor->EnableChannel(channelIdx);
 	}
 
+	//设置轨道事件演奏方式
+	void MidiEditorSynther::SetTrackPlayType(Track* track, MidiEventPlayType playType)
+	{
+		if (midiEditor == nullptr)
+			return;
+
+		midiEditor->SetTrackPlayType(track, playType);
+	}
 
 	// 设置对应轨道的乐器
 	void MidiEditorSynther::SetVirInstrument(Track* track,

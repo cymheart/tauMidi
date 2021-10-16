@@ -282,6 +282,21 @@ namespace tau
 		NoMerge
 	};
 
+
+	/// <summary>
+	/// 弹奏方式
+	/// </summary>
+	enum MidiEventPlayType
+	{
+		//左手
+		LeftHand,
+		//右手
+		RightHand,
+		//背景
+		Background,
+		//自定
+		Custom
+	};
 }
 
 #endif

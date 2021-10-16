@@ -346,6 +346,28 @@ namespace tau
 		se->sem->set();
 	}
 
+
+	//设置轨道事件演奏方式
+	void MidiEditorSynther::SetTrackPlayTypeTask(Semaphore* waitSem, Track* track, MidiEventPlayType playType)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _SetTrackPlayTypeTask;
+		ev->value = playType;
+		ev->ptr = track;
+		ev->sem = waitSem;
+		PostTask(ev);
+
+	}
+
+	void MidiEditorSynther::_SetTrackPlayTypeTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.SetTrackPlayType((Track*)se->ptr, (MidiEventPlayType)se->value);
+		se->sem->set();
+	}
+
 	// 设置对应轨道的乐器
 	void MidiEditorSynther::SetVirInstrumentTask(
 		Semaphore* waitSem, Track* track,

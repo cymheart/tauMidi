@@ -126,6 +126,9 @@ namespace tau
 		void DisableChannel(int channelIdx);
 		void EnableChannel(int channelIdx);
 
+		//设置轨道事件演奏方式
+		void SetTrackPlayType(Track* track, MidiEventPlayType playType);
+
 		//设置轨道乐器
 		void SetVirInstrument(Track* track, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 

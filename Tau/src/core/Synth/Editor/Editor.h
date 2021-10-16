@@ -113,6 +113,9 @@ namespace tau
 		// 启用播放指定编号通道
 		void EnableChannel(int channelIdx);
 
+		//设置轨道事件演奏方式
+		void SetTrackPlayType(int trackIdx, MidiEventPlayType playType);
+
 		// 设置对应轨道的乐器
 		void SetVirInstrument(int trackIdx, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
@@ -135,10 +138,35 @@ namespace tau
 		//删除轨道
 		void DeleteTracks(vector<Track*>& tracks);
 
+
+		void SetSelectInstFragMode(SelectInstFragMode mode)
+		{
+			selectInstFragMode = mode;
+		}
+
+		void SelectInstFragment(int trackIdx, int branchIdx, int instFragIdx);
+		void UnSelectInstFragment(int trackIdx, int branchIdx, int instFragIdx);
+
+		void UnSelectAllInstFragment()
+		{
+			selectedInstFrags.clear();
+		}
+
+		InstFragment* GetInstFragment(int trackIdx, int branchIdx, int instFragIdx);
+
+		//移动乐器片段到目标轨道分径的指定时间点
+		void MoveSelectedInstFragment(int dstTrack, int dstBranchIdx, float sec);
+
+		//移动乐器片段到目标轨道分径的指定时间点
+		void MoveSelectedInstFragments(vector<int>& dstTracks, vector<int>& dstBranchIdx, vector<float>& secs);
+
+
+	private:
+
 		//移动乐器片段到目标轨道分径的指定时间点
 		void MoveInstFragments(
 			vector<InstFragment*>& instFragments,
-			vector<Track*>& dstTracks, vector<int>& dstBranchIdx, vector<float>& secs);
+			vector<Track*>& dstTracks, vector<int>& dstBranchIdxs, vector<float>& secs);
 
 		//移动乐器片段到目标轨道的指定时间点
 		void MoveInstFragments(vector<InstFragment*>& instFragments, vector<Track*>& dstTracks, vector<float>& secs);
@@ -151,9 +179,6 @@ namespace tau
 
 		//移动乐器片段到指定时间点
 		void MoveInstFragment(InstFragment* instFragment, float sec);
-
-
-	private:
 
 		//需要按键信号
 		void NeedOnKeySignal(int key);
@@ -206,6 +231,11 @@ namespace tau
 
 		int needOffkey[128] = { 0 };
 		int needOffKeyCount = 0;
+
+
+		SelectInstFragMode selectInstFragMode = SelectInstFragMode::SingleSelect;
+		vector<SelectInstFragmentInfo> selectedInstFrags;
+
 
 		//
 		list<InstFragmentToTrackInfo> orgList;

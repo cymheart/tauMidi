@@ -13,6 +13,7 @@ namespace tau
 	{
 	public:
 		MidiEventType type = MidiEventType::Unknown;
+		MidiEventPlayType playType = MidiEventPlayType::Background;
 
 		/// <summary>
 		/// 起始tick
@@ -29,6 +30,8 @@ namespace tau
 		/// 事件相关通道
 		/// </summary>
 		int channel = -1;
+
+
 
 	};
 

@@ -19,6 +19,12 @@ namespace tau
 		PAUSE
 	};
 
+	//instFragMode
+	enum class SelectInstFragMode
+	{
+		SingleSelect,
+		MultiSelect,
+	};
 
 	struct InstFragmentToTrackInfo
 	{
@@ -26,6 +32,13 @@ namespace tau
 		Track* track;
 		int branchIdx;
 		float sec;
+	};
+
+	struct SelectInstFragmentInfo
+	{
+		int trackIdx;
+		int branchIdx;
+		int instFragmentIdx;
 	};
 
 }

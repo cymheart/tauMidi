@@ -73,9 +73,6 @@ namespace tau
 	}
 
 
-
-
-
 	//移除乐器片段
 	void MidiEditor::RemoveInstFragment(InstFragment* instFragment)
 	{
@@ -352,6 +349,15 @@ namespace tau
 		}
 	}
 
+	//设置轨道事件演奏方式
+	void MidiEditor::SetTrackPlayType(Track* track, MidiEventPlayType playType)
+	{
+		if (track == nullptr)
+			return;
+
+		track->playType = playType;
+	}
+
 
 	//设置播放速率(相对于正常播放速率1.0的倍率)
 	void MidiEditor::SetSpeed(float speed_)
@@ -409,6 +415,15 @@ namespace tau
 
 		for (int i = 0; i < trackList.size(); i++)
 		{
+			//重新处理当前时间点在事件处理时间中间时，可以重新启用此时间
+			vector<MidiEvent*>& evs = trackList[i]->reProcessMidiEvents;
+			if (!evs.empty()) {
+				for (int j = 0; j < evs.size(); j++)
+					ProcessEvent(evs[j], trackList[i], false);
+				evs.clear();
+			}
+
+			//
 			trackEndCount += RunTrack(trackList[i], isDirectGoto);
 		}
 
@@ -431,12 +446,12 @@ namespace tau
 		if (track->isEnded)
 			return 1;
 
-		auto& instFragments = track->instFragments;
-		for (int j = 0; j < instFragments.size(); j++)
+		auto& instFragmentBranchs = track->instFragmentBranchs;
+		for (int j = 0; j < instFragmentBranchs.size(); j++)
 		{
-			orgInstFragCount += instFragments[j]->size();
-			list<InstFragment*>::iterator frag_it = instFragments[j]->begin();
-			list<InstFragment*>::iterator frag_end = instFragments[j]->end();
+			orgInstFragCount += instFragmentBranchs[j]->size();
+			list<InstFragment*>::iterator frag_it = instFragmentBranchs[j]->begin();
+			list<InstFragment*>::iterator frag_end = instFragmentBranchs[j]->end();
 			for (; frag_it != frag_end; frag_it++)
 			{
 				instFrag = *frag_it;
@@ -451,6 +466,14 @@ namespace tau
 				for (; it != end; it++)
 				{
 					ev = *it;
+
+					//重新处理当前时间点在事件处理时间中间时，可以重新启用此事件
+					if (isDirectGoto &&
+						ev->startSec < curtPlaySec &&
+						ev->endSec > curtPlaySec)
+					{
+						track->reProcessMidiEvents.push_back(ev);
+					}
 
 					//
 					if (ev->startSec > curtPlaySec)
@@ -501,10 +524,16 @@ namespace tau
 
 			NoteOnEvent* noteOnEv = (NoteOnEvent*)midEv;
 
-			if (!isWaitPlayMode)
+			if (!isWaitPlayMode ||
+				track->playType == MidiEventPlayType::Background ||
+				(track->playType == MidiEventPlayType::Custom &&
+					midEv->playType != MidiEventPlayType::Background))
+			{
 				virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1);
-			else
+			}
+			else {
 				editor->NeedOnKeySignal(noteOnEv->note);
+			}
 		}
 		break;
 
@@ -518,10 +547,16 @@ namespace tau
 			if (noteOffEv->noteOnEvent == nullptr)
 				break;
 
-			if (!isWaitPlayMode)
+			if (!isWaitPlayMode ||
+				track->playType == MidiEventPlayType::Background ||
+				(track->playType == MidiEventPlayType::Custom &&
+					midEv->playType != MidiEventPlayType::Background))
+			{
 				virInst->OffKey(noteOffEv->note, (float)noteOffEv->velocity);
-			else
+			}
+			else {
 				editor->NeedOffKeySignal(noteOffEv->note);
+			}
 		}
 		break;
 

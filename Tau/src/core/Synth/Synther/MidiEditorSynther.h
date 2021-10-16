@@ -77,6 +77,9 @@ namespace tau
 		// 启用播放指定编号通道
 		void EnableChannelTask(Semaphore* waitSem, int channelIdx);
 
+		//设置轨道事件演奏方式
+		void SetTrackPlayTypeTask(Semaphore* waitSem, Track* track, MidiEventPlayType playType);
+
 		// 设置对应轨道的乐器
 		void SetVirInstrumentTask(
 			Semaphore* waitSem, Track* track,
@@ -112,6 +115,7 @@ namespace tau
 		static void _EnableTrackTask(Task* ev);
 		static void _DisableChannelTask(Task* ev);
 		static void _EnableChannelTask(Task* ev);
+		static void _SetTrackPlayTypeTask(Task* ev);
 		static void _SetVirInstrumentTask(Task* ev);
 		static void _SetBeatVirInstrumentTask(Task* ev);
 		static void _SetMarkerListTask(Task* ev);
@@ -175,6 +179,8 @@ namespace tau
 		// 启用播放指定编号Midi文件通道
 		void EnableChannel(int channelIdx);
 
+		//设置轨道事件演奏方式
+		void SetTrackPlayType(Track* track, MidiEventPlayType playType);
 
 		// 设置midi对应轨道通道的乐器
 		void SetVirInstrument(Track* track,

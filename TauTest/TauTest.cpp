@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 	Tau* tau = new Tau();
 
 	tau->SetFrameSampleCount(512);
-	tau->SetSampleProcessRate(44100);
+	tau->SetSampleProcessRate(48000);
 	tau->SetChildFrameSampleCount(64);
 	tau->SetLimitRegionSounderCount(500);
 	tau->SetLimitOnKeySpeed(600);
@@ -253,45 +253,45 @@ int main(int argc, char* argv[])
 	//{
 		//tau->RemoveMidi();
 
-	string path = midiPath + "venture.mid"; // midiPath + "BA.DECIMATIONMODE.mid.OR.mid"; // midiPath + "venture.mid";   //midiPath + "tau2.5.9.mid"; // midiPath + "笑傲江湖.mid";
+	string path = midiPath + "笑红尘-陈淑桦.mid"; // midiPath + "BA.DECIMATIONMODE.mid.OR.mid"; // midiPath + "venture.mid";   //midiPath + "tau2.5.9.mid"; // midiPath + "笑傲江湖.mid";
 	tau->Load(path);
 	tau->Play();
 
-	Sleep(6000);
+	//Sleep(6000);
 
-	//等待继续功能测试
-	tau->Wait();
-	Sleep(3000);
-	tau->Continue();
-	Sleep(2000);
-	tau->Wait();
-	Sleep(3000);
-	tau->Continue();
+	////等待继续功能测试
+	//tau->Wait();
+	//Sleep(3000);
+	//tau->Continue();
+	//Sleep(2000);
+	//tau->Wait();
+	//Sleep(3000);
+	//tau->Continue();
 
-	//
-	Sleep(1000);
-	//步进播放模式
-	tau->EnterStepPlayMode();
-	float t = 6;
-	for (int i = 0; i < 50; i++)
-	{
-		Sleep(200);
-		t += 0.2;
+	////
+	//Sleep(1000);
+	////步进播放模式
+	//tau->EnterStepPlayMode();
+	//float t = 6;
+	//for (int i = 0; i < 50; i++)
+	//{
+	//	Sleep(200);
+	//	t += 0.2;
 
-		tau->Runto(t);
-	}
+	//	tau->Runto(t);
+	//}
 
-	tau->Runto(0);
-	t = 0;
-	for (int i = 0; i < 50; i++)
-	{
-		Sleep(200);
-		t += 0.2;
+	//tau->Runto(0);
+	//t = 0;
+	//for (int i = 0; i < 50; i++)
+	//{
+	//	Sleep(200);
+	//	t += 0.2;
 
-		tau->Runto(t);
-	}
+	//	tau->Runto(t);
+	//}
 
-	tau->LeaveStepPlayMode();
+	//tau->LeaveStepPlayMode();
 
 
 	//Sleep(1000);

@@ -6,6 +6,7 @@
 #include <Audio/Audio.h>
 #include"FX/TauEffect.h"
 #include"FX/EffectList.h"
+#include"Editor/EditorTypes.h"
 using namespace tauFX;
 
 namespace tau
@@ -267,6 +268,9 @@ namespace tau
 		//载入
 		void Load(string& midiFilePath);
 
+		//新建轨道
+		void NewTracks(int count);
+
 		//播放
 		void Play();
 
@@ -331,6 +335,20 @@ namespace tau
 
 		// 启用播放指定编号通道
 		void EnableChannel(int channelIdx);
+
+		void SetSelectInstFragMode(SelectInstFragMode mode);
+		void SelectInstFragment(int trackIdx, int branchIdx, int instFragIdx);
+		void UnSelectInstFragment(int trackIdx, int branchIdx, int instFragIdx);
+		void UnSelectAllInstFragment();
+
+		//移动乐器片段到目标轨道分径的指定时间点
+		void MoveSelectedInstFragment(int dstTrack, int dstBranchIdx, float sec);
+
+		//移动乐器片段到目标轨道分径的指定时间点
+		void MoveSelectedInstFragments(vector<int>& dstTracks, vector<int>& dstBranchIdx, vector<float>& secs);
+
+		//设置轨道事件演奏方式
+		void SetTrackPlayType(int trackIdx, MidiEventPlayType playType);
 
 		// 设置乐器Bend值
 		void SetVirInstrumentPitchBend(VirInstrument* virInst, int value);

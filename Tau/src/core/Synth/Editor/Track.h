@@ -3,6 +3,7 @@
 
 #include "Synth/TauTypes.h"
 #include "InstFragment.h"
+#include"Midi/MidiTypes.h"
 
 namespace tau
 {
@@ -42,14 +43,19 @@ namespace tau
 		void AddInstFragment(InstFragment* instFragment, int branchIdx = 0);
 		void RemoveInstFragment(InstFragment* instFragment);
 
-		const vector<list<InstFragment*>*>& GetInstFragments()
+		const vector<list<InstFragment*>*>& GetInstFragmentBranchs()
 		{
-			return instFragments;
+			return instFragmentBranchs;
 		}
+
+		InstFragment* GetInstFragment(int branchIdx, int instFragIdx);
 
 	protected:
 
 		MidiEditor* midiEditor = nullptr;
+
+		//弹奏方式
+		MidiEventPlayType playType = MidiEventPlayType::Background;
 
 		//是否播放结束
 		bool isEnded = false;
@@ -60,14 +66,16 @@ namespace tau
 		// 通道
 		Channel* channel = nullptr;
 
-		vector<list<InstFragment*>*> instFragments;
+		vector<list<InstFragment*>*> instFragmentBranchs;
 
 		//结束时间点
 		float endSec = 0;
 
-		//
 
 	private:
+
+		//重新处理当前时间点在事件处理时间中间时，可以重新启用此时间
+		vector<MidiEvent*> reProcessMidiEvents;
 		vector<InstFragment*> _updateInstFrags;
 		bool _isUpdatePlayPos = false;
 		bool _isUpdatePlayPrevPos = false;
