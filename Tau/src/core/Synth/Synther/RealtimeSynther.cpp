@@ -217,8 +217,6 @@ namespace tau
 
 		//混合所有乐器中的样本到synther的声道buffer中
 		MixVirInstsSamplesToChannelBuffer();
-
-		//
 		CombineSynthersFrameBufs();
 	}
 

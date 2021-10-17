@@ -57,9 +57,6 @@ namespace tau
 		//弹奏方式
 		MidiEventPlayType playType = MidiEventPlayType::Background;
 
-		//是否播放结束
-		bool isEnded = false;
-
 		//是否禁止播放
 		bool isDisablePlay = false;
 

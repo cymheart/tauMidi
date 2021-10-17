@@ -32,8 +32,6 @@ namespace tau
 
 	void Track::Clear()
 	{
-		isEnded = false;
-		endSec = 0;
 		reProcessMidiEvents.clear();
 
 		//

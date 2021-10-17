@@ -1032,8 +1032,8 @@ namespace tau
 			if (abs(fadeReverbDepthInfo.curtDepth - regionReverb->GetEffectMix()) > 0.001f)
 			{
 				regionReverb->SetRoomSize(0.8f);
-				regionReverb->SetWidth(0.3f);
-				regionReverb->SetDamping(0.5f);
+				regionReverb->SetWidth(0.5f);
+				regionReverb->SetDamping(0.3f);
 				regionReverb->SetEffectMix(fadeReverbDepthInfo.curtDepth);
 			}
 		}

@@ -11,8 +11,6 @@ import cymheart.tau.midi.MidiEvent;
 
 public class Track {
 
-    //是否播放结束
-    protected boolean isEnded = false;
 
     //是否禁止播放
     protected boolean isDisablePlay = false;
@@ -39,8 +37,6 @@ public class Track {
 
     public void Clear()
     {
-        isEnded = false;
-        endSec = 0;
         reProcessMidiEvents.clear();
 
         //

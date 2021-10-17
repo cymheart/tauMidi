@@ -8,9 +8,6 @@ import cymheart.tau.midi.MidiEvent;
 
 public class InstFragment {
 
-    //是否播放结束
-    protected boolean isEnded = false;
-
     protected int startTick = 0;
     protected double startSec = 0;
     protected double endSec = 0;
@@ -30,7 +27,6 @@ public class InstFragment {
 
     void Clear()
     {
-        isEnded = false;
         eventOffsetIter = midiEvents.listIterator();
         eventFirstIter = midiEvents.listIterator();
     }

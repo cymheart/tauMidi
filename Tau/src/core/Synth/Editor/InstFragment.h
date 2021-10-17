@@ -60,10 +60,6 @@ namespace tau
 
 	private:
 
-
-		//是否播放结束
-		bool isEnded = false;
-
 		uint32_t startTick = 0;
 		double startSec = 0;
 		double endSec = 0;

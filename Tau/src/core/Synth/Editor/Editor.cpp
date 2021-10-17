@@ -51,7 +51,7 @@ namespace tau
 		DEL(midiFile);
 
 		//打印工程信息
-		//PrintProjectInfo();
+		PrintProjectInfo();
 	}
 
 	void Editor::PrintProjectInfo()
@@ -82,11 +82,16 @@ namespace tau
 					if (tau->midiEditorSynthers[i]->IsOpened())
 						tau->midiEditorSynthers[i]->RemoveTask(&waitSem);
 				}
+
 				waitSem.wait();
 			}
 		}
 
 		DelEmptyTrackRealtimeSynther();
+
+		//等所有发音结束后删除轨道事件
+		for (int i = 0; i < tracks.size(); i++)
+			DEL(tracks[i]);
 
 		computedPerSyntherLimitTrackCount = tau->perSyntherLimitTrackCount;
 		tracks.clear();

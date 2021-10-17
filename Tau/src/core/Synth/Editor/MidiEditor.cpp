@@ -30,8 +30,7 @@ namespace tau
 
 	MidiEditor::~MidiEditor()
 	{
-		for (int i = 0; i < trackList.size(); i++)
-			DEL(trackList[i]);
+		midiMarkerList.Clear();
 	}
 
 	//设置标记
@@ -409,12 +408,17 @@ namespace tau
 			return;
 
 		ProcessCore(sec);
+
+		//检测播放是否结束
+		if (curtPlaySec >= endSec) {
+			printf("当前轨道midi时间处理结束! \n");
+			Pause();
+		}
 	}
 
 
 	void MidiEditor::ProcessCore(double sec, bool isDirectGoto)
 	{
-		int trackEndCount = 0;
 		curtPlaySec = curtPlaySec + sec * speed;
 
 		for (int i = 0; i < trackList.size(); i++)
@@ -428,42 +432,24 @@ namespace tau
 			}
 
 			//
-			trackEndCount += ProcessTrack(trackList[i], isDirectGoto);
-		}
-
-		//检测播放是否结束
-		if (trackEndCount == trackList.size())
-		{
-			printf("当前轨道midi时间处理结束! \n");
-			Pause();
+			ProcessTrack(trackList[i], isDirectGoto);
 		}
 	}
 
-	int MidiEditor::ProcessTrack(Track* track, bool isDirectGoto)
+	void MidiEditor::ProcessTrack(Track* track, bool isDirectGoto)
 	{
 		list<MidiEvent*>* eventList;
 		InstFragment* instFrag;
 		MidiEvent* ev;
-		int orgInstFragCount = 0;
-		int instFragCount = 0;
-
-		if (track->isEnded)
-			return 1;
 
 		auto& instFragmentBranchs = track->instFragmentBranchs;
 		for (int j = 0; j < instFragmentBranchs.size(); j++)
 		{
-			orgInstFragCount += instFragmentBranchs[j]->size();
 			list<InstFragment*>::iterator frag_it = instFragmentBranchs[j]->begin();
 			list<InstFragment*>::iterator frag_end = instFragmentBranchs[j]->end();
 			for (; frag_it != frag_end; frag_it++)
 			{
 				instFrag = *frag_it;
-				if (instFrag->isEnded) {
-					instFragCount++;
-					continue;
-				}
-
 				eventList = &(instFrag->midiEvents);
 				list<MidiEvent*>::iterator it = instFrag->eventOffsetIter;
 				list<MidiEvent*>::iterator end = eventList->end();
@@ -481,25 +467,18 @@ namespace tau
 
 					//
 					if (ev->startSec > curtPlaySec)
-					{
-						instFrag->eventOffsetIter = it;
 						break;
-					}
 
 					ProcessEvent(ev, track, isDirectGoto);
 				}
 
-				if (it == end)
-				{
-					instFrag->isEnded = true;
-				}
+				if (&(instFrag->eventOffsetIter) != &it)
+					instFrag->eventOffsetIter = it;
 			}
 		}
 
-		if (instFragCount == orgInstFragCount)
+		if (curtPlaySec >= endSec)
 		{
-			track->isEnded = true;
-
 			//轨道播发结束后，清除相关设置
 			Channel* channel = track->GetChannel();
 			if (channel != nullptr) {
@@ -507,9 +486,8 @@ namespace tau
 				midiSynther->ModulationVirInstParams(channel);
 			}
 		}
-
-		return 0;
 	}
+
 
 	//处理轨道事件
 	void MidiEditor::ProcessEvent(MidiEvent* midEv, Track* track, bool isDirectGoto)
@@ -573,7 +551,7 @@ namespace tau
 				return;
 			}
 
-			//	virInst->SetProgramNum(ev->value);
+			virInst->SetProgramNum(ev->value);
 		}
 		break;
 

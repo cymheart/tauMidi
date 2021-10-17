@@ -135,12 +135,10 @@ namespace tau
 		//设置打击乐器
 		void SetBeatVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
-
-
 	private:
 
 		void ProcessCore(double sec, bool isDirectGoto = false);
-		int ProcessTrack(Track* track, bool isDirectGoto);
+		void ProcessTrack(Track* track, bool isDirectGoto);
 
 		//处理轨道事件
 		void ProcessEvent(MidiEvent* midEv, Track* track, bool isDirectGoto);

@@ -108,7 +108,12 @@ public class Editor {
     public void Pause()
     {
         ndkPause(ndkEditor);
+        _Pause();
+    }
 
+    //暂停播放
+    public void _Pause()
+    {
         if (state != PLAY)
             return;
 
@@ -213,12 +218,14 @@ public class Editor {
             return;
 
         ProcessCore(sec, false);
+
+        if(curtPlaySec >= endSec)
+            _Pause();
     }
 
 
     protected void ProcessCore(double sec, boolean isDirectGoto)
     {
-        int trackEndCount = 0;
         curtProcessMidiEvent.clear();
         curtPlaySec += sec;
 
@@ -235,43 +242,23 @@ public class Editor {
                 evs.clear();
             }
 
-            trackEndCount += ProcessTrack(track, isDirectGoto);
-        }
-
-        //检测播放是否结束
-        if (trackEndCount == tracks.size())
-        {
-            Pause();
+            ProcessTrack(track, isDirectGoto);
         }
     }
 
-    int ProcessTrack(Track track, boolean isDirectGoto)
+    void ProcessTrack(Track track, boolean isDirectGoto)
     {
-        InstFragment instFrag;
         MidiEvent ev;
-        int orgInstFragCount = 0;
-        int instFragCount;
-
-        if (track.isEnded)
-           return 1;
-
-        instFragCount = 0;
         List<LinkedList<InstFragment>> instFragments = track.instFragments;
         LinkedList<InstFragment> instFragmentList;
         for (int j = 0; j < instFragments.size(); j++)
         {
             instFragmentList = instFragments.get(j);
-            orgInstFragCount += instFragmentList.size();
-
-            for (InstFragment instFragment : instFragmentList) {
-                instFrag = instFragment;
-                if (instFrag.isEnded) {
-                    instFragCount++;
-                    continue;
-                }
+            for (InstFragment instFrag : instFragmentList) {
 
                 ListIterator<MidiEvent> it = instFrag.eventOffsetIter;
-                while (it.hasNext()) {
+                while (it.hasNext())
+                {
                     ev = it.next();
 
                     if(ev == null)
@@ -286,26 +273,15 @@ public class Editor {
                     }
 
                     //
-                    if (ev.startSec > curtPlaySec) {
-                        instFrag.eventOffsetIter = it;
+                    if (ev.startSec > curtPlaySec)
                         break;
-                    }
 
                     ProcessEvent(ev, track, isDirectGoto);
                 }
 
-                if (!it.hasNext()) {
-                    instFrag.isEnded = true;
-                }
+                instFrag.eventOffsetIter = it;
             }
         }
-
-        if (instFragCount == orgInstFragCount)
-        {
-            track.isEnded = true;
-        }
-
-        return 0;
     }
 
 

@@ -1,4 +1,5 @@
 #include"InstFragment.h"
+#include"Midi/MidiEvent.h"
 
 namespace tau
 {
@@ -22,7 +23,6 @@ namespace tau
 
 	void InstFragment::Clear()
 	{
-		isEnded = false;
 		eventOffsetIter = midiEvents.begin();
 	}
 

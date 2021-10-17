@@ -127,7 +127,8 @@ public class MainActivity extends AppCompatActivity {
         tau.SetFrameSampleCount(512);
         tau.SetChannelCount(2);
         tau.SetSoundFont(sf);
-       // tau.SetEnableAllVirInstEffects(false);
+        tau.SetUnitProcessMidiTrackCount(100);
+        tau.SetEnableAllVirInstEffects(false);
         tau.Open();
 
         ButtonListener b = new ButtonListener();
@@ -167,13 +168,13 @@ public class MainActivity extends AppCompatActivity {
                                        // tau.OnKey(60, 127, inst);
 
 
-                                        for(int i=0; i<10; i++) {
-                                            tau.Load("/storage/emulated/0/爱江山更爱美人-李丽芬.mid");
+                                        //for(int i=0; i<10; i++) {
+                                            tau.Load("/storage/emulated/0/tau2.5.9.mid");
                                             tau.Play();
-                                            Thread.sleep(6000);
-                                            tau.Stop();
+                                         //   Thread.sleep(6000);
+                                          //  tau.Stop();
                                            // Thread.sleep(1000);
-                                        }
+                                       // }
 
 
 //                                        int s = tau.GetMidiState();
