@@ -192,7 +192,7 @@ namespace dsignal
 	{
 		float pos;
 		if (isUseLogAxis)
-			pos = (freq - plotFreqAxisStart) / plotFreqAxisWidth * plotAreaWidth;
+			pos = (log10(freq) - freqAxisStartLogPos) / freqAxisLogWidth * plotAreaWidth;
 		else
 			pos = (freq - plotFreqAxisStart) / plotFreqAxisWidth * plotAreaWidth;
 		return pos;
