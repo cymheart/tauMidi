@@ -26,7 +26,7 @@ namespace tau
 			return channel;
 		}
 
-		inline float GetEndSec()
+		inline double GetEndSec()
 		{
 			return endSec;
 		}
@@ -69,7 +69,7 @@ namespace tau
 		vector<list<InstFragment*>*> instFragmentBranchs;
 
 		//结束时间点
-		float endSec = 0;
+		double endSec = 0;
 
 
 	private:

@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.library'
     //id 'com.android.application'
-    id 'com.google.protobuf'
+   // id 'com.google.protobuf'
 }
 
 android {
@@ -71,17 +71,17 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    sourceSets {
-        main {
-            java {
-                srcDir 'src/main/java'
-            }
-            proto {
-                srcDir 'src/main/proto' //指定.proto文件路径
-                include '**/*.proto'
-            }
-        }
-    }
+//    sourceSets {
+//        main {
+//            java {
+//                srcDir 'src/main/java'
+//            }
+//            proto {
+//                srcDir 'src/main/proto' //指定.proto文件路径
+//                include '**/*.proto'
+//            }
+//        }
+//    }
 
     task makeJar(type: Copy) {
         //删除存在的
@@ -103,24 +103,24 @@ android {
 
 }
 
-protobuf {
-    protoc {
-        artifact = 'com.google.protobuf:protoc:3.18.1' // 也可以配置本地编译器路径
-    }
-
-    generateProtoTasks {
-        all().each { task ->
-            task.builtins {
-                remove java
-            }
-            task.builtins {
-                java {}// 生产java源码
-            }
-        }
-    }
-
-   // generatedFilesBaseDir = "$projectDir/src/generated"
-}
+//protobuf {
+//    protoc {
+//        artifact = 'com.google.protobuf:protoc:3.18.1' // 也可以配置本地编译器路径
+//    }
+//
+//    generateProtoTasks {
+//        all().each { task ->
+//            task.builtins {
+//                remove java
+//            }
+//            task.builtins {
+//                java {}// 生产java源码
+//            }
+//        }
+//    }
+//
+//   // generatedFilesBaseDir = "$projectDir/src/generated"
+//}
 
 
 
@@ -133,6 +133,6 @@ dependencies {
     implementation "io.reactivex.rxjava3:rxjava:3.0.4"
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
 
-    implementation 'com.google.protobuf:protobuf-java:3.18.1'
-    implementation 'com.google.protobuf:protoc:3.18.1'
+   // implementation 'com.google.protobuf:protobuf-java:3.18.1'
+   // implementation 'com.google.protobuf:protoc:3.18.1'
 }

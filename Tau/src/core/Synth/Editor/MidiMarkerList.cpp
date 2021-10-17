@@ -10,9 +10,7 @@ namespace tau
 
 	MidiMarkerList::~MidiMarkerList()
 	{
-		for (int i = 0; i < midiMarkers.size(); i++)
-			DEL(midiMarkers[i]);
-		midiMarkers.clear();
+		Clear();
 	}
 
 	void MidiMarkerList::Clear()

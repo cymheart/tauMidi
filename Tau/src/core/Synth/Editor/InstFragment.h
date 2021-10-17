@@ -25,9 +25,14 @@ namespace tau
 			return (int)startTick;
 		}
 
-		float GetStartSec()
+		double GetStartSec()
 		{
 			return startSec;
+		}
+
+		double GetEndSec()
+		{
+			return endSec;
 		}
 
 		Track* GetTrack()
@@ -60,8 +65,8 @@ namespace tau
 		bool isEnded = false;
 
 		uint32_t startTick = 0;
-		float startSec = 0;
-		float endSec = 0;
+		double startSec = 0;
+		double endSec = 0;
 
 		Track* track = nullptr;
 		int branchIdx = 0;

@@ -489,7 +489,7 @@ namespace tau
 		bool useCommonModulator = false;
 
 		//使用区域内部和声效果
-		bool useRegionInnerChorusEffect = true;
+		bool useRegionInnerChorusEffect = false;
 
 		//发声区域最大限制数量
 		int limitRegionSounderCount = 500;

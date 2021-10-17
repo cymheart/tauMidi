@@ -16,8 +16,8 @@ namespace tau {
 	{
 
 		biquad = new Iir::RBJ::LowPass;
-		//chorus[0] = new stk::Chorus();
-		//chorus[1] = new stk::Chorus();
+		chorus[0] = new daisysp::Chorus();
+		chorus[1] = new daisysp::Chorus();
 
 		//biquad = new Biquad;
 		modifyedGenList = new GeneratorList();
@@ -57,6 +57,8 @@ namespace tau {
 			DEL(envInfoLists[i]);
 		}
 
+		DEL(chorus[0]);
+		DEL(chorus[1]);
 	}
 
 	// 清理
@@ -177,18 +179,18 @@ namespace tau {
 	void RegionSounder::Init()
 	{
 		//
-		if (tau->UseRegionInnerChorusEffect())
+		/*if (tau->UseRegionInnerChorusEffect())
 		{
-			chorus[0].Init(tau->GetSampleProcessRate());
-			chorus[0].SetLfoDepth(1);
-			chorus[0].SetEffectMix(1);
-			chorus[0].SetDelayMs(8);
+			chorus[0]->Init(tau->GetSampleProcessRate());
+			chorus[0]->SetLfoDepth(1);
+			chorus[0]->SetEffectMix(1);
+			chorus[0]->SetDelayMs(8);
 
-			chorus[1].Init(tau->GetSampleProcessRate());
-			chorus[1].SetLfoDepth(1);
-			chorus[1].SetEffectMix(1);
-			chorus[1].SetDelayMs(8);
-		}
+			chorus[1]->Init(tau->GetSampleProcessRate());
+			chorus[1]->SetLfoDepth(1);
+			chorus[1]->SetEffectMix(1);
+			chorus[1]->SetDelayMs(8);
+		}*/
 
 		//
 		switch (tau->GetRenderQuality())
@@ -1191,10 +1193,10 @@ namespace tau {
 			{
 				for (int i = 0; i < tau->GetChildFrameSampleCount(); i++)
 				{
-					chorus[0].Process(0);
-					chorus[1].Process(0);
-					leftChannelSamples[i] = chorus[0].GetLeft() + chorus[1].GetLeft();
-					rightChannelSamples[i] = chorus[0].GetRight() + chorus[1].GetRight();
+					chorus[0]->Process(0);
+					chorus[1]->Process(0);
+					leftChannelSamples[i] = chorus[0]->GetLeft() + chorus[1]->GetLeft();
+					rightChannelSamples[i] = chorus[0]->GetRight() + chorus[1]->GetRight();
 				}
 
 				if (!IsEffectSoundStop())
@@ -1238,8 +1240,8 @@ namespace tau {
 			FadeParams();
 
 			atten_mul_vel = attenuation * velocity;
-			chorus[0].SetEffectMix(chorusDepth);
-			chorus[1].SetEffectMix(chorusDepth);
+			chorus[0]->SetEffectMix(chorusDepth);
+			chorus[1]->SetEffectMix(chorusDepth);
 
 
 			//重设低通滤波器
@@ -1364,10 +1366,10 @@ namespace tau {
 
 	void RegionSounder::ChorusProcessSample(int idx)
 	{
-		chorus[0].Process(leftChannelSamples[idx]);
-		chorus[1].Process(rightChannelSamples[idx]);
-		leftChannelSamples[idx] = chorus[0].GetLeft() + chorus[1].GetLeft();
-		rightChannelSamples[idx] = chorus[0].GetRight() + chorus[1].GetRight();
+		chorus[0]->Process(leftChannelSamples[idx]);
+		chorus[1]->Process(rightChannelSamples[idx]);
+		leftChannelSamples[idx] = chorus[0]->GetLeft() + chorus[1]->GetLeft();
+		rightChannelSamples[idx] = chorus[0]->GetRight() + chorus[1]->GetRight();
 
 	}
 

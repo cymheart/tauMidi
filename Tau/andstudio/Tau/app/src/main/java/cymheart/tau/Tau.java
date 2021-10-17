@@ -153,13 +153,15 @@ public class Tau
     }
 
 
-    public void Load(String midifile, boolean isShowTips)
+    public void Load(String midifile)
     {
         editor.Load(midifile);
     }
 
     public void Play()
     {
+        editor.Play();
+
 //        //创建对象，及属性赋值
 //        LoginInfo.Login.Builder builder = LoginInfo.Login.newBuilder();
 //
@@ -182,21 +184,22 @@ public class Tau
 
     public void Pause()
     {
-
+        editor.Pause();
     }
 
     public void Stop()
     {
-
+        editor.Stop();
     }
 
     public void Remove()
     {
-
+        editor.Remove();
     }
 
-    public void Goto(float sec)
+    public void Goto(double sec)
     {
+        editor.Goto(sec);
     }
 
     public int GetState()
@@ -207,6 +210,7 @@ public class Tau
     // 禁止播放指定编号Midi文件的轨道
     public void DisableTrack(int trackIdx)
     {
+
     }
 
     // 禁止播放Midi的所有轨道

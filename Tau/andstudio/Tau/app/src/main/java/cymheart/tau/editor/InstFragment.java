@@ -12,7 +12,8 @@ public class InstFragment {
     protected boolean isEnded = false;
 
     protected int startTick = 0;
-    protected float startSec = 0;
+    protected double startSec = 0;
+    protected double endSec = 0;
 
     protected Track track = null;
     protected int branchIdx = 0;

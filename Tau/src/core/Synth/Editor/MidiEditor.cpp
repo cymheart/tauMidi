@@ -174,7 +174,7 @@ namespace tau
 				midiSynther->OffVirInstrumentAllKeys(track->GetChannel());
 
 			track->Clear();
-			RunTrack(track, true);
+			ProcessTrack(track, true);
 		}
 
 		track->_isUpdatePlayPos = false;
@@ -202,6 +202,7 @@ namespace tau
 
 
 		if (state == EditorState::STOP) {
+			curtPlaySec = 0;
 			for (int i = 0; i < trackList.size(); i++)
 				trackList[i]->Clear();
 		}
@@ -234,6 +235,7 @@ namespace tau
 			trackList[i]->Clear();
 		}
 
+		curtPlaySec = 0;
 		state = EditorState::STOP;
 	}
 
@@ -246,6 +248,7 @@ namespace tau
 			trackList[i]->Clear();
 		}
 
+		curtPlaySec = 0;
 		state = EditorState::STOP;
 	}
 
@@ -253,13 +256,14 @@ namespace tau
 	//移动到指定时间点
 	void MidiEditor::Runto(double sec)
 	{
+		//当状态不是处于播放状态时，可以直接使用goto到目标位置（使用goto会关闭当前发音）
 		if (state != EditorState::PLAY || !editor->isStepPlayMode) {
 			Goto(sec);
 			return;
 		}
 
 		if (sec >= curtPlaySec) {
-			Run((sec - curtPlaySec) / speed, true);
+			Process((sec - curtPlaySec) / speed, true);
 		}
 		else {
 			Goto(sec);
@@ -276,7 +280,7 @@ namespace tau
 		}
 
 		curtPlaySec = 0;
-		RunCore(sec / speed, true);
+		ProcessCore(sec / speed, true);
 	}
 
 
@@ -392,8 +396,8 @@ namespace tau
 	}
 
 
-	//运行
-	void MidiEditor::Run(double sec, bool isStepOp)
+	//处理
+	void MidiEditor::Process(double sec, bool isStepOp)
 	{
 		if (editor->isStepPlayMode && !isStepOp)
 			return;
@@ -404,11 +408,11 @@ namespace tau
 		if (state != EditorState::PLAY)
 			return;
 
-		RunCore(sec);
+		ProcessCore(sec);
 	}
 
 
-	void MidiEditor::RunCore(double sec, bool isDirectGoto)
+	void MidiEditor::ProcessCore(double sec, bool isDirectGoto)
 	{
 		int trackEndCount = 0;
 		curtPlaySec = curtPlaySec + sec * speed;
@@ -419,12 +423,12 @@ namespace tau
 			vector<MidiEvent*>& evs = trackList[i]->reProcessMidiEvents;
 			if (!evs.empty()) {
 				for (int j = 0; j < evs.size(); j++)
-					ProcessEvent(evs[j], trackList[i], false);
+					ProcessEvent(evs[j], trackList[i], isDirectGoto);
 				evs.clear();
 			}
 
 			//
-			trackEndCount += RunTrack(trackList[i], isDirectGoto);
+			trackEndCount += ProcessTrack(trackList[i], isDirectGoto);
 		}
 
 		//检测播放是否结束
@@ -435,7 +439,7 @@ namespace tau
 		}
 	}
 
-	int MidiEditor::RunTrack(Track* track, bool isDirectGoto)
+	int MidiEditor::ProcessTrack(Track* track, bool isDirectGoto)
 	{
 		list<MidiEvent*>* eventList;
 		InstFragment* instFrag;
@@ -569,7 +573,7 @@ namespace tau
 				return;
 			}
 
-			virInst->SetProgramNum(ev->value);
+			//	virInst->SetProgramNum(ev->value);
 		}
 		break;
 

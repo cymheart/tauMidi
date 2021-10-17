@@ -348,12 +348,10 @@ namespace tau
 		Sample* sample = nullptr;
 		float* input = nullptr;
 
-		daisysp::Chorus chorus[2];
-
-		//stk::Chorus* chorus[2];
+		daisysp::Chorus* chorus[2];
 
 		Iir::RBJ::LowPass* biquad = nullptr;
-		double biquadSampleRate = 44100;
+		double biquadSampleRate = 48000;
 		double biquadCutoffFrequency = 0;
 		double biquadQ = ONESQRT2;
 

@@ -18,6 +18,10 @@ namespace tau
 	{
 		this->tau = tau;
 		computedPerSyntherLimitTrackCount = tau->perSyntherLimitTrackCount;
+
+		//
+		isStepPlayMode = false;
+		isWait = false;
 	}
 
 	Editor::~Editor()
@@ -47,7 +51,7 @@ namespace tau
 		DEL(midiFile);
 
 		//打印工程信息
-		PrintProjectInfo();
+		//PrintProjectInfo();
 	}
 
 	void Editor::PrintProjectInfo()

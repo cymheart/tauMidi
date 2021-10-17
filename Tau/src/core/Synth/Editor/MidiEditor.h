@@ -118,7 +118,7 @@ namespace tau
 		void ComputeEndSec();
 
 		//运行
-		void Run(double sec, bool isStepOp = false);
+		void Process(double sec, bool isStepOp = false);
 		void DisableTrack(Track* track);
 		void DisableAllTrack();
 		void EnableTrack(Track* track);
@@ -139,8 +139,8 @@ namespace tau
 
 	private:
 
-		void RunCore(double sec, bool isDirectGoto = false);
-		int RunTrack(Track* track, bool isDirectGoto);
+		void ProcessCore(double sec, bool isDirectGoto = false);
+		int ProcessTrack(Track* track, bool isDirectGoto);
 
 		//处理轨道事件
 		void ProcessEvent(MidiEvent* midEv, Track* track, bool isDirectGoto);

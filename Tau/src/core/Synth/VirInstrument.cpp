@@ -838,7 +838,7 @@ namespace tau
 				if (keySounder)
 					keySounder->SetRealtimeControlType(keyEvent.isRealTime);
 				//
-				PrintOnKeyInfo(keyEvent.key, keyEvent.velocity, keyEvent.isRealTime);
+				//PrintOnKeyInfo(keyEvent.key, keyEvent.velocity, keyEvent.isRealTime);
 			}
 			else
 			{
@@ -1032,7 +1032,7 @@ namespace tau
 			if (abs(fadeReverbDepthInfo.curtDepth - regionReverb->GetEffectMix()) > 0.001f)
 			{
 				regionReverb->SetRoomSize(0.8f);
-				regionReverb->SetWidth(0.2f);
+				regionReverb->SetWidth(0.3f);
 				regionReverb->SetDamping(0.5f);
 				regionReverb->SetEffectMix(fadeReverbDepthInfo.curtDepth);
 			}

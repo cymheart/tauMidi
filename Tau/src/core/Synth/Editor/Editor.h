@@ -207,7 +207,7 @@ namespace tau
 		MidiMarkerList midiMarkerList;
 
 		//结束时间点
-		float endSec = 0;
+		double endSec = 0;
 
 		//播放速率(相对于正常播放速率1.0的倍率)
 		float speed = 1;
@@ -216,12 +216,12 @@ namespace tau
 		int computedPerSyntherLimitTrackCount = 20;
 
 		//是否是步进播放模式
-		atomic_bool isStepPlayMode = false;
+		atomic_bool isStepPlayMode;
 		//是否为等待播放模式
 		bool isWaitPlayMode = false;
 
 		//是否等待
-		atomic_bool isWait = false;
+		atomic_bool isWait;
 
 		mutex waitOnKeyLock;
 		int onkey[128] = { 0 };

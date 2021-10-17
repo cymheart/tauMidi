@@ -14,6 +14,7 @@ import cymheart.tau.effect.Equalizer;
 public class MainActivity extends AppCompatActivity {
 
     Tau tau;
+    SoundFont sf;
     VirInstrument virInst;
     Equalizer eq;
 
@@ -90,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
 
             System.loadLibrary("tau");
 
-        SoundFont sf = new SoundFont();
+        sf = new SoundFont();
         sf.Parse("SF2", "/storage/emulated/0/gnusmas_gm_soundfont_2.01.sf2");
         tau = new Tau(this);
 
@@ -123,9 +124,10 @@ public class MainActivity extends AppCompatActivity {
 
        // eqCmd.SetFreqBandGain(0, 1);
 
-        tau.SetFrameSampleCount(4096);
+        tau.SetFrameSampleCount(512);
         tau.SetChannelCount(2);
         tau.SetSoundFont(sf);
+       // tau.SetEnableAllVirInstEffects(false);
         tau.Open();
 
         ButtonListener b = new ButtonListener();
@@ -165,8 +167,15 @@ public class MainActivity extends AppCompatActivity {
                                        // tau.OnKey(60, 127, inst);
 
 
-                                        tau.Load("/storage/emulated/0/紅蓮の弓矢.mid", true);
-                                       // tau.PlayMidi();
+                                        for(int i=0; i<10; i++) {
+                                            tau.Load("/storage/emulated/0/爱江山更爱美人-李丽芬.mid");
+                                            tau.Play();
+                                            Thread.sleep(6000);
+                                            tau.Stop();
+                                           // Thread.sleep(1000);
+                                        }
+
+
 //                                        int s = tau.GetMidiState();
 //                                        Log.d("state", s+"");
 //                                        tau.PauseMidi();

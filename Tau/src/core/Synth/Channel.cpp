@@ -13,7 +13,7 @@ namespace tau
 
 	Channel::~Channel()
 	{
-
+		inst = nullptr;
 	}
 
 	//设置通道号

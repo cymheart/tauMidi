@@ -9,7 +9,15 @@ namespace tau
 
 	InstFragment::~InstFragment()
 	{
+		list<MidiEvent*>::iterator it = midiEvents.begin();
+		list<MidiEvent*>::iterator end = midiEvents.end();
 
+		for (; it != end; it++)
+		{
+			DEL(*it);
+		}
+
+		midiEvents.clear();
 	}
 
 	void InstFragment::Clear()

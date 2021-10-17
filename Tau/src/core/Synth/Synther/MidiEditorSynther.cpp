@@ -27,7 +27,7 @@ namespace tau
 		if (midiEditor == nullptr)
 			return;
 
-		midiEditor->Run(tau->unitSampleSec);
+		midiEditor->Process(tau->unitSampleSec);
 	}
 
 	//建立MidiEditor

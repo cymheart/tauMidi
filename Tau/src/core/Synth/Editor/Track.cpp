@@ -16,6 +16,18 @@ namespace tau
 	Track::~Track()
 	{
 		DEL(channel);
+
+		for (int i = 0; i < instFragmentBranchs.size(); i++)
+		{
+			list<InstFragment*>::iterator frag_it = instFragmentBranchs[i]->begin();
+			list<InstFragment*>::iterator frag_end = instFragmentBranchs[i]->end();
+			for (; frag_it != frag_end; frag_it++)
+			{
+				DEL(*frag_it);
+			}
+		}
+
+		instFragmentBranchs.clear();
 	}
 
 	void Track::Clear()

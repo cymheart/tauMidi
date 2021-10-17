@@ -20,34 +20,39 @@ public class Editor {
     //暂停
     static public final int PAUSE = 2;
 
-
-    Utils.Action0RetF GetCurtSec = null;
-
     protected List<Track> tracks = new ArrayList<>();
 
     public List<Track> GetTracks() {
         return tracks;
     }
 
-    protected boolean isOpen = false;
-    protected boolean isDirectGoto = false;
-    protected boolean isGotoEnd = false;
     protected int state = STOP;
-    protected float gotoSec = 0;
 
     protected float speed = 1;
-    protected float playStartSec = 0;
-    protected float baseSpeedSec = 0;
-    protected float curtPlaySec = 0;
+    protected double curtPlaySec = 0;
+    public double GetPlaySec()
+    {
+        return curtPlaySec;
+    }
+
+    //是否是步进播放模式
+    protected  boolean isStepPlayMode = false;
+    //是否为等待播放模式
+    protected boolean isWaitPlayMode = false;
 
     //结束时间点
-    protected float endSec = 0;
+    protected double endSec = 0;
+    public double GetEndSec()
+    {
+        return endSec;
+    }
 
     protected List<MidiEvent> curtProcessMidiEvent = new ArrayList<>();
     protected VisualMidiEvents visualMidiEvents = new VisualMidiEvents();
 
     public void Load(String midifile)
     {
+        _Remove();
         ndkLoad(this, ndkEditor, midifile);
         _Load();
     }
@@ -62,15 +67,14 @@ public class Editor {
 
             Object[] a = (Object[])(_ndkInstFragmentArray[i]);
 
-            for(int n = 0; n<a.length; n++)
-            {
-                InstFragment[] instFrags = (InstFragment[]) a[n];
+            for (Object o : a) {
+                InstFragment[] instFrags = (InstFragment[]) o;
                 LinkedList<InstFragment> instFragList = new LinkedList<>();
-                for (int j = 0; j < instFrags.length; j++) {
-                    instFrags[j].midiEvents.addAll(Arrays.asList(instFrags[j]._ndkMidiEvent));
-                    instFrags[j]._ndkMidiEvent = null;
-                    instFrags[j].track = track;
-                    instFragList.add(instFrags[j]);
+                for (InstFragment instFrag : instFrags) {
+                    instFrag.midiEvents.addAll(Arrays.asList(instFrag._ndkMidiEvent));
+                    instFrag._ndkMidiEvent = null;
+                    instFrag.track = track;
+                    instFragList.add(instFrag);
                 }
 
                 track.instFragments.add(instFragList);
@@ -83,22 +87,28 @@ public class Editor {
 
 
     //开始播放
-    void Play()
+    public void Play()
     {
+        ndkPlay(ndkEditor);
+
         if (state == PLAY)
             return;
 
+        if (state == STOP)
+        {
+            curtPlaySec = 0;
+            for (int i = 0; i < tracks.size(); i++)
+                tracks.get(i).Clear();
+        }
+
         state = PLAY;
-
-        playStartSec = 0;
-        if(GetCurtSec != null)
-            playStartSec = GetCurtSec.Execute();
-
     }
 
     //暂停播放
-    void Pause()
+    public void Pause()
     {
+        ndkPause(ndkEditor);
+
         if (state != PLAY)
             return;
 
@@ -107,158 +117,125 @@ public class Editor {
     }
 
     //停止播放
-    void Stop()
+    public void Stop()
     {
+        ndkStop(ndkEditor);
+
         if (state == STOP)
             return;
 
-        isGotoEnd = false;
-        isDirectGoto = false;
-        isOpen = false;
-        gotoSec = 0;
+        for (int i = 0; i < tracks.size(); i++)
+            tracks.get(i).Clear();
+
+        curtPlaySec = 0;
         state = STOP;
     }
 
 
     //移除
-    void Remove()
+    public void Remove()
     {
-        isGotoEnd = false;
-        isDirectGoto = false;
-        isOpen = false;
-        gotoSec = 0;
+        ndkRemove(ndkEditor);
+        _Remove();
+    }
+
+    //移除
+    protected void _Remove()
+    {
+
+        for (int i = 0; i < tracks.size(); i++)
+            tracks.get(i).Clear();
+        tracks.clear();
+        curtPlaySec = 0;
         state = STOP;
     }
 
-
     //设置播放的起始时间点
-    void Goto(float gotoSec_)
+    public void Goto(double sec)
     {
-       int oldState = state;
+        ndkGoto(ndkEditor, sec);
 
-        isDirectGoto = false;
-        isOpen = false;
-        isGotoEnd = false;
-        gotoSec = gotoSec_;
-
-        playStartSec = 0;
-        if(GetCurtSec != null)
-            playStartSec = GetCurtSec.Execute();
+        for (int i = 0; i < tracks.size(); i++)
+            tracks.get(i).Clear();
 
         curtPlaySec = 0;
-        baseSpeedSec = 0;
-        state = oldState;
+        ProcessCore(sec / speed, true);
     }
 
     //设置快进到开头
-    void GotoStart()
+    public void GotoStart()
     {
         Goto(0);
     }
 
     //设置快进到结尾
-    void GotoEnd()
+    public void GotoEnd()
     {
-        Goto(9999999);
-        isGotoEnd = true;
+        Goto(endSec + 1);
     }
 
-
-    //运行
-    public void Run(float sec)
+    //移动到指定时间点
+    public void Runto(double sec)
     {
+        if (state != PLAY || !isStepPlayMode) {
+            Goto(sec);
+            return;
+        }
+
+        if (sec >= curtPlaySec) {
+            Process((sec - curtPlaySec) / speed, true);
+        }
+        else {
+            Goto(sec);
+        }
+    }
+
+    //处理
+    public void Process()
+    {
+        Process(false);
+    }
+
+    //处理
+    public void Process(boolean isStepOp)
+    {
+        double ndkPlaySec = ndkGetPlaySec(ndkEditor);
+        Process(ndkPlaySec - curtPlaySec, isStepOp);
+    }
+
+    //处理
+    protected void Process(double sec, boolean isStepOp)
+    {
+        if (isStepPlayMode && !isStepOp)
+            return;
+
         if (state != PLAY)
             return;
 
-        if (isOpen == false)
-        {
-            isOpen = true;
-
-            Track track;
-            for (int i = 0; i < tracks.size(); i++)
-            {
-                track = tracks.get(i);
-                track.Clear();
-            }
-
-            if (gotoSec > 0)
-            {
-                isDirectGoto = true;
-                RunCore(gotoSec / speed);
-                isDirectGoto = false;
-                isGotoEnd = false;
-            }
-        }
-
-        //
-        RunCore(gotoSec / speed + sec - playStartSec);
+        ProcessCore(sec, false);
     }
 
 
-    protected void RunCore(float sec)
+    protected void ProcessCore(double sec, boolean isDirectGoto)
     {
-        Track track;
-        InstFragment instFrag;
-        MidiEvent ev;
-        int orgInstFragCount = 0;
         int trackEndCount = 0;
-        int instFragCount;
-
         curtProcessMidiEvent.clear();
-        curtPlaySec = baseSpeedSec + (sec - baseSpeedSec) * speed;
+        curtPlaySec += sec;
 
+        Track track;
         for (int i = 0; i < tracks.size(); i++)
         {
             track = tracks.get(i);
 
-            if (track.isEnded) {
-                trackEndCount++;
-                continue;
+            //重新处理当前时间点在事件处理时间中间时，可以重新启用此时间
+            List<MidiEvent> evs = track.reProcessMidiEvents;
+            if (!evs.isEmpty()) {
+                for (int j = 0; j < evs.size(); j++)
+                    ProcessEvent(evs.get(j), track, isDirectGoto);
+                evs.clear();
             }
 
-            instFragCount = 0;
-            List<LinkedList<InstFragment>> instFragments = track.instFragments;
-            LinkedList<InstFragment> instFragmentList;
-            for (int j = 0; j < instFragments.size(); j++)
-            {
-                instFragmentList = instFragments.get(j);
-                orgInstFragCount += instFragmentList.size();
-
-                ListIterator<InstFragment> frag_it = instFragmentList.listIterator();
-                for (; frag_it.hasNext(); )
-                {
-                    instFrag = frag_it.next();
-                    if (instFrag.isEnded) {
-                        instFragCount++;
-                        continue;
-                    }
-
-                    ListIterator<MidiEvent> it = instFrag.eventOffsetIter;
-                    for (; it.hasNext(); )
-                    {
-                        ev = it.next();
-
-                        //
-                        if (!isGotoEnd && ev.startSec > curtPlaySec)
-                        {
-                            instFrag.eventOffsetIter = it;
-                            break;
-                        }
-
-                        ProcessEvent(ev, i);
-                    }
-
-                    if (!it.hasNext())
-                    {
-                        instFrag.isEnded = true;
-                    }
-                }
-            }
-
-            if (instFragCount == orgInstFragCount)
-            {
-                track.isEnded = true;
-            }
+            trackEndCount += ProcessTrack(track, isDirectGoto);
         }
 
         //检测播放是否结束
@@ -268,8 +245,73 @@ public class Editor {
         }
     }
 
+    int ProcessTrack(Track track, boolean isDirectGoto)
+    {
+        InstFragment instFrag;
+        MidiEvent ev;
+        int orgInstFragCount = 0;
+        int instFragCount;
+
+        if (track.isEnded)
+           return 1;
+
+        instFragCount = 0;
+        List<LinkedList<InstFragment>> instFragments = track.instFragments;
+        LinkedList<InstFragment> instFragmentList;
+        for (int j = 0; j < instFragments.size(); j++)
+        {
+            instFragmentList = instFragments.get(j);
+            orgInstFragCount += instFragmentList.size();
+
+            for (InstFragment instFragment : instFragmentList) {
+                instFrag = instFragment;
+                if (instFrag.isEnded) {
+                    instFragCount++;
+                    continue;
+                }
+
+                ListIterator<MidiEvent> it = instFrag.eventOffsetIter;
+                while (it.hasNext()) {
+                    ev = it.next();
+
+                    if(ev == null)
+                        continue;
+
+                    //重新处理当前时间点在事件处理时间中间时，可以重新启用此事件
+                    if (isDirectGoto &&
+                            ev.startSec < curtPlaySec &&
+                            ev.endSec > curtPlaySec)
+                    {
+                        track.reProcessMidiEvents.add(ev);
+                    }
+
+                    //
+                    if (ev.startSec > curtPlaySec) {
+                        instFrag.eventOffsetIter = it;
+                        break;
+                    }
+
+                    ProcessEvent(ev, track, isDirectGoto);
+                }
+
+                if (!it.hasNext()) {
+                    instFrag.isEnded = true;
+                }
+            }
+        }
+
+        if (instFragCount == orgInstFragCount)
+        {
+            track.isEnded = true;
+        }
+
+        return 0;
+    }
+
+
+
     //处理轨道事件
-    void ProcessEvent(MidiEvent midEv, int trackIdx)
+    void ProcessEvent(MidiEvent midEv, Track track, boolean isDirectGoto)
     {
         switch (midEv.type) {
             case MidiEvent.NoteOn:
@@ -313,7 +355,7 @@ public class Editor {
         Track track;
         InstFragment instFrag;
         MidiEvent ev;
-        float endSec = curtPlaySec + secWidth;
+        double endSec = curtPlaySec + secWidth;
 
         for (int i = 0; i < tracks.size(); i++)
         {
@@ -327,37 +369,33 @@ public class Editor {
             for (int j = 0; j < instFragments.size(); j++)
             {
                 instFragmentList = instFragments.get(j);
-                ListIterator<InstFragment> frag_it = instFragmentList.listIterator();
-                for (; frag_it.hasNext(); )
-                {
-                    instFrag = frag_it.next();
+                for (InstFragment instFragment : instFragmentList) {
+                    instFrag = instFragment;
                     ListIterator<MidiEvent> it = instFrag.eventOffsetIter;
-                    for (; it.hasPrevious(); )
-                    {
+                    while (it.hasPrevious()) {
                         ev = it.previous();
 
-                        if(ev == null || ev.endSec < curtPlaySec)
+                        if (ev == null || ev.type != MidiEvent.NoteOn || ev.endSec < curtPlaySec)
                             continue;
 
                         instFrag.eventFirstIter = it;
-                        NoteOnEvent noteOnEvent = (NoteOnEvent)ev;
+                        NoteOnEvent noteOnEvent = (NoteOnEvent) ev;
                         List<NoteOnEvent> noteEvlist = noteOnEvents.get(noteOnEvent.note);
                         noteEvlist.add(noteOnEvent);
                         noteSet.add(noteOnEvent.note);
                     }
 
                     it = instFrag.eventOffsetIter;
-                    for (; it.hasNext(); )
-                    {
+                    while (it.hasNext()) {
                         ev = it.next();
 
-                        if(ev == null)
+                        if (ev == null || ev.type != MidiEvent.NoteOn)
                             continue;
 
                         if (ev.startSec > endSec)
                             break;
 
-                        NoteOnEvent noteOnEvent = (NoteOnEvent)ev;
+                        NoteOnEvent noteOnEvent = (NoteOnEvent) ev;
                         List<NoteOnEvent> noteEvlist = noteOnEvents.get(noteOnEvent.note);
                         noteEvlist.add(noteOnEvent);
                         noteSet.add(noteOnEvent.note);
@@ -379,4 +417,10 @@ public class Editor {
 
     //
     private static native void ndkLoad(Editor editor, long ndkEditor, String midifile);
+    private static native void ndkPlay(long ndkEditor);
+    private static native void ndkPause(long ndkEditor);
+    private static native void ndkStop(long ndkEditor);
+    private static native void ndkRemove(long ndkEditor);
+    private static native void ndkGoto(long ndkEditor, double sec);
+    private static native double ndkGetPlaySec(long ndkEditor);
 }

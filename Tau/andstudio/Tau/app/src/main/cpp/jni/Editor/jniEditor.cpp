@@ -27,6 +27,49 @@ Java_cymheart_tau_editor_Editor_ndkLoad(JNIEnv *env, jclass clazz, jobject jedit
 }
 
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkPlay(JNIEnv *env, jclass clazz, jlong ndk_editor) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->Play();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkPause(JNIEnv *env, jclass clazz, jlong ndk_editor) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->Pause();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkStop(JNIEnv *env, jclass clazz, jlong ndk_editor) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->Stop();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkRemove(JNIEnv *env, jclass clazz, jlong ndk_editor) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->Remove();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkGoto(JNIEnv *env, jclass clazz, jlong ndk_editor, jdouble sec) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->Goto(sec);
+}
+
+extern "C"
+JNIEXPORT jdouble JNICALL
+Java_cymheart_tau_editor_Editor_ndkGetPlaySec(JNIEnv *env, jclass clazz, jlong ndk_editor) {
+    Editor* editor = (Editor*)ndk_editor;
+    return editor->GetPlaySec();
+}
+
+
 void CreateJEditor(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* editor)
 {
     CreateJNoteOnEventClassInfo(env);
@@ -37,14 +80,14 @@ void CreateJEditor(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* ed
     //Editor
     jfieldID jEditorClassNdkTracksField = env->GetFieldID(jeditorClass, "_ndkTracks", "[Lcymheart/tau/editor/Track;");
     jfieldID jEditorClassNdkInstFragArrayField = env->GetFieldID(jeditorClass, "_ndkInstFragmentArray","[Ljava/lang/Object;");
-    jfieldID jEditorClassEndSecField = env->GetFieldID(jeditorClass, "endSec","F");
+    jfieldID jEditorClassEndSecField = env->GetFieldID(jeditorClass, "endSec","D");
 
 
     //Track
     jclass jTrackClass = env->FindClass("cymheart/tau/editor/Track");
     jmethodID jTrackClassInitMethod = env->GetMethodID(jTrackClass, "<init>", "()V");
     jfieldID jTrackClassChannelField = env->GetFieldID(jTrackClass, "channel","Lcymheart/tau/Channel;");
-    jfieldID jTrackClassEndSecField = env->GetFieldID(jTrackClass, "endSec", "F");
+    jfieldID jTrackClassEndSecField = env->GetFieldID(jTrackClass, "endSec", "D");
 
     //Channel
     jclass jChannelClass = env->FindClass("cymheart/tau/Channel");
@@ -62,7 +105,8 @@ void CreateJEditor(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* ed
     jmethodID jInstFragmentClassInitMethod = env->GetMethodID(jInstFragmentClass, "<init>", "()V");
     jfieldID jInstFragmentClassNdKMidiEventField = env->GetFieldID(jInstFragmentClass, "_ndkMidiEvent", "[Lcymheart/tau/midi/MidiEvent;");
     jfieldID jInstFragmentClassStartTickField = env->GetFieldID(jInstFragmentClass, "startTick", "I");
-    jfieldID jInstFragmentClassStartSecField = env->GetFieldID(jInstFragmentClass, "startSec", "F");
+    jfieldID jInstFragmentClassStartSecField = env->GetFieldID(jInstFragmentClass, "startSec", "D");
+    jfieldID jInstFragmentClassEndSecField = env->GetFieldID(jInstFragmentClass, "endSec", "D");
 
     //MidiEvent
     jclass jMidiEventClass = env->FindClass("cymheart/tau/midi/MidiEvent");
@@ -86,14 +130,14 @@ void CreateJEditor(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* ed
         env->SetObjectField(jChannel, jChannelClassInstField, jVirInst);
         env->DeleteLocalRef(jVirInst);
 
-        env->SetFloatField(jTrack, jTrackClassEndSecField, tracks[i]->GetEndSec());
+        env->SetDoubleField(jTrack, jTrackClassEndSecField, tracks[i]->GetEndSec());
         env->SetObjectField(jTrack, jTrackClassChannelField, jChannel);
         env->DeleteLocalRef(jChannel);
 
         env->SetObjectArrayElement(jTracks, i, jTrack);
 
         //
-        const vector<list<InstFragment*>*>& instFragmentArray = tracks[i]->GetInstFragments();
+        const vector<list<InstFragment*>*>& instFragmentArray = tracks[i]->GetInstFragmentBranchs();
         jobjectArray jInstFragmentArray = (jobjectArray)env->NewObjectArray(instFragmentArray.size(), jObjectClass, NULL);
         for(int j=0; j<instFragmentArray.size(); j++)
         {
@@ -104,8 +148,8 @@ void CreateJEditor(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* ed
                 InstFragment* instFragment = *it;
                 jobject jInstFragment = env->NewObject(jInstFragmentClass, jInstFragmentClassInitMethod);
                 env->SetIntField(jInstFragment, jInstFragmentClassStartTickField, instFragment->GetStartTick());
-                env->SetFloatField(jInstFragment, jInstFragmentClassStartSecField, instFragment->GetStartSec());
-
+                env->SetDoubleField(jInstFragment, jInstFragmentClassStartSecField, instFragment->GetStartSec());
+                env->SetDoubleField(jInstFragment, jInstFragmentClassEndSecField, instFragment->GetEndSec());
 
                 //
                 int m = 0;
@@ -122,13 +166,13 @@ void CreateJEditor(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* ed
                         {
                             jMidiEvent = CreateJNoteOnEvent(env, (NoteOnEvent*)midiEvent);
                         }
-                            break;
+                        break;
 
                         case MidiEventType::NoteOff:
                         {
                             jMidiEvent = CreateJNoteOffEvent(env, (NoteOffEvent*)midiEvent);
                         }
-                            break;
+                        break;
 
                         default:
                             continue;
@@ -154,16 +198,16 @@ void CreateJEditor(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* ed
         env->SetObjectArrayElement(jInstFragmentArrays, i, jInstFragmentArray);
         env->DeleteLocalRef(jInstFragmentArray);
 
-        env->DeleteLocalRef(jTracks);
+
     }
 
     //
-    env->SetFloatField(jeditor, jEditorClassEndSecField, editor->GetEndSec());
+    env->SetDoubleField(jeditor, jEditorClassEndSecField, editor->GetEndSec());
     env->SetObjectField(jeditor, jEditorClassNdkTracksField, jTracks);
     env->SetObjectField(jeditor, jEditorClassNdkInstFragArrayField, jInstFragmentArrays);
 
 
-
+    env->DeleteLocalRef(jTracks);
     env->DeleteLocalRef(jInstFragmentArrays);
 
     //

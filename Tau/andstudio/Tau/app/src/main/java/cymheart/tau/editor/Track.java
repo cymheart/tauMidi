@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import cymheart.tau.Channel;
+import cymheart.tau.midi.MidiEvent;
 
 public class Track {
 
@@ -30,13 +31,17 @@ public class Track {
     }
 
     //结束时间点
-    protected float endSec;
+    protected double endSec;
+
+    //重新处理当前时间点在事件处理时间中间时，可以重新启用此时间
+    protected List<MidiEvent> reProcessMidiEvents = new ArrayList<>();
 
 
     public void Clear()
     {
         isEnded = false;
         endSec = 0;
+        reProcessMidiEvents.clear();
 
         //
         InstFragment instFragment;
