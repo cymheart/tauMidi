@@ -420,7 +420,7 @@ namespace tau
 		//不受真实时间流逝影响，比如已处理了2000个点采样点，每个采样点的采样时间为1.0f/44100.0f
 		//则当前sec = 2000 * 1.0f/44100.0f = 0.045s = 45ms,
 		//即表示目前播放时间已流逝0.045s
-		float sec = 0;
+		double sec = 0;
 
 		//所有正在发声的区域
 		RegionSounder* totalRegionSounders[100000] = { nullptr };

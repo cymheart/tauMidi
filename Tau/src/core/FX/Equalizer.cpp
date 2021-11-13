@@ -1,4 +1,5 @@
 ﻿#include"Equalizer.h"
+#include"Synth/Synther/Synther.h"
 
 namespace tauFX
 {
@@ -11,6 +12,12 @@ namespace tauFX
 	Equalizer::~Equalizer()
 	{
 		DEL(eq);
+	}
+
+	void Equalizer::SetSynther(Synther* synther)
+	{
+		this->synther = synther;
+		eq->SetSampleRate(synther->GetSampleProcessRate());
 	}
 
 	vector<dsignal::Filter*> Equalizer::GetFilters()

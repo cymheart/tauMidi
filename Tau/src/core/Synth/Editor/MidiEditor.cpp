@@ -219,7 +219,10 @@ namespace tau
 		if (state != EditorState::PLAY)
 			return;
 
-		Goto(curtPlaySec);
+		for (int i = 0; i < trackList.size(); i++) {
+			midiSynther->OffVirInstrumentAllKeys(trackList[i]->GetChannel());
+		}
+
 		state = EditorState::PAUSE;
 	}
 
@@ -272,7 +275,6 @@ namespace tau
 	//设置播放的起始时间点
 	void MidiEditor::Goto(double sec)
 	{
-
 		for (int i = 0; i < trackList.size(); i++) {
 			midiSynther->OffVirInstrumentAllKeys(trackList[i]->GetChannel());
 			trackList[i]->Clear();

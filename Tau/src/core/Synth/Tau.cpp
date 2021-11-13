@@ -60,7 +60,7 @@ namespace tau {
 			return;
 
 		sampleProcessRate = (float)rate;
-		invSampleProcessRate = 1 / sampleProcessRate;
+		invSampleProcessRate = 1.0 / (double)sampleProcessRate;
 		stk::Stk::setSampleRate(44100);
 
 		unitSampleSec = invSampleProcessRate * childFrameSampleCount;

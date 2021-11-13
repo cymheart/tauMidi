@@ -518,7 +518,7 @@ namespace tau
 		int childFrameSampleCount = 64;
 
 		//采样率的倒数，表示1个采样点所花费的时间
-		float invSampleProcessRate = 1.0f / 48000.0f;
+		double invSampleProcessRate = 1.0f / 48000.0f;
 
 		//单位采样时间
 		double unitSampleSec = 0;

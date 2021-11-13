@@ -570,7 +570,11 @@ namespace tau
 		for (int i = start; i <= end; i++)
 		{
 			instFrag = new InstFragment();
-			instFrag->AddMidiEvents(*midiTracks[i]->GetEventList());
+
+			list<MidiEvent*>& eventList = *midiTracks[i]->GetEventList();
+			instFrag->AddMidiEvents(eventList);
+			eventList.clear();
+
 			instFragments.push_back(instFrag);
 		}
 

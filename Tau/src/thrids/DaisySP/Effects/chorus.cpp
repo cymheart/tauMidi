@@ -85,7 +85,7 @@ float ChorusEngine::ProcessLfo()
 void Chorus::Init(float sample_rate)
 {
 	engines_[0].Init(sample_rate);
-	//engines_[1].Init(sample_rate);
+	engines_[1].Init(sample_rate);
 	SetPan(.25f, .75f);
 
 	gain_frac_ = 0.75f;

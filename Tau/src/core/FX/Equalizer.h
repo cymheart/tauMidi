@@ -15,7 +15,7 @@ namespace tauFX
 		Equalizer(Synther* synther = nullptr);
 		virtual ~Equalizer();
 
-		void SetSampleRate(float sampleRate);
+		void SetSynther(Synther* synther);
 		void SetFreqBandGain(int bandIdx, float gainDB);
 		void EffectProcess(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount);
 		vector<dsignal::Filter*> GetFilters();

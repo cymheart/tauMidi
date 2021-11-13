@@ -179,7 +179,7 @@ namespace tau {
 	void RegionSounder::Init()
 	{
 		//
-		/*if (tau->UseRegionInnerChorusEffect())
+		if (tau->UseRegionInnerChorusEffect())
 		{
 			chorus[0]->Init(tau->GetSampleProcessRate());
 			chorus[0]->SetLfoDepth(1);
@@ -190,7 +190,7 @@ namespace tau {
 			chorus[1]->SetLfoDepth(1);
 			chorus[1]->SetEffectMix(1);
 			chorus[1]->SetDelayMs(8);
-		}*/
+		}
 
 		//
 		switch (tau->GetRenderQuality())
