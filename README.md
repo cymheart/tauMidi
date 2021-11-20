@@ -1,4 +1,4 @@
-# tau midi数字音乐合成器库
+# tau Midi数字音乐合成器库(midi synthesizer lib)
   一个数字音乐合成器库，该库具备Midi音乐解析播放，录制，soundfont解析播放，支持混音，合唱，压缩器，均衡器等音效添加。
 支持对黑乐谱的流畅播放。
 
