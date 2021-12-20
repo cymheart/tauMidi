@@ -35,16 +35,14 @@ namespace tau
 
 	//void Audio_pa::Open()
 	//{
+	//	if (isOpened)
+	//		return;
+
 	//	PaStreamParameters outputParameters;
-	//	//PaWinDirectSoundStreamInfo dsoundStreamInfo;
 
 	//	PaError err = Pa_Initialize();
-	//	//int deviceIndex;
 	//	if (err != paNoError)
 	//		goto error;
-
-	//	//deviceIndex = Pa_GetHostApiInfo(Pa_HostApiTypeIdToHostApiIndex(paDirectSound))->defaultOutputDevice;
-	//	//outputParameters.device = deviceIndex; // Pa_GetDefaultOutputDevice(); /* default output device */
 
 	//	outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
 	//	if (outputParameters.device == paNoDevice)
@@ -55,19 +53,6 @@ namespace tau
 	//	outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
 	//	outputParameters.hostApiSpecificStreamInfo = NULL;
 
-
-	//	/*	dsoundStreamInfo.size = sizeof(PaWinDirectSoundStreamInfo);
-	//		dsoundStreamInfo.hostApiType = paDirectSound;
-	//		dsoundStreamInfo.version = 2;
-	//		dsoundStreamInfo.flags = paWinDirectSoundUseLowLevelLatencyParameters;
-	//		dsoundStreamInfo.framesPerBuffer = 4096;
-	//		outputParameters.hostApiSpecificStreamInfo = &dsoundStreamInfo;*/
-	//		/*if (Pa_IsFormatSupported(0, &outputParameters, freq) == paFormatIsSupported) {
-	//			printf("Pa_IsFormatSupported reports device will support %d channels.\n", channelCount);
-	//		}
-	//		else {
-	//			printf("Pa_IsFormatSupported reports device will not support %d channels.\n", channelCount);
-	//		}*/
 
 	//	err = Pa_OpenStream(
 	//		&stream,
@@ -92,7 +77,6 @@ namespace tau
 	//	if (err != paNoError)
 	//		goto error;
 
-
 	//	err = Pa_StartStream(stream);
 	//	if (err != paNoError) goto error;
 
@@ -108,6 +92,7 @@ namespace tau
 	//	fprintf(stderr, "Host Error message: %s\n", Pa_GetLastHostErrorInfo()->errorText);
 
 	//}
+
 
 	void Audio_pa::Open()
 	{
@@ -187,6 +172,7 @@ namespace tau
 		fprintf(stderr, "Host Error message: %s\n", Pa_GetLastHostErrorInfo()->errorText);
 
 	}
+
 
 	int Audio_pa::patest1Callback(const void* inputBuffer, void* outputBuffer,
 		unsigned long framesPerBuffer,

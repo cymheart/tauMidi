@@ -4,10 +4,9 @@
 #include"TaskTypes.h"
 #include"TaskProcesser.h"
 
+
 namespace task
 {
-
-
 	class TimerTask :public Task
 	{
 	public:
@@ -25,24 +24,6 @@ namespace task
 		static void Release(Task* task);
 	};
 
-	class TimerTaskPool
-	{
-		SINGLETON(TimerTaskPool)
-
-	public:
-		TimerTask* Pop()
-		{
-			return pool.Pop();
-		}
-
-		void Push(TimerTask* task)
-		{
-			pool.Push(task);
-		}
-
-	private:
-		ObjectPool<TimerTask> pool;
-	};
 
 	class TaskTimer
 	{
@@ -72,7 +53,6 @@ namespace task
 		TimerTask* task;
 
 	private:
-		TimerTaskPool* timerTaskPool = nullptr;
 		int durationMS;
 		TaskProcesser* taskProcesser = nullptr;
 		void* data = nullptr;
@@ -80,8 +60,6 @@ namespace task
 
 		bool isStop;
 		bool isRepeat;
-
-		friend class TaskPump;
 	};
 }
 

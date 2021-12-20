@@ -7,6 +7,7 @@
 #include"FX/TauEffect.h"
 #include"FX/EffectList.h"
 #include"Audio/Audio.h"
+#include"task/MsgProcesser.h"
 using namespace tauFX;
 
 namespace tau
@@ -445,12 +446,10 @@ namespace tau
 		//
 		Audio* audio = nullptr;
 
-
 		//
 		bool isMainSynther = false;
 		atomic_int computedFrameBufSyntherCount;
 		vector<Synther*> assistSynthers;
-
 
 		friend class Tau;
 		friend class Editor;

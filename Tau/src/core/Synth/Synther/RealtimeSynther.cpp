@@ -43,8 +43,14 @@ namespace tau
 
 	void RealtimeSynther::Close()
 	{
-		Synther::Close();
+		RemoveAllVirInstrument();
+		ReqDeleteTask();
+		waitDelSem.wait();
+
 		realtimeKeyOpTaskProcesser->Stop();
+
+		Synther::Close();
+		isReqDelete = false;
 	}
 
 	//投递实时按键操作任务
@@ -121,7 +127,7 @@ namespace tau
 		ev.key = key;
 		ev.velocity = velocity;
 		ev.virInst = virInst;
-		ev.timeSec = taskProcesser->GetCurtTimeMillis() * 0.001f;
+		ev.timeSec = GetCurrentTimeMsec() * 0.001f;
 
 		cmdLock.lock();
 
@@ -148,7 +154,7 @@ namespace tau
 		ev.key = key;
 		ev.velocity = velocity;
 		ev.virInst = virInst;
-		ev.timeSec = taskProcesser->GetCurtTimeMillis() * 0.001f;
+		ev.timeSec = GetCurrentTimeMsec() * 0.001f;
 
 		cmdLock.lock();
 

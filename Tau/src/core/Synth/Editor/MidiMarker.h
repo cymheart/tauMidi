@@ -19,7 +19,7 @@ namespace tau
 
 		void Copy(MidiMarker& cpyMidiMarker);
 
-		inline uint32_t GetStartTick()
+		inline int32_t GetStartTick()
 		{
 			return startTick;
 		}
@@ -29,7 +29,7 @@ namespace tau
 			return startSec;
 		}
 
-		inline void SetStartTick(uint32_t tick)
+		inline void SetStartTick(int32_t tick)
 		{
 			startTick = tick;
 		}
@@ -44,13 +44,13 @@ namespace tau
 			return microTempo;
 		}
 
-		inline uint32_t GetTickForQuarterNote()
+		inline int32_t GetTickForQuarterNote()
 		{
 			return tickForQuarterNote;
 		}
 
 		//速度设置
-		inline void SetTempo(float microTempo_, uint32_t tickForQuarterNote_, bool isEnable)
+		inline void SetTempo(float microTempo_, int32_t tickForQuarterNote_, bool isEnable)
 		{
 			isEnableTempo = isEnable;
 			tickForQuarterNote = tickForQuarterNote_;
@@ -83,7 +83,7 @@ namespace tau
 		bool isEnableTempo = false;
 
 		//标记起始的tick数
-		uint32_t startTick = 0;
+		int32_t startTick = 0;
 
 		//标记起始的时间点
 		double startSec = 0;
@@ -92,7 +92,7 @@ namespace tau
 		float microTempo = 0;
 
 		// 一个四分音符的tick数
-		uint32_t tickForQuarterNote = 480;
+		int32_t tickForQuarterNote = 480;
 
 		//
 		//是否开启节拍设置

@@ -28,7 +28,6 @@ namespace tau
 		taskProcesser = new TaskProcesser;
 		regionSounderThreadPool = new RegionSounderThread(this);
 
-
 		//
 		effects = new EffectList();
 		effects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
@@ -37,6 +36,7 @@ namespace tau
 		innerEffects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
 
 	}
+
 
 	Synther::~Synther()
 	{

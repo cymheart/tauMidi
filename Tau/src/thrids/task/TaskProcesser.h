@@ -13,6 +13,11 @@ namespace task
 		TaskProcesser();
 		~TaskProcesser();
 
+		void SetTaskQueueType(TaskQueueType type);
+
+		void PushTask(Task* task);
+		Task* PopTask(TaskMsg msg = TaskMsg::TMSG_DATA);
+
 		//打开嵌入模式
 		void OpenEmbedMode();
 
@@ -29,17 +34,8 @@ namespace task
 		}
 
 		//返回一个当前时间的毫秒值
-		float GetCurtTimeMillis();
+		//float GetCurtTimeMillis();
 
-		//设置主线程Looper
-		inline void SetMainThreadTaskProcesser(TaskProcesser* taskProcesser) {
-			mainThreadTaskProcesser = taskProcesser;
-		}
-
-		// 设置是否送到主线程处理
-		inline void SetPostTaskToMainThreadProcess(bool isPostToMainThread) {
-			isPostTaskToMainThreadProcess = isPostToMainThread;
-		}
 
 		//设置否是嵌入到其它循环回调之中
 		inline void SetEmbedMode(bool isEmbed)
@@ -81,57 +77,67 @@ namespace task
 		//生成定时器 
 		TaskTimer* CreateTimer(TimerCallBack timerCB, void* data, int durationMS, bool isRepeat);
 
+		void PostBlockFilterSingle(int filterNumber);
+		void PostUnBlockFilter();
 		int PostTask(TaskCallBack taskCallBack);
 		int PostTask(TaskCallBack taskCallBack, int delay);
 		int PostTask(TaskCallBack taskCallBack, void* data);
 		int PostTask(TaskCallBack taskCallBack, void* data, int delay);
+		int PostTaskByFilter(TaskCallBack taskCallBack, int filterNumber);
+		int PostTaskByFilter(TaskCallBack taskCallBack, int delay, int filterNumber);
+		int PostTaskByFilter(TaskCallBack taskCallBack, void* data, int filterNumber);
+
+		int PostTask(TaskCallBack taskCallBack, void* data, int delay, int filterNumber);
 		int PostTask(Task* task);
 		int PostTask(Task* task, int delay);
 
 
 
 	private:
-		int PostTaskDirect(Task* task, int delay, bool isFromSelfThread);
-		int PostCommonTask(Task* task, int delay, bool isFromSelfThread);
-		int PostTimerTask(Task* task, int delay, bool isFromSelfThread);
+
+		void Lock();
+		void UnLock();
+		void Wait();
+		void Wait(uint32_t timeOut);
+		void Notify();
+
 		void Run();
 
-		//遍历定时任务列表
-		int ReadTimerList(TaskList& timerReads, clock::time_point curTime);
-		int ReadCommonList(TaskList& reads);
-		int ProcessTask(Task* curtTask, TaskList& tasks);
+		int ProcessTask(Task* curtTask);
+
+		static int ReadTaskList(TaskProcesser* taskProcesser, Task* task)
+		{
+			return taskProcesser->_ReadTaskList(task);
+		}
+		static int RemoveTaskProcess(TaskProcesser* taskProcesser, Task* task)
+		{
+			return taskProcesser->_RemoveTaskProcess(task);
+		}
+		static int ReleaseProcess(TaskProcesser* taskProcesser, Task* task)
+		{
+			return taskProcesser->_ReleaseProcess(task);
+		}
+		int _ReadTaskList(Task* task);
+		int _RemoveTaskProcess(Task* task);
+		int _ReleaseProcess(Task* task);
 
 		//
 		static void ThreadRunCallBack(void* param);
-	private:
-		class TimerCompare
-		{
-		public:
-			TimerCompare() :curTime(res::zero()) {}
-			bool operator()(Task* left, Task* right)
-			{
-				int tmA = (int)chrono::duration_cast<res>(curTime - left->startTime).count();
-				int tmB = (int)chrono::duration_cast<res>(curTime - right->startTime).count();
-				int delayA = (int)(left->delay - tmA);
-				int delayB = (int)(right->delay - tmB);
-				return delayA < delayB;
-			}
-
-		private:
-			clock::time_point curTime;
-			friend class TaskProcesser;
-		};
 
 	private:
 
-		//主线程任务处理器
-		TaskProcesser* mainThreadTaskProcesser = nullptr;
+		TaskQueueType taskQueType = TaskQueueType::SortTaskQue;
+		TaskQueue* readQue;
+		TaskQueue* writeQue;
+
+		int taskBlockFilterNumbers[100];
+		int taskBlockFilterCount = 0;
+
+		int taskProcessRet = 0;
+		Task* cmpRemoveTask = nullptr;
 
 		//是否为固定帧率模式
 		bool isFixedFps = false;
-
-		//是否投递任务到主线程进行处理
-		bool isPostTaskToMainThreadProcess = false;
 
 		//帧率
 		float frameRate = 60;
@@ -150,25 +156,16 @@ namespace task
 
 		bool isStop = true;
 
-		TaskList* readList = nullptr;
-		TaskList* writeList = nullptr;
-		TaskList* timerReadList = nullptr;
-		TaskList* timerWriteList = nullptr;
 
-		TaskList* readListSelfThread = nullptr;
-		TaskList* writeListSelfThread = nullptr;
-		TaskList* timerReadListSelfThread = nullptr;
-		TaskList* timerWriteListSelfThread = nullptr;
-		long minDelay = MAX_DELAY_TIME;
+		int64_t startTime = 0;
 
 		thread::id threadID;
-		TaskQueue* taskQue = nullptr;
-		TimerCompare* timerCompare = nullptr;
 		Semaphore pauseSem;
 		Semaphore quitSem;
 
-		clock::time_point startTime;
-		clock::time_point curTime;
+
+		mutex locker;
+		Semaphore sem;
 	};
 
 }

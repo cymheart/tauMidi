@@ -109,9 +109,16 @@ namespace scutils
 	DLL_FUNC int JudgeLittleOrBigEndianSystem();
 
 	DLL_FUNC vector<string> split(const string& s, const string& seperator);
-	DLL_FUNC unsigned long long GetCurrentTimeMsec();
+	DLL_FUNC int64_t GetCurrentTimeMsec();
 
 	int ScUtils_GetCPUCount();
+
+	template <typename T>
+	class Comparator
+	{
+	public:
+		virtual int compare(T left, T right) = 0;
+	};
 
 	template <typename T> // T must be integer type
 	T to_little_endian(T x)

@@ -213,9 +213,6 @@
     <ClCompile Include="..\..\src\thrids\task\Task.cpp">
       <Filter>thrids\task</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\thrids\task\TaskQueue.cpp">
-      <Filter>thrids\task</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\thrids\task\TaskTimer.cpp">
       <Filter>thrids\task</Filter>
     </ClCompile>
@@ -605,6 +602,21 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\Midi\MidiFileCreate.cpp">
       <Filter>core\Midi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\task\SortTaskQueue.cpp">
+      <Filter>thrids\task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\task\TaskObjectPool.cpp">
+      <Filter>thrids\task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\task\MsgProcesser.cpp">
+      <Filter>thrids\task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\task\TimerWheel.cpp">
+      <Filter>thrids\task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\task\WheelSlot.cpp">
+      <Filter>thrids\task</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1150,6 +1162,27 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\Synth\Synther\Synther.h">
       <Filter>core\Synth\Synther</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\LinkedList.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\task\SortTaskQueue.h">
+      <Filter>thrids\task</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\LinkedListNode.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\task\TaskObjectPool.h">
+      <Filter>thrids\task</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\task\MsgProcesser.h">
+      <Filter>thrids\task</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\task\TimerWheel.h">
+      <Filter>thrids\task</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\task\WheelSlot.h">
+      <Filter>thrids\task</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

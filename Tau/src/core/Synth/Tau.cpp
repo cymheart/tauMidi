@@ -53,6 +53,33 @@ namespace tau {
 
 	}
 
+	//打开
+	void Tau::Open()
+	{
+		if (isOpened)
+			return;
+
+		midiEditorSynthers[0]->Open();
+		isOpened = true;
+	}
+
+	//关闭
+	void Tau::Close()
+	{
+		if (!isOpened)
+			return;
+
+		Remove();
+
+		for (int i = 1; i < syntherCount; i++)
+			DEL(midiEditorSynthers[i]);
+
+		syntherCount = 1;
+		midiEditorSynthers[0]->Close();
+
+		isOpened = false;
+	}
+
 	// 设置样本处理采样率
 	void Tau::SetSampleProcessRate(int rate)
 	{
@@ -169,33 +196,7 @@ namespace tau {
 
 
 
-	//打开
-	void Tau::Open()
-	{
-		if (isOpened)
-			return;
 
-		for (int i = 0; i < syntherCount; i++)
-		{
-			midiEditorSynthers[i]->Open();
-		}
-
-		isOpened = true;
-	}
-
-	//关闭
-	void Tau::Close()
-	{
-		if (!isOpened)
-			return;
-
-		for (int i = 0; i < syntherCount; i++)
-		{
-			midiEditorSynthers[i]->Close();
-		}
-
-		isOpened = false;
-	}
 
 	//增加效果器
 	void Tau::AddEffect(TauEffect* effect)

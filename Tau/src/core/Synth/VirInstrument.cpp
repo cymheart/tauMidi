@@ -838,7 +838,7 @@ namespace tau
 				if (keySounder)
 					keySounder->SetRealtimeControlType(keyEvent.isRealTime);
 				//
-				PrintOnKeyInfo(keyEvent.key, keyEvent.velocity, keyEvent.isRealTime);
+				//PrintOnKeyInfo(keyEvent.key, keyEvent.velocity, keyEvent.isRealTime);
 			}
 			else
 			{

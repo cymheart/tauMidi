@@ -548,6 +548,7 @@ namespace tau
 		MidiEditorSynther* midiEditorSynthers[500] = { nullptr };
 		int syntherCount = 1;
 
+
 		friend class MidiEditorSynther;
 		friend class VirInstrument;
 		friend class MidiEditor;

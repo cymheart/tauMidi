@@ -160,6 +160,12 @@ public class Editor {
     {
         ndkGoto(ndkEditor, sec);
 
+        _Goto(sec);
+    }
+
+    //设置播放的起始时间点
+    protected void _Goto(double sec)
+    {
         for (int i = 0; i < tracks.size(); i++)
             tracks.get(i).Clear();
 
@@ -192,6 +198,22 @@ public class Editor {
         }
         else {
             Goto(sec);
+        }
+    }
+
+    //移动到指定时间点
+    public void GraphRunto(double sec)
+    {
+        if (state != PLAY || !isStepPlayMode) {
+            _Goto(sec);
+            return;
+        }
+
+        if (sec >= curtPlaySec) {
+            Process((sec - curtPlaySec) / speed, true);
+        }
+        else {
+            _Goto(sec);
         }
     }
 

@@ -172,8 +172,6 @@ namespace dsignal
 		//单位频率
 		float unitFreq = maxFreq / 512;
 
-		//采样个数设置
-		int sampleCountSetting = 512;
 		//采样个数
 		int sampleCount = 0;
 

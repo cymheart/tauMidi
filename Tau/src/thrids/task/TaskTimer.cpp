@@ -1,25 +1,12 @@
 ﻿#include"TaskTimer.h"
+#include"TaskObjectPool.h"
 
 namespace task
 {
-
-	BUILD_SHARE(TimerTaskPool)
-
-		//TimerTask	
-		void TimerTask::Release(Task* task)
+	//TimerTask	
+	void TimerTask::Release(Task* task)
 	{
-		TimerTaskPool::GetInstance().Push((TimerTask*)task);
-	}
-
-	//TimerTaskPool
-	TimerTaskPool::TimerTaskPool()
-	{
-
-	}
-
-	TimerTaskPool::~TimerTaskPool()
-	{
-
+		TaskObjectPool::GetInstance().TimerPool().Push((TimerTask*)task);
 	}
 
 	//TaskTimer
@@ -40,18 +27,15 @@ namespace task
 			float fps = taskProcesser->GetFrameRate();
 			this->durationMS = (int)(1000 / fps);
 		}
-
-		//
 	}
 
 	TaskTimer::~TaskTimer()
 	{
 	}
 
-
 	void TaskTimer::Start()
 	{
-		task = TimerTaskPool::GetInstance().Pop();
+		task = TaskObjectPool::GetInstance().TimerPool().Pop();
 		task->timer = this;
 		task->msg = TaskMsg::TMSG_TIMER_START;
 		task->processCallBack = StartTask;
@@ -60,7 +44,7 @@ namespace task
 
 	void TaskTimer::ReStart()
 	{
-		TimerTask* t = TimerTaskPool::GetInstance().Pop();
+		TimerTask* t = TaskObjectPool::GetInstance().TimerPool().Pop();
 		t->timer = this;
 		t->msg = TaskMsg::TMSG_TIMER_RESTART;
 		t->processCallBack = StartTask;
@@ -69,7 +53,7 @@ namespace task
 
 	void TaskTimer::Stop()
 	{
-		TimerTask* t = TimerTaskPool::GetInstance().Pop();
+		TimerTask* t = TaskObjectPool::GetInstance().TimerPool().Pop();
 		t->timer = this;
 		t->msg = TaskMsg::TMSG_TIMER_STOP;
 		task->processCallBack = StopTask;
@@ -78,7 +62,7 @@ namespace task
 
 	void TaskTimer::PostTask(int tm)
 	{
-		task = TimerTaskPool::GetInstance().Pop();
+		task = TaskObjectPool::GetInstance().TimerPool().Pop();
 		task->timer = this;
 		task->msg = TaskMsg::TMSG_TIMER_RUN;
 		task->processCallBack = RunTask;
