@@ -10,8 +10,8 @@
 
 ### 支持系统平台
 目前支持
-   Window 
-   Android
+   Window， 
+   Android 平台
    
 ### 工程文件包括测试示例
 TauClrTest(C#)
