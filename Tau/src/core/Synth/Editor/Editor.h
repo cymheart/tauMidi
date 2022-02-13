@@ -5,6 +5,8 @@
 #include "Midi/MidiTypes.h"
 #include"EditorTypes.h"
 #include"MidiMarkerList.h"
+#include"scutils/Semaphore.h"
+using namespace scutils;
 
 namespace tau
 {

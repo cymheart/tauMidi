@@ -19,6 +19,23 @@ namespace scutils
 			return (size == 0);
 		}
 
+		/**根据指定的标号找到对应的节点*/
+		LinkedListNode<T> GetNode(int idx)
+		{
+			if (idx <= 0) return head;
+			else if (idx >= size - 1) return tail;
+
+			int i = 0;
+			LinkedListNode<T> node = head;
+			for (; node; node = node.next) {
+				if (i == idx)
+					return node;
+				i++;
+			}
+
+			return nullptr;
+		}
+
 		void Clear()
 		{
 			head = tail = nullptr;
@@ -70,6 +87,7 @@ namespace scutils
 			return AddBack(tail, node);
 		}
 
+
 		// 往链表末尾加入节点
 		LinkedListNode<T>* AddLast(LinkedListNode<T>* startNode, LinkedListNode<T>* endNode, int count)
 		{
@@ -105,6 +123,11 @@ namespace scutils
 		LinkedListNode<T>* AddBack(LinkedListNode<T>* prev, LinkedListNode<T>* node)
 		{
 			return AddBack(prev, node, node, 1);
+		}
+
+		LinkedListNode<T>* AddBack(LinkedListNode<T>* prev, LinkedList<T>& addList)
+		{
+			return AddBack(prev, addList.GetHeadNode(), addList.GetLastNode(), addList.Size());
 		}
 
 		LinkedListNode<T>* AddBack(
@@ -156,6 +179,11 @@ namespace scutils
 		LinkedListNode<T>* AddBefore(LinkedListNode<T>* next, LinkedListNode<T>* node)
 		{
 			return AddBefore(next, node, node, 1);
+		}
+
+		LinkedListNode<T>* AddBefore(LinkedListNode<T>* next, LinkedList<T>& addList)
+		{
+			return AddBefore(next, addList.GetHeadNode(), addList.GetLastNode(), addList.Size());
 		}
 
 		LinkedListNode<T>* AddBefore(
@@ -253,7 +281,7 @@ namespace scutils
 				}
 
 				// 再从左往右边找，直到找到比base值大的数
-				while (cmp.compare(j->elem, base) != 1 && i != j) {
+				while (cmp.compare(i->elem, base) != 1 && i != j) {
 					i = i->next;
 				}
 

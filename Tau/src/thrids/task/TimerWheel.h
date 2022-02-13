@@ -42,7 +42,7 @@ namespace task
 		}
 
 		/**步进到指定时间点,并回调处理在时间点之间的所有元素*/
-		void Read(int64_t curTimeMS);
+		bool Read(int64_t curTimeMS);
 
 		/**合并时间轮数据*/
 		void Merge(TaskQueue& mergeTaskQue);

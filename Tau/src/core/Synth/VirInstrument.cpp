@@ -6,6 +6,9 @@
 #include"Channel.h"
 #include"Preset.h"
 #include <random>
+#include"FX/TauEffect.h"
+#include"FX/EffectList.h"
+#include"MidiTrackRecord.h"
 using namespace tauFX;
 
 

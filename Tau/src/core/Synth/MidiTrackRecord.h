@@ -4,6 +4,7 @@
 #include"TauTypes.h"
 #include"Midi/MidiEvent.h"
 #include"Midi/MidiTrack.h"
+#include<thread>
 
 namespace tau
 {
@@ -75,7 +76,7 @@ namespace tau
 		float defTickForQuarterNote = 480;
 
 		//开始录制的起始时间点
-		clock::time_point startRecordTime;
+		chrono::high_resolution_clock::time_point startRecordTime;
 	};
 
 }

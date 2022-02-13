@@ -25,7 +25,7 @@ namespace tau
 
 		Clear();
 		midiTrack = new MidiTrack();
-		startRecordTime = clock::now();
+		startRecordTime = chrono::high_resolution_clock::now();
 		isRecord = true;
 	}
 
@@ -59,7 +59,8 @@ namespace tau
 	//获取录制时间点(单位:s)
 	float MidiTrackRecord::GetRecordSec()
 	{
-		return (chrono::duration_cast<res>(clock::now() - startRecordTime).count() * 0.001f);
+		return (chrono::duration_cast<chrono::microseconds>(
+			chrono::high_resolution_clock::now() - startRecordTime).count() * 0.001f);
 	}
 
 	//录制OnKey

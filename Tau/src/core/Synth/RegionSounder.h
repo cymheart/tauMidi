@@ -10,6 +10,7 @@
 #include"RegionModulation.h"
 #include"DaisySP/daisysp.h"
 #include <stk/Chorus.h>
+#include"iir/Iir1.h"
 
 namespace tau
 {

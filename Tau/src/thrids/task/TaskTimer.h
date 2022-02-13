@@ -39,8 +39,8 @@ namespace task
 		}
 
 		void Start();
-		void ReStart();
 		void Stop();
+		void ReStart();
 
 	private:
 		void PostTask(int tm);
@@ -50,7 +50,7 @@ namespace task
 		static void StopTask(Task* task);
 
 	public:
-		TimerTask* task;
+		TimerTask* runTask;
 
 	private:
 		int durationMS;

@@ -163,12 +163,12 @@ public class Tau
         editor.Play();
 
 //        //创建对象，及属性赋值
-//        LoginInfo.Login.Builder builder = LoginInfo.Login.newBuilder();
+      //  LoginInfo.Login.Builder builder = LoginInfo.Login.newBuilder();
 //
-//        builder.setAccount("Mrzhang")
-//                .setPassword("18");
+       // builder.setAccount("Mrzhang")
+        //        .setPassword("18");
 //
-//        LoginInfo.Login login = builder.build();
+      //  LoginInfo.Login login = builder.build();
 //
 ////序列化(通过protobuf生成的java类的内部方法进行序列化)
 //        byte[] bytes = login.toByteArray();

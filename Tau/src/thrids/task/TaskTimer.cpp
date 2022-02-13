@@ -14,7 +14,7 @@ namespace task
 		TimerCallBack timerCB,
 		void* data, int durationMS, bool isRepeat)
 		:isStop(true)
-		, task(nullptr)
+		, runTask(nullptr)
 	{
 		this->timerCB = timerCB;
 		this->data = data;
@@ -35,7 +35,7 @@ namespace task
 
 	void TaskTimer::Start()
 	{
-		task = TaskObjectPool::GetInstance().TimerPool().Pop();
+		TimerTask* task = TaskObjectPool::GetInstance().TimerPool().Pop();
 		task->timer = this;
 		task->msg = TaskMsg::TMSG_TIMER_START;
 		task->processCallBack = StartTask;
@@ -44,11 +44,8 @@ namespace task
 
 	void TaskTimer::ReStart()
 	{
-		TimerTask* t = TaskObjectPool::GetInstance().TimerPool().Pop();
-		t->timer = this;
-		t->msg = TaskMsg::TMSG_TIMER_RESTART;
-		t->processCallBack = StartTask;
-		taskProcesser->PostTask(t);
+		Stop();
+		Start();
 	}
 
 	void TaskTimer::Stop()
@@ -56,17 +53,17 @@ namespace task
 		TimerTask* t = TaskObjectPool::GetInstance().TimerPool().Pop();
 		t->timer = this;
 		t->msg = TaskMsg::TMSG_TIMER_STOP;
-		task->processCallBack = StopTask;
+		t->processCallBack = StopTask;
 		taskProcesser->PostTask(t);
 	}
 
 	void TaskTimer::PostTask(int tm)
 	{
-		task = TaskObjectPool::GetInstance().TimerPool().Pop();
-		task->timer = this;
-		task->msg = TaskMsg::TMSG_TIMER_RUN;
-		task->processCallBack = RunTask;
-		taskProcesser->PostTask(task, tm);
+		runTask = TaskObjectPool::GetInstance().TimerPool().Pop();
+		runTask->timer = this;
+		runTask->msg = TaskMsg::TMSG_TIMER_RUN;
+		runTask->processCallBack = RunTask;
+		taskProcesser->PostTask(runTask, tm);
 	}
 
 	void TaskTimer::RunTask(Task* task)
@@ -77,7 +74,7 @@ namespace task
 		if (timer.isStop)
 			return;
 
-		timer.task = nullptr;
+		timer.runTask = nullptr;
 
 		if (timer.timerCB != nullptr)
 			timer.timerCB(timer.data);

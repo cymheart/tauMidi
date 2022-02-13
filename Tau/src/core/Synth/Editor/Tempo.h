@@ -13,6 +13,13 @@ namespace tau
 	public:
 		void Copy(Tempo& cpyTempo);
 
+		// <summary>
+	    /// 设置轨道速度
+	    /// </summary>
+	    /// <param name="bpm">节拍（每分钟的拍子数）</param>
+	    /// <param name="tickForQuarterNote">一个四分音符的tick数</param>
+		void SetTempoByBPM(float bpm, float tickForQuarterNote, int startTickCount, double startSec);
+
 		/// <summary>
 		/// 设置轨道速度
 		/// </summary>

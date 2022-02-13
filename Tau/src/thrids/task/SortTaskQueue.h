@@ -18,7 +18,7 @@ namespace task
 		bool IsBlockFilter(int num);
 		bool IsEmpty();
 		bool NeedProcessTimeOutList();
-		void Read(int64_t curTimeMS);
+		bool Read(int64_t curTimeMS);
 		void Merge(TaskQueue& mergeTaskQue);
 		void Traversal();
 		void Release();

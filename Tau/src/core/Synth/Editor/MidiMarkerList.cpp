@@ -56,6 +56,7 @@ namespace tau
 		//
 		lastGetTempoIdx = cpyMidiMarkerList.lastGetTempoIdx;
 		tickForQuarterNote = cpyMidiMarkerList.tickForQuarterNote;
+		defaultTempo.SetTempoByBPM(120, tickForQuarterNote, 0, 0);
 
 	}
 
@@ -81,6 +82,8 @@ namespace tau
 
 
 	//获取当前速度
+	//tick >= 0 时使用tick
+	//sec >=0 时使用sec判断
 	Tempo* MidiMarkerList::GetTempo(int tick, double sec, int startIdx)
 	{
 		int prevIdx = -1;
@@ -105,7 +108,7 @@ namespace tau
 		lastGetTempoIdx = max(prevIdx, 0);
 
 		if (i == 0 || prevIdx == -1)
-			return nullptr;
+			return &defaultTempo;
 
 		return &(midiMarkers[prevIdx]->tempo);
 	}
@@ -143,7 +146,8 @@ namespace tau
 		ComputeTempo();
 	}
 
-	void MidiMarkerList::AppendFormMidiEvents(list<MidiEvent*>& midiEvents)
+	//从midiEvents中发现并添加MidiMarker标记
+	void MidiMarkerList::AppendFromMidiEvents(list<MidiEvent*>& midiEvents)
 	{
 		list<MidiEvent*>::iterator it = midiEvents.begin();
 		list<MidiEvent*>::iterator end = midiEvents.end();

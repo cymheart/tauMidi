@@ -2,6 +2,7 @@
 #define _Semaphore_h_
 
 #include"Utils.h"
+#include<mutex>
 
 namespace scutils
 {

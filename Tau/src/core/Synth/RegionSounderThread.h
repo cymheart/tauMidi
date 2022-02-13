@@ -2,6 +2,8 @@
 #define _RegionSounderThread_h_
 
 #include "TauTypes.h"
+#include"scutils/Semaphore.h"
+using namespace scutils;
 
 namespace tau
 {

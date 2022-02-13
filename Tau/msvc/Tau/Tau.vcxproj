@@ -197,6 +197,7 @@
     <ClInclude Include="..\..\src\core\FX\Distortion.h" />
     <ClInclude Include="..\..\src\core\FX\Equalizer.h" />
     <ClInclude Include="..\..\src\core\FX\EffectList.h" />
+    <ClInclude Include="..\..\src\core\FX\FxTypes.h" />
     <ClInclude Include="..\..\src\core\FX\Reverb.h" />
     <ClInclude Include="..\..\src\core\FX\EffectTask.h" />
     <ClInclude Include="..\..\src\core\FX\Tremolo.h" />

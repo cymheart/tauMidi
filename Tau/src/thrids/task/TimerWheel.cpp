@@ -21,7 +21,7 @@ namespace task
 	}
 
 	/**步进到指定时间点,并回调处理在时间点之间的所有元素*/
-	void TimerWheel::Read(int64_t curTimeMS)
+	bool TimerWheel::Read(int64_t curTimeMS)
 	{
 		int count;
 		LinkedList<Task*>* taskList;
@@ -85,7 +85,7 @@ namespace task
 				node = next;
 
 				if (ret == 1)
-					return;
+					return false;
 			}
 
 			if (blockFilterCount == 0)
@@ -93,6 +93,8 @@ namespace task
 
 			break;
 		}
+
+		return true;
 	}
 
 

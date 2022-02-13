@@ -4,9 +4,8 @@
 #include "TauTypes.h"
 #include"Midi/MidiTypes.h"
 #include <Audio/Audio.h>
-#include"FX/TauEffect.h"
-#include"FX/EffectList.h"
 #include"Editor/EditorTypes.h"
+#include"FX/FxTypes.h"
 using namespace tauFX;
 
 namespace tau
@@ -155,7 +154,7 @@ namespace tau
 
 		inline float GetInvSampleProcessRate()
 		{
-			return invSampleProcessRate;
+			return (float)invSampleProcessRate;
 		}
 
 

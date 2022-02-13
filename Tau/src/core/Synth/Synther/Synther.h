@@ -8,6 +8,9 @@
 #include"FX/EffectList.h"
 #include"Audio/Audio.h"
 #include"task/MsgProcesser.h"
+#include "task/Task.h"
+using namespace task;
+
 using namespace tauFX;
 
 namespace tau

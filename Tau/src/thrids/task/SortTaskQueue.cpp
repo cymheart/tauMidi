@@ -20,11 +20,6 @@ namespace task
 		return waitTimeMS;
 	}
 
-	/**�����������˲���
-	 * @param filterNumbers ��Ҫ���˵Ķ�Ӧ�����
-	 * @param count �������鳤��
-	 * */
-
 	void SortTaskQueue::SetBlockFilter(int* filterNumbers, int count)
 	{
 		blockFilterNumbers = filterNumbers;
@@ -46,7 +41,6 @@ namespace task
 		return timeOutList.Empty() && timerTaskList.Empty();
 	}
 
-	/**�Ƿ���Ҫ����ʱ�б�*/
 	bool SortTaskQueue::NeedProcessTimeOutList()
 	{
 		if (timeOutList.Empty())
@@ -61,7 +55,7 @@ namespace task
 	}
 
 
-	void SortTaskQueue::Read(int64_t curTimeMS)
+	bool SortTaskQueue::Read(int64_t curTimeMS)
 	{
 		waitTimeMS = -1;
 		LinkedListNode<Task*>* node = timerTaskList.GetHeadNode();
@@ -96,7 +90,7 @@ namespace task
 				node = next;
 
 				if (ret == 1)
-					return;
+					return false;
 			}
 
 			if (blockFilterCount == 0)
@@ -104,6 +98,8 @@ namespace task
 
 			break;
 		}
+
+		return true;
 	}
 
 
@@ -115,8 +111,6 @@ namespace task
 		timeOutList.Merge(tq.timeOutList);
 	}
 
-
-	/**��������Ԫ�أ����ص�����*/
 	void SortTaskQueue::Traversal()
 	{
 		LinkedListNode<Task*>* node = timeOutList.GetHeadNode();
@@ -132,7 +126,6 @@ namespace task
 		}
 	}
 
-	/**�ͷ�����Ԫ��*/
 	void SortTaskQueue::Release()
 	{
 		LinkedListNode<Task*>* node = timeOutList.GetHeadNode();
@@ -200,7 +193,6 @@ namespace task
 		return false;
 	}
 
-	/**����Ԫ��node��ָ�������б���*/
 	void SortTaskQueue::AddToTimeOutList(LinkedListNode<Task*>* node)
 	{
 		if (node->elem->GetPriority() == TASK_MAX_PRIORITY) {

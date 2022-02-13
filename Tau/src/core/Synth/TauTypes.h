@@ -3,15 +3,8 @@
 
 #include "scutils/Utils.h"
 #include "scutils/MathUtils.h"
-#include "scutils/Semaphore.h"
-#include "task/TaskProcesser.h"
-#include "scutils/ObjectPool.h"
-#include "scutils/RingBuffer.h"
-#include "iir/Iir1.h"
-#include "scutils/UniqueID.h"
 #include <queue>
 
-using namespace task;
 using namespace scutils;
 
 namespace tau
@@ -36,6 +29,7 @@ namespace tau
 	class Modulator;
 	class Sample;
 	class RegionSounder;
+	class MidiTrackRecord;
 
 	class Envelope;
 	class KeySounder;

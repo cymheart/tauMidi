@@ -4,6 +4,9 @@
 #include <dsignal/MorphLBHFilter.h>
 #include <dsignal/Bode.h>
 #include "Editor/Editor.h"
+#include"FX/TauEffect.h"
+#include"FX/EffectList.h"
+
 using namespace dsignal;
 
 /*

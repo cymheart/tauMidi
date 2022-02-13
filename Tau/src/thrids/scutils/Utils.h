@@ -15,9 +15,7 @@
 #include <functional>
 #include <atomic>
 #include <math.h>
-#include <mutex>
 #include <cstdint>
-#include <thread>
 #include <list>
 
 using namespace std;
@@ -102,10 +100,6 @@ if(objList != nullptr)\
 
 namespace scutils
 {
-
-	typedef chrono::high_resolution_clock clock;
-	typedef chrono::microseconds res;
-
 	DLL_FUNC int JudgeLittleOrBigEndianSystem();
 
 	DLL_FUNC vector<string> split(const string& s, const string& seperator);

@@ -1,4 +1,5 @@
 ﻿#include"Utils.h"
+#include <chrono>
 
 namespace scutils
 {
@@ -28,7 +29,8 @@ namespace scutils
 
 	DLL_FUNC int64_t GetCurrentTimeMsec()
 	{
-		return std::chrono::duration_cast<chrono::milliseconds>(clock::now().time_since_epoch()).count();
+		return std::chrono::duration_cast<chrono::milliseconds>(
+			chrono::high_resolution_clock::now().time_since_epoch()).count();
 
 		//
 		//#ifdef _WIN32

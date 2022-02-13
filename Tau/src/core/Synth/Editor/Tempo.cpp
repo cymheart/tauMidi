@@ -15,10 +15,26 @@ namespace tau
 	/// <summary>
 	/// 设置轨道速度
 	/// </summary>
+	/// <param name="bpm">节拍（每分钟的拍子数）</param>
+	/// <param name="tickForQuarterNote">一个四分音符的tick数</param>
+	void Tempo::SetTempoByBPM(float bpm, float tickForQuarterNote, int startTickCount, double startSec)
+	{
+		curtTempoStartSec = startSec;
+		BPM = bpm;
+		this->tickForQuarterNote = tickForQuarterNote;
+		float microTempo = 60000000 / BPM; //60000000: 1分钟的微秒数
+		msPerTick = microTempo / tickForQuarterNote * 0.001f;
+		curtTempoStartTick = startTickCount;
+	}
+
+	/// <summary>
+	/// 设置轨道速度
+	/// </summary>
 	/// <param name="microTempo">一个四分音符的微秒数</param>
 	/// <param name="tickForQuarterNote">一个四分音符的tick数</param>
 	void Tempo::SetTempo(float microTempo, float tickForQuarterNote, int startTickCount, double startSec)
 	{
+		this->tickForQuarterNote = tickForQuarterNote;
 		curtTempoStartSec = startSec;
 		msPerTick = microTempo / tickForQuarterNote * 0.001f;
 		BPM = 60000000 / microTempo;  //60000000: 1分钟的微秒数

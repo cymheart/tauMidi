@@ -133,7 +133,6 @@ namespace task
 		int taskBlockFilterNumbers[100];
 		int taskBlockFilterCount = 0;
 
-		int taskProcessRet = 0;
 		Task* cmpRemoveTask = nullptr;
 
 		//是否为固定帧率模式

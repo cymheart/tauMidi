@@ -43,7 +43,7 @@ namespace tau
 		list<MidiEvent*>* golbalEvents = midiFile->GetGolbalEventList();
 
 		midiMarkerList.SetTickForQuarterNote(midiFile->GetTickForQuarterNote());
-		midiMarkerList.AppendFormMidiEvents(*golbalEvents);
+		midiMarkerList.AppendFromMidiEvents(*golbalEvents);
 
 		AddMidiTracks(*midiFile->GetTrackList());
 
@@ -646,7 +646,7 @@ namespace tau
 	//增加标记，来自于midi事件列表中
 	void Editor::AddMarkers(list<MidiEvent*>& midiEvents)
 	{
-		midiMarkerList.AppendFormMidiEvents(midiEvents);
+		midiMarkerList.AppendFromMidiEvents(midiEvents);
 
 		waitSem.reset(tau->syntherCount - 1);
 		for (int i = 0; i < tau->syntherCount; i++)

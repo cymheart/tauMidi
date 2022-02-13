@@ -44,7 +44,7 @@ namespace task
 		virtual void Add(Task* task) = 0;
 		virtual bool Remove(Task* task) = 0;
 
-		virtual void Read(int64_t curTimeMS) = 0;
+		virtual bool Read(int64_t curTimeMS) = 0;
 
 		virtual void Merge(TaskQueue& mergeTaskQue) = 0;
 

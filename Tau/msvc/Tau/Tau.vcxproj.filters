@@ -1184,5 +1184,8 @@
     <ClInclude Include="..\..\src\thrids\task\WheelSlot.h">
       <Filter>thrids\task</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\FxTypes.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

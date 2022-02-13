@@ -249,8 +249,10 @@ int main(int argc, char* argv[])
 
 	//添加需要播放的midi文件
 	//midiFiles.push_back(midiPath + "tau2.5.9.mid");
+	midiFiles.push_back(midiPath + "aloha heja he-Achim Reichel.mid");
 	midiFiles.push_back(midiPath + "venture.mid");
 	midiFiles.push_back(midiPath + "吻别.mid");
+	midiFiles.push_back(midiPath + "aloha heja he-Achim Reichel.mid");
 	midiFiles.push_back(midiPath + "dream.mid");
 	midiFiles.push_back(midiPath + "鱼姐 remix.mid");
 	midiFiles.push_back(midiPath + "决心鱼.mid");
@@ -316,10 +318,10 @@ int main(int argc, char* argv[])
 	//{
 		//tau->RemoveMidi();
 
-	string p = midiPath + "learning\\Brainiac Maniac 2.mid";
+	//string p = midiPath + "learning\\Brainiac Maniac 2.mid";
 	//int i = 15;
 
-	string p2 = midiPath + "故乡的原风景(陶笛).mid";
+	//string p2 = midiPath + "故乡的原风景(陶笛).mid";
 
 	//tau->Load(p);
 	//tau->Play();

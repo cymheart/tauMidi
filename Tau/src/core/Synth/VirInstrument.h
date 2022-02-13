@@ -2,11 +2,8 @@
 #define _VirInstrument_h_
 
 #include"TauTypes.h"
-#include"Midi/MidiEvent.h"
-#include"Midi/MidiTrack.h"
-#include"MidiTrackRecord.h"
-#include"FX/TauEffect.h"
-#include"FX/EffectList.h"
+#include"Midi/MidiTypes.h"
+#include"FX/FxTypes.h"
 using namespace tauFX;
 
 namespace tau

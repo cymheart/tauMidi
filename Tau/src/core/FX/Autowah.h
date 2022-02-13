@@ -3,6 +3,8 @@
 
 #include <DaisySP/daisysp.h>
 #include"TauEffect.h"
+#include "task/Task.h"
+using namespace task;
 
 namespace tauFX
 {

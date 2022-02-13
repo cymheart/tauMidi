@@ -3,8 +3,10 @@
 
 #include<Synth/TauTypes.h>
 #include "scutils/Utils.h"
+#include "task/Task.h"
 using namespace scutils;
 using namespace tau;
+using namespace task;
 
 
 namespace tauFX

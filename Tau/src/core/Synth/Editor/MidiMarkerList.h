@@ -25,6 +25,7 @@ namespace tau
 		void SetTickForQuarterNote(uint32_t tick)
 		{
 			tickForQuarterNote = tick;
+			defaultTempo.SetTempoByBPM(120, tickForQuarterNote, 0, 0);
 		}
 
 		//获取当前速度
@@ -34,12 +35,14 @@ namespace tau
 
 		//
 		void AppendMidiMarker(MidiMarker* midiMarker);
-		void AppendFormMidiEvents(list<MidiEvent*>& midiEvents);
+		void AppendFromMidiEvents(list<MidiEvent*>& midiEvents);
 
 
 	private:
 
 		//获取当前速度
+		//tick >= 0 时使用tick
+		//sec >=0 时使用sec判断
 		Tempo* GetTempo(int tick, double sec, int startIdx = 0);
 
 		//计算速度
@@ -51,6 +54,9 @@ namespace tau
 		int lastGetTempoIdx = 0;
 
 		uint32_t tickForQuarterNote;
+
+		//默认速度
+		Tempo defaultTempo;
 
 	};
 }

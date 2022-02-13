@@ -297,25 +297,12 @@ namespace task
 		case  TMSG_TIMER_STOP:
 		{
 			TaskTimer* timer = ((TimerTask*)task)->timer;
-			if (timer->task != nullptr) {
-				timer->task->isRemove = true;
-				timer->task = nullptr;
-			}
-
-		}
-		break;
-
-		case TMSG_TIMER_RESTART:
-		{
-			TaskTimer* timer = ((TimerTask*)task)->timer;
-			if (timer->task != nullptr) {
-				Task* tsk = timer->task;
+			if (timer->runTask != nullptr) {
+				Task* tsk = timer->runTask;
 				if (!writeQue->Remove(tsk))
 					readQue->Remove(tsk);
-				tsk->executeTimeMS = GetCurrentTimeMsec() - startTime + tsk->delay;
-				tsk->isRemove = false;
-				writeQue->Add(tsk);
 			}
+
 		}
 		break;
 
@@ -358,10 +345,7 @@ namespace task
 		}
 		break;
 
-
 		case TMSG_QUIT:
-			if (isLock)
-				quitSem.set();
 			return 1;
 
 		case TMSG_PAUSE:
@@ -382,17 +366,19 @@ namespace task
 		int64_t waitTime;
 		int64_t tm;
 		int64_t curTime;
-		taskProcessRet = 0;
 
 		for (;;)
 		{
 			curTime = GetCurrentTimeMsec();
 			readQue->SetBlockFilter(taskBlockFilterNumbers, taskBlockFilterCount);
 			tm = curTime - startTime;
-			readQue->Read(tm);
 
-			if (taskProcessRet == 1)
+			if (!readQue->Read(tm)) 
+			{
+				if (isLock)
+					quitSem.set();
 				return;
+			}
 
 			if (isLock)
 			{
@@ -447,13 +433,12 @@ namespace task
 
 	int TaskProcesser::_ReadTaskList(Task* task)
 	{
-		taskProcessRet = 0;
+		int ret = 0;
 		if (!task->isRemove)
-			taskProcessRet = ProcessTask(task);
-
+			ret = ProcessTask(task);	
 		Task::Release(task);
 
-		return taskProcessRet;
+		return ret;
 	}
 
 	int TaskProcesser::_RemoveTaskProcess(Task* task)
