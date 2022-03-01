@@ -3,6 +3,7 @@
 
 #include "Synth/TauTypes.h"
 
+
 namespace tau
 {
 	// 乐器片段
@@ -51,9 +52,10 @@ namespace tau
 			branchIdx = branchIdx_;
 		}
 
-		void AddMidiEvents(list<MidiEvent*>& midiEvents_);
+		void AddMidiEvents(LinkedList<MidiEvent*>& midiEvents_);
 
-		const list<MidiEvent*>& GetMidiEvents()
+
+		LinkedList<MidiEvent*>& GetMidiEvents()
 		{
 			return midiEvents;
 		}
@@ -68,9 +70,9 @@ namespace tau
 		int branchIdx = 0;
 
 		//对应音轨事件队列的当前处理位置
-		list<MidiEvent*>::iterator eventOffsetIter;
+		LinkedListNode<MidiEvent*>* eventOffsetNode;
+		LinkedList<MidiEvent*> midiEvents;
 
-		list<MidiEvent*> midiEvents;
 
 		friend class Track;
 		friend class MidiEditor;

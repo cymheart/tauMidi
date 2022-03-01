@@ -2,6 +2,7 @@
 #define _MidiTypes_h_
 
 #include"scutils/ByteStream.h"
+#include"scutils/LinkedList.h"
 
 using namespace scutils;
 
@@ -14,7 +15,6 @@ namespace tau
 	class NoteOffEvent;
 	class MidiTrack;
 
-	using MidiEventList = vector<MidiEvent*>;
 	using MidiTrackList = vector<MidiTrack*>;
 	using MidiControllerTypeList = vector<MidiControllerType>;
 
@@ -221,6 +221,11 @@ namespace tau
 		/// 文本
 		/// </summary>
 		Text,
+
+		/// <summary>
+		/// 时间同步
+		/// </summary>
+		Smpte,
 
 		/// <summary>
 		/// 系统码

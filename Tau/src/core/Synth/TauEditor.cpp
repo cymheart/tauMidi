@@ -7,10 +7,17 @@
 namespace tau
 {
 
-	//载入
-	void Tau::Load(string& midiFilePath)
+	//判断是否载入完成
+	bool Tau::IsLoadCompleted()
 	{
-		editor->Load(midiFilePath);
+		return editor->IsLoadCompleted();
+	}
+
+
+	//载入
+	void Tau::Load(string& midiFilePath, bool isWaitLoadCompleted)
+	{
+		editor->Load(midiFilePath, isWaitLoadCompleted);
 	}
 
 	//新建轨道

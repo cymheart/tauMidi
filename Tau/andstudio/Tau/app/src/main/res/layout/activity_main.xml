@@ -15,6 +15,9 @@
             android:id="@+id/button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:rotation="0"
+            android:rotationX="0"
+            android:rotationY="-2"
             android:text="Button" />
 
         <Button

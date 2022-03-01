@@ -6,6 +6,8 @@
 
 namespace tau
 {
+	using EditorProcessCB = void (*)(Editor* editor);
+
 	class MidiMarkerList;
 
 	// Editor状态

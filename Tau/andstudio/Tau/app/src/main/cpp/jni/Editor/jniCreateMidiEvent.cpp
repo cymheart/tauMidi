@@ -31,7 +31,7 @@ const int jNoteOnEventNote = 4;
 jfieldID jNoteOnEventFields[5];
 void CreateJNoteOnEventClassInfo(JNIEnv *env)
 {
-    jNoteOnEventClass = env->FindClass("cymheart/tau/midi/NoteOnEvent");
+    jNoteOnEventClass =  env->FindClass("cymheart/tau/midi/NoteOnEvent");
     jNoteOnEventClassInitMethod = env->GetMethodID(jNoteOnEventClass, "<init>", "()V");
     SaveJMidiEventClassFields(env, jNoteOnEventClass, jNoteOnEventFields);
     jNoteOnEventFields[jNoteOnEventNote] = env->GetFieldID(jNoteOnEventClass, "note", "I");

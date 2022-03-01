@@ -58,6 +58,13 @@ namespace tau
 			isMainSynther = isMain;
 		}
 
+		//移除所有从合成器
+		void RemoveAllAssistSynthers();
+
+		//移除指定的合成器
+		void RemoveAssistSynthers(vector<Synther*>* removeAssistSynthers);
+
+		void WaitSoundEnd();
 
 		//添加替换乐器
 		void AppendReplaceInstrumentTask(
@@ -133,7 +140,7 @@ namespace tau
 	protected:
 		void CombineSynthersFrameBufsTask();
 		void AddAssistSyntherTask(Semaphore* waitSem, Synther* assistSynther);
-		void RemoveAssistSyntherTask(Semaphore* waitSem, Synther* assistSynther);
+		void RemoveAssistSyntherTask(Synther* assistSynther);
 
 		// 请求删除合成器
 		void ReqDeleteTask();
@@ -145,6 +152,7 @@ namespace tau
 		static void _CombineSynthersFrameBufsTask(Task* ev);
 		static void _AddAssistSyntherTask(Task* ev);
 		static void _RemoveAssistSyntherTask(Task* ev);
+
 		static void _ReqDeleteTaskTask(Task* ev);
 		static void _AppendReplaceInstrumentTask(Task* ev);
 		static void _RemoveReplaceInstrumentTask(Task* ev);
@@ -175,8 +183,8 @@ namespace tau
 
 		void _CombineSynthersFrameBufs();
 		void AddAssistSynther(Synther* assistSynther);
-		void RemoveAssistSynther(Synther* assistSynther);
-		void CreateAssistSyntherSem();
+		void RemoveAssistSynther(Synther* removeAssistSynther);
+
 
 		//设置帧样本数量
 		//这个值越小，声音的实时性越高（在实时演奏时，值最好在1024以下，最合适的值为512）,
@@ -281,6 +289,8 @@ namespace tau
 
 		//合并辅助合成器buffer到主buffer中
 		void CombineAssistToMainBuffer();
+		//合并辅助合成器buffer到主buffer中
+		void CombineAssistToMainBuffer(vector<Synther*>& aSynthers);
 
 		//应用效果器到乐器的声道buffer
 		void ApplyEffectsToChannelBuffer();
@@ -306,6 +316,9 @@ namespace tau
 		//  移除已完成所有区域发声处理(采样处理)的KeySounder               
 		void RemoveProcessEndedKeySounder();
 
+		//等待发声结束移除对应的从合成器
+		void WaitSoundEndRemoveAssistSynthers();
+
 		static bool SounderCountCompare(VirInstrument* a, VirInstrument* b);
 
 		// 请求帧渲染事件
@@ -313,11 +326,6 @@ namespace tau
 		static void RenderTask(Task* ev);
 		// 渲染每帧音频
 		virtual void Render();
-
-		// 辅助帧渲染
-		void AssistFrameRender();
-		static void ThreadAssistFrameRender(void* param);
-
 
 		// 帧渲染
 		void FrameRender(uint8_t* stream, int len);
@@ -439,7 +447,7 @@ namespace tau
 		//是否请求删除合成器
 		bool isReqDelete = false;
 
-		Semaphore waitDelSem;
+		Semaphore waitSem;
 
 		int instSoundCount[1000];
 
@@ -453,6 +461,8 @@ namespace tau
 		bool isMainSynther = false;
 		atomic_int computedFrameBufSyntherCount;
 		vector<Synther*> assistSynthers;
+		vector<Synther*> waitSoundEndRemoveAssistSynthers;
+
 
 		friend class Tau;
 		friend class Editor;

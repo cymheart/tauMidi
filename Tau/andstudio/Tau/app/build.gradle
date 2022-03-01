@@ -1,11 +1,12 @@
 plugins {
     id 'com.android.library'
     //id 'com.android.application'
-    id 'com.google.protobuf'
+  //  id 'com.google.protobuf'
 }
 
 android {
-    compileSdkVersion 29
+    compileSdk 30
+    buildToolsVersion '30.0.3'
 
     repositories {
         maven { url 'https://maven.aliyun.com/repository/public/' }
@@ -31,9 +32,11 @@ android {
         minSdkVersion 23
         targetSdk 26
 
+
         externalNativeBuild {
             cmake {
 
+                cFlags "-std=c99","-Os","-fvisibility=hidden"
                 //"-fvisibility=hidden"
                 cppFlags "-std=c++11"
                 arguments '-DANDROID_STL=c++_static'
@@ -48,7 +51,9 @@ android {
         }
     }
 
+
     buildTypes {
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -65,21 +70,25 @@ android {
     }
 
     compileOptions {
+
+      //  sourceCompatibility(JavaVersion.VERSION_11)
+       // targetCompatibility(JavaVersion.VERSION_11)
+
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    sourceSets {
-        main {
-            java {
-                srcDir 'src/main/java'
-            }
-            proto {
-                srcDir 'src/main/proto' //指定.proto文件路径
-                include '**/*.proto'
-            }
-        }
-    }
+//    sourceSets {
+//        main {
+//            java {
+//                srcDir 'src/main/java'
+//            }
+//            proto {
+//                srcDir 'src/main/proto' //指定.proto文件路径
+//                include '**/*.proto'
+//            }
+//        }
+//    }
 
     task makeJar(type: Copy) {
         //删除存在的
@@ -102,24 +111,24 @@ android {
 
 }
 
-protobuf {
-    protoc {
-        artifact = 'com.google.protobuf:protoc:3.19.4' // 也可以配置本地编译器路径
-    }
-
-    generateProtoTasks {
-        all().each { task ->
-            task.builtins {
-                remove java
-            }
-            task.builtins {
-                java {}// 生产java源码
-            }
-        }
-    }
-
-    generatedFilesBaseDir = "$projectDir/src/generated"
-}
+//protobuf {
+//    protoc {
+//        artifact = 'com.google.protobuf:protoc:3.19.4' // 也可以配置本地编译器路径
+//    }
+//
+//    generateProtoTasks {
+//        all().each { task ->
+//            task.builtins {
+//                remove java
+//            }
+//            task.builtins {
+//                java {}// 生产java源码
+//            }
+//        }
+//    }
+//
+//    generatedFilesBaseDir = "$projectDir/src/generated"
+//}
 
 
 
@@ -132,6 +141,6 @@ dependencies {
     implementation "io.reactivex.rxjava3:rxjava:3.0.4"
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
 
-    implementation 'com.google.protobuf:protobuf-java:3.19.4'
-    implementation 'com.google.protobuf:protoc:3.19.4'
+//    implementation 'com.google.protobuf:protobuf-java:3.19.4'
+//    implementation 'com.google.protobuf:protoc:3.19.4'
 }

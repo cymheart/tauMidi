@@ -170,43 +170,43 @@ namespace task
 		PostTask(task);
 	}
 
-	int TaskProcesser::PostTask(TaskCallBack taskCallBack)
+	Task* TaskProcesser::PostTask(TaskCallBack taskCallBack)
 	{
 		return PostTask(taskCallBack, nullptr, 0, 0);
 	}
 
-	int TaskProcesser::PostTask(TaskCallBack taskCallBack, int delay)
+	Task* TaskProcesser::PostTask(TaskCallBack taskCallBack, int delay)
 	{
 		return PostTask(taskCallBack, nullptr, delay, 0);
 	}
 
-	int TaskProcesser::PostTask(TaskCallBack taskCallBack, void* data)
+	Task* TaskProcesser::PostTask(TaskCallBack taskCallBack, void* data)
 	{
 		return PostTask(taskCallBack, data, 0, 0);
 	}
 
-	int TaskProcesser::PostTask(TaskCallBack taskCallBack, void* data, int delay)
+	Task* TaskProcesser::PostTask(TaskCallBack taskCallBack, void* data, int delay)
 	{
 		return PostTask(taskCallBack, data, delay, 0);
 	}
 
-	int TaskProcesser::PostTaskByFilter(TaskCallBack taskCallBack, int filterNumber)
+	Task* TaskProcesser::PostTaskByFilter(TaskCallBack taskCallBack, int filterNumber)
 	{
 		return PostTask(taskCallBack, nullptr, 0, filterNumber);
 	}
 
-	int TaskProcesser::PostTaskByFilter(TaskCallBack taskCallBack, int delay, int filterNumber)
+	Task* TaskProcesser::PostTaskByFilter(TaskCallBack taskCallBack, int delay, int filterNumber)
 	{
 		return PostTask(taskCallBack, nullptr, delay, filterNumber);
 	}
 
-	int TaskProcesser::PostTaskByFilter(TaskCallBack taskCallBack, void* data, int filterNumber)
+	Task* TaskProcesser::PostTaskByFilter(TaskCallBack taskCallBack, void* data, int filterNumber)
 	{
 		return PostTask(taskCallBack, data, 0, filterNumber);
 	}
 
 
-	int TaskProcesser::PostTask(TaskCallBack taskCallBack, void* data, int delay, int filterNumber)
+	Task* TaskProcesser::PostTask(TaskCallBack taskCallBack, void* data, int delay, int filterNumber)
 	{
 		Task* task = new Task(TaskMsg::TMSG_DATA);
 		task->processCallBack = taskCallBack;
@@ -214,15 +214,15 @@ namespace task
 		task->filterNum = filterNumber;
 		PostTask(task, delay);
 
-		return 0;
+		return task;
 	}
 
 
-	int TaskProcesser::PostTask(Task* task) {
+	Task* TaskProcesser::PostTask(Task* task) {
 		return PostTask(task, 0);
 	}
 
-	int TaskProcesser::PostTask(Task* task, int delay)
+	Task* TaskProcesser::PostTask(Task* task, int delay)
 	{
 		if (isLock)
 			Lock();
@@ -230,8 +230,10 @@ namespace task
 		if (task->msg == TaskMsg::TMSG_TASK_REMOVE)
 			task->SetPriority(TASK_MIN_PRIORITY);
 
+		int64_t curtTime = GetCurrentTimeMsec();
 		task->delay = (int64_t)delay;
-		task->executeTimeMS = GetCurrentTimeMsec() - startTime + task->delay;
+		task->createTimeMS = curtTime;
+		task->executeTimeMS = curtTime - startTime + task->delay;
 		writeQue->Add(task);
 
 
@@ -241,7 +243,7 @@ namespace task
 			Notify();
 		}
 
-		return 0;
+		return task;
 	}
 
 	int TaskProcesser::Stop()
@@ -253,8 +255,8 @@ namespace task
 		Continue();
 
 		Task* task = PopTask(TMSG_QUIT);
-		if (PostTask(task, 0) != 0)
-			return -1;
+		PostTask(task, 0);
+
 
 		if (!isLock) {
 			readQue->Release();
@@ -272,9 +274,7 @@ namespace task
 	int TaskProcesser::Pause()
 	{
 		Task* task = PopTask(TMSG_PAUSE);
-		if (PostTask(task, 0) != 0)
-			return -1;
-
+		PostTask(task, 0);
 		return 0;
 	}
 
@@ -373,7 +373,7 @@ namespace task
 			readQue->SetBlockFilter(taskBlockFilterNumbers, taskBlockFilterCount);
 			tm = curTime - startTime;
 
-			if (!readQue->Read(tm)) 
+			if (!readQue->Read(tm))
 			{
 				if (isLock)
 					quitSem.set();
@@ -435,7 +435,7 @@ namespace task
 	{
 		int ret = 0;
 		if (!task->isRemove)
-			ret = ProcessTask(task);	
+			ret = ProcessTask(task);
 		Task::Release(task);
 
 		return ret;

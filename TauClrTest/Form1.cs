@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TauClr;
@@ -39,8 +40,17 @@ namespace TauClrTest
             tau.Open();
 
             string p = midiPath + "aloha heja he-Achim Reichel.mid";
+
+            //非阻塞加载方式
+            //tau.Load(p, false);
+            //while (!tau.IsLoadCompleted())
+            //    Thread.Sleep(5);
+            //tau.Play();
+
+            //阻塞加载方式
             tau.Load(p);
             tau.Play();
+
 
             //
             // art();

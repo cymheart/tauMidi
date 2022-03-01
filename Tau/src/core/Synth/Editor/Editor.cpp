@@ -27,20 +27,89 @@ namespace tau
 	Editor::~Editor()
 	{
 		Remove();
+		if (releaseCallBack)
+			releaseCallBack(this);
 	}
 
 
 	//载入
-	void Editor::Load(string& midiFilePath)
+	void Editor::Load(string& midiFilePath, bool isWaitLoadCompleted)
 	{
-		Remove();
+		loadingMidiFilelocker.lock();
+
+		while (loadMidiFileState == 1) {
+			midiFile->StopParse();
+			isStopLoad = true;
+			loadingMidiFilelocker.unlock();
+			loadingMidiFileWaitSem.wait();
+			loadingMidiFilelocker.lock();
+		}
+
+		DEL(midiFile);
+		RemoveCore();
+
+		if (loadStartCallBack != nullptr)
+			loadStartCallBack(this);
+
+		isStopLoad = false;
+		loadMidiFileState = 1;
+		loadingMidiFilePath = midiFilePath;
+		midiFile = new MidiFile();
+		midiFile->SetEnableMidiEventCountOptimize(tau->enableMidiEventCountOptimize);
+		midiFile->SetKeepSameStartTickNoteOnEventsCount(tau->midiKeepSameTimeNoteOnCount);
+		midiFile->SetTrackChannelMergeMode(tau->midiFileMergeMode);
+
+		thread t(ReadMidiFileThread, this);
+		t.detach();
+
+		loadingMidiFilelocker.unlock();
+
+		if (isWaitLoadCompleted)
+			loadingMidiFileWaitSem.wait();
+	}
+
+	void Editor::ReadMidiFileThread(void* param)
+	{
+		Editor* editor = (Editor*)param;
+		editor->ReadMidiFile();
+	}
+
+	void Editor::ReadMidiFile()
+	{
+		bool isParseCompleted = midiFile->Parse(loadingMidiFilePath);
+
+		loadingMidiFilelocker.lock();
+		if (isParseCompleted) {
+			_Load();
+			if (!isStopLoad) {
+				loadMidiFileState = 2;
+				if (loadCompletedCallBack != nullptr)
+					loadCompletedCallBack(this);
+			}
+			else
+				loadMidiFileState = 0;
+		}
+		else
+			loadMidiFileState = 0;
+
+		loadingMidiFilelocker.unlock();
+		loadingMidiFileWaitSem.set();
+
+	}
+
+	//载入
+	void Editor::_Load()
+	{
+		if (midiFile == nullptr)
+			return;
 
 		//
-		MidiFile* midiFile = new MidiFile();
-		midiFile->SetTrackChannelMergeMode(tau->midiFileMergeMode);
-		midiFile->Parse(midiFilePath);
-
-		list<MidiEvent*>* golbalEvents = midiFile->GetGolbalEventList();
+		LinkedList<MidiEvent*>* golbalEvents = midiFile->GetGolbalEventList();
+		if (golbalEvents == nullptr) {
+			DEL(midiFile);
+			loadMidiFileState = 0;
+			return;
+		}
 
 		midiMarkerList.SetTickForQuarterNote(midiFile->GetTickForQuarterNote());
 		midiMarkerList.AppendFromMidiEvents(*golbalEvents);
@@ -54,6 +123,7 @@ namespace tau
 		PrintProjectInfo();
 	}
 
+
 	void Editor::PrintProjectInfo()
 	{
 		printf("\n=================================== \n");
@@ -64,6 +134,23 @@ namespace tau
 
 	//移除
 	void Editor::Remove()
+	{
+		loadingMidiFilelocker.lock();
+		while (loadMidiFileState == 1) {
+			midiFile->StopParse();
+			loadingMidiFilelocker.unlock();
+			loadingMidiFileWaitSem.wait();
+			loadingMidiFilelocker.lock();
+		}
+
+		DEL(midiFile);
+		RemoveCore();
+
+		loadingMidiFilelocker.unlock();
+	}
+
+	//移除核心
+	void Editor::RemoveCore()
 	{
 		if (tau->syntherCount != 0)
 		{
@@ -87,7 +174,9 @@ namespace tau
 			}
 		}
 
+
 		DelEmptyTrackRealtimeSynther();
+
 
 		//等所有发音结束后删除轨道事件
 		for (int i = 0; i < tracks.size(); i++)
@@ -96,6 +185,29 @@ namespace tau
 		computedPerSyntherLimitTrackCount = tau->perSyntherLimitTrackCount;
 		tracks.clear();
 		midiMarkerList.Clear();
+	}
+
+
+	//删除空轨实时RealtimeSynther
+	void Editor::DelEmptyTrackRealtimeSynther()
+	{
+		int idx = 1;
+		for (int i = 1; i < tau->syntherCount; i++)
+		{
+			MidiEditor* midiEditor = tau->midiEditorSynthers[i]->GetMidiEditor();
+			if (midiEditor == nullptr || midiEditor->GetTrackCount() == 0)
+			{
+				tau->mainEditorSynther->RemoveAssistSyntherTask(tau->midiEditorSynthers[i]);
+			}
+			else
+			{
+				tau->midiEditorSynthers[idx] = tau->midiEditorSynthers[i];
+				idx++;
+			}
+		}
+
+		tau->syntherCount = idx;
+
 	}
 
 
@@ -113,6 +225,9 @@ namespace tau
 	//停止
 	void Editor::Stop()
 	{
+		if (loadMidiFileState == 1)
+			return;
+
 		waitSem.reset(tau->syntherCount - 1);
 
 		for (int i = 0; i < tau->syntherCount; i++)
@@ -144,7 +259,6 @@ namespace tau
 
 		isStepPlayMode = true;
 		isWait = false;
-		//		
 	}
 
 	//离开步进播放模式
@@ -193,6 +307,7 @@ namespace tau
 			tau->midiEditorSynthers[i]->LeaveWaitPlayModeTask(&waitSem);
 
 		waitSem.wait();
+
 	}
 
 
@@ -354,12 +469,14 @@ namespace tau
 	// 设置播放时间点
 	void Editor::Goto(double sec)
 	{
+
 		waitSem.reset(tau->syntherCount - 1);
 
 		for (int i = 0; i < tau->syntherCount; i++)
 			tau->midiEditorSynthers[i]->GotoTask(&waitSem, sec);
 
 		waitSem.wait();
+
 	}
 
 
@@ -539,17 +656,6 @@ namespace tau
 	}
 
 
-	//删除空轨实时RealtimeSynther
-	void Editor::DelEmptyTrackRealtimeSynther()
-	{
-		for (int i = 1; i < tau->syntherCount; i++)
-		{
-			MidiEditor* midiEditor = tau->midiEditorSynthers[i]->GetMidiEditor();
-			if (midiEditor == nullptr || midiEditor->GetTrackCount() == 0)
-				DEL(tau->midiEditorSynthers[i]);
-		}
-		tau->syntherCount = 1;
-	}
 
 	//增加轨道，来自于MidiTrackList
 	void Editor::AddMidiTracks(vector<MidiTrack*>& midiTracks,
@@ -571,9 +677,9 @@ namespace tau
 		{
 			instFrag = new InstFragment();
 
-			list<MidiEvent*>& eventList = *midiTracks[i]->GetEventList();
+			LinkedList<MidiEvent*>& eventList = *midiTracks[i]->GetEventList();
 			instFrag->AddMidiEvents(eventList);
-			eventList.clear();
+			eventList.Release();
 
 			instFragments.push_back(instFrag);
 		}
@@ -644,7 +750,7 @@ namespace tau
 	}
 
 	//增加标记，来自于midi事件列表中
-	void Editor::AddMarkers(list<MidiEvent*>& midiEvents)
+	void Editor::AddMarkers(LinkedList<MidiEvent*>& midiEvents)
 	{
 		midiMarkerList.AppendFromMidiEvents(midiEvents);
 
@@ -837,10 +943,15 @@ namespace tau
 		vector<InstFragment*>& instFragments,
 		vector<Track*>& dstTracks, vector<int>& dstBranchIdxs, vector<float>& secs)
 	{
+		modifyTrackMap.clear();
+
 		//1.数据组合缓存到list中
 		orgList.clear();
 		for (int i = 0; i < instFragments.size(); i++)
 		{
+			if (isStopLoad)
+				return;
+
 			InstFragmentToTrackInfo data;
 			data.instFragment = instFragments[i];
 			data.track = dstTracks[min(i, dstTracks.size() - 1)];
@@ -861,6 +972,9 @@ namespace tau
 		list<InstFragmentToTrackInfo>::iterator it = orgList.begin();
 		for (; it != orgList.end(); )
 		{
+			if (isStopLoad)
+				return;
+
 			InstFragmentToTrackInfo& a = *it;
 			frag = a.instFragment;
 			track = a.track;
@@ -897,6 +1011,11 @@ namespace tau
 			waitSem.reset(a.size() - 1);
 			for (int i = 0; i < a.size(); i++)
 			{
+				if (isStopLoad) {
+					waitSem.set();
+					continue;
+				}
+
 				synther->MoveInstFragmentTask(&waitSem, a[i].instFragment, a[i].track, a[i].branchIdx, a[i].sec);
 
 				//收集被修改的的轨道
@@ -907,13 +1026,20 @@ namespace tau
 					modifyTrackMap[synther].insert(a[i].instFragment->GetTrack());
 			}
 			waitSem.wait();
-		}
 
+			if (isStopLoad)
+				return;
+		}
 
 		//4.挑选出在同一synther中的片段到dataGroup中
 		waitSem.reset(orgList.size() - 1);
 		for (it = orgList.begin(); it != orgList.end(); it++)
 		{
+			if (isStopLoad) {
+				waitSem.set();
+				continue;
+			}
+
 			InstFragmentToTrackInfo& a = *it;
 			frag = a.instFragment;
 			synther1 = frag->GetTrack()->GetMidiEditor()->GetSynther();
@@ -924,6 +1050,9 @@ namespace tau
 		}
 		waitSem.wait();
 
+		if (isStopLoad)
+			return;
+
 
 		//5.挑选出在同一synther中的track到dataGroup中,因为步骤4，5，已经移除了片段，这些片段现在是没有被线程使用的，
 		//此时可以直接分组到目标轨道组中，进行一次性MoveInstFragmentTask
@@ -931,6 +1060,9 @@ namespace tau
 		it = orgList.begin();
 		for (; it != orgList.end(); it++)
 		{
+			if (isStopLoad)
+				return;
+
 			InstFragmentToTrackInfo& a = *it;
 			Track* track = a.track;
 			synther2 = nullptr;
@@ -947,12 +1079,20 @@ namespace tau
 			waitSem.reset(a.size() - 1);
 			for (int i = 0; i < a.size(); i++)
 			{
+				if (isStopLoad) {
+					waitSem.set();
+					continue;
+				}
+
 				synther->MoveInstFragmentTask(&waitSem, a[i].instFragment, a[i].track, a[i].branchIdx, a[i].sec);
 
 				//收集被修改的的轨道
 				modifyTrackMap[synther].insert(a[i].track);
 			}
 			waitSem.wait();
+
+			if (isStopLoad)
+				return;
 		}
 
 		//6.计算被修改轨道的所有事件时间，并重新计算每个MidiEditor的结束时间
@@ -969,19 +1109,32 @@ namespace tau
 		{
 			synther = iter->first;
 			unordered_set<Track*>& trackset = iter->second;
-			for (auto it = trackset.begin(); it != trackset.end(); ++it) {
+			for (auto it = trackset.begin(); it != trackset.end(); ++it)
+			{
+				if (isStopLoad) {
+					waitSem.set();
+					continue;
+				}
+
 				synther->ComputeTrackEventsTimeTask(&waitSem, *it);
 			}
 		}
 
 		for (auto iter = beg; iter != end; ++iter)
 		{
+			if (isStopLoad) {
+				waitSem.set();
+				continue;
+			}
+
 			synther = iter->first;
 			synther->ComputeEndSecTask(&waitSem);
 		}
 
 		waitSem.wait();
 
+		if (isStopLoad)
+			return;
 
 		//7.重新给每个MidiEditor设置相同的最大结束时间
 		ComputeMidiEditorMaxSec();

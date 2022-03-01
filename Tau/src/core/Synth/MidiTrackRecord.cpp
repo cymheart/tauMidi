@@ -89,7 +89,11 @@ namespace tau
 		noteOffEvent->channel = channel;
 		noteOffEvent->startSec = GetRecordSec();
 
-		NoteOnEvent* noteOnEvent = midiTrack->FindNoteOnEvent(key, channel);
+		LinkedListNode<MidiEvent*>* nd = midiTrack->FindNoteOnEvent(key, channel);
+		if (nd == nullptr || nd->elem == nullptr)
+			return;
+
+		NoteOnEvent* noteOnEvent = (NoteOnEvent*)nd->elem;
 		noteOnEvent->endSec = noteOffEvent->startSec;
 		noteOnEvent->noteOffEvent = noteOffEvent;
 		noteOffEvent->noteOnEvent = noteOnEvent;

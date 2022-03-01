@@ -35,7 +35,7 @@ namespace tau
 
 		//
 		void AppendMidiMarker(MidiMarker* midiMarker);
-		void AppendFromMidiEvents(list<MidiEvent*>& midiEvents);
+		void AppendFromMidiEvents(LinkedList<MidiEvent*>& midiEvents);
 
 
 	private:

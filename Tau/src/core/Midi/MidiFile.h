@@ -16,6 +16,19 @@ namespace tau
 		MidiFile();
 		~MidiFile();
 
+		//设置是否开启MidiEvent数量优化
+		inline void SetEnableMidiEventCountOptimize(bool enable)
+		{
+			enableMidiEventCountOptimize = enable;
+		}
+
+		//保持相同StartTick按键事件的数量 (默认值:-1 无限制)
+		inline void SetKeepSameStartTickNoteOnEventsCount(int count)
+		{
+			keepSameStartTickNoteOnEventsCount = count;
+		}
+
+
 		//设置轨道通道合并模式
 		inline void SetTrackChannelMergeMode(TrackChannelMergeMode mode)
 		{
@@ -60,7 +73,7 @@ namespace tau
 		void AddMidiTrack(MidiTrack* midiTrack);
 
 		// 解析文件到可识别数据结构
-		void Parse(string filePath);
+		bool Parse(string filePath);
 
 		//生成midi格式内存数据
 		void CreateMidiFormatMemData();
@@ -69,9 +82,26 @@ namespace tau
 		void SaveMidiFormatMemDataToDist(string saveFilePath);
 
 		//获取全局事件列表
-		list<MidiEvent*>* GetGolbalEventList();
+		LinkedList<MidiEvent*>* GetGolbalEventList();
 
 
+		//打开解析
+		void OpenParse()
+		{
+			isStopParse = false;
+		}
+
+		//停止解析
+		void StopParse()
+		{
+			isStopParse = true;
+		}
+
+		//是否停止解析
+		inline bool IsStopParse()
+		{
+			return isStopParse;
+		}
 
 	private:
 
@@ -82,7 +112,7 @@ namespace tau
 
 		//是否两个通道可以具有相同的乐器改变事件
 		//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
-		bool IsSameProgramChannel(vector<MidiEvent*>* eventListA, vector<MidiEvent*>* eventListB);
+		bool IsSameProgramChannel(LinkedList<MidiEvent*>* eventListA, LinkedList<MidiEvent*>* eventListB);
 
 		//每个通道midi事件分配到每一个轨道
 		void PerChannelMidiEventToPerTrack();
@@ -91,7 +121,7 @@ namespace tau
 		void FindTracksDefaultProgramChangeEvent();
 
 		//去除前后值相同,以及后值覆盖前值的全局事件
-		void RemoveSameAndOverrideGlobalEvents(list<MidiEvent*>* globalMidiEvents);
+		void RemoveSameAndOverrideGlobalEvents(LinkedList<MidiEvent*>* globalMidiEvents);
 
 		//解析内核
 		bool ParseCore();
@@ -113,10 +143,10 @@ namespace tau
 		//写入变长值
 		void WriteDynamicValue(ByteStream& writer, int32_t value);
 
-		short ReadInt16(ByteStream& reader);
-		uint32_t ReadInt32(ByteStream& reader);
-		uint32_t Read3BtyesToInt32(ByteStream& reader);
-		void WriteInt32To3Btyes(ByteStream& writer, int32_t value);
+		short ReadInt16(ByteStream& reader) const;
+		uint32_t ReadInt32(ByteStream& reader) const;
+		uint32_t Read3BtyesToInt32(ByteStream& reader) const;
+		void WriteInt32To3Btyes(ByteStream& writer, int32_t value) const;
 
 		static bool MidiEventTickCompare(MidiEvent* a, MidiEvent* b);
 
@@ -124,10 +154,20 @@ namespace tau
 		ByteStream* midiReader = nullptr;
 		ByteStream* midiWriter = nullptr;
 
-		bool isLittleEndianSystem = true;
+		//是否停止解析
+		bool isStopParse = false;
+
+		//是否开启MidiEvent数量优化
+		bool enableMidiEventCountOptimize = false;
+
+		//保持相同StartTick按键事件的数量 (默认值:-1 无限制)
+		int keepSameStartTickNoteOnEventsCount = -1;
+
 
 		//轨道通道合并模式
 		TrackChannelMergeMode mergeMode = TrackChannelMergeMode::AutoMerge;
+
+		bool isLittleEndianSystem = true;
 
 		// 最后解析的事件号
 		byte lastParseEventNum = 0;

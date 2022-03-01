@@ -40,13 +40,6 @@ namespace tau
 
 	Synther::~Synther()
 	{
-		if (!isMainSynther) {
-			Synther* s = (Synther*)(tau->mainEditorSynther);
-			Semaphore waitSem;
-			s->RemoveAssistSyntherTask(&waitSem, this);
-			waitSem.wait();
-		}
-
 		DEL(audio);
 
 		//
@@ -65,6 +58,8 @@ namespace tau
 		DEL(innerEffects);
 		DEL(presetBankReplaceMap);
 	}
+
+
 
 	void Synther::Open()
 	{
@@ -88,16 +83,20 @@ namespace tau
 		isOpened = false;
 	}
 
+
 	void Synther::AddAssistSynther(Synther* assistSynther)
 	{
 		assistSynthers.push_back(assistSynther);
 	}
 
-	void Synther::RemoveAssistSynther(Synther* assistSynther)
+	void Synther::RemoveAssistSynther(Synther* removeAssistSynther)
 	{
-		vector<Synther*>::iterator iVector = find(assistSynthers.begin(), assistSynthers.end(), assistSynther);
+		vector<Synther*>::iterator iVector = find(assistSynthers.begin(), assistSynthers.end(), removeAssistSynther);
 		if (iVector != assistSynthers.end())
+		{
 			assistSynthers.erase(iVector);
+			waitSoundEndRemoveAssistSynthers.push_back(removeAssistSynther);
+		}
 	}
 
 	float Synther::GetSampleProcessRate()
@@ -203,8 +202,13 @@ namespace tau
 		if (synther.isMainSynther)
 		{
 			synther.computedFrameBufSyntherCount = synther.assistSynthers.size() + 1;
+			synther.computedFrameBufSyntherCount += synther.waitSoundEndRemoveAssistSynthers.size();
+
 			for (int i = 0; i < synther.assistSynthers.size(); i++)
 				synther.assistSynthers[i]->ReqRender();
+
+			for (int i = 0; i < synther.waitSoundEndRemoveAssistSynthers.size(); i++)
+				synther.waitSoundEndRemoveAssistSynthers[i]->ReqRender();
 		}
 
 		synther.Render();
@@ -774,7 +778,7 @@ namespace tau
 		if (isMainSynther)
 		{
 			computedFrameBufSyntherCount--;
-			if (computedFrameBufSyntherCount == 0)
+			if (computedFrameBufSyntherCount <= 0)
 				_CombineSynthersFrameBufs();
 		}
 		else
@@ -783,7 +787,7 @@ namespace tau
 
 			Synther& mainSynther = *(Synther*)(tau->mainEditorSynther);
 			mainSynther.computedFrameBufSyntherCount--;
-			if (mainSynther.computedFrameBufSyntherCount == 0)
+			if (mainSynther.computedFrameBufSyntherCount <= 0)
 				mainSynther.CombineSynthersFrameBufsTask();
 		}
 	}
@@ -794,16 +798,75 @@ namespace tau
 		ApplyEffectsToChannelBuffer();
 		CombineChannelBufferToStream();
 		isFrameRenderCompleted = true;
+
+		if (!waitSoundEndRemoveAssistSynthers.empty())
+		{
+			Synther* removeSynther = nullptr;
+			vector<Synther*>::iterator it = waitSoundEndRemoveAssistSynthers.begin();
+			for (; it != waitSoundEndRemoveAssistSynthers.end(); )
+			{
+				if ((*it)->isSoundEnd) {
+					removeSynther = *it;
+					it = waitSoundEndRemoveAssistSynthers.erase(it);
+					if (removeSynther != nullptr) {
+						removeSynther->isMainSynther = true;
+						removeSynther->isReqDelete = true;
+					}
+					DEL(removeSynther);
+
+				}
+				else {
+					++it;
+				}
+			}
+		}
+
+
+	}
+
+	//等待发声结束移除对应的从合成器
+	void Synther::WaitSoundEndRemoveAssistSynthers()
+	{
+		if (!waitSoundEndRemoveAssistSynthers.empty())
+		{
+			Synther* removeSynther = nullptr;
+			vector<Synther*>::iterator it = waitSoundEndRemoveAssistSynthers.begin();
+			for (; it != waitSoundEndRemoveAssistSynthers.end(); )
+			{
+				if ((*it)->isSoundEnd) {
+					removeSynther = *it;
+					it = waitSoundEndRemoveAssistSynthers.erase(it);
+					if (removeSynther != nullptr) {
+						removeSynther->isMainSynther = true;
+						removeSynther->isReqDelete = true;
+					}
+					DEL(removeSynther);
+
+				}
+				else {
+					++it;
+				}
+			}
+		}
+
 	}
 
 
 	//合并辅助合成器buffer到主buffer中
 	void Synther::CombineAssistToMainBuffer()
 	{
+		CombineAssistToMainBuffer(assistSynthers);
+		CombineAssistToMainBuffer(waitSoundEndRemoveAssistSynthers);
+	}
+
+
+	//合并辅助合成器buffer到主buffer中
+	void Synther::CombineAssistToMainBuffer(vector<Synther*>& aSynthers)
+	{
 		Synther* synther;
-		for (int i = 0; i < assistSynthers.size(); i++)
+		for (int i = 0; i < aSynthers.size(); i++)
 		{
-			synther = assistSynthers[i];
+			synther = aSynthers[i];
 
 			switch (tau->channelOutputMode)
 			{
@@ -836,6 +899,13 @@ namespace tau
 					break;
 			}
 
+			for (int i = 0; i < waitSoundEndRemoveAssistSynthers.size(); i++)
+			{
+				isSoundEnd &= waitSoundEndRemoveAssistSynthers[i]->isSoundEnd;
+				if (!isSoundEnd)
+					break;
+			}
+
 			if (isSoundEnd)
 				return;
 		}
@@ -848,6 +918,13 @@ namespace tau
 			for (int i = 0; i < assistSynthers.size(); i++)
 			{
 				isVirInstSoundEnd &= assistSynthers[i]->isVirInstSoundEnd;
+				if (!isVirInstSoundEnd)
+					break;
+			}
+
+			for (int i = 0; i < waitSoundEndRemoveAssistSynthers.size(); i++)
+			{
+				isVirInstSoundEnd &= waitSoundEndRemoveAssistSynthers[i]->isVirInstSoundEnd;
 				if (!isVirInstSoundEnd)
 					break;
 			}

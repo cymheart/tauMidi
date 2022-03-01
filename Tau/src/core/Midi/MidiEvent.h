@@ -347,6 +347,44 @@ namespace tau
 	};
 
 	/// <summary>
+	/// 时间同步事件
+	/// </summary>
+	class SmpteEvent :public MidiEvent
+	{
+	public:
+		/// <summary>
+		/// 时
+		/// </summary>
+		int hr = 0;
+
+		/// <summary>
+		/// 分
+		/// </summary>
+		int mn = 0;
+
+		/// <summary>
+		/// 秒
+		/// </summary>
+		int sec = 0;
+
+		/// <summary>
+		/// 帧
+		/// </summary>
+		int fr = 0;
+
+		/// <summary>
+		/// 复帧
+		/// </summary>
+		int ff = 8;
+
+		SmpteEvent()
+		{
+			type = MidiEventType::Smpte;
+		}
+	};
+
+
+	/// <summary>
 	/// 文本设置事件
 	/// </summary>
 	class TextEvent : public MidiEvent

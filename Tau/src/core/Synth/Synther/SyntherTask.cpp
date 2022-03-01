@@ -43,13 +43,12 @@ namespace tau
 		se->sem->set();
 	}
 
-	void Synther::RemoveAssistSyntherTask(Semaphore* waitSem, Synther* assistSynther)
+	void Synther::RemoveAssistSyntherTask(Synther* assistSynther)
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
 		ev->processCallBack = _RemoveAssistSyntherTask;
 		ev->ptr = assistSynther;
-		ev->sem = waitSem;
 		PostTask(ev);
 	}
 
@@ -58,9 +57,7 @@ namespace tau
 		SyntherEvent* se = (SyntherEvent*)ev;
 		Synther& synther = (Synther&)*(se->synther);
 		synther.RemoveAssistSynther((Synther*)se->ptr);
-		se->sem->set();
 	}
-
 
 	// 请求删除合成器
 	void Synther::ReqDeleteTask()

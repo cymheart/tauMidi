@@ -5,6 +5,7 @@
 
 namespace scutils
 {
+
 	template<typename T>
 	class LinkedList
 	{
@@ -20,14 +21,14 @@ namespace scutils
 		}
 
 		/**根据指定的标号找到对应的节点*/
-		LinkedListNode<T> GetNode(int idx)
+		LinkedListNode<T>* GetNode(int idx)
 		{
 			if (idx <= 0) return head;
 			else if (idx >= size - 1) return tail;
 
 			int i = 0;
-			LinkedListNode<T> node = head;
-			for (; node; node = node.next) {
+			LinkedListNode<T>* node = head;
+			for (; node; node = node->next) {
 				if (i == idx)
 					return node;
 				i++;
@@ -41,6 +42,21 @@ namespace scutils
 			head = tail = nullptr;
 			size = 0;
 		}
+
+		void Release()
+		{
+			LinkedListNode<T>* node = head;
+			LinkedListNode<T>* next;
+			for (; node; node = next)
+			{
+				next = node->next;
+				delete node;
+			}
+
+			head = tail = nullptr;
+			size = 0;
+		}
+
 
 		LinkedListNode<T>* GetHeadNode()
 		{
@@ -254,55 +270,105 @@ namespace scutils
 			return next;
 		}
 
-		static void Sort(LinkedList<T>* list, Comparator<T>& cmp)
+		template <class Fn>
+		void Sort(Fn cmp)
 		{
-
-			if (list == nullptr || list->Size() <= 1)
+			if (size <= 1)
 				return;
 
-			SortCore(list->GetHeadNode(), list->GetLastNode(), cmp);
+			LinkedListNode<T> start;
+			head->prev = &start;
+			start.next = head;
+
+			LinkedListNode<T> end;
+			tail->next = &end;
+			end.prev = tail;
+
+			_Sort(head, size, cmp);
+
+			tail = end.prev;
+			head->prev = nullptr;
+			tail->next = nullptr;
 		}
 
 	private:
-		static void SortCore(LinkedListNode<T>* left, LinkedListNode<T>* right, Comparator<T>& cmp)
+
+
+		template <class Fn>
+		static LinkedListNode<T>* _Sort(LinkedListNode<T>*& _First, int _Size, Fn cmp)
 		{
-			if (right == nullptr || left == nullptr || left == right->next) {
-				return;
+			switch (_Size) {
+			case 0:
+				return _First;
+			case 1:
+				return _First->next;
+			default:
+				break;
 			}
 
-			// base中存放基准数
-			T base = left->elem;
-			LinkedListNode<T>* i = left;
-			LinkedListNode<T>* j = right;
-			while (i != j) {
-				// 顺序很重要，先从右边开始往左找，直到找到比base值小的数
-				while (cmp.compare(j->elem, base) != -1 && i != j) {
-					j = j->prev;
-				}
-
-				// 再从左往右边找，直到找到比base值大的数
-				while (cmp.compare(i->elem, base) != 1 && i != j) {
-					i = i->next;
-				}
-
-				// 上面的循环结束表示找到了位置或者(i>=j)了，交换两个数在数组中的位置
-				if (i != j) {
-					T tmp = i->elem;
-					i->elem = j->elem;
-					j->elem = tmp;
-				}
-			}
-
-			// 将基准数放到中间的位置（基准数归位）
-			left->elem = i->elem;
-			i->elem = base;
-
-			// 递归，继续向基准的左右两边执行和上面同样的操作
-			// i的索引处为上面已确定好的基准值的位置，无需再处理
-			SortCore(left, i->prev, cmp);
-			SortCore(i->next, right, cmp);
+			auto _Mid = _Sort(_First, _Size / 2, cmp);
+			const auto _Last = _Sort(_Mid, _Size - _Size / 2, cmp);
+			_First = _Merge_same(_First, _Mid, _Last, cmp);
+			return _Last;
 		}
 
+
+		template <class Fn>
+		static LinkedListNode<T>* _Merge_same(LinkedListNode<T>* _First, LinkedListNode<T>* _Mid, const LinkedListNode<T>* _Last, Fn cmp)
+		{
+			LinkedListNode<T>* _Newfirst;
+			if (cmp(_Mid->elem, _First->elem)) {
+				_Newfirst = _Mid;
+			}
+			else {
+				_Newfirst = _First;
+				do {
+					_First = _First->next;
+					if (_First == _Mid) {
+						return _Newfirst;
+					}
+				} while (!cmp(_Mid->elem, _First->elem));
+			}
+
+			for (;;)
+			{
+				auto _Run_start = _Mid;
+				do {
+					_Mid = _Mid->next;
+				} while (_Mid != _Last && cmp(_Mid->elem, _First->elem));
+
+				_Splice(_First, _Run_start, _Mid);
+
+				if (_Mid == _Last)
+					return _Newfirst;
+
+				do {
+					_First = _First->next;
+					if (_First == _Mid)
+						return _Newfirst;
+				} while (!cmp(_Mid->elem, _First->elem));
+			}
+		}
+
+
+		static LinkedListNode<T>* _Splice(LinkedListNode<T>* _Before, LinkedListNode<T>* _First, LinkedListNode<T>* _Last)
+		{
+
+			// fixup the _Next values
+			auto _First_prev = _First->prev;
+			_First_prev->next = _Last;
+			auto _Last_prev = _Last->prev;
+			_Last_prev->next = _Before;
+			auto _Before_prev = _Before->prev;
+			_Before_prev->next = _First;
+
+			// fixup the _Prev values
+			_Before->prev = _Last_prev;
+			_Last->prev = _First_prev;
+			_First->prev = _Before_prev;
+
+			return _Last;
+		}
 
 	private:
 		LinkedListNode<T>* head = nullptr;

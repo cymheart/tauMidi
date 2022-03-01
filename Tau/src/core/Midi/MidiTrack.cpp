@@ -4,24 +4,21 @@
 namespace tau
 {
 	MidiTrack::MidiTrack()
-	{
-
-	}
+	= default;
 
 	MidiTrack::~MidiTrack()
 	{
-		list<MidiEvent*>::iterator it = midiEventList.begin();
-		list<MidiEvent*>::iterator end = midiEventList.end();
-		for (; it != end; it++)
-			DEL(*it);
-		midiEventList.clear();
+		LinkedListNode<MidiEvent*>* node = midiEventList.GetHeadNode();
+		for (; node; node = node->next)
+			DEL(node->elem);
+		midiEventList.Release();
 
 		//
-		it = midiGolbalEventList.begin();
-		end = midiGolbalEventList.end();
-		for (; it != end; it++)
-			DEL(*it);
-		midiGolbalEventList.clear();
+		node = midiGolbalEventList.GetHeadNode();
+		for (; node; node = node->next)
+			DEL(node->elem);
+		midiGolbalEventList.Release();
+
 
 		//
 		defaultProgramChangeEvent = nullptr;
@@ -33,16 +30,16 @@ namespace tau
 	//清空midiTrack列表,但并不真正删除列表中的事件
 	void MidiTrack::Clear()
 	{
-		midiEventList.clear();
-		midiGolbalEventList.clear();
+		midiEventList.Release();
+		midiGolbalEventList.Release();
 		noteOnEventMap.clear();
 
-		for (int n = 0; n < 16; n++)
-			midiEventListAtChannel[n].clear();
+		for (auto & n : midiEventListAtChannel)
+			n.Release();
 	}
 
 	//根据给定时间点获取tick的数量
-#define GetTickCount(sec) (int)(baseTick + (uint32_t)((sec - baseTickSec) * 1000 / msPerTick));
+#define GetTickCount(sec) (int)(baseTick + (uint32_t)(((sec) - baseTickSec) * 1000 / msPerTick));
 
 	void MidiTrack::CreateTempoEvents(float tickForQuarterNote, vector<RecordTempo>& tempos)
 	{
@@ -50,7 +47,7 @@ namespace tau
 		int baseTick = 0;
 		float baseTickSec = 0;
 		// 一个四分音符的微秒数
-		float microTempo = 60000000 / tempos[tempoIdx].BPM; //60000000: 1分钟的微秒数
+		float microTempo = 60000000.0f / tempos[tempoIdx].BPM; //60000000: 1分钟的微秒数
 		//录制midi时每tick的毫秒数	
 		float msPerTick = microTempo / tickForQuarterNote * 0.001f;
 
@@ -64,7 +61,7 @@ namespace tau
 			AddEvent(tempoEvent);
 
 			//	
-			microTempo = 60000000 / tempos[tempoIdx].BPM;   //60000000: 1分钟的微秒数
+			microTempo = 60000000.0f / tempos[tempoIdx].BPM;   //60000000: 1分钟的微秒数
 			msPerTick = microTempo / tickForQuarterNote * 0.001f;
 			baseTickSec = tempos[tempoIdx].sec;
 			baseTick = tempoEvent->startTick;
@@ -78,22 +75,21 @@ namespace tau
 		int baseTick = 0;
 		float baseTickSec = 0;
 		// 一个四分音符的微秒数
-		float microTempo = 60000000 / tempos[tempoIdx].BPM; //60000000: 1分钟的微秒数
+		float microTempo = 60000000.0f / tempos[tempoIdx].BPM; //60000000: 1分钟的微秒数
 		//录制midi时每tick的毫秒数	
 		float msPerTick = microTempo / tickForQuarterNote * 0.001f;
 		tempoIdx = GetNextTempoIndex(tempos, tempoIdx);
 
 		//
-		list<MidiEvent*>& cpyMidiEventList = ((MidiTrack&)orgMidiTrack).midiEventList;
+		LinkedList<MidiEvent*>& cpyMidiEventList = ((MidiTrack&)orgMidiTrack).midiEventList;
 		MidiEvent* midiEvent = nullptr;
 		MidiEvent* cpyMidiEvent;
 
 		//
-		list<MidiEvent*>::iterator it = cpyMidiEventList.begin();
-		list<MidiEvent*>::iterator end = cpyMidiEventList.end();
-		for (; it != end; it++)
+		LinkedListNode<MidiEvent*>* node = cpyMidiEventList.GetHeadNode();
+		for (; node; node = node->next)
 		{
-			cpyMidiEvent = *it;
+			cpyMidiEvent = node->elem;
 
 			//
 			switch (cpyMidiEvent->type)
@@ -162,11 +158,14 @@ namespace tau
 				break;
 			}
 
+			if (midiEvent == nullptr)
+				continue;
+
 			midiEvent->startTick = GetTickCount(midiEvent->startSec);
 
 			if (tempoIdx >= 0 && midiEvent->startSec >= tempos[tempoIdx].sec)
 			{
-				microTempo = 60000000 / tempos[tempoIdx].BPM;   //60000000: 1分钟的微秒数
+				microTempo = 60000000.0f / tempos[tempoIdx].BPM;   //60000000: 1分钟的微秒数
 				msPerTick = microTempo / tickForQuarterNote * 0.001f;
 				baseTickSec = midiEvent->startSec;
 				baseTick = midiEvent->startTick;
@@ -178,11 +177,10 @@ namespace tau
 
 	void MidiTrack::SetMidiEventsChannel(int channel)
 	{
-		list<MidiEvent*>::iterator it = midiEventList.begin();
-		list<MidiEvent*>::iterator end = midiEventList.end();
-		for (; it != end; it++)
+		LinkedListNode<MidiEvent*>* node = midiEventList.GetHeadNode();
+		for (; node; node = node->next)
 		{
-			MidiEvent* midiEvent = *it;
+			MidiEvent* midiEvent = node->elem;
 			midiEvent->channel = channel;
 		}
 	}
@@ -210,20 +208,19 @@ namespace tau
 	}
 
 	//添加midi事件
-	void MidiTrack::AppendMidiEvents(vector<MidiEvent*>& midiEvents)
+	void MidiTrack::AppendMidiEvents(LinkedList<MidiEvent*>& midiEvents)
 	{
-		for (int i = 0; i < midiEvents.size(); i++)
-			midiEventList.push_back(midiEvents[i]);
+		midiEventList.Merge(midiEvents);
 	}
+
 
 	//寻找默认乐器改变事件
 	void MidiTrack::FindDefaultProgramChangeEvent()
 	{
-		list<MidiEvent*>::iterator it = midiEventList.begin();
-		list<MidiEvent*>::iterator end = midiEventList.end();
-		for (; it != end; it++)
+		LinkedListNode<MidiEvent*>* node = midiEventList.GetHeadNode();
+		for (; node; node = node->next)
 		{
-			MidiEvent* midiEvent = *it;
+			MidiEvent* midiEvent = node->elem;
 			if (midiEvent->type == MidiEventType::ProgramChange)
 			{
 				defaultProgramChangeEvent = (ProgramChangeEvent*)midiEvent;
@@ -240,11 +237,20 @@ namespace tau
 	/// 增加一个事件
 	/// </summary>
 	/// <param name="ev"></param>
-	void MidiTrack::AddEvent(MidiEvent* ev)
+	LinkedListNode<MidiEvent*>* MidiTrack::AddEvent(MidiEvent* ev)
 	{
 		if (ev->channel >= 0)
 		{
-			midiEventListAtChannel[ev->channel].push_back(ev);
+			LinkedListNode<MidiEvent*>* node = midiEventListAtChannel[ev->channel].AddLast(ev);
+
+			//对noteon事件增加一个map索引，方便noteoff快速找到其对应noteon
+			if (ev->type == MidiEventType::NoteOn)
+			{
+				NoteOnEvent* noteOnEvent = (NoteOnEvent*)ev;
+				noteOnEventMap[noteOnEvent->note << 12 | noteOnEvent->channel].push_back(node);
+			}
+
+			return node;
 		}
 		else
 		{
@@ -252,19 +258,115 @@ namespace tau
 				ev->type == MidiEventType::TimeSignature ||
 				ev->type == MidiEventType::KeySignature)
 			{
-				midiGolbalEventList.push_back(ev);
+				midiGolbalEventList.AddLast(ev);
 			}
 			else
 			{
-				midiEventList.push_back(ev);
+				midiEventList.AddLast(ev);
 			}
 		}
 
-		//对noteon事件增加一个map索引，方便noteoff快速找到其对应noteon
-		if (ev->type == MidiEventType::NoteOn)
+		return nullptr;
+	}
+
+	/// <summary>
+	/// 移除一个事件
+	/// </summary>
+	/// <param name="ev"></param>
+	void MidiTrack::RemoveEvent(LinkedListNode<MidiEvent*>* midiEventNode)
+	{
+		if (midiEventNode == nullptr || midiEventNode->elem == nullptr)
+			return;
+
+		int channel = midiEventNode->elem->channel;
+		midiEventListAtChannel[channel].Remove(midiEventNode);
+		delete midiEventNode->elem;
+		delete midiEventNode;
+	}
+
+	/// <summary>
+	/// 是否需要按键事件
+	/// </summary>
+	bool MidiTrack::IsNeedNoteOnEvents(int channel, uint32_t startTick, int keepCount)
+	{
+		if (keepCount < 0)
+			return true;
+
+		int count = 0;
+		LinkedListNode<MidiEvent*>* startNode = nullptr;
+		LinkedListNode<MidiEvent*>* node = midiEventListAtChannel[channel].GetLastNode();
+		for (; node; node = node->prev)
 		{
-			NoteOnEvent* noteOnEvent = (NoteOnEvent*)ev;
-			noteOnEventMap[noteOnEvent->note << 12 | noteOnEvent->channel].push_back(noteOnEvent);
+			if (node->elem->type != MidiEventType::NoteOn)
+				continue;
+
+			if (node->elem->startTick == startTick)
+			{
+				startNode = node;
+				count++;
+			}
+			else
+				break;
+		}
+
+		if (count > keepCount)
+			return false;
+
+		return true;
+	}
+
+
+	/// <summary>
+	/// 移除相同StartTick的midi事件
+	/// </summary>
+	/// <param name="ev"></param>
+	void MidiTrack::RemoveSameStartTickEvents(LinkedListNode<MidiEvent*>* midiEventNode, int keepCount)
+	{
+		if (midiEventNode == nullptr || midiEventNode->elem == nullptr)
+			return;
+
+		int count = 0;
+		LinkedListNode<MidiEvent*>* startNode = nullptr;
+		LinkedListNode<MidiEvent*>* node = midiEventNode;
+		for (; node; node = node->prev)
+		{
+			if (node->elem->type != MidiEventType::NoteOn)
+				continue;
+
+			if (node->elem->startTick == midiEventNode->elem->startTick)
+			{
+				startNode = node;
+				count++;
+			}
+			else
+				break;
+		}
+
+		if (count > keepCount)
+		{
+			return;
+
+
+			/*	midiEventListAtChannel[midiEventNode->elem->channel].Remove(midiEventNode);
+				delete midiEventNode->elem;
+				delete midiEventNode;*/
+
+
+				/*	LinkedListNode<MidiEvent*>* next = nullptr;
+					int n = 0;
+					for (node = startNode; node; node = next)
+					{
+						next = node->next;
+
+						n++;
+						if (n > keepCount)
+						{
+							midiEventListAtChannel[node->elem->channel].Remove(node);
+							delete node->elem;
+							delete node;
+						}
+
+					}*/
 		}
 	}
 
@@ -275,16 +377,16 @@ namespace tau
 	/// <param name="note"></param>
 	/// <param name="channel"></param>
 	/// <returns></returns>
-	NoteOnEvent* MidiTrack::FindNoteOnEvent(int note, int channel)
+	LinkedListNode<MidiEvent*>* MidiTrack::FindNoteOnEvent(int note, int channel)
 	{
-		NoteOnEvent* ev;
+		LinkedListNode<MidiEvent*>* evNode;
 		auto it = noteOnEventMap.find(note << 12 | channel);
 		if (it != noteOnEventMap.end()) {
-			ev = it->second.back();
+			evNode = it->second.back();
 			it->second.pop_back();
 			if (it->second.empty())
 				noteOnEventMap.erase(note << 12 | channel);
-			return ev;
+			return evNode;
 		}
 		return nullptr;
 	}

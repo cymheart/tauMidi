@@ -36,6 +36,9 @@ namespace TauClr
 		}
 
 		void Open();
+
+		bool IsLoadCompleted();
+		void Load(String^ midiFilePath, bool isWaitLoadCompleted);
 		void Load(String^ midiFilePath);
 		void Play();
 		void Stop();

@@ -8,22 +8,37 @@
 #include<Midi/MidiEvent.h>
 #include<Synth/Preset.h>
 #include<Synth/SoundFont.h>
+#include<Synth/Editor/Editor.h>
+#include <unistd.h>
 
 using namespace tau;
 
 extern "C"
 JNIEXPORT jlong JNICALL
-Java_cymheart_tau_Tau_ndkCreateTau(JNIEnv *env, jclass clazz, jobject tau, jobject jeditor) {
-    Tau* v = new Tau();
-    Editor* editor = v->GetEditor();
+Java_cymheart_tau_Tau_ndkCreateTau(JNIEnv *env, jclass clazz, jobject jtau, jobject jeditor) {
+    Tau* tau = new Tau();
+    Editor* editor = tau->GetEditor();
 
     jclass jEditorClass = env->GetObjectClass(jeditor);
     jfieldID ndkEditorField = env->GetFieldID(jEditorClass, "ndkEditor", "J");
     env->SetLongField(jeditor, ndkEditorField, (jlong)editor);
 
-    env->DeleteLocalRef(jEditorClass);
+    jclass cls = env->FindClass("cymheart/tau/editor/Editor");
+    jmethodID mid = env->GetMethodID(cls, "Init", "()V");
+    env->CallVoidMethod(jeditor, mid);
 
-    return (int64_t)v;
+
+    env->DeleteLocalRef(jEditorClass);
+    env->DeleteLocalRef(cls);
+
+    return (int64_t)tau;
+}
+
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_cymheart_tau_Tau_ndkDeleteTau(JNIEnv *env, jclass clazz, jlong ndk_tau) {
+    Tau* tau = (Tau*)ndk_tau;
+    delete tau;
 }
 
 extern "C"
@@ -39,6 +54,7 @@ Java_cymheart_tau_Tau_ndkClose(JNIEnv *env, jclass clazz,  jlong ndk_tau) {
     Tau* tau = (Tau*)ndk_tau;
     tau->Close();
 }
+
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -105,6 +121,22 @@ Java_cymheart_tau_Tau_ndkSetSetLimitOnKeySpeed(JNIEnv *env, jclass clazz, jlong 
                                                    jfloat speed) {
     Tau* tau = (Tau*)ndk_tau;
     tau->SetLimitOnKeySpeed(speed);
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkSetEnableMidiEventCountOptimize(JNIEnv *env, jclass clazz, jlong ndk_tau,
+                                                         jboolean enable) {
+    Tau* tau = (Tau*)ndk_tau;
+    tau->SetEnableMidiEventCountOptimize(enable);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkSetMidiKeepSameTimeNoteOnCount(JNIEnv *env, jclass clazz, jlong ndk_tau,
+                                                        jint count) {
+    Tau* tau = (Tau*)ndk_tau;
+    tau->SetMidiKeepSameTimeNoteOnCount(count);
 }
 
 extern "C"
@@ -279,5 +311,8 @@ Java_cymheart_tau_Tau_ndkAddEffect(JNIEnv *env, jclass clazz, jlong ndk_tau,
     TauEffect* effect = (TauEffect*)ndk_effect;
     tau->AddEffect(effect);
 }
+
+
+
 
 

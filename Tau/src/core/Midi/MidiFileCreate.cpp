@@ -1,4 +1,4 @@
-#include"MidiFile.h"
+ï»¿#include"MidiFile.h"
 #include <iostream>
 #include <fstream>
 #include"MidiTrack.h"
@@ -8,7 +8,7 @@ using namespace std;
 
 namespace tau
 {
-	//±£´æmidi¸ñÊ½ÄÚ´æÊı¾İµ½ÎÄ¼ş
+	//ä¿å­˜midiæ ¼å¼å†…å­˜æ•°æ®åˆ°æ–‡ä»¶
 	void MidiFile::SaveMidiFormatMemDataToDist(string saveFilePath)
 	{
 		try
@@ -20,11 +20,11 @@ namespace tau
 		}
 		catch (exception)
 		{
-			cout << saveFilePath << "midiÎÄ¼şĞ´Èë³ö´í!" << endl;
+			cout << saveFilePath << "midiæ–‡ä»¶å†™å…¥å‡ºé”™!" << endl;
 		}
 	}
 
-	//Éú³Émidi¸ñÊ½ÄÚ´æÊı¾İ
+	//ç”Ÿæˆmidiæ ¼å¼å†…å­˜æ•°æ®
 	void MidiFile::CreateMidiFormatMemData()
 	{
 		midiWriter->clear();
@@ -39,7 +39,7 @@ namespace tau
 		}
 	}
 
-	//Éú³ÉÍ·¿é
+	//ç”Ÿæˆå¤´å—
 	bool MidiFile::CreateHeaderChunk()
 	{
 		//
@@ -73,7 +73,7 @@ namespace tau
 	}
 
 
-	//Éú³É¹ìµÀ¿é
+	//ç”Ÿæˆè½¨é“å—
 	int MidiFile::CreateTrackChuck(int trackIdx)
 	{
 		MidiTrack& track = *midiTrackList[trackIdx];
@@ -86,37 +86,39 @@ namespace tau
 		size_t writeLenPos = midiWriter->getWriteCursor();
 		midiWriter->write((int)0);
 
-		list<MidiEvent*>* midiEvents = track.GetEventList();
-		list<MidiEvent*>* newMidiEvents = nullptr;
+		LinkedList<MidiEvent*>* midiEvents = track.GetEventList();
+		LinkedList<MidiEvent*>* newMidiEvents = nullptr;
 		if (trackIdx == 0)
 		{
-			list<MidiEvent*>* midiGolbalEvents = track.GetGolbalEventList();
-			if (midiEvents == nullptr || midiEvents->empty()) {
+			LinkedList<MidiEvent*>* midiGolbalEvents = track.GetGolbalEventList();
+			if (midiEvents == nullptr || midiEvents->Empty()) {
 				midiEvents = midiGolbalEvents;
 			}
 			else
 			{
-				newMidiEvents = new list<MidiEvent*>;
-				for (auto it = midiEvents->begin(); it != midiEvents->end(); it++)
-					newMidiEvents->push_back(*it);
+				newMidiEvents = new LinkedList<MidiEvent*>;
 
-				for (auto it = midiGolbalEvents->begin(); it != midiGolbalEvents->end(); it++)
-					newMidiEvents->push_back(*it);
+				LinkedListNode<MidiEvent*>* node = midiEvents->GetHeadNode();
+				for (; node; node = node->next)
+					newMidiEvents->AddLast(node->elem);
 
-				newMidiEvents->sort(MidiEventTickCompare);
+				node = midiGolbalEvents->GetHeadNode();
+				for (; node; node = node->next)
+					newMidiEvents->AddLast(node->elem);
+
+				newMidiEvents->Sort(MidiEventTickCompare);
 				midiEvents = newMidiEvents;
 			}
 		}
 
 
-		list<MidiEvent*>::iterator it = midiEvents->begin();
-		list<MidiEvent*>::iterator end = midiEvents->end();
-		for (; it != end; it++)
+		LinkedListNode<MidiEvent*>* node = midiEvents->GetHeadNode();
+		for (; node; node = node->next)
 		{
-			CreateEventData(*(*it));
+			CreateEventData(*(node->elem));
 		}
 
-		//½áÎ²: 00FF2F00
+		//ç»“å°¾: 00FF2F00
 		WriteDynamicValue(*midiWriter, 0); //tick
 		midiWriter->write((byte)0xFF);
 		midiWriter->write((byte)0x2F);
@@ -237,8 +239,8 @@ namespace tau
 		case MidiEventType::Tempo:
 		{
 			TempoEvent& tempoEvent = (TempoEvent&)midiEvent;
-			midiWriter->write((byte)0xff);  //ÊÂ¼şÀàĞÍ
-			midiWriter->write((byte)0x51);  //ÖÖÀà
+			midiWriter->write((byte)0xff);  //äº‹ä»¶ç±»å‹
+			midiWriter->write((byte)0x51);  //ç§ç±»
 			midiWriter->write((byte)0x3);  //len
 			WriteInt32To3Btyes(*midiWriter, (int32_t)(tempoEvent.microTempo));
 		}
@@ -248,8 +250,8 @@ namespace tau
 		case MidiEventType::TimeSignature:
 		{
 			TimeSignatureEvent& timeSignatureEvent = (TimeSignatureEvent&)midiEvent;
-			midiWriter->write((byte)0xff);  //ÊÂ¼şÀàĞÍ
-			midiWriter->write((byte)0x58);  //ÖÖÀà
+			midiWriter->write((byte)0xff);  //äº‹ä»¶ç±»å‹
+			midiWriter->write((byte)0x58);  //ç§ç±»
 			midiWriter->write((byte)0x4);  //len
 			midiWriter->write((byte)timeSignatureEvent.numerator);
 			midiWriter->write((byte)timeSignatureEvent.numerator);
@@ -262,18 +264,32 @@ namespace tau
 		case MidiEventType::KeySignature:
 		{
 			KeySignatureEvent& keySignatureEvent = (KeySignatureEvent&)midiEvent;
-			midiWriter->write((byte)0xff);  //ÊÂ¼şÀàĞÍ
-			midiWriter->write((byte)0x59);  //ÖÖÀà
+			midiWriter->write((byte)0xff);  //äº‹ä»¶ç±»å‹
+			midiWriter->write((byte)0x59);  //ç§ç±»
 			midiWriter->write((byte)0x2);  //len
 			midiWriter->write((byte)keySignatureEvent.sf);
 			midiWriter->write((byte)keySignatureEvent.mi);
 		}
 
+		case MidiEventType::Smpte:
+		{
+			SmpteEvent& smpteEvent = (SmpteEvent&)midiEvent;
+			midiWriter->write((byte)0xff);  //äº‹ä»¶ç±»å‹
+			midiWriter->write((byte)0x54);  //ç§ç±»
+			midiWriter->write((byte)0x5);  //len
+			midiWriter->write((byte)smpteEvent.hr);
+			midiWriter->write((byte)smpteEvent.mn);
+			midiWriter->write((byte)smpteEvent.sec);
+			midiWriter->write((byte)smpteEvent.fr);
+			midiWriter->write((byte)smpteEvent.ff);
+		}
+		break;
+
 		case MidiEventType::Unknown:
 		{
 			UnknownEvent& unknownEvent = (UnknownEvent&)midiEvent;
-			midiWriter->write((byte)0xff);  //ÊÂ¼şÀàĞÍ
-			midiWriter->write((byte)0x59);  //ÖÖÀà
+			midiWriter->write((byte)0xff);  //äº‹ä»¶ç±»å‹
+			midiWriter->write((byte)0x59);  //ç§ç±»
 			WriteDynamicValue(*midiReader, (int32_t)unknownEvent.size); //len
 			midiWriter->write(unknownEvent.data, unknownEvent.size);
 		}
@@ -281,10 +297,10 @@ namespace tau
 		break;
 		}
 
-		return 0; //¼ÌĞø½âÎöµ±Ç°Òô¹ìÊı¾İ
+		return 0; //ç»§ç»­è§£æå½“å‰éŸ³è½¨æ•°æ®
 	}
 
-	//¶ÁÈ¡±ä³¤Öµ
+	//è¯»å–å˜é•¿å€¼
 	uint32_t MidiFile::ReadDynamicValue(ByteStream& reader, int maxByteCount)
 	{
 		uint32_t val = 0;
@@ -306,7 +322,7 @@ namespace tau
 		return val;
 	}
 
-	//Ğ´Èë±ä³¤Öµ
+	//å†™å…¥å˜é•¿å€¼
 	void MidiFile::WriteDynamicValue(ByteStream& writer, int32_t value)
 	{
 		if (!isLittleEndianSystem)
@@ -328,7 +344,7 @@ namespace tau
 	}
 
 
-	short MidiFile::ReadInt16(ByteStream& reader)
+	short MidiFile::ReadInt16(ByteStream& reader) const
 	{
 		byte dataBtyes[2] = { 0 };
 		reader.read(dataBtyes, 0, 2);
@@ -337,7 +353,7 @@ namespace tau
 		return *((short*)dataBtyes);
 	}
 
-	uint32_t MidiFile::ReadInt32(ByteStream& reader)
+	uint32_t MidiFile::ReadInt32(ByteStream& reader) const
 	{
 		byte dataBtyes[4] = { 0 };
 		reader.read(dataBtyes, 0, 4);
@@ -350,7 +366,7 @@ namespace tau
 		return *((uint32_t*)dataBtyes);
 	}
 
-	uint32_t MidiFile::Read3BtyesToInt32(ByteStream& reader)
+	uint32_t MidiFile::Read3BtyesToInt32(ByteStream& reader) const
 	{
 		byte dataBtyes[4] = { 0 };
 		reader.read(dataBtyes, 1, 3);
@@ -364,7 +380,7 @@ namespace tau
 	}
 
 
-	void MidiFile::WriteInt32To3Btyes(ByteStream& writer, int32_t value)
+	void MidiFile::WriteInt32To3Btyes(ByteStream& writer, int32_t value) const
 	{
 		byte* v = (byte*)&value;
 

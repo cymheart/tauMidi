@@ -3,6 +3,7 @@
 
 #include "scutils/Utils.h"
 #include "scutils/MathUtils.h"
+#include "scutils/LinkedList.h"
 #include <queue>
 
 using namespace scutils;

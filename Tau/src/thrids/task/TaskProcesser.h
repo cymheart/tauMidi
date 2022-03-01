@@ -4,6 +4,7 @@
 #include"Task.h"
 #include"TaskQueue.h"
 #include <chrono>
+#include<thread>
 
 namespace task
 {
@@ -79,17 +80,17 @@ namespace task
 
 		void PostBlockFilterSingle(int filterNumber);
 		void PostUnBlockFilter();
-		int PostTask(TaskCallBack taskCallBack);
-		int PostTask(TaskCallBack taskCallBack, int delay);
-		int PostTask(TaskCallBack taskCallBack, void* data);
-		int PostTask(TaskCallBack taskCallBack, void* data, int delay);
-		int PostTaskByFilter(TaskCallBack taskCallBack, int filterNumber);
-		int PostTaskByFilter(TaskCallBack taskCallBack, int delay, int filterNumber);
-		int PostTaskByFilter(TaskCallBack taskCallBack, void* data, int filterNumber);
+		Task* PostTask(TaskCallBack taskCallBack);
+		Task* PostTask(TaskCallBack taskCallBack, int delay);
+		Task* PostTask(TaskCallBack taskCallBack, void* data);
+		Task* PostTask(TaskCallBack taskCallBack, void* data, int delay);
+		Task* PostTaskByFilter(TaskCallBack taskCallBack, int filterNumber);
+		Task* PostTaskByFilter(TaskCallBack taskCallBack, int delay, int filterNumber);
+		Task* PostTaskByFilter(TaskCallBack taskCallBack, void* data, int filterNumber);
 
-		int PostTask(TaskCallBack taskCallBack, void* data, int delay, int filterNumber);
-		int PostTask(Task* task);
-		int PostTask(Task* task, int delay);
+		Task* PostTask(TaskCallBack taskCallBack, void* data, int delay, int filterNumber);
+		Task* PostTask(Task* task);
+		Task* PostTask(Task* task, int delay);
 
 
 

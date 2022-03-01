@@ -22,9 +22,10 @@ namespace tau
 	{
 		RemoveAllVirInstrument();
 
-		//
-		ReqDeleteTask();
-		waitDelSem.wait();
+		if (!isReqDelete) {
+			ReqDeleteTask();
+			waitSem.wait();
+		}
 
 		//
 		realtimeKeyOpTaskProcesser->Stop();
@@ -44,8 +45,10 @@ namespace tau
 	void RealtimeSynther::Close()
 	{
 		RemoveAllVirInstrument();
-		ReqDeleteTask();
-		waitDelSem.wait();
+		if (!isReqDelete) {
+			ReqDeleteTask();
+			waitSem.wait();
+		}
 
 		realtimeKeyOpTaskProcesser->Stop();
 
@@ -177,7 +180,6 @@ namespace tau
 	// 渲染每帧音频
 	void RealtimeSynther::Render()
 	{
-
 		if (isReqDelete && isSoundEnd)
 		{
 			if (isMainSynther)
@@ -194,7 +196,7 @@ namespace tau
 					mainSynther.isFrameRenderCompleted = true;
 			}
 
-			waitDelSem.set();
+			waitSem.set();
 			return;
 		}
 

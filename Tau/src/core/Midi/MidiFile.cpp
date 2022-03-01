@@ -21,7 +21,7 @@ namespace tau
 		DEL(midiReader);
 		DEL(midiWriter);
 
-		if (midiTrackList.size() <= 0)
+		if (midiTrackList.empty())
 			return;
 
 		//
@@ -33,8 +33,9 @@ namespace tau
 	}
 
 	// 解析文件到可识别数据结构
-	void MidiFile::Parse(string filePath)
+	bool MidiFile::Parse(string filePath)
 	{
+		bool ret = true;
 		std::ifstream t;
 		try
 		{
@@ -49,7 +50,7 @@ namespace tau
 			t.close();
 			midiReader->write(buffer, length);
 			delete[] buffer;
-			ParseCore();
+			ret = ParseCore();
 		}
 		catch (exception e)
 		{
@@ -60,21 +61,22 @@ namespace tau
 		}
 
 		midiReader->clear();
+		return ret;
 	}
 
 	//是否两个通道可以具有相同的乐器改变事件
 	//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
-	bool MidiFile::IsSameProgramChannel(vector<MidiEvent*>* eventListA, vector<MidiEvent*>* eventListB)
+	bool MidiFile::IsSameProgramChannel(LinkedList<MidiEvent*>* eventListA, LinkedList<MidiEvent*>* eventListB)
 	{
 		programChangeA = -1;
 		programChangeB = -1;
 
-		vector<MidiEvent*>::iterator itA = eventListA->begin();
+		LinkedListNode<MidiEvent*>* node = eventListA->GetHeadNode();
 		MidiEvent* evA;
 		bool isHavProgramChangeA = false;
-		for (; itA != eventListA->end(); itA++)
+		for (; node; node = node->next)
 		{
-			evA = *itA;
+			evA = node->elem;
 			if (evA->type == MidiEventType::NoteOn)
 				break;
 
@@ -86,12 +88,12 @@ namespace tau
 
 		}
 
-		vector<MidiEvent*>::iterator itB = eventListB->begin();
+		node = eventListB->GetHeadNode();
 		MidiEvent* evB;
 		bool isHavProgramChangeB = false;
-		for (; itB != eventListB->end(); itB++)
+		for (; node; node = node->next)
 		{
-			evB = *itB;
+			evB = node->elem;
 			if (evB->type == MidiEventType::NoteOn)
 				break;
 
@@ -110,13 +112,15 @@ namespace tau
 		return true;
 	}
 
+
+
 	//是否两个通道具有相同的乐器改变事件
 	//即合并任何多个轨道上相同的通道事件到一个轨道，删除被合并轨道上对应通道的事件
 	//如果一个轨道上所有通道事件都被合并完了，那这个轨道也会被相应删除
 	void MidiFile::SetChannelSameProgram()
 	{
-		MidiEventList* eventListAtChannelA;
-		MidiEventList* eventListAtChannelB;
+		LinkedList<MidiEvent*>* eventListAtChannelA;
+		LinkedList<MidiEvent*>* eventListAtChannelB;
 
 		for (int i = 0; i < midiTrackList.size() - 1; i++)
 		{
@@ -124,7 +128,7 @@ namespace tau
 			bool isEmptyChannelA = true;
 			for (int n = 0; n < 16; n++)
 			{
-				if (!eventListAtChannelA[n].empty()) {
+				if (!eventListAtChannelA[n].Empty()) {
 					isEmptyChannelA = false;
 					break;
 				}
@@ -139,8 +143,8 @@ namespace tau
 
 				for (int n = 0; n < 16; n++)
 				{
-					if (eventListAtChannelA[n].empty() ||
-						eventListAtChannelB[n].empty())
+					if (eventListAtChannelA[n].Empty() ||
+						eventListAtChannelB[n].Empty())
 						continue;
 
 					//是否可以合并轨道通道事件的标准是:两个轨道通道事件，
@@ -153,13 +157,13 @@ namespace tau
 					{
 						ProgramChangeEvent* pcev = new ProgramChangeEvent();
 						pcev->value = programChangeA;
-						eventListAtChannelB[n].insert(eventListAtChannelB[n].begin(), pcev);
+						eventListAtChannelB[n].AddBefore(eventListAtChannelB[n].GetHeadNode(), pcev);
 					}
 					else
 					{
 						ProgramChangeEvent* pcev = new ProgramChangeEvent();
 						pcev->value = programChangeB;
-						eventListAtChannelA[n].insert(eventListAtChannelA[n].begin(), pcev);
+						eventListAtChannelA[n].AddBefore(eventListAtChannelA[n].GetHeadNode(), pcev);
 					}
 				}
 			}
@@ -179,11 +183,11 @@ namespace tau
 		int len = midiTrackList.size();
 		for (int j = 0; j < len; j++)
 		{
-			MidiEventList* eventListAtChannel = midiTrackList[j]->GetEventListAtChannel();
+			LinkedList<MidiEvent*>* eventListAtChannel = midiTrackList[j]->GetEventListAtChannel();
 			isHavChannelMidiEvents = false;
 			for (int n = 0; n < 16; n++)
 			{
-				if (eventListAtChannel[n].size() == 0)
+				if (eventListAtChannel[n].Size() == 0)
 					continue;
 
 				if (!isHavChannelMidiEvents)
@@ -193,14 +197,15 @@ namespace tau
 					midiTrackList[j]->SetChannelNum(n);
 
 					if (count != 0)
-						midiTrackList[j]->GetEventList()->sort(MidiEventTickCompare);
+						midiTrackList[j]->GetEventList()->Sort(MidiEventTickCompare);
 				}
 				else
 				{
 					bool isHavKey = false;
-					for (int i = 0; i < eventListAtChannel[n].size(); i++)
+					LinkedListNode<MidiEvent*>* node = eventListAtChannel[n].GetHeadNode();
+					for (; node; node = node->next)
 					{
-						if (eventListAtChannel[n][i]->type == MidiEventType::NoteOn) {
+						if (node->elem->type == MidiEventType::NoteOn) {
 							isHavKey = true;
 							break;
 						}
@@ -215,11 +220,13 @@ namespace tau
 					}
 				}
 
-				eventListAtChannel[n].clear();
+
+				eventListAtChannel[n].Release();
 				isHavChannelMidiEvents = true;
 			}
 		}
 	}
+
 
 	//寻找轨道默认乐器改变事件
 	void MidiFile::FindTracksDefaultProgramChangeEvent()
@@ -230,6 +237,9 @@ namespace tau
 			midiTrackList[j]->FindDefaultProgramChangeEvent();
 		}
 	}
+
+
+
 
 
 	//清空midiTrack列表,但并不真正删除track列表中的事件
@@ -244,9 +254,9 @@ namespace tau
 
 
 	//获取全局事件列表
-	list<MidiEvent*>* MidiFile::GetGolbalEventList()
+	LinkedList<MidiEvent*>* MidiFile::GetGolbalEventList()
 	{
-		if (midiTrackList.size() <= 0)
+		if (midiTrackList.empty())
 			return nullptr;
 
 		return midiTrackList[0]->GetGolbalEventList();
@@ -280,16 +290,16 @@ namespace tau
 		//有些midi文件的格式明明是SyncTracks，但速度设置却没有放在全局0轨道中，而把速度设置放在了其他轨道，
 		//此时通过把速度设置事件迁移到0轨道来适配标准格式
 		//当所以事件解析完成后，重新排序0轨道所有事件
-		if (format == MidiFileFormat::SyncTracks && golbalEvents.size() != 0)
+		if (format == MidiFileFormat::SyncTracks && !golbalEvents.empty())
 		{
-			list<MidiEvent*>* globalMidiEvents = midiTrackList[0]->GetGolbalEventList();
+			LinkedList<MidiEvent*>* globalMidiEvents = midiTrackList[0]->GetGolbalEventList();
 			auto it = golbalEvents.begin();
 			for (; it != golbalEvents.end(); it++)
 			{
-				globalMidiEvents->push_back(*it);
+				globalMidiEvents->AddLast(*it);
 			}
 
-			globalMidiEvents->sort(MidiEventTickCompare);
+			globalMidiEvents->Sort(MidiEventTickCompare);
 
 			//去除前后值相同,以及后值覆盖前值的全局事件
 			RemoveSameAndOverrideGlobalEvents(globalMidiEvents);
@@ -310,86 +320,108 @@ namespace tau
 	}
 
 	//去除前后值相同,以及后值覆盖前值的全局事件
-	void MidiFile::RemoveSameAndOverrideGlobalEvents(list<MidiEvent*>* globalMidiEvents)
+	void MidiFile::RemoveSameAndOverrideGlobalEvents(LinkedList<MidiEvent*>* globalMidiEvents)
 	{
-		TempoEvent* prevTempo = nullptr;
-		KeySignatureEvent* prevKeySig = nullptr;
-		TimeSignatureEvent* prevTimeSig = nullptr;
+		LinkedListNode<MidiEvent*>* prevTempoNode = nullptr;
+		LinkedListNode<MidiEvent*>* prevKeySigNode = nullptr;
+		LinkedListNode<MidiEvent*>* prevTimeSigNode = nullptr;
 
-		auto iter = globalMidiEvents->begin();
-		for (; iter != globalMidiEvents->end(); )
+		LinkedListNode<MidiEvent*>* node = globalMidiEvents->GetHeadNode();
+		LinkedListNode<MidiEvent*>* next;
+		for (; node;)
 		{
-			switch ((*iter)->type)
+			switch (node->elem->type)
 			{
 			case MidiEventType::Tempo:
 			{
-				TempoEvent* tempo = (TempoEvent*)*iter;
-				if (prevTempo != nullptr)
+				TempoEvent* tempo = (TempoEvent*)node->elem;
+				if (prevTempoNode != nullptr)
 				{
+					TempoEvent* prevTempo = (TempoEvent*)prevTempoNode->elem;
 					if (prevTempo->microTempo == tempo->microTempo) {
-						iter = globalMidiEvents->erase(iter);
+
+						next = globalMidiEvents->Remove(node);
+						DEL(node->elem);
+						DEL(node);
+						node = next;
 						continue;
 					}
 					else if (prevTempo->startTick == tempo->startTick)
 					{
-						globalMidiEvents->remove(prevTempo);
+						globalMidiEvents->Remove(prevTempoNode);
+						DEL(prevTempoNode->elem);
+						DEL(prevTempoNode);
 					}
 				}
 
-				prevTempo = tempo;
-				iter++;
+				prevTempoNode = node;
+				node = node->next;
 
 			}
 			break;
 
 			case MidiEventType::KeySignature:
 			{
-				KeySignatureEvent* keySig = (KeySignatureEvent*)*iter;
-				if (prevKeySig != nullptr)
+				KeySignatureEvent* keySig = (KeySignatureEvent*)node->elem;
+				if (prevKeySigNode != nullptr)
 				{
+					KeySignatureEvent* prevKeySig = (KeySignatureEvent*)prevKeySigNode->elem;
+
 					if (prevKeySig->mi == keySig->mi &&
 						prevKeySig->sf == keySig->sf) {
-						iter = globalMidiEvents->erase(iter);
+						next = globalMidiEvents->Remove(node);
+						DEL(node->elem);
+						DEL(node);
+						node = next;
 						continue;
 					}
 					else if (prevKeySig->startTick == keySig->startTick)
 					{
-						globalMidiEvents->remove(prevKeySig);
+						globalMidiEvents->Remove(prevKeySigNode);
+						DEL(prevKeySigNode->elem);
+						DEL(prevKeySigNode);
 					}
 				}
 
-				prevKeySig = keySig;
-				iter++;
+				prevKeySigNode = node;
+				node = node->next;
 			}
 
 			break;
 
 			case MidiEventType::TimeSignature:
 			{
-				TimeSignatureEvent* timeSig = (TimeSignatureEvent*)*iter;
-				if (prevTimeSig != nullptr)
+				TimeSignatureEvent* timeSig = (TimeSignatureEvent*)node->elem;
+				if (prevTimeSigNode != nullptr)
 				{
+					TimeSignatureEvent* prevTimeSig = (TimeSignatureEvent*)prevTimeSigNode->elem;
+
 					if (prevTimeSig->denominator == timeSig->denominator &&
 						prevTimeSig->numerator == timeSig->numerator &&
 						prevTimeSig->metronomeCount == timeSig->metronomeCount &&
 						prevTimeSig->nCount32ndNotesPerQuarterNote == timeSig->nCount32ndNotesPerQuarterNote) {
-						iter = globalMidiEvents->erase(iter);
+						next = globalMidiEvents->Remove(node);
+						DEL(node->elem);
+						DEL(node);
+						node = next;
 						continue;
 					}
 					else if (prevTimeSig->startTick == timeSig->startTick)
 					{
-						globalMidiEvents->remove(prevTimeSig);
+						globalMidiEvents->Remove(prevTimeSigNode);
+						DEL(prevTimeSigNode->elem);
+						DEL(prevTimeSigNode);
 					}
 				}
 
-				prevTimeSig = timeSig;
-				iter++;
+				prevTimeSigNode = node;
+				node = node->next;
 
 			}
 			break;
 
 			default:
-				iter++;
+				node = node->next;
 				break;
 
 			}
@@ -399,8 +431,16 @@ namespace tau
 
 	bool MidiFile::MidiEventTickCompare(MidiEvent* a, MidiEvent* b)
 	{
-		return a->startTick < b->startTick;//升序
+		return a->startTick < b->startTick;
+
+		////升序
+		//if (a->startTick < b->startTick)
+		//	return -1;
+		//else if (a->startTick > b->startTick)
+		//	return 1;
+		//return 0;
 	}
+
 
 	// 解析头块
 	bool MidiFile::ParseHeaderChunk()
@@ -452,9 +492,9 @@ namespace tau
 
 		MidiTrack* track = new MidiTrack();
 		track->SetTickForQuarterNote(tickForQuarterNote);
-		int parseRet = 0;
+		int parseRet = -1;
 
-		while (midiReader->getReadCursor() < midiReader->size())
+		while (midiReader->getReadCursor() < midiReader->getWriteCursor() && !isStopParse)
 		{
 			uint32_t deltaTime = ReadDynamicValue(*midiReader);
 			curtParseTickCount += deltaTime;
@@ -505,13 +545,22 @@ namespace tau
 		{
 			int note = midiReader->read<byte>();
 			int velocity = midiReader->read<byte>();
+			LinkedListNode<MidiEvent*>* noteOnEventNode;
 
-			NoteOnEvent* noteOnEvent;
 			if (velocity == 0)
 			{
-				noteOnEvent = track.FindNoteOnEvent(note, lastParseEventChannel);
-				if (noteOnEvent == nullptr)
+				noteOnEventNode = track.FindNoteOnEvent(note, lastParseEventChannel);
+				if (noteOnEventNode == nullptr || noteOnEventNode->elem == nullptr)
 					break;
+
+				NoteOnEvent* noteOnEvent = (NoteOnEvent*)noteOnEventNode->elem;
+
+				//优化midi音符数量，对于tick数(时长)非常小的NoteOn事件采取忽略策略
+				if (enableMidiEventCountOptimize && curtParseTickCount - noteOnEvent->startTick < 5)
+				{
+					track.RemoveEvent(noteOnEventNode);
+					break;
+				}
 
 				//
 				NoteOffEvent* noteOffEvent = new NoteOffEvent();
@@ -529,12 +578,20 @@ namespace tau
 			}
 			else
 			{
-				noteOnEvent = new NoteOnEvent();
+				bool isNeed = true;
+
+				//开启按键数量控制优化(根据按键事件的startTick相同情况下，维持一定的数量)
+				if (enableMidiEventCountOptimize)
+					isNeed = track.IsNeedNoteOnEvents(lastParseEventChannel, curtParseTickCount, keepSameStartTickNoteOnEventsCount);
+				if (!isNeed)
+					break;
+
+				NoteOnEvent* noteOnEvent = new NoteOnEvent();
 				noteOnEvent->startTick = curtParseTickCount;
 				noteOnEvent->note = note;
 				noteOnEvent->velocity = velocity;
 				noteOnEvent->channel = lastParseEventChannel;
-				track.AddEvent(noteOnEvent);
+				noteOnEventNode = track.AddEvent(noteOnEvent);
 			}
 		}
 		break;
@@ -543,9 +600,20 @@ namespace tau
 		{
 			int note = midiReader->read<byte>();
 			int velocity = midiReader->read<byte>();
-			NoteOnEvent* noteOnEvent = track.FindNoteOnEvent(note, lastParseEventChannel);
-			if (noteOnEvent == nullptr)
+
+			LinkedListNode<MidiEvent*>* noteOnEventNode = track.FindNoteOnEvent(note, lastParseEventChannel);
+			if (noteOnEventNode == nullptr || noteOnEventNode->elem == nullptr)
 				break;
+
+			NoteOnEvent* noteOnEvent = (NoteOnEvent*)noteOnEventNode->elem;
+
+
+			//优化midi音符数量，对于tick数(时长)非常小的NoteOn事件采取忽略策略
+			if (enableMidiEventCountOptimize && curtParseTickCount - noteOnEvent->startTick < 5)
+			{
+				track.RemoveEvent(noteOnEventNode);
+				break;
+			}
 
 			NoteOffEvent* noteOffEvent = new NoteOffEvent();
 			noteOffEvent->startTick = curtParseTickCount;
@@ -663,9 +731,10 @@ namespace tau
 				if (len != 0)
 				{
 					byte* byteCodes = (byte*)malloc(len);
-					midiReader->read(byteCodes, 0, len);
-					byteCodes[len - 1] = 0;
-					if (byteCodes != nullptr) {
+					if (byteCodes != nullptr)
+					{
+						midiReader->read(byteCodes, 0, len);
+						byteCodes[len - 1] = 0;
 						textEvent->text.assign((const char*)byteCodes);
 						free(byteCodes);
 					}
@@ -675,9 +744,20 @@ namespace tau
 			}
 			break;
 
+
+			case 0x20: //MIDI通道
+				midiReader->read<byte>();  // 1字节长度
+				midiReader->read<byte>();
+				break;
+
+			case 0x21: //接口号码
+				midiReader->read<byte>();  // 1字节长度
+				midiReader->read<byte>();
+				break;
+
 			case 0x51:
 			{
-				midiReader->read<byte>();
+				midiReader->read<byte>();  // 长度
 				TempoEvent* tempoEvent = new TempoEvent();
 				tempoEvent->startTick = curtParseTickCount;
 				tempoEvent->microTempo = (float)Read3BtyesToInt32(*midiReader);
@@ -697,9 +777,22 @@ namespace tau
 			}
 			break;
 
+			case 0x54:
+			{
+				midiReader->read<byte>(); // 长度
+				SmpteEvent* smpteEvent = new SmpteEvent();
+				smpteEvent->hr = midiReader->read<byte>();
+				smpteEvent->mn = midiReader->read<byte>();
+				smpteEvent->sec = midiReader->read<byte>();
+				smpteEvent->fr = midiReader->read<byte>();
+				smpteEvent->ff = midiReader->read<byte>();
+				track.AddEvent(smpteEvent);
+			}
+			break;
+
 			case 0x58:
 			{
-				midiReader->read<byte>();
+				midiReader->read<byte>(); // 长度
 				TimeSignatureEvent* timeSignatureEvent = new TimeSignatureEvent();
 				timeSignatureEvent->startTick = curtParseTickCount;
 				timeSignatureEvent->numerator = midiReader->read<byte>();
@@ -724,7 +817,7 @@ namespace tau
 
 			case 0x59:
 			{
-				midiReader->read<byte>();
+				midiReader->read<byte>(); // 长度
 				KeySignatureEvent* keySignatureEvent = new KeySignatureEvent();
 				keySignatureEvent->startTick = curtParseTickCount;
 				keySignatureEvent->sf = midiReader->read<byte>();
@@ -755,6 +848,8 @@ namespace tau
 				UnknownEvent* unknownEvent = new UnknownEvent();
 				unknownEvent->codeType = type;
 				uint32_t len = ReadDynamicValue(*midiReader);
+				if (len <= 0)
+					break;
 
 				byte* byteCodes = (byte*)malloc(len);
 				midiReader->read(byteCodes, 0, len);

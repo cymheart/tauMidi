@@ -39,8 +39,10 @@ namespace task
 	public:
 		//过滤号
 		int filterNum = 0;
+		//生成时间点
+		int64_t createTimeMS = 0;
 		//执行时间点
-		int64_t executeTimeMS;
+		int64_t executeTimeMS = 0;
 		int slotPos[5] = { 0 };
 		int64_t delay = 0;                //延迟执行时间
 		TaskCallBack processCallBack = nullptr;      //处理数据回调函数

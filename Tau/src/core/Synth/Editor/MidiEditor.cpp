@@ -122,15 +122,13 @@ namespace tau
 		}
 		if (sec < curtPlaySec)
 			dstTrack->_isUpdatePlayPrevPos = true;
-
 	}
-
 
 	//计算指定轨道所有事件的实际时间点
 	void MidiEditor::ComputeTrackEventsTime(Track* track)
 	{
 		Tempo* tempo;
-		list<MidiEvent*>* eventList;
+		LinkedList<MidiEvent*>* eventList;
 		InstFragment* instFrag;
 		MidiEvent* ev;
 
@@ -143,11 +141,10 @@ namespace tau
 			instFrag->startSec = (float)tempo->GetTickSec(instFrag->startTick);
 
 			eventList = &(instFrag->midiEvents);
-			list<MidiEvent*>::iterator it = eventList->begin();
-			list<MidiEvent*>::iterator end = eventList->end();
-			for (; it != end; it++)
+			LinkedListNode<MidiEvent*>* node = eventList->GetHeadNode();
+			for (; node; node = node->next)
 			{
-				ev = *it;
+				ev = node->elem;
 				int evStartTick = ev->startTick + instFrag->startTick;
 				tempo = midiMarkerList.GetTempo(evStartTick);
 				ev->endSec = ev->startSec = (float)tempo->GetTickSec(evStartTick);
@@ -180,6 +177,7 @@ namespace tau
 		track->_isUpdatePlayPrevPos = false;
 		track->_updateInstFrags.clear();
 	}
+
 
 
 	//计算结束时间点
@@ -440,7 +438,7 @@ namespace tau
 
 	void MidiEditor::ProcessTrack(Track* track, bool isDirectGoto)
 	{
-		list<MidiEvent*>* eventList;
+		LinkedList<MidiEvent*>* eventList;
 		InstFragment* instFrag;
 		MidiEvent* ev;
 
@@ -453,11 +451,11 @@ namespace tau
 			{
 				instFrag = *frag_it;
 				eventList = &(instFrag->midiEvents);
-				list<MidiEvent*>::iterator it = instFrag->eventOffsetIter;
-				list<MidiEvent*>::iterator end = eventList->end();
-				for (; it != end; it++)
+
+				LinkedListNode<MidiEvent*>* node = instFrag->eventOffsetNode;
+				for (; node; node = node->next)
 				{
-					ev = *it;
+					ev = node->elem;
 
 					//重新处理当前时间点在事件处理时间中间时，可以重新启用此事件
 					if (isDirectGoto &&
@@ -474,8 +472,8 @@ namespace tau
 					ProcessEvent(ev, track, isDirectGoto);
 				}
 
-				if (&(instFrag->eventOffsetIter) != &it)
-					instFrag->eventOffsetIter = it;
+				if (instFrag->eventOffsetNode != node)
+					instFrag->eventOffsetNode = node;
 			}
 		}
 

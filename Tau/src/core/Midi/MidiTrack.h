@@ -29,7 +29,7 @@ namespace tau
 		}
 
 		//添加midi事件
-		void AppendMidiEvents(vector<MidiEvent*>& midiEvents);
+		void AppendMidiEvents(LinkedList<MidiEvent*>& midiEvents);
 
 		//寻找默认乐器改变事件
 		void FindDefaultProgramChangeEvent();
@@ -38,13 +38,31 @@ namespace tau
 		/// 增加一个事件
 		/// </summary>
 		/// <param name="ev"></param>
-		void AddEvent(MidiEvent* ev);
+		LinkedListNode<MidiEvent*>* AddEvent(MidiEvent* ev);
+
+		/// <summary>
+		/// 移除一个事件
+		/// </summary>
+		/// <param name="ev"></param>
+		void RemoveEvent(LinkedListNode<MidiEvent*>* midiEventNode);
+
+		/// <summary>
+		/// 是否需要按键事件
+		/// </summary>
+		bool IsNeedNoteOnEvents(int channel, uint32_t startTick, int keepCount);
+
+		/// <summary>
+		/// 移除相同StartTick的midi事件
+		/// </summary>
+		/// <param name="ev"></param>
+		void RemoveSameStartTickEvents(LinkedListNode<MidiEvent*>* midiEventNode, int keepCount);
+
 
 		/// <summary>
 		/// 获取事件列表
 		/// </summary>
 		/// <returns></returns>
-		inline list<MidiEvent*>* GetEventList()
+		inline LinkedList<MidiEvent*>* GetEventList()
 		{
 			return &midiEventList;
 		}
@@ -53,7 +71,7 @@ namespace tau
 		/// 获取全局事件列表
 		/// </summary>
 		/// <returns></returns>
-		inline list<MidiEvent*>* GetGolbalEventList()
+		inline LinkedList<MidiEvent*>* GetGolbalEventList()
 		{
 			return &midiGolbalEventList;
 		}
@@ -62,10 +80,11 @@ namespace tau
 		/// 获取通道分类的事件列表
 		/// </summary>
 		/// <returns></returns>
-		inline MidiEventList* GetEventListAtChannel()
+		inline LinkedList<MidiEvent*>* GetEventListAtChannel()
 		{
 			return midiEventListAtChannel;
 		}
+
 
 		/// <summary>
 		/// 获取事件数量
@@ -73,7 +92,7 @@ namespace tau
 		/// <returns></returns>
 		inline int GetEventCount()
 		{
-			return (int)midiEventList.size();
+			return (int)midiEventList.Size();
 		}
 
 
@@ -98,7 +117,7 @@ namespace tau
 		/// <param name="note"></param>
 		/// <param name="channel"></param>
 		/// <returns></returns>
-		NoteOnEvent* FindNoteOnEvent(int note, int channel);
+		LinkedListNode<MidiEvent*>* FindNoteOnEvent(int note, int channel);
 
 	private:
 		//获取下一个TempoIndex
@@ -106,16 +125,17 @@ namespace tau
 
 	private:
 		int channelNum = -1;
-		list<MidiEvent*> midiEventList;
-		list<MidiEvent*> midiGolbalEventList;
-		MidiEventList midiEventListAtChannel[16];
+		LinkedList<MidiEvent*> midiEventList;
+		LinkedList<MidiEvent*> midiGolbalEventList;
+		LinkedList<MidiEvent*> midiEventListAtChannel[16];
+
 		ProgramChangeEvent* defaultProgramChangeEvent = nullptr;
 
 
 		//一个四分音符所要弹奏的tick数,默认值120
 		float tickForQuarterNote = 120;
 
-		unordered_map<int, vector<NoteOnEvent*>> noteOnEventMap;
+		unordered_map<int, vector<LinkedListNode<MidiEvent*>*>> noteOnEventMap;
 
 	};
 

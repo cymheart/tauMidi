@@ -26,6 +26,8 @@ public class Editor {
         return tracks;
     }
 
+    protected boolean isLoadCompleted = false;
+
     protected int state = STOP;
 
     protected float speed = 1;
@@ -50,12 +52,47 @@ public class Editor {
     protected List<MidiEvent> curtProcessMidiEvent = new ArrayList<>();
     protected VisualMidiEvents visualMidiEvents = new VisualMidiEvents();
 
+    private void Init()
+    {
+        ndkInit(this, ndkEditor);
+    }
+
+    private void Release()
+    {
+        ndkInit(this, ndkEditor);
+    }
+
+    //判断是否载入完成
+    public boolean IsLoadCompleted()
+    {
+        return isLoadCompleted;
+    }
+
+    //载入
+    public void Load(String midifile, boolean isWaitLoadCompleted)
+    {
+        ndkLoad(this, ndkEditor, midifile, isWaitLoadCompleted);
+    }
+
+    //载入
     public void Load(String midifile)
     {
-        _Remove();
-        ndkLoad(this, ndkEditor, midifile);
-        _Load();
+        Load(midifile, true);
     }
+
+    private void _JniLoadStart()
+    {
+        isLoadCompleted = false;
+        _Remove();
+    }
+
+    private void _JniLoadCompleted()
+    {
+        ndkCreateDatas(this, ndkEditor);
+        _Load();
+        isLoadCompleted = true;
+    }
+
 
     private void _Load()
     {
@@ -414,7 +451,9 @@ public class Editor {
     }
 
     //
-    private static native void ndkLoad(Editor editor, long ndkEditor, String midifile);
+    private static native void ndkInit(Editor editor, long ndkEditor);
+    private static native void ndkLoad(Editor editor, long ndkEditor, String midifile, boolean isWaitLoadCompleted);
+    private static native void ndkCreateDatas(Editor editor, long ndkEditor);
     private static native void ndkPlay(long ndkEditor);
     private static native void ndkPause(long ndkEditor);
     private static native void ndkStop(long ndkEditor);

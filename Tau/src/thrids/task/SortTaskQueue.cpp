@@ -15,6 +15,11 @@ namespace task
 		Release();
 	}
 
+	bool SortTaskQueue::Compare(Task* left, Task* right)
+	{
+		return left->executeTimeMS < right->executeTimeMS;
+	}
+
 	int64_t SortTaskQueue::GetWaitTimeMS(int64_t curTimeMS)
 	{
 		return waitTimeMS;
@@ -107,7 +112,7 @@ namespace task
 	{
 		SortTaskQueue& tq = (SortTaskQueue&)mergeTaskQue;
 		timerTaskList.Merge(tq.timerTaskList);
-		LinkedList<Task*>::Sort(&timerTaskList, timerCompare);
+		timerTaskList.Sort(Compare);
 		timeOutList.Merge(tq.timeOutList);
 	}
 

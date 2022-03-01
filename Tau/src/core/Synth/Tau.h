@@ -128,6 +128,18 @@ namespace tau
 			return renderQuality;
 		}
 
+		//设置是否开启MidiEvent数量优化
+		inline void SetEnableMidiEventCountOptimize(bool enable)
+		{
+			enableMidiEventCountOptimize = enable;
+		}
+
+		//设置midi文件中保持同时按键的数量 (默认值:-1 无限制)
+		inline void SetMidiKeepSameTimeNoteOnCount(int count)
+		{
+			midiKeepSameTimeNoteOnCount = count;
+		}
+
 		//设置轨道通道合并模式
 		inline void SetTrackChannelMergeMode(TrackChannelMergeMode mode)
 		{
@@ -188,7 +200,7 @@ namespace tau
 		}
 
 		// 获取处理每子帧样本所花费的时间(单位:秒)
-		inline float GetPerChildFrameSampleSec()
+		inline double GetPerChildFrameSampleSec()
 		{
 			return invSampleProcessRate * childFrameSampleCount;
 		}
@@ -264,8 +276,12 @@ namespace tau
 			return 0;
 		}
 
+
+		//判断是否载入完成
+		bool IsLoadCompleted();
+
 		//载入
-		void Load(string& midiFilePath);
+		void Load(string& midiFilePath, bool isWaitLoadCompleted = true);
 
 		//新建轨道
 		void NewTracks(int count);
@@ -439,7 +455,6 @@ namespace tau
 		//保存midiFile到文件
 		void SaveMidiFileToDisk(MidiFile* midiFile, string saveFilePath);
 
-
 	private:
 
 
@@ -458,6 +473,12 @@ namespace tau
 #else
 		Audio::EngineType audioEngineType = Audio::EngineType::Oboe;
 #endif
+
+		//是否开启MidiEvent数量优化
+		bool enableMidiEventCountOptimize = false;
+
+		//midi文件中保持同时按键的数量 (默认值:-1 无限制)
+		int midiKeepSameTimeNoteOnCount = -1;
 
 		//midi文件轨道通道合并模式
 		TrackChannelMergeMode midiFileMergeMode = TrackChannelMergeMode::AutoMerge;

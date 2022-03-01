@@ -3,7 +3,7 @@
 //
 #include <jni.h>
 #include<FX/Equalizer.h>
-#include"../JniUtils/JniUtils.h"
+#include"../../JniUtils/JniUtils.h"
 
 using namespace tauFX;
 
@@ -22,7 +22,7 @@ Java_cymheart_tau_effect_Equalizer_ndkSetFreqBandGain(JNIEnv *env, jclass clazz,
         jlong ndk_effect, jint band_idx,
         jfloat gain_db) {
     Equalizer* eq = (Equalizer*)ndk_effect;
-eq->SetFreqBandGainTask(band_idx, gain_db);
+    eq->SetFreqBandGainTask(band_idx, gain_db);
 }
 
 

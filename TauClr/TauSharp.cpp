@@ -47,10 +47,20 @@ namespace TauClr
 		tau->OffKey(key, velocity, inst->GetVirInstrument(), delayMS);
 	}
 
-	void TauSharp::Load(String^ midiFilePath)
+	bool TauSharp::IsLoadCompleted()
+	{
+		return tau->IsLoadCompleted();
+	}
+
+	void TauSharp::Load(String^ midiFilePath, bool isWaitLoadCompleted)
 	{
 		string stdMidiFilePath = marshal_as<string>(midiFilePath->ToString());
-		tau->Load(stdMidiFilePath);
+		tau->Load(stdMidiFilePath, isWaitLoadCompleted);
+	}
+
+	void TauSharp::Load(String^ midiFilePath)
+	{
+		Load(midiFilePath, true);
 	}
 
 	void TauSharp::Play()

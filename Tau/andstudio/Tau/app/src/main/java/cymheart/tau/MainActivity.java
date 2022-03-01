@@ -2,21 +2,26 @@ package cymheart.tau;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.Manifest;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+//import com.tbruyelle.rxpermissions3.RxPermissions;
+
 import com.tbruyelle.rxpermissions3.RxPermissions;
 
 import cymheart.tau.effect.Equalizer;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity   {
 
     Tau tau;
+    Tau prevtau;
     SoundFont sf;
     VirInstrument virInst;
     Equalizer eq;
+    Context context;
 
     private static final String[] permissionsGroup=
             new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
@@ -88,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
         // Example of a call to a native method
         Button btn = findViewById(R.id.button);
 
+        context = this;
 
             System.loadLibrary("tau");
 
@@ -124,17 +130,34 @@ public class MainActivity extends AppCompatActivity {
 
        // eqCmd.SetFreqBandGain(0, 1);
 
-        tau.SetFrameSampleCount(512);
+        tau.SetFrameSampleCount(256);
+        tau.SetSampleProcessRate(44100);
         tau.SetChannelCount(2);
         tau.SetSoundFont(sf);
-        tau.SetUnitProcessMidiTrackCount(100);
+        tau.SetUnitProcessMidiTrackCount(20);
         tau.SetEnableAllVirInstEffects(false);
+        tau.SetLimitRegionSounderCount(64);
+        tau.SetLimitOnKeySpeed(100);
+        tau.SetEnableMidiEventCountOptimize(true);
+        tau.SetMidiKeepSameTimeNoteOnCount(10);
+
+
         tau.Open();
+
+
+      //  tau.Load("/storage/emulated/0/紅蓮の弓矢.mid", true);
+      //  tau.Play();
+
+
+
+
+
+
 
         ButtonListener b = new ButtonListener();
 
         Button btn2 = findViewById(R.id.button2);
-        btn2.setOnTouchListener(b);
+      //  btn2.setOnTouchListener(b);
 
         Button btn3 = findViewById(R.id.button3);
         btn3.setOnTouchListener(b);
@@ -168,13 +191,21 @@ public class MainActivity extends AppCompatActivity {
                                        // tau.OnKey(60, 127, inst);
 
 
-                                        //for(int i=0; i<10; i++) {
-                                            tau.Load("/storage/emulated/0/tau2.5.9.mid");
-                                            tau.Play();
-                                         //   Thread.sleep(6000);
+                                        //for(int i=0; i<1; i++) {
+                                            tau.Load("/storage/emulated/0/tau2.5.9.mid", false);
+
+//                                            while (!tau.IsLoadCompleted())
+//                                            {
+//                                                Thread.sleep(50);
+//                                            }
+//
+//                                            tau.Play();
+                                            //tau.Release();
+                                           // tau.Release();
+                                           // Thread.sleep(6000);
                                           //  tau.Stop();
-                                           // Thread.sleep(1000);
-                                       // }
+                                      //      Thread.sleep(100);
+                                     //   }
 
 
 //                                        int s = tau.GetMidiState();
@@ -200,12 +231,65 @@ public class MainActivity extends AppCompatActivity {
                                 });
             }
         });
+
+
+
+
+     btn2.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View view)
+        {
+            RxPermissions permissions = new RxPermissions(activityw);
+            permissions.setLogging(true);
+            permissions.request(permissionsGroup)
+                    .subscribe(
+                            granted -> {
+                                if (granted) { // Always true pre-M
+                                    tau.Load("/storage/emulated/0/dream.mid", false);
+
+//                                    while (!tau.IsLoadCompleted())
+//                                    {
+//                                        Thread.sleep(50);
+//                                    }
+//
+//                                    tau.Play();
+                                } else {
+                                    //TestVentrue.VentruePlayTest();
+
+                                }
+                            });
+        }
+    });
+
+
         // checkPermissionRequest(this);
         //testRequest(tv);
+}
+
+    protected void Run()
+    {
+//        prevtau = new Tau(context);
+//        prevtau.SetFrameSampleCount(256);
+//        prevtau.SetSampleProcessRate(44100);
+//        prevtau.SetChannelCount(2);
+//        prevtau.SetSoundFont(sf);
+//        prevtau.SetUnitProcessMidiTrackCount(20);
+//        prevtau.SetEnableAllVirInstEffects(false);
+//        prevtau.SetLimitRegionSounderCount(64);
+//        prevtau.SetLimitOnKeySpeed(100);
+//        prevtau.Open();
+
+        prevtau = new Tau(context);
+        prevtau.SetSampleProcessRate(44100);
+        prevtau.SetFrameSampleCount(512);
+        prevtau.SetChannelCount(2);
+        prevtau.SetLimitRegionSounderCount(64);
+        prevtau.SetLimitOnKeySpeed(100);
+        prevtau.SetUnitProcessMidiTrackCount(20);
+        prevtau.SetSoundFont(sf);
+        prevtau.Open();
+
     }
-
-
-
 
 
 //    /**

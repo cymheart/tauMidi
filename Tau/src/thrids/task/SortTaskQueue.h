@@ -28,27 +28,11 @@ namespace task
 
 	protected:
 		void AddToTimeOutList(LinkedListNode<Task*>* node);
-
-		class TimerCompare :public Comparator<Task*>
-		{
-		public:
-			int compare(Task* left, Task* right)
-			{
-				if (left->executeTimeMS < right->executeTimeMS) {
-					return -1;
-				}
-				else if (left->executeTimeMS > right->executeTimeMS) {
-					return 1;
-				}
-				return 0;
-			}
-		};
-
+		static bool Compare(Task* left, Task* right);
 
 	protected:
 		LinkedList<Task*> timeOutList;
 		LinkedList<Task*> timerTaskList;
-		TimerCompare timerCompare;
 		int64_t waitTimeMS = -1;
 		int* blockFilterNumbers;
 		int blockFilterCount = 0;

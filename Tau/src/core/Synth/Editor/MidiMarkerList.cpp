@@ -147,10 +147,9 @@ namespace tau
 	}
 
 	//从midiEvents中发现并添加MidiMarker标记
-	void MidiMarkerList::AppendFromMidiEvents(list<MidiEvent*>& midiEvents)
+	void MidiMarkerList::AppendFromMidiEvents(LinkedList<MidiEvent*>& midiEvents)
 	{
-		list<MidiEvent*>::iterator it = midiEvents.begin();
-		list<MidiEvent*>::iterator end = midiEvents.end();
+		LinkedListNode<MidiEvent*>* node = midiEvents.GetHeadNode();
 
 		MidiEvent* ev;
 		MidiMarker* midiMarker;
@@ -158,9 +157,9 @@ namespace tau
 		TimeSignatureEvent* timeSignEvent;
 		KeySignatureEvent* keySignEvent;
 
-		for (; it != end; it++)
+		for (; node; node = node->next)
 		{
-			ev = *it;
+			ev = node->elem;
 
 			if (ev->type != MidiEventType::Tempo &&
 				ev->type != MidiEventType::TimeSignature &&

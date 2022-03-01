@@ -40,8 +40,15 @@ namespace tau
 			return speed;
 		}
 
+
+		//是否读取完成
+		bool IsLoadCompleted()
+		{
+			return loadMidiFileState == 2 ? true : false;
+		}
+
 		//载入
-		void Load(string& midiFilePath);
+		void Load(string& midiFilePath, bool isWaitLoadCompleted = true);
 
 		//移除
 		void Remove();
@@ -132,7 +139,7 @@ namespace tau
 			Track* dstFirstTrack = nullptr, int dstFirstBranchIdx = 0, float sec = 0);
 
 		//增加标记，来自于midi事件列表中
-		void AddMarkers(list<MidiEvent*>& midiEvents);
+		void AddMarkers(LinkedList<MidiEvent*>& midiEvents);
 
 		//新建轨道
 		void NewTracks(int count);
@@ -163,7 +170,30 @@ namespace tau
 		void MoveSelectedInstFragments(vector<int>& dstTracks, vector<int>& dstBranchIdx, vector<float>& secs);
 
 
+		inline void SetUserData(void* data)
+		{
+			userData = data;
+		}
+
+		inline void* GetUserData()
+		{
+			return userData;
+		}
+
+
+	public:
+
+		EditorProcessCB loadStartCallBack = nullptr;
+		EditorProcessCB loadCompletedCallBack = nullptr;
+		EditorProcessCB releaseCallBack = nullptr;
+
 	private:
+
+		//载入
+		void _Load();
+
+		//移除核心
+		void RemoveCore();
 
 		//移动乐器片段到目标轨道分径的指定时间点
 		void MoveInstFragments(
@@ -199,6 +229,11 @@ namespace tau
 
 		//打印工程信息
 		void PrintProjectInfo();
+
+
+		static void ReadMidiFileThread(void* param);
+		void ReadMidiFile();
+
 
 	private:
 
@@ -240,12 +275,25 @@ namespace tau
 
 
 		//
+		int loadMidiFileState = 0;
+
+		string loadingMidiFilePath;
+		MidiFile* midiFile = nullptr;
+		mutex loadingMidiFilelocker;
+		Semaphore loadingMidiFileWaitSem;
+		bool isStopLoad = false;
+
+
+		//
 		list<InstFragmentToTrackInfo> orgList;
 		unordered_map<MidiEditorSynther*, vector<InstFragmentToTrackInfo>> dataGroup;
 		unordered_map<MidiEditorSynther*, unordered_set<Track*>> modifyTrackMap;
 		unordered_set<MidiEditorSynther*> syntherSet;
 		Semaphore waitSem;
 
+
+		//
+		void* userData = nullptr;
 
 		friend class MidiEditor;
 

@@ -55,6 +55,8 @@ public class Tau
     public void Destory()
     {
         outputPortSelector.onClose();
+        ndkDeleteTau(ndkTau);
+
     }
 
     public void Open()
@@ -153,6 +155,32 @@ public class Tau
     }
 
 
+    //设置是否开启MidiEvent数量优化
+    public void SetEnableMidiEventCountOptimize(boolean enable)
+    {
+        ndkSetEnableMidiEventCountOptimize(ndkTau, enable);
+    }
+
+    //设置midi文件中保持同时按键的数量 (默认值:-1 无限制)
+    public void SetMidiKeepSameTimeNoteOnCount(int count)
+    {
+        ndkSetMidiKeepSameTimeNoteOnCount(ndkTau, count);
+    }
+
+
+    //判断是否读取完成
+    public boolean IsLoadCompleted()
+    {
+        return editor.IsLoadCompleted();
+    }
+
+    //载入
+    public void Load(String midifile, boolean isWaitLoadCompleted)
+    {
+        editor.Load(midifile, isWaitLoadCompleted);
+    }
+
+    //载入
     public void Load(String midifile)
     {
         editor.Load(midifile);
@@ -161,25 +189,6 @@ public class Tau
     public void Play()
     {
         editor.Play();
-
-//        //创建对象，及属性赋值
-      //  LoginInfo.Login.Builder builder = LoginInfo.Login.newBuilder();
-//
-       // builder.setAccount("Mrzhang")
-        //        .setPassword("18");
-//
-      //  LoginInfo.Login login = builder.build();
-//
-////序列化(通过protobuf生成的java类的内部方法进行序列化)
-//        byte[] bytes = login.toByteArray();
-//
-////反序列化(通过protobuf生成的java类的内部方法进行反序列化)
-//        try {
-//            LoginInfo.Login parseFrom = LoginInfo.Login.parseFrom(bytes);
-//        } catch (InvalidProtocolBufferException e) {
-//            e.printStackTrace();
-//        }
-
     }
 
     public void Pause()
@@ -359,6 +368,7 @@ public class Tau
 
     //
     private static native long ndkCreateTau(Tau tau, Editor editor);
+    private static native long ndkDeleteTau(long ndkTau);
     private static native void ndkOpen(long ndkTau);
     private static native void ndkClose(long ndkTau);
     private static native void ndkSetSoundFont(long ndkTau, long ndkSoundFont);
@@ -369,6 +379,8 @@ public class Tau
     private static native void ndkSetUnitProcessMidiTrackCount(long ndkTau, int count);
     private static native void ndkSetLimitRegionSounderCount(long ndkTau, int count);
     private static native void ndkSetSetLimitOnKeySpeed(long ndkTau, float speed);
+    private static native void ndkSetEnableMidiEventCountOptimize(long ndkTau, boolean enable);
+    private static native void ndkSetMidiKeepSameTimeNoteOnCount(long ndkTau, int count);
 
     private static native void ndkAddEffect(long ndkTau, long ndkEffect);
     private static native void ndkSetEnableAllVirInstEffects(long ndkTau, boolean isEnable);

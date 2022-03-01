@@ -15,6 +15,8 @@ using namespace dsignal;
 */
 namespace tau {
 
+
+
 	Tau::Tau()
 	{
 #ifdef _WIN32

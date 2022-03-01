@@ -10,31 +10,23 @@ namespace tau
 
 	InstFragment::~InstFragment()
 	{
-		list<MidiEvent*>::iterator it = midiEvents.begin();
-		list<MidiEvent*>::iterator end = midiEvents.end();
-
-		for (; it != end; it++)
+		LinkedListNode<MidiEvent*>* node = midiEvents.GetHeadNode();
+		for (; node; node = node->next)
 		{
-			DEL(*it);
+			DEL(node->elem);
 		}
 
-		midiEvents.clear();
+		midiEvents.Release();
 	}
 
 	void InstFragment::Clear()
 	{
-		eventOffsetIter = midiEvents.begin();
+		eventOffsetNode = midiEvents.GetHeadNode();
 	}
 
-	void InstFragment::AddMidiEvents(list<MidiEvent*>& midiEvents_)
+	void InstFragment::AddMidiEvents(LinkedList<MidiEvent*>& midiEvents_)
 	{
-		list<MidiEvent*>::iterator it = midiEvents_.begin();
-		list<MidiEvent*>::iterator end = midiEvents_.end();
-
-		for (; it != end; it++)
-		{
-			midiEvents.push_back(*it);
-		}
+		midiEvents.Merge(midiEvents_);
 	}
 
 

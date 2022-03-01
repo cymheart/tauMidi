@@ -12,18 +12,61 @@
 
 using namespace tau;
 
-void CreateJEditor(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* editor);
+
+struct CBData{
+    JNIEnv* env;
+    jobject jeditor;
+};
+
+
+void LoadStart(Editor* editor);
+void LoadCompleted(Editor* editor);
+void Release(Editor* editor);
+void CreateDatas(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* editor);
+
+
+static JavaVM* g_vm = nullptr;
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
+{
+    JNIEnv * env = nullptr;
+    if(g_vm == nullptr){
+        g_vm = vm;
+    }
+
+    if( g_vm->GetEnv((void**)&env,JNI_VERSION_1_4) != JNI_OK ){
+        return JNI_ERR;
+    }
+    return JNI_VERSION_1_4;
+}
+
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_cymheart_tau_editor_Editor_ndkLoad(JNIEnv *env, jclass clazz, jobject jeditor , jlong ndk_editor,
-                                        jstring midifile){
+Java_cymheart_tau_editor_Editor_ndkInit(JNIEnv *env, jclass clazz, jobject jeditor,
+                                        jlong ndk_editor) {
+
+    Editor* editor = (Editor*)ndk_editor;
+
+    editor->loadStartCallBack = LoadStart;
+    editor->loadCompletedCallBack = LoadCompleted;
+    editor->releaseCallBack = Release;
+
+
+    CBData* cbData = new CBData();
+    cbData->env = env;
+    cbData->jeditor = env->NewGlobalRef(jeditor);
+    editor->SetUserData((void*)cbData);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkLoad(JNIEnv *env, jclass clazz,
+                                        jobject jeditor, jlong ndk_editor,
+                                        jstring midifile, jboolean is_wait_read_completed) {
 
     Editor* editor = (Editor*)ndk_editor;
     string _midifile = jstring2str(env, midifile);
-    editor->Load(_midifile);
-
-    CreateJEditor(env, clazz, jeditor, editor);
+    editor->Load(_midifile, is_wait_read_completed);
 }
 
 
@@ -69,8 +112,50 @@ Java_cymheart_tau_editor_Editor_ndkGetPlaySec(JNIEnv *env, jclass clazz, jlong n
     return editor->GetPlaySec();
 }
 
+void LoadStart(Editor* editor)
+{
+    CBData* cbData = (CBData*)editor->GetUserData();
+    JNIEnv* env = cbData->env;
 
-void CreateJEditor(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* editor)
+    jclass jclsProcess = env->GetObjectClass(cbData->jeditor);
+    jmethodID method = env->GetMethodID(jclsProcess, "_JniLoadStart", "()V");
+    env->CallVoidMethod(cbData->jeditor, method);
+}
+
+
+void LoadCompleted(Editor* editor)
+{
+    CBData* cbData = (CBData*)editor->GetUserData();
+    jobject jeditorRef = cbData->jeditor;
+
+    JNIEnv *env;
+    g_vm->AttachCurrentThread(&env,NULL);
+    jclass jclsProcess = env->GetObjectClass(jeditorRef);
+    jmethodID mid = env->GetMethodID(jclsProcess, "_JniLoadCompleted", "()V");
+    env->CallVoidMethod(jeditorRef, mid);
+
+    g_vm->DetachCurrentThread();
+}
+
+void Release(Editor* editor)
+{
+    CBData* cbData = (CBData*)editor->GetUserData();
+    editor->SetUserData(nullptr);
+    jobject jeditorRef = cbData->jeditor;
+    cbData->env->DeleteGlobalRef(jeditorRef);
+    delete cbData;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkCreateDatas(JNIEnv *env, jclass clazz, jobject jeditor,
+                                          jlong ndk_editor){
+
+    CreateDatas(env,clazz, jeditor, (Editor*)ndk_editor);
+}
+
+
+void CreateDatas(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* editor)
 {
     CreateJNoteOnEventClassInfo(env);
     CreateJNoteOffEventClassInfo(env);
@@ -153,12 +238,12 @@ void CreateJEditor(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* ed
 
                 //
                 int m = 0;
-                const auto& midiEvents =  (*it)->GetMidiEvents();
-                jobjectArray jMidiEvents = (jobjectArray)env->NewObjectArray(midiEvents.size(), jMidiEventClass, NULL);
-                for(auto it2 = midiEvents.begin(); it2 != midiEvents.end(); it2++)
+                LinkedList<MidiEvent*>& midiEvents =  (*it)->GetMidiEvents();
+                jobjectArray jMidiEvents = (jobjectArray)env->NewObjectArray(midiEvents.Size(), jMidiEventClass, NULL);
+                for(auto node = midiEvents.GetHeadNode(); node; node = node->next)
                 {
                     jobject jMidiEvent;
-                    MidiEvent* midiEvent = *it2;
+                    MidiEvent* midiEvent = node->elem;
 
 
                     switch (midiEvent->type) {
@@ -221,6 +306,5 @@ void CreateJEditor(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* ed
     env->DeleteLocalRef(jInstFragmentClass);
     env->DeleteLocalRef(jMidiEventClass);
 }
-
 
 

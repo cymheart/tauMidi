@@ -186,9 +186,11 @@ int main(int argc, char* argv[])
 	tau->SetPerSyntherLimitTrackCount(20);
 	tau->SetLimitSyntherCount(12);
 	tau->SetSoundFont(&sf);
+	tau->SetEnableMidiEventCountOptimize(true);
+	tau->SetMidiKeepSameTimeNoteOnCount(20);
 	tau->SetOnlyUseOneMainSynther(true);
-	tau->SetUseRegionInnerChorusEffect(true);
-	tau->SetEnableAllVirInstEffects(true);
+	//tau->SetUseRegionInnerChorusEffect(false);
+	//tau->SetEnableAllVirInstEffects(false);
 	//tau->SetAudioEngine(Audio::EngineType::PortAudio);
 	//tau->SetAudioEngine(Audio::EngineType::RtAudio);
 	//tau->SetTrackChannelMergeMode(AutoMerge);
@@ -205,10 +207,10 @@ int main(int argc, char* argv[])
 //	tau->AddEffect(eq);
 
 	Reverb* reverb = new Reverb();
-	reverb->SetRoomSize(0.3f);
+	reverb->SetRoomSize(0.6f);
 	reverb->SetWidth(0.5f);
 	reverb->SetDamping(0.5f);
-	reverb->SetEffectMix(0.3f);
+	reverb->SetEffectMix(0.6f);
 	//tau->AddEffect(reverb);
 
 	//Chorus* chorus = new Chorus();
@@ -249,10 +251,8 @@ int main(int argc, char* argv[])
 
 	//添加需要播放的midi文件
 	//midiFiles.push_back(midiPath + "tau2.5.9.mid");
-	midiFiles.push_back(midiPath + "aloha heja he-Achim Reichel.mid");
 	midiFiles.push_back(midiPath + "venture.mid");
 	midiFiles.push_back(midiPath + "吻别.mid");
-	midiFiles.push_back(midiPath + "aloha heja he-Achim Reichel.mid");
 	midiFiles.push_back(midiPath + "dream.mid");
 	midiFiles.push_back(midiPath + "鱼姐 remix.mid");
 	midiFiles.push_back(midiPath + "决心鱼.mid");
@@ -299,7 +299,7 @@ int main(int argc, char* argv[])
 	midiFiles.push_back(midiPath + "故乡的原风景 钢琴版.mid");
 	//midiFiles.push_back(midiPath + "Fujiwara no Mokou's Theme act.5.0 32 million ICEwiimaker.mid");
 	midiFiles.push_back(midiPath + "故乡的原风景(陶笛).mid");
-	//midiFiles.push_back(midiPath + "BA.DECIMATIONMODE.mid.OR.mid");
+
 	midiFiles.push_back(midiPath + "Fight.mid");
 	midiFiles.push_back(midiPath + "突然的自我.mid");
 	midiFiles.push_back(midiPath + "突然的自我3.mid");
@@ -318,39 +318,108 @@ int main(int argc, char* argv[])
 	//{
 		//tau->RemoveMidi();
 
-	//string p = midiPath + "learning\\Brainiac Maniac 2.mid";
-	//int i = 15;
+	string p2 = midiPath + "tau2.5.9.mid";
+	string p = midiPath + "圆周率+TSMB2之作+3.14百万音符.mid";
+	string p3 = midiPath + "dream.mid";
 
-	//string p2 = midiPath + "故乡的原风景(陶笛).mid";
-
-	//tau->Load(p);
-	//tau->Play();
-	//Sleep(3000);
-	//tau->Close();
-	//tau->Open();
-	//tau->Load(p2);
-	//tau->Play();
-	//Sleep(3000);
-	//tau->Close();
-	//Sleep(1000);
-	//tau->Open();
-	//tau->Load(p);
-	//tau->Play();
-	//tau->DisableAllTrack();
-	//tau->EnableTrack(3);
-	//tau->Goto(60 + 37);
-
-	//for (int i = 0; i < 20; i++)
+	//for (int i = 0; i < 100; i++)
 	//{
-	//	tau->Goto(434);
-	//	tau->Play();
-	//	Sleep(2000);
+		//string p = midiPath + "紅蓮の弓矢.mid";
+
+	//tau->Read(p2, false);
+	////Sleep(20);
+
+	////tau->Read(p2);
+
+
+	//while (tau->IsReading()) {
+	//	Sleep(5);
 	//}
 
-	//art(tau);
+	//tau->Load(p2);
+	//tau->Load(p);
 
-	//tau->DisableTrack(7);
-	//Sleep(116000);
+
+
+//	tau->Load(p2);
+
+	//while (!tau->IsLoadCompleted())
+	//	Sleep(5);
+
+//	tau->Play();
+
+	//for (int i = 0; i < 100; i++)
+	//{
+	//	printf("idx=%d\n", i);
+	//	tau->Load(p3, false);
+	//	//Sleep(1);
+	//}
+
+
+
+	//tau->Play();
+
+
+
+	//Sleep(40);
+//	}
+
+
+	//int i = 15;
+//
+	//string p2 = "G:\\TauProjects\\TauTest\\midi\\song100\\086.mid";
+
+	//	for (int i = 0; i < 4; i++) {
+	//tau->Load(p2);
+	//tau->Play();
+	//		Sleep(6000);
+		//}
+		//Sleep(3000);
+		//tau->Close();
+		//tau->Open();
+		//tau->Load(p2);
+		//tau->Play();
+		//Sleep(3000);
+		//tau->Close();
+		//Sleep(1000);
+		//tau->Open();
+		//tau->Load(p);
+		//tau->Play();
+		//tau->DisableAllTrack();
+		//tau->EnableTrack(3);
+		//tau->Goto(60 + 37);
+
+		//for (int i = 0; i < 20; i++)
+		//{
+		//	tau->Goto(434);
+		//	tau->Play();
+		//	Sleep(2000);
+		//}
+
+		//art(tau);
+
+		//tau->DisableTrack(7);
+		//Sleep(116000);
+
+	/*vector<string> midiFiles2;
+	midiFiles2.push_back(midiPath + "大话西游主题曲.mid");
+	int i = -1;
+	while (1)
+	{
+		Sleep(5);
+		if (tau->GetEditorState() == EditorState::PAUSE ||
+			tau->GetEditorState() == EditorState::STOP)
+		{
+			i++;
+			if (i >= midiFiles2.size())
+				break;
+
+			tau->Load(midiFiles2[i]);
+			tau->Play();
+
+		}
+	}*/
+
 
 	int i = -1;
 	while (1)
@@ -365,32 +434,34 @@ int main(int argc, char* argv[])
 
 			tau->Load(midiFiles[i]);
 			tau->Play();
+
 		}
 	}
 
 
-	/*int i = 0;
-	while (1)
-	{
-		Sleep(5);
-		if (tau->GetEditorState() == EditorState::PAUSE ||
-			tau->GetEditorState() == EditorState::STOP)
-		{
-			i++;
-			if (i >= 101)
-				break;
-			string a;
-			if (i < 10)
-				a = "00" + std::to_string(i);
-			else if (i < 100)
-				a = "0" + std::to_string(i);
-			else
-				a = std::to_string(i);
-			string p = midiPath + "song100\\" + a + ".mid";
-			tau->Load(p);
-			tau->Play();
-		}
-	}*/
+
+	//int i = 0;
+	//while (1)
+	//{
+	//	Sleep(5);
+	//	if (tau->GetEditorState() == EditorState::PAUSE ||
+	//		tau->GetEditorState() == EditorState::STOP)
+	//	{
+	//		i++;
+	//		if (i >= 101)
+	//			break;
+	//		string a;
+	//		if (i < 10)
+	//			a = "00" + std::to_string(i);
+	//		else if (i < 100)
+	//			a = "0" + std::to_string(i);
+	//		else
+	//			a = std::to_string(i);
+	//		string p = midiPath + "song100\\" + a + ".mid";
+	//		tau->Load(p);
+	//		tau->Play();
+	//	}
+	//}
 
 
 	//for (int i = 0; i < 55; i++)
@@ -571,9 +642,11 @@ int main(int argc, char* argv[])
 	tau2->SetSoundFont(&sf);
 	tau2->Open();
 
-	tau2->AppendMidiFile(midiPath + "笑红尘-陈淑桦.mid");
-	tau2->LoadMidi(0);
-	tau2->PlayMidi();*/
+	p = midiPath + "笑红尘-陈淑桦.mid";
+	tau2->Load(p);
+	tau2->Play();*/
+
+
 
 	//
 	char input;
