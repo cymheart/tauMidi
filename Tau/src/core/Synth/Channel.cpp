@@ -2,6 +2,7 @@
 #include"UnitTransform.h"
 #include"Modulator.h"
 #include"Synther/Synther.h"
+#include"VirInstrument.h"
 
 namespace tau
 {
@@ -13,6 +14,8 @@ namespace tau
 
 	Channel::~Channel()
 	{
+		if (inst != nullptr)
+			inst->channel = nullptr;
 		inst = nullptr;
 	}
 

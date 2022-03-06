@@ -1,5 +1,6 @@
 ﻿#include"MidiTrackRecord.h"
 
+
 namespace tau
 {
 	MidiTrackRecord::MidiTrackRecord()
@@ -59,8 +60,8 @@ namespace tau
 	//获取录制时间点(单位:s)
 	float MidiTrackRecord::GetRecordSec()
 	{
-		return (chrono::duration_cast<chrono::microseconds>(
-			chrono::high_resolution_clock::now() - startRecordTime).count() * 0.001f);
+		return (chrono::duration_cast<chrono::duration<double>>(
+			chrono::high_resolution_clock::now() - startRecordTime)).count();
 	}
 
 	//录制OnKey

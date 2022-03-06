@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import cymheart.tau.midi.MidiEvent;
 import cymheart.tau.midi.NoteOnEvent;
@@ -37,11 +38,6 @@ public class Editor {
         return curtPlaySec;
     }
 
-    //是否是步进播放模式
-    protected  boolean isStepPlayMode = false;
-    //是否为等待播放模式
-    protected boolean isWaitPlayMode = false;
-
     //结束时间点
     protected double endSec = 0;
     public double GetEndSec()
@@ -49,8 +45,14 @@ public class Editor {
         return endSec;
     }
 
+    //是否是步进播放模式
+    protected  boolean isStepPlayMode = false;
+    //是否为等待播放模式
+    protected boolean isWaitPlayMode = false;
+
     protected List<MidiEvent> curtProcessMidiEvent = new ArrayList<>();
     protected VisualMidiEvents visualMidiEvents = new VisualMidiEvents();
+
 
     private void Init()
     {
@@ -96,6 +98,9 @@ public class Editor {
 
     private void _Load()
     {
+        if(_ndkTracks == null)
+            return;
+
         Track track;
         for(int i=0; i<_ndkTracks.length; i++)
         {
@@ -153,8 +158,6 @@ public class Editor {
     {
         if (state != PLAY)
             return;
-
-        Goto(curtPlaySec);
         state = PAUSE;
     }
 
@@ -184,19 +187,19 @@ public class Editor {
     //移除
     protected void _Remove()
     {
-
         for (int i = 0; i < tracks.size(); i++)
             tracks.get(i).Clear();
         tracks.clear();
         curtPlaySec = 0;
         state = STOP;
+
+        System.gc();
     }
 
     //设置播放的起始时间点
     public void Goto(double sec)
     {
         ndkGoto(ndkEditor, sec);
-
         _Goto(sec);
     }
 
@@ -254,6 +257,16 @@ public class Editor {
         }
     }
 
+    public double GetBackgroundPlaySec()
+    {
+        return ndkGetPlaySec(ndkEditor);
+    }
+
+    public double GetBackgroundEndSec()
+    {
+        return ndkGetEndSec(ndkEditor);
+    }
+
     //处理
     public void Process()
     {
@@ -287,6 +300,9 @@ public class Editor {
     {
         curtProcessMidiEvent.clear();
         curtPlaySec += sec;
+
+        if(_ndkTracks == null)
+            return;
 
         Track track;
         for (int i = 0; i < tracks.size(); i++)
@@ -452,6 +468,8 @@ public class Editor {
 
     //
     private static native void ndkInit(Editor editor, long ndkEditor);
+
+    private static native boolean ndkIsLoadCompleted(long ndkEditor);
     private static native void ndkLoad(Editor editor, long ndkEditor, String midifile, boolean isWaitLoadCompleted);
     private static native void ndkCreateDatas(Editor editor, long ndkEditor);
     private static native void ndkPlay(long ndkEditor);
@@ -460,4 +478,5 @@ public class Editor {
     private static native void ndkRemove(long ndkEditor);
     private static native void ndkGoto(long ndkEditor, double sec);
     private static native double ndkGetPlaySec(long ndkEditor);
+    private static native double ndkGetEndSec(long ndkEditor);
 }

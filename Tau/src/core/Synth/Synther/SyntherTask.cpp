@@ -296,7 +296,22 @@ namespace tau
 		synther.RemoveVirInstrument(virInst, se->value);
 	}
 
+	// 移除所有乐器
+	void Synther::RemoveAllVirInstrumentTask(bool isFade)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _RemoveAllInstrumentTask;
+		ev->value = isFade ? 1 : 0;
+		PostTask(ev);
+	}
 
+	void Synther::_RemoveAllInstrumentTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		Synther& synther = (Synther&)*(se->synther);
+		synther.RemoveAllVirInstrument(se->value);
+	}
 
 	// 删除乐器
 	void Synther::DelVirInstrumentTask(VirInstrument* virInst)

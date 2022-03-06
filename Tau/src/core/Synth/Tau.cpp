@@ -15,8 +15,6 @@ using namespace dsignal;
 */
 namespace tau {
 
-
-
 	Tau::Tau()
 	{
 #ifdef _WIN32
@@ -338,6 +336,17 @@ namespace tau {
 		for (int i = 0; i < syntherCount; i++)
 		{
 			midiEditorSynthers[i]->RemoveVirInstrumentTask(virInst, isFade);
+		}
+	}
+
+	/// <summary>
+	/// 移除所有乐器
+	/// </summary>
+	void Tau::RemoveAllVirInstrument(bool isFade)
+	{
+		for (int i = 0; i < syntherCount; i++)
+		{
+			midiEditorSynthers[i]->RemoveAllVirInstrumentTask(isFade);
 		}
 	}
 

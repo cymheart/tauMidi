@@ -72,7 +72,11 @@ namespace tau
 		DEL(leftChannelSamples);
 		DEL(rightChannelSamples);
 
-		channel = nullptr;
+		if (channel != nullptr) {
+			channel->SetVirInstrument(nullptr);
+			channel = nullptr;
+		}
+
 		preset = nullptr;
 	}
 
@@ -913,26 +917,34 @@ namespace tau
 			canExecuteStateOp = false;
 		}
 
-
 		if (state == VirInstrumentState::OFFING ||
 			state == VirInstrumentState::ONING)
 		{
-			float scale = (synther->sec - startGainFadeSec) / totalGainFadeTime;
-			if (scale >= 1)
+			//当发声结束后，状态有可能是开启中的状态，此时不能调用开启状态的gain处理，而应该等到
+			//soundend == false,再进行此状态
+			if (IsSoundEnd() && state == VirInstrumentState::ONING)
 			{
-				if (state == VirInstrumentState::OFFING)
-					state = VirInstrumentState::OFFED;
-				else if (state == VirInstrumentState::ONING)
-					state = VirInstrumentState::ONED;
-
-				scale = 1;
-				//canExecuteStateOp = true;
-
-				if (virInstStateChangedCB != nullptr)
-					virInstStateChangedCB(this);
+				startGainFadeSec = synther->sec;
 			}
+			else
+			{
+				float scale = (synther->sec - startGainFadeSec) / totalGainFadeTime;
+				if (scale >= 1)
+				{
+					if (state == VirInstrumentState::OFFING)
+						state = VirInstrumentState::OFFED;
+					else if (state == VirInstrumentState::ONING)
+						state = VirInstrumentState::ONED;
 
-			gain = startGain + (dstGain - startGain) * scale;
+					scale = 1;
+					canExecuteStateOp = true;
+
+					if (virInstStateChangedCB != nullptr)
+						virInstStateChangedCB(this);
+				}
+
+				gain = startGain + (dstGain - startGain) * scale;
+			}
 		}
 
 		//
@@ -1086,8 +1098,8 @@ namespace tau
 			for (int i = 0; i < tau->frameSampleCount; i += offset)
 			{
 				//此处值需要非常小，不然会产生杂音
-				if (fabsf(leftChannelSamples[i]) > 0.001f ||
-					fabsf(rightChannelSamples[i]) > 0.001f)
+				if (fabsf(leftChannelSamples[i]) > 0.0001f ||
+					fabsf(rightChannelSamples[i]) > 0.0001f)
 					return;
 			}
 

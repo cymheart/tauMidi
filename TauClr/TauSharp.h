@@ -45,9 +45,13 @@ namespace TauClr
 		void Pause();
 		void Close();
 		void Goto(float sec);
-
-
 		TauClr::EditorState GetEditorState();
+		//获取当前播放时间点
+		double GetPlaySec();
+		//获取结束时间点
+		double GetEndSec();
+		// 设定播放速度
+		void SetSpeed(float speed);
 
 		void SetSoundFont(SoundFontSharp^ sf);
 

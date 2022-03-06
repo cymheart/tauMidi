@@ -3,6 +3,7 @@
 
 #include "MidiTypes.h"
 #include"MidiTrack.h"
+#include <chrono>
 
 namespace tau
 {
@@ -28,13 +29,24 @@ namespace tau
 			keepSameStartTickNoteOnEventsCount = count;
 		}
 
+		//设置是否启用解析极限时间(默认值:2s)
+		inline void SetEnableParseLimitTime(bool enable, float limitSec = 2.0)
+		{
+			isEnableParseLimitTime = enable;
+			limitParseSec = limitSec;
+		}
+
+		//判断是否全部解析
+		inline bool IsFullParsed()
+		{
+			return isFullParsed;
+		}
 
 		//设置轨道通道合并模式
 		inline void SetTrackChannelMergeMode(TrackChannelMergeMode mode)
 		{
 			mergeMode = mode;
 		}
-
 
 		// 获取文件格式
 		inline MidiFileFormat GetFormat()
@@ -131,6 +143,9 @@ namespace tau
 		int ParseTrackChuck();
 		int ParseEvent(MidiTrack& track);
 
+		//跳过解析的事件
+		int PassParseEvent(MidiTrack& track);
+
 		//生成头块
 		bool CreateHeaderChunk();
 		//生成轨道块
@@ -160,8 +175,8 @@ namespace tau
 		//是否开启MidiEvent数量优化
 		bool enableMidiEventCountOptimize = false;
 
-		//保持相同StartTick按键事件的数量 (默认值:-1 无限制)
-		int keepSameStartTickNoteOnEventsCount = -1;
+		//保持相同StartTick按键事件的数量 (默认值:15 )
+		int keepSameStartTickNoteOnEventsCount = 15;
 
 
 		//轨道通道合并模式
@@ -187,6 +202,19 @@ namespace tau
 		// 一个四分音符的tick数
 		short tickForQuarterNote = 480;
 
+		//
+		//是否启用解析极限时间
+		bool isEnableParseLimitTime = false;
+		//极限解析时间(默认值:2s)
+		float limitParseSec = 2.0f;
+
+		//是否全部解析
+		bool isFullParsed = true;
+
+
+		chrono::high_resolution_clock::time_point startParseTime;
+		float perTrackParseSec = 0;
+		float curtTrackParseSec = 0;
 
 		MidiTrackList midiTrackList;
 		list<MidiEvent*> golbalEvents;

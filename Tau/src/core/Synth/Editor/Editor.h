@@ -28,26 +28,12 @@ namespace tau
 			return tracks;
 		}
 
-		//获取结束时间
-		inline float GetEndSec()
-		{
-			return endSec;
-		}
-
-		//获取播放速率(相对于正常播放速率1.0的倍率)
-		inline float GetSpeed()
-		{
-			return speed;
-		}
-
-
 		//是否读取完成
-		bool IsLoadCompleted()
-		{
-			return loadMidiFileState == 2 ? true : false;
-		}
+		bool IsLoadCompleted();
 
 		//载入
+		//在非阻塞模式isWaitLoadCompleted = false下，
+		//Load前面不能有任何与之相冲突的调用（play(), pasue(),stop()等,因为这些函数出于效率考虑没有加互斥锁）
 		void Load(string& midiFilePath, bool isWaitLoadCompleted = true);
 
 		//移除
@@ -95,6 +81,25 @@ namespace tau
 		//获取当前播放时间点
 		double GetPlaySec();
 
+		//获取结束时间
+		inline double GetEndSec()
+		{
+			return endSec;
+		}
+
+		//获取播放速率(相对于正常播放速率1.0的倍率)
+		inline float GetSpeed()
+		{
+			return speed;
+		}
+
+		//判断是否全部解析了midiFile
+		inline bool IsFullParsedMidiFile()
+		{
+			return isFullParsedMidiFile;
+		}
+
+
 		// 设定速度
 		void SetSpeed(float speed_);
 
@@ -130,6 +135,9 @@ namespace tau
 
 		//设置打击乐号
 		void SetMidiBeatVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
+
+
+		void ResetVirInstruments();
 
 
 		//增加轨道，来自于MidiTrackList
@@ -281,7 +289,12 @@ namespace tau
 		MidiFile* midiFile = nullptr;
 		mutex loadingMidiFilelocker;
 		Semaphore loadingMidiFileWaitSem;
+
+		//在非阻塞设置停止调用命令，注意内存的释放
 		bool isStopLoad = false;
+
+		//midifile是否全部解析完成
+		bool isFullParsedMidiFile = true;
 
 
 		//
@@ -290,7 +303,6 @@ namespace tau
 		unordered_map<MidiEditorSynther*, unordered_set<Track*>> modifyTrackMap;
 		unordered_set<MidiEditorSynther*> syntherSet;
 		Semaphore waitSem;
-
 
 		//
 		void* userData = nullptr;

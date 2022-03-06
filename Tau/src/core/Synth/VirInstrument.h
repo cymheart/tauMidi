@@ -284,8 +284,6 @@ namespace tau
 		//设置区域混音深度
 		void SetRegionReverbDepth(float value);
 
-
-
 		//bend
 		void SetPitchBend(int value);
 
@@ -480,6 +478,7 @@ namespace tau
 		friend class Synther;
 		friend class RealtimeSynther;
 		friend class MidiRender;
+		friend class Channel;
 	};
 }
 

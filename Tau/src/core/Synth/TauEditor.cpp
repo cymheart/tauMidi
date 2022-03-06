@@ -13,8 +13,15 @@ namespace tau
 		return editor->IsLoadCompleted();
 	}
 
+	//判断是否全部解析了midiFile
+	bool Tau::IsFullParsedMidiFile()
+	{
+		return editor->IsFullParsedMidiFile();
+	}
 
 	//载入
+	//在非阻塞模式isWaitLoadCompleted = false下，
+	//Load前面不能有任何与之相冲突的调用（play(), pasue(),stop()等,因为这些函数出于效率考虑没有加互斥锁）
 	void Tau::Load(string& midiFilePath, bool isWaitLoadCompleted)
 	{
 		editor->Load(midiFilePath, isWaitLoadCompleted);
@@ -122,6 +129,12 @@ namespace tau
 		return editor->GetPlaySec();
 	}
 
+	//获取结束时间点
+	double Tau::GetEndSec()
+	{
+		return editor->GetEndSec();
+	}
+
 	// 设定播放速度
 	void Tau::SetSpeed(float speed)
 	{
@@ -217,6 +230,12 @@ namespace tau
 	void Tau::SetMidiBeatVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
 		editor->SetMidiBeatVirInstrument(bankSelectMSB, bankSelectLSB, instrumentNum);
+	}
+
+
+	void Tau::ResetVirInstruments()
+	{
+		editor->ResetVirInstruments();
 	}
 
 	/// <summary>

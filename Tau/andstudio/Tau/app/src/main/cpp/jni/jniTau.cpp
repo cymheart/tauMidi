@@ -35,7 +35,7 @@ Java_cymheart_tau_Tau_ndkCreateTau(JNIEnv *env, jclass clazz, jobject jtau, jobj
 }
 
 extern "C"
-JNIEXPORT jlong JNICALL
+JNIEXPORT void JNICALL
 Java_cymheart_tau_Tau_ndkDeleteTau(JNIEnv *env, jclass clazz, jlong ndk_tau) {
     Tau* tau = (Tau*)ndk_tau;
     delete tau;

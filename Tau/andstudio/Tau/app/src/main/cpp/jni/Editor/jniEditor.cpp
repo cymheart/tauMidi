@@ -58,6 +58,14 @@ Java_cymheart_tau_editor_Editor_ndkInit(JNIEnv *env, jclass clazz, jobject jedit
     editor->SetUserData((void*)cbData);
 }
 
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_cymheart_tau_editor_Editor_ndkIsLoadCompleted(JNIEnv *env, jclass clazz, jlong ndk_editor) {
+    Editor* editor = (Editor*)ndk_editor;
+    return editor->IsLoadCompleted();
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_cymheart_tau_editor_Editor_ndkLoad(JNIEnv *env, jclass clazz,
@@ -110,6 +118,14 @@ JNIEXPORT jdouble JNICALL
 Java_cymheart_tau_editor_Editor_ndkGetPlaySec(JNIEnv *env, jclass clazz, jlong ndk_editor) {
     Editor* editor = (Editor*)ndk_editor;
     return editor->GetPlaySec();
+}
+
+
+extern "C"
+JNIEXPORT jdouble JNICALL
+Java_cymheart_tau_editor_Editor_ndkGetEndSec(JNIEnv *env, jclass clazz, jlong ndk_editor) {
+    Editor* editor = (Editor*)ndk_editor;
+    return editor->GetEndSec();
 }
 
 void LoadStart(Editor* editor)
@@ -306,5 +322,4 @@ void CreateDatas(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* edit
     env->DeleteLocalRef(jInstFragmentClass);
     env->DeleteLocalRef(jMidiEventClass);
 }
-
 

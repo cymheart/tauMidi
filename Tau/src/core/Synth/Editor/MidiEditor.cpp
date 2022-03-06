@@ -494,6 +494,8 @@ namespace tau
 	{
 		Channel* channel = track->GetChannel();
 		VirInstrument* virInst = channel->GetVirInstrument();
+		if (virInst == nullptr)
+			return;
 
 		//
 		switch (midEv->type)

@@ -93,8 +93,26 @@ namespace TauClr
 		return (TauClr::EditorState)tau->GetEditorState();
 	}
 
+	//获取当前播放时间点
+	double TauSharp::GetPlaySec()
+	{
+		return tau->GetPlaySec();
+	}
+
+	//获取结束时间点
+	double TauSharp::GetEndSec()
+	{
+		return tau->GetEndSec();
+	}
+
 	void TauSharp::SetSoundFont(SoundFontSharp^ sf)
 	{
 		tau->SetSoundFont(sf->GetSoundFont());
+	}
+
+	// 设定播放速度
+	void TauSharp::SetSpeed(float speed)
+	{
+		tau->SetSpeed(speed);
 	}
 }

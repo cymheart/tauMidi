@@ -99,6 +99,9 @@ namespace tau
 		// 移除乐器
 		void RemoveVirInstrumentTask(VirInstrument* virInst, bool isFade);
 
+		// 移除所有乐器
+		void RemoveAllVirInstrumentTask(bool isFade);
+
 		//删除乐器
 		void DelVirInstrumentTask(VirInstrument* virInst);
 
@@ -164,6 +167,7 @@ namespace tau
 		static void _EnableInstrumentTask(Task* ev);
 		static void _SetVirInstrumentProgramTask(Task* ev);
 		static void _RemoveInstrumentTask(Task* ev);
+		static void _RemoveAllInstrumentTask(Task* ev);
 		static void _DelInstrumentTask(Task* ev);
 		static void _OnInstrumentTask(Task* ev);
 		static void _OffInstrumentTask(Task* ev);

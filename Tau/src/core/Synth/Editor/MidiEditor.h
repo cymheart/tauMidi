@@ -46,7 +46,7 @@ namespace tau
 
 
 		//获取播放时间
-		inline float GetPlaySec()
+		inline double GetPlaySec()
 		{
 			return curtPlaySec;
 		}

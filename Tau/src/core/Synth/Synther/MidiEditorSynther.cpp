@@ -113,7 +113,7 @@ namespace tau
 	}
 
 	//获取播放时间
-	float MidiEditorSynther::GetPlaySec()
+	double MidiEditorSynther::GetPlaySec()
 	{
 		return midiEditor->GetPlaySec();
 	}
@@ -128,7 +128,7 @@ namespace tau
 	}
 
 	//获取结束时间(单位:秒)
-	float MidiEditorSynther::GetEndSec()
+	double MidiEditorSynther::GetEndSec()
 	{
 		if (midiEditor == nullptr)
 			return 0;

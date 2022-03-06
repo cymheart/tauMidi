@@ -348,14 +348,19 @@ int main(int argc, char* argv[])
 
 //	tau->Play();
 
-	//for (int i = 0; i < 100; i++)
+	//for (int i = 0; i < 10; i++)
 	//{
 	//	printf("idx=%d\n", i);
-	//	tau->Load(p3, false);
-	//	//Sleep(1);
+	//	tau->Load(p2, false);
+
+	//	Sleep(1000);
 	//}
 
+	//while (!tau->IsLoadCompleted()) {
+	//	Sleep(5);
+	//}
 
+	//tau->Play();
 
 	//tau->Play();
 
@@ -464,16 +469,6 @@ int main(int argc, char* argv[])
 	//}
 
 
-	//for (int i = 0; i < 55; i++)
-	//{
-	//tau->Load(path);
-	//tau->Play();
-	//tau->SetSpeed(0.5);
-	//Sleep(6000);
-	//tau->Goto(280);
-	//	Sleep(6000);
-	//	tau->Stop();
-//	}
 
 	//tau->Load(path);
 	//tau->Play();

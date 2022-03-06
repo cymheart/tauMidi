@@ -186,9 +186,9 @@ namespace tau
 
 
 	//获取结束时间(单位:秒)
-	float MidiEditorSynther::GetEndSecTask()
+	double MidiEditorSynther::GetEndSecTask()
 	{
-		float endSec;
+		double endSec;
 		Semaphore waitSem;
 
 		SyntherEvent* ev = SyntherEvent::New();
@@ -208,7 +208,7 @@ namespace tau
 		SyntherEvent* se = (SyntherEvent*)ev;
 		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
 
-		float* endSec = (float*)se->ptr;
+		double* endSec = (double*)se->ptr;
 		*endSec = midiSynther.GetEndSec();
 		se->sem->set();
 	}

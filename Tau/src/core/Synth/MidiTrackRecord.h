@@ -4,7 +4,7 @@
 #include"TauTypes.h"
 #include"Midi/MidiEvent.h"
 #include"Midi/MidiTrack.h"
-#include<thread>
+#include <chrono>
 
 namespace tau
 {

@@ -216,6 +216,28 @@ public class Tau
         return 0;
     }
 
+    public double GetPlaySec()
+    {
+        return editor.GetPlaySec();
+    }
+
+    public double GetEndSec()
+    {
+        return editor.GetEndSec();
+    }
+
+
+    public double GetBackgroundPlaySec()
+    {
+        return editor.GetBackgroundPlaySec();
+    }
+
+    public double GetBackgroundEndSec()
+    {
+        return editor.GetBackgroundEndSec();
+    }
+
+
     // 禁止播放指定编号Midi文件的轨道
     public void DisableTrack(int trackIdx)
     {
@@ -368,7 +390,7 @@ public class Tau
 
     //
     private static native long ndkCreateTau(Tau tau, Editor editor);
-    private static native long ndkDeleteTau(long ndkTau);
+    private static native void ndkDeleteTau(long ndkTau);
     private static native void ndkOpen(long ndkTau);
     private static native void ndkClose(long ndkTau);
     private static native void ndkSetSoundFont(long ndkTau, long ndkSoundFont);

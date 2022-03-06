@@ -53,7 +53,7 @@ namespace tau
 		EditorState GetStateTask();
 
 		//获取结束时间(单位:秒)
-		float GetEndSecTask();
+		double GetEndSecTask();
 
 		//设置结束时间(单位:秒)
 		void SetEndSecTask(Semaphore* waitSem, double sec);
@@ -153,13 +153,13 @@ namespace tau
 		void Goto(double sec);
 
 		//获取midi播放时间
-		float GetPlaySec();
+		double GetPlaySec();
 
 		//获取midi状态
 		EditorState GetState();
 
 		//获取midi结束时间(单位:秒)
-		float GetEndSec();
+		double GetEndSec();
 
 		//设置midi结束时间(单位:秒)
 		void SetEndSec(double sec);

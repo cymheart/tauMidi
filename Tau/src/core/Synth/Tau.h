@@ -36,9 +36,6 @@ namespace tau
 		//设置SoundFont
 		inline void SetSoundFont(SoundFont* sf)
 		{
-			if (isOpened)
-				return;
-
 			soundFont = sf;
 		}
 
@@ -138,6 +135,13 @@ namespace tau
 		inline void SetMidiKeepSameTimeNoteOnCount(int count)
 		{
 			midiKeepSameTimeNoteOnCount = count;
+		}
+
+		//设置是否启用midi文件解析极限时间(默认值:2s)
+		inline void SetEnableMidiEventParseLimitTime(bool enable, float limitSec = 2.0)
+		{
+			isEnableMidiEventParseLimitTime = enable;
+			midiEventLimitParseSec = limitSec;
 		}
 
 		//设置轨道通道合并模式
@@ -280,7 +284,12 @@ namespace tau
 		//判断是否载入完成
 		bool IsLoadCompleted();
 
+		//判断是否全部解析了midiFile
+		bool IsFullParsedMidiFile();
+
 		//载入
+		//在非阻塞模式isWaitLoadCompleted = false下，
+		//Load前面不能有任何与之相冲突的调用（play(), pasue(),stop()等,因为这些函数出于效率考虑没有加互斥锁）
 		void Load(string& midiFilePath, bool isWaitLoadCompleted = true);
 
 		//新建轨道
@@ -331,6 +340,9 @@ namespace tau
 
 		//获取当前播放时间点
 		double GetPlaySec();
+
+		//获取结束时间点
+		double GetEndSec();
 
 		// 设定播放速度
 		void SetSpeed(float speed);
@@ -398,6 +410,11 @@ namespace tau
 		void RemoveVirInstrument(VirInstrument* virInst, bool isFade = true);
 
 		/// <summary>
+		/// 移除所有乐器
+		/// </summary>
+		void RemoveAllVirInstrument(bool isFade = true);
+
+		/// <summary>
 		/// 打开乐器
 		/// </summary>
 		void OnVirInstrument(VirInstrument* virInst, bool isFade = true);
@@ -418,6 +435,7 @@ namespace tau
 		//为midi文件设置打击乐号
 		void SetMidiBeatVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
+		void ResetVirInstruments();
 
 		/// <summary>
 		/// 录制所有乐器弹奏为midi
@@ -475,10 +493,15 @@ namespace tau
 #endif
 
 		//是否开启MidiEvent数量优化
-		bool enableMidiEventCountOptimize = false;
+		bool enableMidiEventCountOptimize = true;
 
-		//midi文件中保持同时按键的数量 (默认值:-1 无限制)
-		int midiKeepSameTimeNoteOnCount = -1;
+		//midi文件中保持同时按键的数量 (默认值:15,  -1表示无限制)
+		int midiKeepSameTimeNoteOnCount = 15;
+
+		//是否启用MidiEvent解析极限时间
+		bool isEnableMidiEventParseLimitTime = false;
+		//MidiEvent极限解析时间(默认值:2s)
+		float midiEventLimitParseSec = 2.0f;
 
 		//midi文件轨道通道合并模式
 		TrackChannelMergeMode midiFileMergeMode = TrackChannelMergeMode::AutoMerge;

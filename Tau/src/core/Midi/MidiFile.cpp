@@ -4,6 +4,8 @@
 #include"MidiTrack.h"
 #include"MidiEvent.h"
 #include <algorithm>
+#include <chrono>
+
 using namespace std;
 
 namespace tau
@@ -239,9 +241,6 @@ namespace tau
 	}
 
 
-
-
-
 	//清空midiTrack列表,但并不真正删除track列表中的事件
 	void MidiFile::ClearMidiTrackList()
 	{
@@ -269,12 +268,20 @@ namespace tau
 		trackCount++;
 	}
 
+
 	//解析内核
 	bool MidiFile::ParseCore()
 	{
 		bool isSuccess = ParseHeaderChunk();
 		if (!isSuccess)
 			return false;
+
+		//
+		if (isEnableParseLimitTime)
+		{
+			perTrackParseSec = limitParseSec / trackCount;
+			curtTrackParseSec = perTrackParseSec;
+		}
 
 		for (int i = 0; i < trackCount; i++)
 		{
@@ -285,6 +292,7 @@ namespace tau
 			int ret = ParseTrackChuck();
 			if (ret == -1)
 				return false;
+
 		}
 
 		//有些midi文件的格式明明是SyncTracks，但速度设置却没有放在全局0轨道中，而把速度设置放在了其他轨道，
@@ -432,13 +440,6 @@ namespace tau
 	bool MidiFile::MidiEventTickCompare(MidiEvent* a, MidiEvent* b)
 	{
 		return a->startTick < b->startTick;
-
-		////升序
-		//if (a->startTick < b->startTick)
-		//	return -1;
-		//else if (a->startTick > b->startTick)
-		//	return 1;
-		//return 0;
 	}
 
 
@@ -494,6 +495,12 @@ namespace tau
 		track->SetTickForQuarterNote(tickForQuarterNote);
 		int parseRet = -1;
 
+		float sec = 0;
+		int eventCount = 0;
+		bool isPassEvents = false;
+
+		startParseTime = chrono::high_resolution_clock::now();
+
 		while (midiReader->getReadCursor() < midiReader->getWriteCursor() && !isStopParse)
 		{
 			uint32_t deltaTime = ReadDynamicValue(*midiReader);
@@ -520,19 +527,62 @@ namespace tau
 				}
 			}
 
+			if (!isPassEvents)
+				parseRet = ParseEvent(*track);
+			else {
+				parseRet = PassParseEvent(*track);
+				if (parseRet == 2)
+				{
+					parseRet = 0;
+					break;
+				}
+				continue;
+			}
 
+			//
+			if (isEnableParseLimitTime)
+			{
+				eventCount++;
+				if (eventCount > 3000)
+				{
+					chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+					sec = (chrono::duration_cast<chrono::duration<double>>(t2 - startParseTime)).count();
 
-			parseRet = ParseEvent(*track);
+					if (sec > curtTrackParseSec) {
+						curtTrackParseSec = perTrackParseSec;
+						isPassEvents = true;
+					}
+
+					eventCount = 0;
+				}
+			}
+
+			//
 			if (parseRet == -1)   //解析出错
 				break;
 			if (parseRet == 2)  //当前音轨数据解析结束
 			{
+				if (isEnableParseLimitTime)
+				{
+					sec = (chrono::duration_cast<chrono::microseconds>(
+						chrono::high_resolution_clock::now() - startParseTime).count() * 0.001f);
+
+					if (sec > curtTrackParseSec)
+						curtTrackParseSec = perTrackParseSec;
+					else
+						curtTrackParseSec = perTrackParseSec + curtTrackParseSec - sec;
+
+				}
+
 				parseRet = 0;
 				break;
 			}
 		}
 
 		midiTrackList.push_back(track);
+
+		if (isPassEvents)
+			isFullParsed = false;
 
 		return parseRet;
 	}
@@ -861,6 +911,93 @@ namespace tau
 			}
 			break;
 			}
+		}
+		break;
+
+		}
+
+		return 0; //继续解析当前音轨数据
+	}
+
+	//跳过解析的事件
+	int MidiFile::PassParseEvent(MidiTrack& track)
+	{
+		switch (lastParseEventNum)
+		{
+		case 0x8:
+		case 0x9:
+		case 0xA:
+		case 0xB:
+		case 0xE:
+			midiReader->read<int16_t>();
+			break;
+
+		case 0xC:
+		case 0xD:
+			midiReader->read<byte>();
+			break;
+
+		case 0xF0:
+			do
+			{
+				byte b = midiReader->read<byte>();
+				if (b == 0xF7)
+					break;
+			} while (true);
+			break;
+
+		case 0xFF:
+		{
+			byte type = midiReader->read<byte>();
+
+			switch (type)
+			{
+			case 0x03:
+			case 0x04:
+			{
+				uint32_t len = ReadDynamicValue(*midiReader);
+				if (len != 0)
+					midiReader->setReadCursor(midiReader->getReadCursor() + len);
+			}
+			break;
+
+
+			case 0x20: //MIDI通道
+			case 0x21: //接口号码
+				midiReader->read<int16_t>();
+				break;
+
+			case 0x51:
+				midiReader->read<byte>();  // 长度
+				Read3BtyesToInt32(*midiReader);
+				break;
+
+			case 0x54:
+				midiReader->setReadCursor(midiReader->getReadCursor() + 6);
+				break;
+
+			case 0x58:
+				midiReader->setReadCursor(midiReader->getReadCursor() + 5);
+				break;
+
+			case 0x59:
+				midiReader->setReadCursor(midiReader->getReadCursor() + 3);
+				break;
+
+			case 0x2F:
+				midiReader->read<byte>();  //FF2F00
+				return 2;  //当前音轨数据解析结束
+
+			default:
+			{
+				uint32_t len = ReadDynamicValue(*midiReader);
+				if (len <= 0)
+					break;
+				midiReader->setReadCursor(midiReader->getReadCursor() + len);
+				break;
+			}
+			}
+			break;
 		}
 		break;
 
