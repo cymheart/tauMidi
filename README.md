@@ -1,5 +1,6 @@
 # tau Midi数字音乐合成器库(tau midi synthesizer lib)
 该库具备Midi音乐解析播放，soundfont解析播放，支持混音，合唱，压缩器，均衡器等音效添加。
+支持边缓存边播放模式
 支持对黑乐谱的流畅播放。
 支持C#播放midi音乐等
 
