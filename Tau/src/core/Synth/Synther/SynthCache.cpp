@@ -18,7 +18,7 @@ namespace tau
 			slaveSynthers[i]->CacheReadFallSamples(this);
 			slaveSynthers[i]->CacheReadToMain(this);
 
-			if (slaveSynthers[i]->state == CacheState::EnterSteped)
+			if (slaveSynthers[i]->state == CacheState::EnterStep)
 				stepModeCount++;
 		}
 
@@ -351,7 +351,7 @@ namespace tau
 		isStepPlayMode = true;
 		cacheGain = dstCacheGain = 1;
 		cacheGainStep = 0.0001;
-		state = CacheState::EnterSteped;
+		state = CacheState::EnterStep;
 	}
 
 	void Synther::CreateFallCacheSamples()

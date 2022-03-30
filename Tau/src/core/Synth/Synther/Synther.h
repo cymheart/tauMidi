@@ -38,32 +38,26 @@ namespace tau
 
 		//缓存并读取中
 		CachingAndRead,
-
-		//
 		//缓存中但不读取
 		CachingNotRead,
-
 		//仅读取
 		OnlyRead,
 
-		//
 		//缓存中但暂停
 		CachingPauseRead,
 		//暂停等待读取
 		PauseWaitRead,
 
-		//
 		CacheReadTail,
 
 		//进入步进播放模式
 		EnterStep,
-		EnterSteped,
 
 		//离开步进播放模式
 		LeaveStep,
 
 		Remove,
-		Removing,
+		Removing
 	};
 
 
