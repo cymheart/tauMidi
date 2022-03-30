@@ -4,7 +4,7 @@
 namespace tau
 {
 	MidiTrack::MidiTrack()
-	= default;
+		= default;
 
 	MidiTrack::~MidiTrack()
 	{
@@ -34,7 +34,7 @@ namespace tau
 		midiGolbalEventList.Release();
 		noteOnEventMap.clear();
 
-		for (auto & n : midiEventListAtChannel)
+		for (auto& n : midiEventListAtChannel)
 			n.Release();
 	}
 
@@ -233,6 +233,27 @@ namespace tau
 		}
 	}
 
+
+	//获取文本
+	string& MidiTrack::GetText(MidiTextType textType, int pos)
+	{
+		auto node = midiGolbalEventList.GetHeadNode();
+		for (; node; node = node->next)
+		{
+			if (node->elem->type == MidiEventType::Text)
+			{
+				TextEvent* textEvent = (TextEvent*)node->elem;
+				if (textEvent->textType == textType)
+				{
+					if ((--pos) == 0)
+						return textEvent->text;
+				}
+			}
+		}
+
+		return _emptyStr;
+	}
+
 	/// <summary>
 	/// 增加一个事件
 	/// </summary>
@@ -256,7 +277,8 @@ namespace tau
 		{
 			if (ev->type == MidiEventType::Tempo ||
 				ev->type == MidiEventType::TimeSignature ||
-				ev->type == MidiEventType::KeySignature)
+				ev->type == MidiEventType::KeySignature ||
+				ev->type == MidiEventType::Text)
 			{
 				midiGolbalEventList.AddLast(ev);
 			}
@@ -340,33 +362,6 @@ namespace tau
 			}
 			else
 				break;
-		}
-
-		if (count > keepCount)
-		{
-			return;
-
-
-			/*	midiEventListAtChannel[midiEventNode->elem->channel].Remove(midiEventNode);
-				delete midiEventNode->elem;
-				delete midiEventNode;*/
-
-
-				/*	LinkedListNode<MidiEvent*>* next = nullptr;
-					int n = 0;
-					for (node = startNode; node; node = next)
-					{
-						next = node->next;
-
-						n++;
-						if (n > keepCount)
-						{
-							midiEventListAtChannel[node->elem->channel].Remove(node);
-							delete node->elem;
-							delete node;
-						}
-
-					}*/
 		}
 	}
 

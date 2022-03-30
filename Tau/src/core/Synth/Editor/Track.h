@@ -34,6 +34,8 @@ namespace tau
 		void SetChannelNum(int channelNum);
 		int GetChannelNum();
 
+		void SetName(string& _name);
+
 		void Clear();
 
 		//新建分径
@@ -70,6 +72,8 @@ namespace tau
 
 
 	private:
+
+		string name;
 
 		//重新处理当前时间点在事件处理时间中间时，可以重新启用此时间
 		vector<MidiEvent*> reProcessMidiEvents;

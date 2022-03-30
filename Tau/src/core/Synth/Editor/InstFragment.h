@@ -60,13 +60,16 @@ namespace tau
 			return midiEvents;
 		}
 
-	private:
+		void SetName(string& _name);
 
+	private:
+		string name;
 		uint32_t startTick = 0;
 		double startSec = 0;
 		double endSec = 0;
 
 		Track* track = nullptr;
+
 		int branchIdx = 0;
 
 		//对应音轨事件队列的当前处理位置

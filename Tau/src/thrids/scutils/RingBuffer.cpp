@@ -20,22 +20,52 @@ namespace scutils
 		writePos = 0;
 	}
 
+	void RingBuffer::Write(void* value, int64_t size)
+	{
+		int64_t writeEndPos = writePos + size;
+		if (writeEndPos < bufSize)
+		{
+			memcpy(buf + writePos, value, size);
+			writePos += size;
+		}
+		else
+		{
+			uint8_t* valPtr = (uint8_t*)(value);
+			int64_t frontCount = bufSize - writePos;
+			int64_t backCount = writeEndPos - bufSize;
+			memcpy(buf + writePos, valPtr, frontCount);
+			if (backCount > 0)
+				memcpy(buf, valPtr + frontCount, backCount);
+			writePos = backCount;
+		}
+	}
+
+	//读取指定长度字节到dst中
 	void RingBuffer::ReadToDst(void* dst, int64_t len)
 	{
+		if (writePos == readPos)
+			return;
+
 		int64_t readEndPos = readPos + len;
 		if (readEndPos < bufSize)
 		{
-			memcpy(dst, buf + readPos, len);
+			if (dst)
+				memcpy(dst, buf + readPos, len);
 			readPos = readEndPos;
 		}
 		else
 		{
 			int64_t frontCount = bufSize - readPos;
 			int64_t backCount = readEndPos - bufSize;
-			memcpy(dst, buf + readPos, frontCount);
-			if (backCount > 0)
-				memcpy((uint8_t*)dst + frontCount, buf, backCount);
+
+			if (dst) {
+				memcpy(dst, buf + readPos, frontCount);
+				if (backCount > 0)
+					memcpy((uint8_t*)dst + frontCount, buf, backCount);
+			}
+
 			readPos = backCount;
 		}
 	}
+
 }

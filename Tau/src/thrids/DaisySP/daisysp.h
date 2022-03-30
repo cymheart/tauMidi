@@ -1,4 +1,4 @@
-﻿//    DaisySP is a DSP Library targeted at the Electrosmith Daisy Product Line.
+//    DaisySP is a DSP Library targeted at the Electrosmith Daisy Product Line.
 //    Author: Stephen Hensley, 2019
 //
 //    However, this is decoupled from the hardware in such a way that it
@@ -94,6 +94,7 @@
 #include "Utility/delayline.h"
 #include "Utility/dsp.h"
 #include "Utility/jitter.h"
+#include "Utility/looper.h"
 #include "Utility/maytrig.h"
 #include "Utility/metro.h"
 #include "Utility/port.h"

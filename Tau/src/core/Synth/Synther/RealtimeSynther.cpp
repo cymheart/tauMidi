@@ -20,17 +20,14 @@ namespace tau
 
 	RealtimeSynther::~RealtimeSynther()
 	{
+		isReqDelete = true;
 		RemoveAllVirInstrument();
 
-		if (!isReqDelete) {
-			ReqDeleteTask();
-			waitSem.wait();
-		}
+		if (isMainSynther)
+			waitSem.wait_for(100);
 
 		//
 		realtimeKeyOpTaskProcesser->Stop();
-
-
 		DEL(realtimeKeyEventList);
 		DEL(realtimeKeyOpTaskProcesser);
 
@@ -38,17 +35,23 @@ namespace tau
 
 	void RealtimeSynther::Open()
 	{
+		if (isOpened)
+			return;
+
 		Synther::Open();
 		realtimeKeyOpTaskProcesser->Start();
 	}
 
 	void RealtimeSynther::Close()
 	{
+		if (!isOpened)
+			return;
+
+		isReqDelete = true;
 		RemoveAllVirInstrument();
-		if (!isReqDelete) {
-			ReqDeleteTask();
+
+		if (isMainSynther)
 			waitSem.wait();
-		}
 
 		realtimeKeyOpTaskProcesser->Stop();
 
@@ -182,24 +185,9 @@ namespace tau
 	{
 		if (isReqDelete && isSoundEnd)
 		{
-			if (isMainSynther)
-			{
-				computedFrameBufSyntherCount--;
-				if (computedFrameBufSyntherCount == 0)
-					isFrameRenderCompleted = true;
-			}
-			else
-			{
-				RealtimeSynther& mainSynther = *(RealtimeSynther*)(tau->mainEditorSynther);
-				mainSynther.computedFrameBufSyntherCount--;
-				if (mainSynther.computedFrameBufSyntherCount == 0)
-					mainSynther.isFrameRenderCompleted = true;
-			}
-
 			waitSem.set();
 			return;
 		}
-
 
 		//清除通道buffer
 		ClearChannelBuffer();
@@ -215,6 +203,9 @@ namespace tau
 				ProcessMidiEvents();
 			}
 
+			//移除需要删除的乐器
+			RemoveNeedDeleteVirInsts();
+
 			//渲染虚拟乐器区域发声
 			RenderVirInstRegionSound();
 
@@ -225,7 +216,7 @@ namespace tau
 
 		//混合所有乐器中的样本到synther的声道buffer中
 		MixVirInstsSamplesToChannelBuffer();
-		CombineSynthersFrameBufs();
+		SynthSampleBuffer();
 	}
 
 

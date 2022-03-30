@@ -15,6 +15,11 @@ namespace scutils
 		void wait();
 		void wait_for(uint32_t ms);
 
+		inline int GetCount()
+		{
+			return count;
+		}
+
 	private:
 		mutex m;
 		condition_variable cv;

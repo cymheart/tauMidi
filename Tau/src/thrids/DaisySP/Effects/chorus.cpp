@@ -1,4 +1,4 @@
-﻿#include "Utility/dsp.h"
+#include "Utility/dsp.h"
 #include "chorus.h"
 #include <math.h>
 
@@ -88,7 +88,7 @@ void Chorus::Init(float sample_rate)
 	engines_[1].Init(sample_rate);
 	SetPan(.25f, .75f);
 
-	gain_frac_ = 0.75f;
+	gain_frac_ = .5f;
 	sigl_ = sigr_ = 0.f;
 	mix_ = 1;
 }
@@ -129,6 +129,7 @@ void Chorus::SetEffectMix(float mix)
 {
 	mix_ = fclamp(mix, 0.f, 1.f);
 }
+
 
 void Chorus::SetPan(float panl, float panr)
 {

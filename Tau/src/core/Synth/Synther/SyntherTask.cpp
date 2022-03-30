@@ -8,72 +8,57 @@
 
 namespace tau
 {
-
-	void Synther::CombineSynthersFrameBufsTask()
+	void Synther::SlaveSyntherProcessCompletedTask()
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
-		ev->processCallBack = _CombineSynthersFrameBufsTask;
+		ev->processCallBack = _SlaveSyntherProcessCompletedTask;
 		PostTask(ev);
 	}
 
-	void Synther::_CombineSynthersFrameBufsTask(Task* ev)
+	void Synther::_SlaveSyntherProcessCompletedTask(Task* ev)
 	{
 		SyntherEvent* se = (SyntherEvent*)ev;
 		Synther& synther = (Synther&)*(se->synther);
-		synther._CombineSynthersFrameBufs();
+		synther.SyntherProcessCompleted();
 	}
 
-
-	void Synther::AddAssistSyntherTask(Semaphore* waitSem, Synther* assistSynther)
+	void Synther::AddSlaveSyntherTask(Semaphore* waitSem, Synther* slaveSynther)
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
-		ev->processCallBack = _AddAssistSyntherTask;
-		ev->ptr = assistSynther;
+		ev->processCallBack = _AddSlaveSyntherTask;
+		ev->ptr = slaveSynther;
 		ev->sem = waitSem;
 		PostTask(ev);
 	}
 
-	void Synther::_AddAssistSyntherTask(Task* ev)
+	void Synther::_AddSlaveSyntherTask(Task* ev)
 	{
 		SyntherEvent* se = (SyntherEvent*)ev;
 		Synther& synther = (Synther&)*(se->synther);
-		synther.AddAssistSynther((Synther*)se->ptr);
+		synther.AddSlaveSynther((Synther*)se->ptr);
 		se->sem->set();
 	}
 
-	void Synther::RemoveAssistSyntherTask(Synther* assistSynther)
+	void Synther::RemoveSlaveSyntherTask(Semaphore* waitSem, Synther* slaveSynther)
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
-		ev->processCallBack = _RemoveAssistSyntherTask;
-		ev->ptr = assistSynther;
+		ev->processCallBack = _RemoveSlaveSyntherTask;
+		ev->ptr = slaveSynther;
+		ev->sem = waitSem;
 		PostTask(ev);
 	}
 
-	void Synther::_RemoveAssistSyntherTask(Task* ev)
+	void Synther::_RemoveSlaveSyntherTask(Task* ev)
 	{
 		SyntherEvent* se = (SyntherEvent*)ev;
 		Synther& synther = (Synther&)*(se->synther);
-		synther.RemoveAssistSynther((Synther*)se->ptr);
+		synther.cmdWait = se->sem;
+		synther.RemoveSlaveSynther((Synther*)se->ptr);
 	}
 
-	// 请求删除合成器
-	void Synther::ReqDeleteTask()
-	{
-		SyntherEvent* ev = SyntherEvent::New();
-		ev->synther = this;
-		ev->processCallBack = _ReqDeleteTaskTask;
-		PostTask(ev);
-	}
-
-	void Synther::_ReqDeleteTaskTask(Task* ev)
-	{
-		SyntherEvent* se = (SyntherEvent*)ev;
-		Synther& synther = (Synther&)*(se->synther);
-		synther.ReqDelete();
-	}
 
 	//添加替换乐器
 	void Synther::AppendReplaceInstrumentTask(
@@ -156,7 +141,6 @@ namespace tau
 		synther.SetEnableAllVirInstEffects(se->value);
 
 	}
-
 
 
 	// 设置乐器Bend值
@@ -312,25 +296,6 @@ namespace tau
 		Synther& synther = (Synther&)*(se->synther);
 		synther.RemoveAllVirInstrument(se->value);
 	}
-
-	// 删除乐器
-	void Synther::DelVirInstrumentTask(VirInstrument* virInst)
-	{
-		SyntherEvent* ev = SyntherEvent::New();
-		ev->synther = this;
-		ev->processCallBack = _DelInstrumentTask;
-		ev->ptr = (void*)virInst;
-		PostTask(ev);
-	}
-
-	void Synther::_DelInstrumentTask(Task* ev)
-	{
-		SyntherEvent* se = (SyntherEvent*)ev;
-		Synther& synther = (Synther&)*(se->synther);
-		VirInstrument* virInst = (VirInstrument*)se->ptr;
-		synther.DelVirInstrument(virInst);
-	}
-
 
 	// 打开虚拟乐器
 	void Synther::OnVirInstrumentTask(VirInstrument* virInst, bool isFade)

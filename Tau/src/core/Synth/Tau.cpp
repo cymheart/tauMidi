@@ -23,10 +23,17 @@ namespace tau {
 		presetBankReplaceMap = new unordered_map<uint32_t, uint32_t>;
 
 		//
-		mainEditorSynther = new MidiEditorSynther(this);
-		mainEditorSynther->SetMainSynther(true);
-		midiEditorSynthers[0] = mainEditorSynther;
-		syntherCount = 1;
+		mainSynther = new RealtimeSynther(this);
+		mainSynther->SetMainSynther(true);
+		synthers[0] = mainSynther;
+
+		midiEditorSynthers[0] = new MidiEditorSynther(this);
+		midiEditorSynthers[0]->SetMainSynther(false);
+		mainSynther->AddSlaveSynther(midiEditorSynthers[0]);
+		synthers[1] = midiEditorSynthers[0];
+
+		syntherCount = 2;
+		midiEditorSyntherCount = 1;
 
 		SetFrameSampleCount(frameSampleCount);
 		SetSampleProcessRate(sampleProcessRate);
@@ -44,11 +51,13 @@ namespace tau {
 
 		DEL(editor);
 
-		for (int i = 1; i < syntherCount; i++)
-			DEL(midiEditorSynthers[i]);
-		DEL(midiEditorSynthers[0]);
+		//
+		DEL(synthers[0]);
+		if (midiEditorSyntherCount != 0)
+			DEL(synthers[1]);
 
 		syntherCount = 0;
+		midiEditorSyntherCount = 0;
 
 		//
 		DEL(presetBankReplaceMap);
@@ -62,7 +71,9 @@ namespace tau {
 		if (isOpened)
 			return;
 
-		midiEditorSynthers[0]->Open();
+		for (int i = 0; i < syntherCount; i++)
+			synthers[i]->Open();
+
 		isOpened = true;
 	}
 
@@ -74,11 +85,12 @@ namespace tau {
 
 		Remove();
 
-		for (int i = 1; i < syntherCount; i++)
-			DEL(midiEditorSynthers[i]);
+		//
+		syntherCount = 2;
+		midiEditorSyntherCount = 1;
 
-		syntherCount = 1;
-		midiEditorSynthers[0]->Close();
+		synthers[0]->Close();
+		synthers[1]->Close();
 
 		isOpened = false;
 	}
@@ -114,7 +126,7 @@ namespace tau {
 
 		//
 		for (int i = 0; i < syntherCount; i++)
-			midiEditorSynthers[i]->SetFrameSampleCount(count);
+			synthers[i]->SetFrameSampleCount(count);
 	}
 
 	//设置是否使用多线程
@@ -132,7 +144,7 @@ namespace tau {
 
 		//
 		for (int i = 0; i < syntherCount; i++)
-			midiEditorSynthers[i]->SetUseMulThread(useMulThreads);
+			synthers[i]->SetUseMulThread(useMulThreads);
 	}
 
 
@@ -161,22 +173,15 @@ namespace tau {
 		int i = syntherCount;
 		syntherCount++;
 
-		midiEditorSynthers[i] = new MidiEditorSynther(this);
-		midiEditorSynthers[i]->SetUseMulThread(useMulThreads);
-		midiEditorSynthers[i]->SetFrameSampleCount(frameSampleCount);
-		midiEditorSynthers[i]->SetEnableAllVirInstEffects(isEnableVirInstEffects);
+		synthers[i] = new MidiEditorSynther(this);
+		synthers[i]->SetUseMulThread(useMulThreads);
+		synthers[i]->SetFrameSampleCount(frameSampleCount);
+		synthers[i]->SetEnableAllVirInstEffects(isEnableVirInstEffects);
 
-		if (!onlyUseOneMainSynther) {
-			midiEditorSynthers[i]->SetMainSynther(true);
-		}
-		else
-		{
-			Semaphore waitSem;
-			midiEditorSynthers[0]->AddAssistSyntherTask(&waitSem, midiEditorSynthers[i]);
-			waitSem.wait();
-		}
-
-		midiEditorSynthers[i]->Open();
+		synthers[i]->Open();
+		Semaphore waitSem;
+		mainSynther->AddSlaveSyntherTask(&waitSem, synthers[i]);
+		waitSem.wait();
 
 		for (auto it = presetBankReplaceMap->begin(); it != presetBankReplaceMap->end(); it++)
 		{
@@ -189,46 +194,46 @@ namespace tau {
 			int repBankLSB = (repKey >> 8) & 0xff;
 			int repInstNum = repKey & 0xff;
 
-			midiEditorSynthers[i]->AppendReplaceInstrumentTask(
+			synthers[i]->AppendReplaceInstrumentTask(
 				orgBankMSB, orgBankLSB, orgInstNum,
 				repBankMSB, repBankLSB, repInstNum);
 		}
 
-		return midiEditorSynthers[i];
+		midiEditorSynthers[midiEditorSyntherCount] = (MidiEditorSynther*)synthers[i];
+		midiEditorSyntherCount++;
+
+		return midiEditorSynthers[midiEditorSyntherCount - 1];
 	}
-
-
-
 
 
 	//增加效果器
 	void Tau::AddEffect(TauEffect* effect)
 	{
-		mainEditorSynther->AddEffectTask(effect);
+		mainSynther->AddEffectTask(effect);
 	}
 
 	// 按下按键
 	void Tau::OnKey(int key, float velocity, VirInstrument* virInst, int delayMS)
 	{
-		mainEditorSynther->OnKeyTask(key, velocity, virInst, delayMS);
+		mainSynther->OnKeyTask(key, velocity, virInst, delayMS);
 	}
 
 	// 释放按键 
 	void Tau::OffKey(int key, float velocity, VirInstrument* virInst, int delayMS)
 	{
-		mainEditorSynther->OffKeyTask(key, velocity, virInst, delayMS);
+		mainSynther->OffKeyTask(key, velocity, virInst, delayMS);
 	}
 
 	// 取消按键 
 	void Tau::CancelDownKey(int key, float velocity, VirInstrument* virInst, int delayMS)
 	{
-		mainEditorSynther->CancelDownKeyTask(key, velocity, virInst, delayMS);
+		mainSynther->CancelDownKeyTask(key, velocity, virInst, delayMS);
 	}
 
 	// 取消释放按键 
 	void Tau::CancelOffKey(int key, float velocity, VirInstrument* virInst, int delayMS)
 	{
-		mainEditorSynther->CancelOffKeyTask(key, velocity, virInst, delayMS);
+		mainSynther->CancelOffKeyTask(key, velocity, virInst, delayMS);
 	}
 
 
@@ -244,7 +249,7 @@ namespace tau {
 		//
 		for (int i = 0; i < syntherCount; i++)
 		{
-			midiEditorSynthers[i]->AppendReplaceInstrumentTask(
+			synthers[i]->AppendReplaceInstrumentTask(
 				orgBankMSB, orgBankLSB, orgInstNum,
 				repBankMSB, repBankLSB, repInstNum);
 		}
@@ -259,7 +264,7 @@ namespace tau {
 
 		//
 		for (int i = 0; i < syntherCount; i++)
-			midiEditorSynthers[i]->RemoveReplaceInstrumentTask(orgBankMSB, orgBankLSB, orgInstNum);
+			synthers[i]->RemoveReplaceInstrumentTask(orgBankMSB, orgBankLSB, orgInstNum);
 	}
 
 
@@ -268,7 +273,7 @@ namespace tau {
 	{
 		for (int i = 0; i < syntherCount; i++)
 		{
-			midiEditorSynthers[i]->SetVirInstrumentPitchBendTask(virInst, value);
+			synthers[i]->SetVirInstrumentPitchBendTask(virInst, value);
 		}
 	}
 
@@ -277,7 +282,7 @@ namespace tau {
 	{
 		for (int i = 0; i < syntherCount; i++)
 		{
-			midiEditorSynthers[i]->SetVirInstrumentPolyPressureTask(virInst, key, pressure);
+			synthers[i]->SetVirInstrumentPolyPressureTask(virInst, key, pressure);
 		}
 	}
 
@@ -287,7 +292,7 @@ namespace tau {
 	{
 		for (int i = 0; i < syntherCount; i++)
 		{
-			midiEditorSynthers[i]->SetVirInstrumentMidiControllerValueTask(virInst, midiController, value);
+			synthers[i]->SetVirInstrumentMidiControllerValueTask(virInst, midiController, value);
 		}
 	}
 
@@ -300,7 +305,7 @@ namespace tau {
 		isEnableVirInstEffects = isEnable;
 		for (int i = 0; i < syntherCount; i++)
 		{
-			midiEditorSynthers[i]->SetEnableAllVirInstEffectsTask(isEnable);
+			synthers[i]->SetEnableAllVirInstEffectsTask(isEnable);
 		}
 	}
 
@@ -309,7 +314,7 @@ namespace tau {
 	{
 		for (int i = 0; i < syntherCount; i++)
 		{
-			midiEditorSynthers[i]->SetVirInstrumentProgramTask(virInst, bankSelectMSB, bankSelectLSB, instrumentNum);
+			synthers[i]->SetVirInstrumentProgramTask(virInst, bankSelectMSB, bankSelectLSB, instrumentNum);
 		}
 	}
 
@@ -325,7 +330,7 @@ namespace tau {
 	/// <returns></returns>
 	VirInstrument* Tau::EnableVirInstrument(int deviceChannelNum, int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
-		return mainEditorSynther->EnableVirInstrumentTask(deviceChannelNum, bankSelectMSB, bankSelectLSB, instrumentNum);
+		return mainSynther->EnableVirInstrumentTask(deviceChannelNum, bankSelectMSB, bankSelectLSB, instrumentNum);
 	}
 
 	/// <summary>
@@ -335,7 +340,7 @@ namespace tau {
 	{
 		for (int i = 0; i < syntherCount; i++)
 		{
-			midiEditorSynthers[i]->RemoveVirInstrumentTask(virInst, isFade);
+			synthers[i]->RemoveVirInstrumentTask(virInst, isFade);
 		}
 	}
 
@@ -346,7 +351,7 @@ namespace tau {
 	{
 		for (int i = 0; i < syntherCount; i++)
 		{
-			midiEditorSynthers[i]->RemoveAllVirInstrumentTask(isFade);
+			synthers[i]->RemoveAllVirInstrumentTask(isFade);
 		}
 	}
 
@@ -357,7 +362,7 @@ namespace tau {
 	{
 		for (int i = 0; i < syntherCount; i++)
 		{
-			midiEditorSynthers[i]->OnVirInstrumentTask(virInst, isFade);
+			synthers[i]->OnVirInstrumentTask(virInst, isFade);
 		}
 	}
 
@@ -368,7 +373,7 @@ namespace tau {
 	{
 		for (int i = 0; i < syntherCount; i++)
 		{
-			midiEditorSynthers[i]->OffVirInstrumentTask(virInst, isFade);
+			synthers[i]->OffVirInstrumentTask(virInst, isFade);
 		}
 	}
 
@@ -381,7 +386,7 @@ namespace tau {
 		vector<VirInstrument*>* curtVirInsts = nullptr;
 		for (int i = 0; i < syntherCount; i++)
 		{
-			curtVirInsts = midiEditorSynthers[i]->TakeVirInstrumentListTask();
+			curtVirInsts = synthers[i]->TakeVirInstrumentListTask();
 			if (curtVirInsts == nullptr)
 				continue;
 

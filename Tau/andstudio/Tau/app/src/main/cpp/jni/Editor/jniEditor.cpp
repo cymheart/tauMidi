@@ -120,6 +120,18 @@ Java_cymheart_tau_editor_Editor_ndkGetPlaySec(JNIEnv *env, jclass clazz, jlong n
     return editor->GetPlaySec();
 }
 
+extern "C"
+JNIEXPORT jint JNICALL
+Java_cymheart_tau_editor_Editor_ndkGetSampleStreamFreqSpectrums(JNIEnv *env, jclass clazz, jlong ndk_editor,
+                                                                jint channel, jdoubleArray out_left,
+                                                                jdoubleArray out_right) {
+    Editor* editor = (Editor*)ndk_editor;
+    double *left = env->GetDoubleArrayElements(out_left, 0);
+    double *right = env->GetDoubleArrayElements(out_right, 0);
+    int count = editor->GetSampleStreamFreqSpectrums(channel, left, right);
+    return count;
+}
+
 
 extern "C"
 JNIEXPORT jdouble JNICALL
@@ -322,4 +334,5 @@ void CreateDatas(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* edit
     env->DeleteLocalRef(jInstFragmentClass);
     env->DeleteLocalRef(jMidiEventClass);
 }
+
 

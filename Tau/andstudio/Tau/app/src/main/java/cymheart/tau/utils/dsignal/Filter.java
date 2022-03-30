@@ -1,4 +1,4 @@
-package cymheart.tau.dsignal;
+package cymheart.tau.utils.dsignal;
 
 public class Filter {
     public Filter(){ndkFilter = ndkCreateFilter();}

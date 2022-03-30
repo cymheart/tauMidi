@@ -20,23 +20,11 @@ namespace tau
 		OFFING,
 		//已经关闭
 		OFFED,
+		//移除中
+		REMOVING,
+		//移除
+		REMOVED,
 	};
-
-	// 虚拟乐器状态操作类型
-	enum class VirInstrumentStateOpType
-	{
-		ON,
-		OFF,
-		REMOVE
-	};
-
-	// 虚拟乐器状态操作
-	struct VirInstrumentStateOp
-	{
-		VirInstrumentStateOpType opType;
-		bool isFade;
-	};
-
 
 	/*
 	* 虚拟乐器类
@@ -80,6 +68,12 @@ namespace tau
 			return isRealtime;
 		}
 
+		inline bool IsRemove()
+		{
+			return (state == VirInstrumentState::REMOVING ||
+				state == VirInstrumentState::REMOVED);
+		}
+
 		//获取乐器的预设
 		inline Preset* GetPreset()
 		{
@@ -104,19 +98,8 @@ namespace tau
 		//移除乐器
 		void Remove(bool isFade);
 
-		inline bool IsRemove()
-		{
-			return isRemove;
-		}
-
-		//状态操作
-		void StateOp();
-
-		//执行打开乐器
-		void OnExecute(bool isFade = true);
-
-		//执行关闭乐器
-		void OffExecute(bool isFade = true);
+		//状态处理
+		void StateProcess();
 
 		//增加效果器
 		void AddEffect(TauEffect* effect);
@@ -423,15 +406,8 @@ namespace tau
 		//按键速率
 		float onKeySpeed = 0;
 
-		//
-		bool isRemove = false;
 		//状态
 		VirInstrumentState state = VirInstrumentState::OFFED;
-		//状态操作
-		queue<VirInstrumentStateOp>* stateOps;
-		//是否可以执行状态操作
-		bool canExecuteStateOp = false;
-
 
 		//gain
 		float gain = 1;

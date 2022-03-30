@@ -29,6 +29,7 @@ namespace tau
 		int instrumentNum = 0;
 		MidiControllerType midiCtrlType = MidiControllerType::CC_None;
 		int value = 0;
+		int iValue[10] = { 0 };
 		string text;
 		float exValue[10] = { 0 };
 		void* exPtr[10] = { nullptr };

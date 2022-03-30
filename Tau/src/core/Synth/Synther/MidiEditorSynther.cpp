@@ -12,14 +12,12 @@ namespace tau
 	MidiEditorSynther::MidiEditorSynther(Tau* tau)
 		:RealtimeSynther(tau)
 	{
-
 	}
 
 	MidiEditorSynther::~MidiEditorSynther()
 	{
 		DEL(midiEditor);
 	}
-
 
 	// 处理midi事件
 	void MidiEditorSynther::ProcessMidiEvents()
@@ -48,6 +46,9 @@ namespace tau
 			return;
 
 		midiEditor->Play();
+
+		if (maxCacheSize > 0 && isEnableCache)
+			CachePlay();
 	}
 
 	//停止
@@ -57,6 +58,9 @@ namespace tau
 			return;
 
 		midiEditor->Stop();
+
+		if (maxCacheSize > 0 && isEnableCache)
+			CacheStop();
 	}
 
 	//暂停
@@ -65,7 +69,30 @@ namespace tau
 		if (midiEditor == nullptr)
 			return;
 
-		midiEditor->Pause();
+		if (maxCacheSize > 0 && isEnableCache)
+			CachePause();
+		else
+			midiEditor->Pause();
+	}
+
+	//快进到指定位置
+	void MidiEditorSynther::Goto(double sec)
+	{
+		if (midiEditor == nullptr)
+			return;
+
+		double endsec = midiEditor->GetEndSec();
+		if (sec > endsec)
+			sec = endsec;
+
+
+		if (maxCacheSize > 0 && isEnableCache) {
+			if (CacheGoto(sec))
+				midiEditor->Goto(sec);
+		}
+		else {
+			midiEditor->Goto(sec);
+		}
 	}
 
 	//移除midiEditor
@@ -76,22 +103,43 @@ namespace tau
 
 		midiEditor->Remove();
 		DEL(midiEditor);
+
+		if (maxCacheSize > 0 && isEnableCache)
+			CacheStop(true);
 	}
 
-	void MidiEditorSynther::EnterWaitPlayMode()
+	//重新缓存
+	void MidiEditorSynther::ReCache()
+	{
+		if (maxCacheSize > 0 && isEnableCache)
+			CacheReset();
+	}
+
+
+	void MidiEditorSynther::EnterPlayMode(EditorPlayMode playMode)
 	{
 		if (midiEditor == nullptr)
 			return;
 
-		midiEditor->EnterWaitPlayMode();
+		midiEditor->EnterPlayMode(playMode);
+
+		if (playMode == EditorPlayMode::Step &&
+			maxCacheSize > 0 && isEnableCache)
+		{
+			midiEditor->Goto(curtCachePlaySec);
+			ReCache();
+			CacheEnterStepPlayMode();
+		}
+
 	}
 
-	void MidiEditorSynther::LeaveWaitPlayMode()
+	void MidiEditorSynther::LeavePlayMode()
 	{
 		if (midiEditor == nullptr)
 			return;
 
-		midiEditor->LeaveWaitPlayMode();
+		isStepPlayMode = false;
+		midiEditor->LeavePlayMode();
 	}
 
 
@@ -103,23 +151,39 @@ namespace tau
 		midiEditor->Runto(sec);
 	}
 
-	//快进到指定位置
-	void MidiEditorSynther::Goto(double sec)
+	//获取播放状态(通用)
+	EditorState MidiEditorSynther::GetPlayStateCommon()
 	{
 		if (midiEditor == nullptr)
-			return;
+			return EditorState::STOP;
 
-		midiEditor->Goto(sec);
+		if (maxCacheSize > 0 && isEnableCache)
+			return GetCachePlayState();
+		return midiEditor->GetState();
+	}
+
+	//获取播放时间(通用)
+	double MidiEditorSynther::GetPlaySecCommon()
+	{
+		if (midiEditor == nullptr)
+			return 0;
+
+		if (maxCacheSize > 0 && isEnableCache)
+			return GetCachePlaySec();
+		return midiEditor->GetPlaySec();
 	}
 
 	//获取播放时间
 	double MidiEditorSynther::GetPlaySec()
 	{
+		if (midiEditor == nullptr)
+			return 0;
+
 		return midiEditor->GetPlaySec();
 	}
 
 	//获取状态
-	EditorState MidiEditorSynther::GetState()
+	EditorState MidiEditorSynther::GetPlayState()
 	{
 		if (midiEditor == nullptr)
 			return EditorState::STOP;
@@ -153,6 +217,7 @@ namespace tau
 			return;
 
 		midiEditor->SetSpeed(speed);
+		ReCache();
 	}
 
 	// 禁止播放指定轨道
@@ -165,6 +230,8 @@ namespace tau
 			midiEditor->DisableAllTrack();
 		else
 			midiEditor->DisableTrack(track);
+
+		ReCache();
 	}
 
 	// 启用播放指定的轨道
@@ -177,6 +244,8 @@ namespace tau
 			midiEditor->EnableAllTrack();
 		else
 			midiEditor->EnableTrack(track);
+
+		ReCache();
 	}
 
 	// 禁止播放指定编号通道
@@ -189,6 +258,8 @@ namespace tau
 			midiEditor->DisableAllTrack();
 		else
 			midiEditor->DisableChannel(channelIdx);
+
+		ReCache();
 	}
 
 	// 启用播放指定编号通道
@@ -201,6 +272,8 @@ namespace tau
 			midiEditor->EnableAllTrack();
 		else
 			midiEditor->EnableChannel(channelIdx);
+
+		ReCache();
 	}
 
 	//设置轨道事件演奏方式
@@ -221,6 +294,8 @@ namespace tau
 
 		midiEditor->SetVirInstrument(
 			track, bankSelectMSB, bankSelectLSB, instrumentNum);
+
+		ReCache();
 	}
 
 
@@ -231,6 +306,7 @@ namespace tau
 			return;
 
 		midiEditor->SetBeatVirInstrument(bankSelectMSB, bankSelectLSB, instrumentNum);
+		ReCache();
 	}
 
 	//设置标记
@@ -258,6 +334,7 @@ namespace tau
 			return;
 
 		midiEditor->DeleteTrack(track);
+		ReCache();
 	}
 
 	//移动乐器片段到目标轨道的指定时间点
@@ -267,6 +344,7 @@ namespace tau
 			return;
 
 		midiEditor->MoveInstFragment(instFragment, dstTrack, dstBranchIdx, sec);
+		ReCache();
 	}
 
 	//移除乐器片段
@@ -276,6 +354,7 @@ namespace tau
 			return;
 
 		midiEditor->RemoveInstFragment(instFragment);
+		ReCache();
 	}
 
 
@@ -295,6 +374,15 @@ namespace tau
 			return;
 
 		midiEditor->ComputeEndSec();
+	}
+
+	bool MidiEditorSynther::CanCache()
+	{
+		if (!isCacheWriteSoundEnd ||
+			(midiEditor != nullptr && midiEditor->GetState() == EditorState::PLAY))
+			return true;
+
+		return false;
 	}
 
 }

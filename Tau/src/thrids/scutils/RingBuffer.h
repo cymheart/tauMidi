@@ -21,20 +21,20 @@ namespace scutils
 				writePos += sizeof(T);
 			}
 			else {
-				uint8_t* valPtr = (uint8_t*)(&value);
-				int64_t frontCount = bufSize - writePos;
-				int64_t backCount = writeEndPos - bufSize;
-				memcpy(buf + writePos, valPtr, frontCount);
-				if (backCount > 0)
-					memcpy(buf, valPtr + frontCount, backCount);
-				writePos = backCount;
+				Write((uint8_t*)(&value), sizeof(T));
 			}
 		}
+
+		void Write(void* value, int64_t size);
 
 		template<typename T>
 		T Read()
 		{
+
 			T value;
+			if (writePos == readPos)
+				return value;
+
 			int64_t readEndPos = readPos + sizeof(T);
 
 			if (readEndPos < bufSize)
@@ -56,11 +56,29 @@ namespace scutils
 			return value;
 		}
 
-		//读取到目标buffer中
+		//读取指定长度字节到dst中
 		void ReadToDst(void* dst, int64_t len);
 
-		//获取剩余尺寸
-		inline int64_t GetSurplusSize()
+		//拾取指定长度字节到dst中
+		inline void PeekToDst(void* dst, int64_t len)
+		{
+			int64_t orgReadPos = readPos;
+			ReadToDst(dst, len);
+			readPos = orgReadPos;
+		}
+
+		inline void OffsetReadPos(int64_t len)
+		{
+			ReadToDst(nullptr, len);
+		}
+
+		inline int64_t GetReadPos()
+		{
+			return readPos;
+		}
+
+		//获取剩余需要读取的尺寸
+		inline int64_t GetNeedReadSize()
 		{
 			int64_t size;
 			if (writePos >= readPos)
@@ -77,9 +95,10 @@ namespace scutils
 		}
 
 	private:
-		volatile int64_t readPos = 0;
-		volatile int64_t writePos = 0;
+
 		uint8_t* buf = nullptr;
+		int64_t readPos = 0;
+		int64_t writePos = 0;
 		int64_t bufSize = 0;
 
 		uint8_t tmpBuf[1024] = { 0 };

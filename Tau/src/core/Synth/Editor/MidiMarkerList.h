@@ -42,7 +42,7 @@ namespace tau
 
 		//获取当前速度
 		//tick >= 0 时使用tick
-		//sec >=0 时使用sec判断
+		//sec >= 0 时使用sec判断
 		Tempo* GetTempo(int tick, double sec, int startIdx = 0);
 
 		//计算速度

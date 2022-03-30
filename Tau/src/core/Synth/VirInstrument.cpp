@@ -27,7 +27,6 @@ namespace tau
 		onKeySounders = new vector<KeySounder*>;
 		keyEvents = new vector<KeyEvent>;
 		onKeySecHistorys = new list<float>;
-		stateOps = new queue<VirInstrumentStateOp>;
 
 		leftChannelSamples = new float[tau->frameSampleCount];
 		rightChannelSamples = new float[tau->frameSampleCount];
@@ -67,7 +66,6 @@ namespace tau
 		DEL(onKeySounders);
 		DEL(keyEvents);
 		DEL(onKeySecHistorys);
-		DEL(stateOps);
 
 		DEL(leftChannelSamples);
 		DEL(rightChannelSamples);
@@ -105,11 +103,6 @@ namespace tau
 		if (onKeySecHistorys)
 			onKeySecHistorys->clear();
 
-		if (stateOps)
-		{
-			queue<VirInstrumentStateOp> empty;
-			swap(empty, *stateOps);
-		}
 
 		isSoundEnd = true;
 
@@ -117,9 +110,7 @@ namespace tau
 		fadeReverbDepthInfo.curtDepth = 0;
 
 		onKeySpeed = 0;
-		isRemove = false;
 		state = VirInstrumentState::ONED;
-		canExecuteStateOp = false;
 		gain = 1;
 		startGain = 0;
 		dstGain = 0;
@@ -137,118 +128,59 @@ namespace tau
 	//打开乐器
 	void VirInstrument::On(bool isFade)
 	{
-		if (stateOps->empty())
-			canExecuteStateOp = true;
-		else if (stateOps->back().opType == VirInstrumentStateOpType::ON ||
-			stateOps->back().opType == VirInstrumentStateOpType::REMOVE)
+		if (state == VirInstrumentState::ONING ||
+			state == VirInstrumentState::ONED)
 			return;
 
-		VirInstrumentStateOp op = { VirInstrumentStateOpType::ON , isFade };
-		stateOps->push(op);
+		state = VirInstrumentState::ONING;
+		startGain = !isFade ? 1 : gain;
+		dstGain = 1;
+		startGainFadeSec = synther->GetCurtSec();
+		totalGainFadeTime = 0.2f;
+
+		//
+		if (virInstStateChangedCB != nullptr)
+			virInstStateChangedCB(this);
 
 	}
 
 	//关闭乐器
 	void VirInstrument::Off(bool isFade)
 	{
-		if (stateOps->empty())
-			canExecuteStateOp = true;
-		else if (stateOps->back().opType == VirInstrumentStateOpType::OFF ||
-			stateOps->back().opType == VirInstrumentStateOpType::REMOVE)
+		if (state == VirInstrumentState::OFFING ||
+			state == VirInstrumentState::OFFED)
 			return;
 
-		VirInstrumentStateOp op = { VirInstrumentStateOpType::OFF , isFade };
-		stateOps->push(op);
+		OffAllKeys();
+
+		state = VirInstrumentState::OFFING;
+		startGain = !isFade ? 0 : gain;
+		dstGain = 0;
+		startGainFadeSec = synther->GetCurtSec();
+		totalGainFadeTime = 0.2f;
+
+		//
+		if (virInstStateChangedCB != nullptr)
+			virInstStateChangedCB(this);
 	}
 
 	//移除乐器
 	void VirInstrument::Remove(bool isFade)
 	{
-		if (isRemove)
+		if (IsRemove())
 			return;
 
-		isRemove = true;
+		OffAllKeys();
 
-		if (stateOps->empty())
-			canExecuteStateOp = true;
-		else if (stateOps->back().opType == VirInstrumentStateOpType::REMOVE)
-			return;
-
-		VirInstrumentStateOp op = { VirInstrumentStateOpType::OFF , isFade };
-		if (stateOps->empty() || stateOps->back().opType != VirInstrumentStateOpType::OFF)
-			stateOps->push(op);
-
-		op = { VirInstrumentStateOpType::REMOVE , isFade };
-		stateOps->push(op);
-	}
-
-	//状态操作
-	void VirInstrument::StateOp()
-	{
-		VirInstrumentStateOp op = stateOps->front();
-
-		switch (op.opType)
-		{
-		case VirInstrumentStateOpType::ON:
-			OnExecute(op.isFade);
-			break;
-		case VirInstrumentStateOpType::OFF:
-			OffExecute(op.isFade);
-			break;
-		case VirInstrumentStateOpType::REMOVE:
-			synther->DelVirInstrumentTask(this);
-			break;
-		default:
-			break;
-		}
-
-		stateOps->pop();
-
-		if (op.opType == VirInstrumentStateOpType::REMOVE)
-		{
-			queue<VirInstrumentStateOp> empty;
-			swap(empty, *stateOps);
-		}
-	}
-
-	//执行打开乐器
-	void VirInstrument::OnExecute(bool isFade)
-	{
-		if (state == VirInstrumentState::ONING ||
-			state == VirInstrumentState::ONED)
-			return;
-
-
-		state = VirInstrumentState::ONING;
-		startGain = !isFade ? 1 : gain;
-		dstGain = 1;
-		startGainFadeSec = synther->sec;
-		totalGainFadeTime = 0.2f;
-
-		//
-		if (virInstStateChangedCB != nullptr)
-			virInstStateChangedCB(this);
-	}
-
-	//执行关闭乐器
-	void VirInstrument::OffExecute(bool isFade)
-	{
-		if (state == VirInstrumentState::OFFING ||
-			state == VirInstrumentState::OFFED)
-			return;
-
-		state = VirInstrumentState::OFFING;
+		state = VirInstrumentState::REMOVING;
 		startGain = !isFade ? 0 : gain;
 		dstGain = 0;
-		startGainFadeSec = synther->sec;
+		startGainFadeSec = synther->GetCurtSec();
 		totalGainFadeTime = 0.2f;
 
 		//
-		if (virInstStateChangedCB != nullptr)
-			virInstStateChangedCB(this);
+		synther->AddNeedDelVirInstrument(this);
 	}
-
-
 
 	//增加效果器
 	void VirInstrument::AddEffect(TauEffect* effect)
@@ -455,7 +387,7 @@ namespace tau
 	//计算按键速度
 	void VirInstrument::ComputeOnKeySpeed()
 	{
-		onKeySecHistorys->push_back(synther->sec);
+		onKeySecHistorys->push_back(synther->GetCurtSec());
 		float tm = 0;
 		int idx = 0;
 		float size = (float)onKeySecHistorys->size();
@@ -464,7 +396,7 @@ namespace tau
 		list<float>::iterator end = onKeySecHistorys->end();
 		for (; it != end; it++, idx++)
 		{
-			tm = synther->sec - *it;
+			tm = synther->GetCurtSec() - *it;
 			if (tm >= 0.1f)
 				break;
 		}
@@ -520,7 +452,9 @@ namespace tau
 	//按键
 	void VirInstrument::OnKey(int key, float velocity, int tickCount)
 	{
-		if (state == VirInstrumentState::OFFED)
+		if (state == VirInstrumentState::OFFED ||
+			state == VirInstrumentState::REMOVED ||
+			state == VirInstrumentState::REMOVING)
 			return;
 
 		//判断是否可以忽略按键
@@ -550,7 +484,9 @@ namespace tau
 	//松开按键
 	void VirInstrument::OffKey(int key, float velocity)
 	{
-		if (state == VirInstrumentState::OFFED)
+		if (state == VirInstrumentState::OFFED ||
+			state == VirInstrumentState::REMOVED ||
+			state == VirInstrumentState::REMOVING)
 			return;
 
 		KeyEvent keyEvent;
@@ -562,11 +498,12 @@ namespace tau
 	}
 
 
-
 	//松开所有按键
 	void VirInstrument::OffAllKeys()
 	{
-		if (state == VirInstrumentState::OFFED)
+		if (state == VirInstrumentState::OFFED ||
+			state == VirInstrumentState::REMOVED ||
+			state == VirInstrumentState::REMOVING)
 			return;
 
 		keyEvents->clear();
@@ -878,7 +815,7 @@ namespace tau
 	{
 		//
 		int trackNum = 0;
-		float sec = floor(synther->sec * 100) / 100;
+		float sec = floor(synther->GetCurtSec() * 100) / 100;
 
 		if (isRealTime)
 		{
@@ -903,54 +840,18 @@ namespace tau
 	//为渲染准备所有正在发声的区域
 	int VirInstrument::CreateRegionSounderForRender(RegionSounder** totalRegionSounder, int startSaveIdx)
 	{
-
 		if (isEnableInnerEffects)
 		{
 			//平滑过渡混音深度设置值
 			FadeReverbDepth();
 		}
 
-		//
-		if (canExecuteStateOp && !stateOps->empty())
-		{
-			StateOp();
-			canExecuteStateOp = false;
-		}
-
-		if (state == VirInstrumentState::OFFING ||
-			state == VirInstrumentState::ONING)
-		{
-			//当发声结束后，状态有可能是开启中的状态，此时不能调用开启状态的gain处理，而应该等到
-			//soundend == false,再进行此状态
-			if (IsSoundEnd() && state == VirInstrumentState::ONING)
-			{
-				startGainFadeSec = synther->sec;
-			}
-			else
-			{
-				float scale = (synther->sec - startGainFadeSec) / totalGainFadeTime;
-				if (scale >= 1)
-				{
-					if (state == VirInstrumentState::OFFING)
-						state = VirInstrumentState::OFFED;
-					else if (state == VirInstrumentState::ONING)
-						state = VirInstrumentState::ONED;
-
-					scale = 1;
-					canExecuteStateOp = true;
-
-					if (virInstStateChangedCB != nullptr)
-						virInstStateChangedCB(this);
-				}
-
-				gain = startGain + (dstGain - startGain) * scale;
-			}
-		}
+		//状态处理
+		StateProcess();
 
 		//
 		regionSounderCount = 0;
 		if (IsSoundEnd()) {
-			canExecuteStateOp = true;
 			return 0;
 		}
 
@@ -993,6 +894,41 @@ namespace tau
 		return idx - startSaveIdx;
 	}
 
+	//状态处理
+	void VirInstrument::StateProcess()
+	{
+		float scale;
+		switch (state)
+		{
+		case VirInstrumentState::OFFING:
+			scale = (synther->GetCurtSec() - startGainFadeSec) / totalGainFadeTime;
+			if (scale >= 1) {
+				scale = 1;
+				state = VirInstrumentState::OFFED;
+			}
+
+			gain = startGain + (dstGain - startGain) * scale;
+			break;
+
+		case VirInstrumentState::ONING:
+			scale = (synther->GetCurtSec() - startGainFadeSec) / totalGainFadeTime;
+			if (scale >= 1) {
+				scale = 1;
+				state = VirInstrumentState::ONED;
+			}
+			gain = startGain + (dstGain - startGain) * scale;
+			break;
+
+		case VirInstrumentState::REMOVING:
+			scale = (synther->GetCurtSec() - startGainFadeSec) / totalGainFadeTime;
+			if (scale >= 1) {
+				scale = 1;
+				state = VirInstrumentState::REMOVED;
+			}
+			gain = startGain + (dstGain - startGain) * scale;
+			break;
+		}
+	}
 
 	//设置过渡效果深度信息
 	void VirInstrument::SettingFadeEffectDepthInfo(float curtEffectDepth, FadeEffectDepthInfo& fadeEffectDepthInfo)
@@ -1006,7 +942,7 @@ namespace tau
 				fadeEffectDepthInfo.isFadeDepth = false;
 			else {
 				fadeEffectDepthInfo.isFadeDepth = true;
-				fadeEffectDepthInfo.startFadeSec = synther->sec;
+				fadeEffectDepthInfo.startFadeSec = synther->GetCurtSec();
 			}
 		}
 	}
@@ -1017,7 +953,7 @@ namespace tau
 		if (!fadeReverbDepthInfo.isFadeDepth)
 			return;
 
-		float scale = (synther->sec - fadeReverbDepthInfo.startFadeSec) / 0.1f;
+		float scale = (synther->GetCurtSec() - fadeReverbDepthInfo.startFadeSec) / 0.1f;
 		if (scale >= 1) {
 			fadeReverbDepthInfo.isFadeDepth = false;
 			scale = 1;
@@ -1074,7 +1010,7 @@ namespace tau
 		//当区域按键时间超过0.1s后（有的发音样本起始音会很长时间处于0值，所以需要一个延迟时间再判断）
 		//此时处理不能听到发声的滞留区域，使其结束发音
 		KeySounder* keySounder = regionSounder->GetKeySounder();
-		if (synther->sec - keySounder->GetOnKeySec() > 0.1f)
+		if (synther->GetCurtSec() - keySounder->GetOnKeySec() > 0.1f)
 			regionSounder->EndBlockSound();
 
 	}
@@ -1104,7 +1040,6 @@ namespace tau
 			}
 
 			isSoundEnd = true;
-			canExecuteStateOp = true;
 		}
 	}
 

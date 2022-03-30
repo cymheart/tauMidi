@@ -9,9 +9,13 @@
 #include"Audio/Audio.h"
 #include"task/MsgProcesser.h"
 #include "task/Task.h"
-using namespace task;
+#include"scutils/RingBuffer.h"
+#include "Synth/Editor/EditorTypes.h"
+#include <scutils/ArrayPool.h>
 
+using namespace task;
 using namespace tauFX;
+using namespace scutils;
 
 namespace tau
 {
@@ -24,6 +28,52 @@ namespace tau
 		Realtime,
 		//可midi编辑
 		MidiEditor
+	};
+
+	enum class CacheState
+	{
+		CacheStop,
+		//停止中
+		CacheStoping,
+
+		//缓存并读取中
+		CachingAndRead,
+
+		//
+		//缓存中但不读取
+		CachingNotRead,
+
+		//仅读取
+		OnlyRead,
+
+		//
+		//缓存中但暂停
+		CachingPauseRead,
+		//暂停等待读取
+		PauseWaitRead,
+
+		//
+		CacheReadTail,
+
+		//进入步进播放模式
+		EnterStep,
+		EnterSteped,
+
+		//离开步进播放模式
+		LeaveStep,
+
+		Remove,
+		Removing,
+	};
+
+
+	struct FadeSamplesInfo
+	{
+		double gain = 1;
+		double gainStep = 0;
+		float* samples = nullptr;
+		int size = 0;
+		int pos = 0;
 	};
 
 	class Synther
@@ -53,18 +103,11 @@ namespace tau
 			return isOpened;
 		}
 
-		void SetMainSynther(bool isMain)
+		//设置为主合成器
+		inline void SetMainSynther(bool isMain)
 		{
 			isMainSynther = isMain;
 		}
-
-		//移除所有从合成器
-		void RemoveAllAssistSynthers();
-
-		//移除指定的合成器
-		void RemoveAssistSynthers(vector<Synther*>* removeAssistSynthers);
-
-		void WaitSoundEnd();
 
 		//添加替换乐器
 		void AppendReplaceInstrumentTask(
@@ -102,9 +145,6 @@ namespace tau
 		// 移除所有乐器
 		void RemoveAllVirInstrumentTask(bool isFade);
 
-		//删除乐器
-		void DelVirInstrumentTask(VirInstrument* virInst);
-
 		// 打开虚拟乐器
 		void OnVirInstrumentTask(VirInstrument* virInst, bool isFade);
 
@@ -113,6 +153,9 @@ namespace tau
 
 		// 获取虚拟乐器列表的备份
 		vector<VirInstrument*>* TakeVirInstrumentListTask();
+
+		//获取采样流的频谱
+		int GetSampleStreamFreqSpectrums(int channel, double* outLeft, double* outRight);
 
 		// 录制所有乐器弹奏为midi
 		void RecordMidiTask();
@@ -141,22 +184,20 @@ namespace tau
 		vector<MidiTrack*>* TakeRecordMidiTracksTask(VirInstrument** virInst, int size, float recordMidiTickForQuarterNote, vector<RecordTempo>* tempos);
 
 	protected:
-		void CombineSynthersFrameBufsTask();
-		void AddAssistSyntherTask(Semaphore* waitSem, Synther* assistSynther);
-		void RemoveAssistSyntherTask(Synther* assistSynther);
 
-		// 请求删除合成器
-		void ReqDeleteTask();
-
+		void SlaveSyntherProcessCompletedTask();
+		void AddSlaveSyntherTask(Semaphore* waitSem, Synther* slaveSynther);
+		void RemoveSlaveSyntherTask(Semaphore* waitSem, Synther* slaveSynther);
 
 	private:
+
+
 		static void FillAudioSample(void* udata, uint8_t* stream, int len);
 
-		static void _CombineSynthersFrameBufsTask(Task* ev);
-		static void _AddAssistSyntherTask(Task* ev);
-		static void _RemoveAssistSyntherTask(Task* ev);
+		static void _SlaveSyntherProcessCompletedTask(Task* ev);
+		static void _AddSlaveSyntherTask(Task* ev);
+		static void _RemoveSlaveSyntherTask(Task* ev);
 
-		static void _ReqDeleteTaskTask(Task* ev);
 		static void _AppendReplaceInstrumentTask(Task* ev);
 		static void _RemoveReplaceInstrumentTask(Task* ev);
 		static void _AddEffectTask(Task* ev);
@@ -168,7 +209,6 @@ namespace tau
 		static void _SetVirInstrumentProgramTask(Task* ev);
 		static void _RemoveInstrumentTask(Task* ev);
 		static void _RemoveAllInstrumentTask(Task* ev);
-		static void _DelInstrumentTask(Task* ev);
 		static void _OnInstrumentTask(Task* ev);
 		static void _OffInstrumentTask(Task* ev);
 		static void _TakeVirInstrumentListTask(Task* ev);
@@ -185,10 +225,20 @@ namespace tau
 
 		void ReqDelete();
 
-		void _CombineSynthersFrameBufs();
-		void AddAssistSynther(Synther* assistSynther);
-		void RemoveAssistSynther(Synther* removeAssistSynther);
 
+		void AddSlaveSynther(Synther* slaveSynther);
+		void RemoveSlaveSynther(Synther* removeSlaveSynther);
+
+		//获取当前时间点
+		inline double GetCurtSec()
+		{
+			return sec;
+		}
+
+		virtual double GetPlaySec()
+		{
+			return curtCachePlaySec;
+		}
 
 		//设置帧样本数量
 		//这个值越小，声音的实时性越高（在实时演奏时，值最好在1024以下，最合适的值为512）,
@@ -255,6 +305,8 @@ namespace tau
 		//移除虚拟乐器
 		void RemoveVirInstrument(VirInstrument* virInst, bool isFade = true);
 
+		void AddNeedDelVirInstrument(VirInstrument* virInst);
+
 		// 删除虚拟乐器
 		virtual void DelVirInstrument(VirInstrument* virInst);
 
@@ -291,24 +343,31 @@ namespace tau
 		//混合所有乐器中的样本到声道buffer中
 		void MixVirInstsSamplesToChannelBuffer();
 
-		//合并辅助合成器buffer到主buffer中
-		void CombineAssistToMainBuffer();
-		//合并辅助合成器buffer到主buffer中
-		void CombineAssistToMainBuffer(vector<Synther*>& aSynthers);
 
-		//应用效果器到乐器的声道buffer
-		void ApplyEffectsToChannelBuffer();
+		//检测由发音是否完全结束
+		bool _TestSoundEnd();
 
-		//设置过渡效果深度信息
-		void SettingFadeEffectDepthInfo(float curtEffectDepth, FadeEffectDepthInfo& fadeEffectDepthInfo);
+		//检测由发音是否完全结束
+		inline void TestSoundEnd()
+		{
+			isSoundEnd = _TestSoundEnd();
+		}
 
-		void CombineSynthersFrameBufs();
+		//合成采样buffer
+		void SynthSampleBuffer();
+		void MainSynthBuffer();
+		void SynthSlavesBuffer();
 
 		//合并声道buffer到数据流
 		void CombineChannelBufferToStream();
 
+		void CreateChannelSamplesFreqSpectrum();
+
 		// 渲染虚拟乐器区域发声     
 		void RenderVirInstRegionSound();
+
+		//移除需要删除的乐器
+		void RemoveNeedDeleteVirInsts(bool isDirectRemove = false);
 
 		//快速释音超过限制的区域发声
 		void FastReleaseRegionSounders();
@@ -321,15 +380,24 @@ namespace tau
 		void RemoveProcessEndedKeySounder();
 
 		//等待发声结束移除对应的从合成器
-		void WaitSoundEndRemoveAssistSynthers();
+		void WaitSoundEndRemoveSlaveSynthers();
+
+		inline void SyntherProcessCompleted()
+		{
+			processedSyntherCount--;
+			if (processedSyntherCount <= 0)
+				MainSynthBuffer();
+		}
 
 		static bool SounderCountCompare(VirInstrument* a, VirInstrument* b);
 
 		// 请求帧渲染事件
-		void ReqRender();
+		void ReqRender(float delay = 0);
 		static void RenderTask(Task* ev);
 		// 渲染每帧音频
-		virtual void Render();
+		virtual void Render()
+		{
+		}
 
 		// 帧渲染
 		void FrameRender(uint8_t* stream, int len);
@@ -343,16 +411,107 @@ namespace tau
 		/// 停止所有乐器midi的录制
 		void StopRecordMidi();
 
-		/// <summary>
-		/// 停止指定乐器midi的录制
-		/// </summary>
-		/// <param name="virInst">如果为null,将停止录制所有乐器</param>
+		// 停止指定乐器midi的录制
+		// 如果为null,将停止录制所有乐器
 		void StopRecordMidi(VirInstrument* virInst);
 
 		// 获取录制的midi轨道
 		vector<MidiTrack*>* TakeRecordMidiTracks(
 			VirInstrument** virInst, int size, float recordMidiTickForQuarterNote, vector<RecordTempo>* tempos);
 
+		void HanningWin(double* data, int len);
+
+
+		/////////////////////////////////////////////////////
+		//缓存处理
+		void CacheProcess();
+
+		void CachePlay();
+		void CachePause();
+		void CacheStop(bool isReset = false);
+		bool CacheGoto(double sec, bool isMustReset = false);
+		inline void CacheReset()
+		{
+			CacheGoto(curtCachePlaySec, true);
+		}
+
+		//在render中缓存处理
+		void CacheRender();
+		//在主合成器中的缓存处理
+		void CacheReadToMain(Synther* mainSynther);
+
+
+		void CacheSynthSlavesBuffer();
+
+		void CacheSynthToMain(Synther* mainSynther);
+
+		//生成渐降的samples
+		void CreateFallCacheSamples();
+
+		//生成渐升的CacheGain
+		inline void CreateRiseCacheGain();
+
+		//缓存处理
+		void CacheWrite();
+		void CacheRead(Synther* mainSynther);
+		void CacheReadFallSamples(Synther* mainSynther);
+		void CacheRead();
+
+		void CacheEnterStepPlayMode();
+
+		//获取缓存播放时间
+		inline double GetCachePlaySec()
+		{
+			return curtCachePlaySec;
+		}
+
+		inline EditorState GetCachePlayState()
+		{
+			return cachePlayState;
+		}
+
+		inline void TestCacheWriteSoundEnd()
+		{
+			isCacheWriteSoundEnd = _TestSoundEnd();
+		}
+
+		void TestCacheSoundEnd();
+
+
+		inline void CacheGainFade()
+		{
+			if (cacheGain == dstCacheGain)
+				return;
+
+			if (cacheGain < dstCacheGain) {
+				cacheGain += cacheGainStep;
+				if (cacheGain > dstCacheGain)
+					cacheGain = dstCacheGain;
+			}
+			else if (cacheGain > dstCacheGain) {
+				cacheGain -= cacheGainStep;
+				if (cacheGain < dstCacheGain)
+					cacheGain = dstCacheGain;
+			}
+		}
+
+		inline float GetLeftCacheChannelSamples(int idx)
+		{
+			return cacheReadLeftChannelSamples[idx] * cacheGain;
+		}
+
+		inline float GetRightCacheChannelSamples(int idx)
+		{
+			return cacheReadRightChannelSamples[idx] * cacheGain;
+		}
+
+		virtual bool CanCache()
+		{
+			return true;
+		}
+
+		void ShowCacheInfo();
+		static void _ShowCacheInfoTask(Task* task);
 
 	protected:
 
@@ -367,8 +526,6 @@ namespace tau
 		//由于多线程同时会检测和修改这个量，会导致检测不准确，声音渲染会有几率触发不正常停止
 		atomic_bool isFrameRenderCompleted;
 
-
-
 		//使用多线程渲染处理声音
 		//多线程渲染在childFrameSampleCount比较小的情况下(比如小于64时)，由于在一大帧中线程调用太过频繁，线程切换的消耗大于声音渲染的时间
 		//当childFrameSampleCount >= 256时，多线程效率会比较高
@@ -382,19 +539,30 @@ namespace tau
 		//使用中的虚拟乐器列表(此列表用于乐器发声数量排序)
 		vector<VirInstrument*> virInsts;
 		unordered_set<VirInstrument*> virInstSet;
+		//需要移除的乐器
+		vector<VirInstrument*> needDeleteVirInsts;
+
+		//帧时间
+		double frameSec = 0;
 
 		// 帧采样数量
 		int frameSampleCount = 1024;
+		//通道数量
+		int channelCount = 2;
 
 		// 左通道已处理采样点
-		float leftChannelSamples[8192 * 10] = { 0 };
+		float* leftChannelSamples = nullptr;
 		// 右通道已处理采样点
-		float rightChannelSamples[8192 * 10] = { 0 };
+		float* rightChannelSamples = nullptr;
+
+		float* cacheReadLeftChannelSamples = nullptr;
+		float* cacheReadRightChannelSamples = nullptr;
 
 		//给发音区域存储计算帧样本值的左通道buf
 		float leftChannelFrameBuf[4096 * 10] = { 0 };
 		//给发音区域存储计算帧样本值的右通道buf
 		float rightChannelFrameBuf[4096 * 10] = { 0 };
+
 
 		//是否开启乐器效果器
 		bool isEnableVirInstEffects = true;
@@ -408,23 +576,26 @@ namespace tau
 		//是否使用内部效果器
 		bool isEnableInnerEffects = false;
 
-		float curtReverbDepth = 0;
-
-		//过渡区域混音深度信息
-		FadeEffectDepthInfo fadeReverbDepthInfo;
-
-		//过渡区域和声深度信息
-		FadeEffectDepthInfo fadeChorusDepthInfo;
-
-		// 区域混音处理
-		Reverb* regionReverb = nullptr;
-
-		// 区域和声处理
-		Chorus* regionChorus = nullptr;
-
 		// 合成后的最终采样流
-		uint8_t synthSampleStream[1000000] = { 0 };
+		uint8_t* synthSampleStream = nullptr;
+		int synthStreamBufferSize = 0;
 
+
+		//
+		double* cacheLeftChannelSampleStream = nullptr;
+		double* cacheRightChannelSampleStream = nullptr;
+
+		double* channelFFTState = nullptr;
+
+		double* leftChannelFreqSpectrums = nullptr;
+		double* rightChannelFreqSpectrums = nullptr;
+
+		int freqSpectrumsCount = 0;
+		int cacheSampleStreamIdx = 0;
+		mutex createFreqSpecLocker;
+
+		//
+		Semaphore* taskWaitSem;
 
 		//目前渲染子帧位置
 		int childFramePos = 0;
@@ -443,8 +614,6 @@ namespace tau
 		//所有正在发声的区域数量
 		int totalRegionSounderCount = 0;
 
-		//所有乐器发音是否结束
-		bool isVirInstSoundEnd = true;
 		//所有发音是否结束
 		bool isSoundEnd = true;
 
@@ -461,13 +630,52 @@ namespace tau
 		//
 		Audio* audio = nullptr;
 
-		//
+		Synther* mainSynther = nullptr;
+
+		//是否为主合成器
 		bool isMainSynther = false;
-		atomic_int computedFrameBufSyntherCount;
-		vector<Synther*> assistSynthers;
-		vector<Synther*> waitSoundEndRemoveAssistSynthers;
+
+		//是否发声结束删除
+		bool isSoundEndRemove = false;
+
+		//完成缓存处理的合成器数量
+		int cachedSyntherCount = 0;
+		int processedSyntherCount = 0;
+		vector<Synther*> slaveSynthers;
+
+		//	
+		//是否开启缓存
+		bool isEnableCache = true;
+		bool isStepPlayMode = false;
+
+		double cacheGainStep = 0;
+		double cacheGain = 1;
+		double dstCacheGain = 1;
+		RingBuffer* cacheBuffer = nullptr;
+
+		bool isCacheWriteSoundEnd = true;
+
+		//
+		int minCacheSize = 0;
+		int reReadCacheSize = 0;
+		int maxCacheSize = 0;
+		int reCacheSize = 0;
+
+		EditorState cachePlayState = EditorState::STOP;
+		CacheState state = CacheState::CacheStop;
+
+		double curtCachePlaySec = 0;
+
+		vector<FadeSamplesInfo> fallSamples;
+		ArrayPool<float>* fallSamplesPool = nullptr;
 
 
+		mutex cacheLocker;
+		Semaphore* cmdWait;
+
+		//
+
+		friend class MidiEditorSynther;
 		friend class Tau;
 		friend class Editor;
 		friend class VirInstrument;

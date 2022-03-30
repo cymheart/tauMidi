@@ -10,6 +10,19 @@ namespace tau
 
 	class MidiMarkerList;
 
+	//播放模式
+	enum class EditorPlayMode
+	{
+		//通常播放模式
+		Common,
+		//等待播放模式
+		Wait,
+
+		//步进播放模式
+		//步进播放模式会启用Runto()函数控制播放时间，非步进模式是由midi固定时间内部控制
+		Step,
+	};
+
 	// Editor状态
 	enum class EditorState
 	{

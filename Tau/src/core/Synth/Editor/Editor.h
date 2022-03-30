@@ -50,14 +50,12 @@ namespace tau
 
 		//进入到步进播放模式
 		void EnterStepPlayMode();
-		//离开步进播放模式
-		void LeaveStepPlayMode();
 
 		//进入到等待播放模式
 		void EnterWaitPlayMode();
 
-		//离开等待播放模式
-		void LeaveWaitPlayMode();
+		//离开当前播放模式
+		void LeavePlayMode();
 
 		//等待(区别于暂停，等待相当于在原始位置播放)
 		void Wait();
@@ -188,6 +186,11 @@ namespace tau
 			return userData;
 		}
 
+		//获取采样流的频谱
+		int GetSampleStreamFreqSpectrums(int channel, double* outLeft, double* outRight);
+
+		//如果启用了缓存播放，将重新缓存
+		void ReCache();
 
 	public:
 
@@ -226,8 +229,8 @@ namespace tau
 		//需要松开按键信号
 		void NeedOffKeySignal(int key);
 
-		//删除空轨实时RealtimeSynther
-		void DelEmptyTrackRealtimeSynther();
+		//删除空轨Synther
+		void DelEmptyTrackSynther();
 
 		int ResetTrackCountNewTracks(int count);
 		int _NewTracks(MidiEditorSynther* synther, int count);
@@ -260,10 +263,8 @@ namespace tau
 		//计算的每个合成器中最大轨道数量
 		int computedPerSyntherLimitTrackCount = 20;
 
-		//是否是步进播放模式
-		atomic_bool isStepPlayMode;
-		//是否为等待播放模式
-		bool isWaitPlayMode = false;
+		//播放模式
+		EditorPlayMode playMode = EditorPlayMode::Common;
 
 		//是否等待
 		atomic_bool isWait;

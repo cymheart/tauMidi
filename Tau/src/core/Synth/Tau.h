@@ -50,18 +50,6 @@ namespace tau
 			return editor;
 		}
 
-		//设置是否仅使用1个主合成器	(默认值:true, 仅使用1个)
-		//合成器模式:
-		// 1.一主合成器，带多个从合成器模式，从合成器每帧的framebuf将会被同步到主合成其中，最后推送到audio流中
-		// 2.全部都是主合成器模式， 每个合成器都将单独合成帧流到audio流中，之间互不相关，好处是效率高，缺点是，最后不能应用总通道效果器
-		inline void SetOnlyUseOneMainSynther(bool isUseOnlyOne)
-		{
-			if (isOpened)
-				return;
-
-			onlyUseOneMainSynther = isUseOnlyOne;
-		}
-
 		//设置是否使用多线程
 		//使用多线程渲染处理声音
 		//多线程渲染在childFrameSampleCount比较小的情况下(比如小于64时)，由于在一大帧中线程调用太过频繁，线程切换的消耗大于声音渲染的时间
@@ -90,6 +78,12 @@ namespace tau
 		inline ChannelOutputMode GetChannelOutputMode()
 		{
 			return channelOutputMode;
+		}
+
+		//设置采样流缓存最大时长(单位:秒， 默认值:0s)
+		void SetSampleStreamCacheSec(float sec)
+		{
+			sampleStreamCacheSec = sec;
 		}
 
 		//设置每个合成器中最大轨道数量
@@ -142,6 +136,14 @@ namespace tau
 		{
 			isEnableMidiEventParseLimitTime = enable;
 			midiEventLimitParseSec = limitSec;
+		}
+
+
+		//设置是否开启生成采样频谱,频谱点采样数量(默认值: 2048)
+		inline void SetEnableCreateFreqSpectrums(bool enable, int count = 2048)
+		{
+			isEnableCreateFreqSpectrums = enable;
+			freqSpectrumsCount = count;
 		}
 
 		//设置轨道通道合并模式
@@ -310,14 +312,11 @@ namespace tau
 		//进入到步进播放模式
 		void EnterStepPlayMode();
 
-		//离开步进播放模式
-		void LeaveStepPlayMode();
-
 		//进入到等待播放模式
 		void EnterWaitPlayMode();
 
-		//离开等待播放模式
-		void LeaveWaitPlayMode();
+		//离开播放模式
+		void LeavePlayMode();
 
 		//等待(区别于暂停，等待相当于在原始位置播放)
 		void Wait();
@@ -475,7 +474,6 @@ namespace tau
 
 	private:
 
-
 		// 获取乐器预设
 		Preset* GetInstrumentPreset(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
@@ -486,11 +484,17 @@ namespace tau
 
 	private:
 
+		//是否开启
+		bool isOpened = false;
+
 #ifdef _WIN32
 		Audio::EngineType audioEngineType = Audio::EngineType::SDL;
 #else
 		Audio::EngineType audioEngineType = Audio::EngineType::Oboe;
 #endif
+
+		//采样流缓存最大时长(单位:秒， 默认值:0s)
+		float sampleStreamCacheSec = 0;
 
 		//是否开启MidiEvent数量优化
 		bool enableMidiEventCountOptimize = true;
@@ -511,15 +515,6 @@ namespace tau
 
 		//渲染品质
 		RenderQuality renderQuality = RenderQuality::Fast;
-
-		//是否开启
-		bool isOpened = false;
-
-		//是否仅使用1个主合成器
-		//合成器模式:
-		// 一主合成器，带多个从合成器模式，从合成器每帧的framebuf将会被同步到主合成其中，最后推送到audio流中
-		// 全部都是主合成器模式， 每个合成器都将单独合成帧流到audio流中，之间互不相关，好处是效率高，缺点是，最后不能应用总通道效果器
-		bool onlyUseOneMainSynther = true;
 
 		//使用多线程渲染处理声音
 		//多线程渲染在childFrameSampleCount比较小的情况下(比如小于64时)，由于在一大帧中线程调用太过频繁，线程切换的消耗大于声音渲染的时间
@@ -548,6 +543,11 @@ namespace tau
 
 		//是否开启乐器效果器
 		bool isEnableVirInstEffects = true;
+
+		//是否开启生成采样频谱
+		bool isEnableCreateFreqSpectrums = false;
+		//频谱点采样数量(默认值: 2048)
+		int freqSpectrumsCount = 2048;
 
 		//声音处理时的采样周期，不同于样本采样率
 		//样本采样率和声音处理采样率的频率矫正倍率计算为: rateAdjustMul = sampleRate / sampleProcessRate
@@ -587,9 +587,14 @@ namespace tau
 		Editor* editor;
 
 
-		MidiEditorSynther* mainEditorSynther = nullptr;
-		MidiEditorSynther* midiEditorSynthers[500] = { nullptr };
+		RealtimeSynther* mainSynther = nullptr;
+		RealtimeSynther* synthers[500] = { nullptr };
 		int syntherCount = 1;
+
+		MidiEditorSynther* midiEditorSynthers[500] = { nullptr };
+		int midiEditorSyntherCount = 1;
+
+
 
 
 		friend class MidiEditorSynther;

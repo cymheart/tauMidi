@@ -43,6 +43,12 @@ namespace tau
 			this->channel = channel;
 		}
 
+		//设置是否使用外部普通调制器
+		inline void SetUseCommonModulator(bool use)
+		{
+			useCommonModulator = use;
+		}
+
 		/// <summary>
 		/// 设置Gen值最终修改后的存储
 		/// </summary>

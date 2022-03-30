@@ -10,6 +10,8 @@
 #include"Audio/AudioOboe/Audio_oboe.h"
 #include"Audio/AudioSDL/Audio_SDL.h"
 #include"Audio/AudioRt/Audio_Rt.h"
+#include"kissfft/kiss_fft.h"
+
 
 namespace tau
 {
@@ -18,7 +20,6 @@ namespace tau
 		this->tau = tau;
 		isFrameRenderCompleted = true;
 		isReqDelete = false;
-		computedFrameBufSyntherCount = 0;
 		isSoundEnd = true;
 
 		//
@@ -30,22 +31,20 @@ namespace tau
 
 		//
 		effects = new EffectList();
-		effects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
-
 		innerEffects = new EffectList();
-		innerEffects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
 
 	}
 
 
 	Synther::~Synther()
 	{
-		DEL(audio);
+		Audio* a = audio;
+		audio = nullptr;
+		DEL(a);
 
 		//
 		regionSounderThreadPool->Stop();
 		taskProcesser->Stop();
-
 
 		DEL(taskProcesser);
 		DEL(regionSounderThreadPool);
@@ -53,28 +52,104 @@ namespace tau
 		for (int i = 0; i < virInstList.size(); i++)
 			DEL(virInstList[i]);
 
-
 		DEL(effects);
 		DEL(innerEffects);
 		DEL(presetBankReplaceMap);
+
+		DEL_ARRAY(leftChannelSamples);
+		DEL_ARRAY(rightChannelSamples);
+		DEL_ARRAY(cacheReadLeftChannelSamples);
+		DEL_ARRAY(cacheReadRightChannelSamples);
+
+		DEL_ARRAY(cacheLeftChannelSampleStream);
+		DEL_ARRAY(cacheRightChannelSampleStream);
+		DEL_ARRAY(channelFFTState);
+		DEL_ARRAY(leftChannelFreqSpectrums);
+		DEL_ARRAY(rightChannelFreqSpectrums);
+
+		DEL(synthSampleStream);
+		DEL(cacheBuffer);
+		DEL(fallSamplesPool);
 	}
-
-
 
 	void Synther::Open()
 	{
-		if (isMainSynther) {
+		if (isOpened)
+			return;
+
+		channelCount = 1;
+		if (tau->channelOutputMode == ChannelOutputMode::Stereo)
+			channelCount = 2;
+
+		leftChannelSamples = new float[tau->frameSampleCount];
+		rightChannelSamples = new float[tau->frameSampleCount];
+
+		cacheReadLeftChannelSamples = new float[tau->frameSampleCount];
+		cacheReadRightChannelSamples = new float[tau->frameSampleCount];
+
+		//
+
+		frameSec = tau->frameSampleCount * tau->invSampleProcessRate;
+		int baseSize = sizeof(float) * tau->frameSampleCount * channelCount;
+		synthStreamBufferSize = baseSize * 20;
+		synthSampleStream = new uint8_t[synthStreamBufferSize];
+
+		if (tau->sampleStreamCacheSec > 0)
+		{
+			maxCacheSize = sizeof(float) * tau->sampleProcessRate * channelCount * tau->sampleStreamCacheSec;
+			if (maxCacheSize < baseSize * 4)
+				maxCacheSize = baseSize * 4;
+
+			cacheBuffer = new RingBuffer(maxCacheSize + synthStreamBufferSize);
+
+			minCacheSize = maxCacheSize / 10;
+			reReadCacheSize = maxCacheSize / 3;
+			reCacheSize = maxCacheSize / 2;
+
+
+			//
+			int sz = 3 * tau->sampleProcessRate * channelCount;
+			sz = sz / tau->frameSampleCount + 2;
+			sz *= tau->frameSampleCount;
+			fallSamplesPool = new ArrayPool<float>(4, sz);
+
+		}
+
+		//
+		if (isMainSynther)
+		{
+			//fft
+			cacheLeftChannelSampleStream = new double[1024 * 100];
+			cacheRightChannelSampleStream = new double[1024 * 100];
+			channelFFTState = new double[1024 * 100];
+			leftChannelFreqSpectrums = new double[1024 * 100];
+			rightChannelFreqSpectrums = new double[1024 * 100];
+
+			//
+			effects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
+			innerEffects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
+
+			//
 			OpenAudio();
 			audio->Open();
+		}
+		else
+		{
+			mainSynther = (Synther*)tau->mainSynther;
 		}
 
 		regionSounderThreadPool->Start();
 		taskProcesser->Start();
 		isOpened = true;
+
+		ShowCacheInfo();
 	}
 
 	void Synther::Close()
 	{
+		if (!isOpened)
+			return;
+
 		if (audio != nullptr)
 			audio->Close();
 
@@ -84,18 +159,16 @@ namespace tau
 	}
 
 
-	void Synther::AddAssistSynther(Synther* assistSynther)
+	void Synther::AddSlaveSynther(Synther* slaveSynther)
 	{
-		assistSynthers.push_back(assistSynther);
+		slaveSynthers.push_back(slaveSynther);
 	}
 
-	void Synther::RemoveAssistSynther(Synther* removeAssistSynther)
+	void Synther::RemoveSlaveSynther(Synther* removeSlaveSynther)
 	{
-		vector<Synther*>::iterator iVector = find(assistSynthers.begin(), assistSynthers.end(), removeAssistSynther);
-		if (iVector != assistSynthers.end())
-		{
-			assistSynthers.erase(iVector);
-			waitSoundEndRemoveAssistSynthers.push_back(removeAssistSynther);
+		vector<Synther*>::iterator iVector = find(slaveSynthers.begin(), slaveSynthers.end(), removeSlaveSynther);
+		if (iVector != slaveSynthers.end()) {
+			removeSlaveSynther->isSoundEndRemove = true;
 		}
 	}
 
@@ -183,49 +256,22 @@ namespace tau
 		}
 	}
 
-
-	// 请求帧渲染事件
-	void Synther::ReqRender()
+	//投递任务
+	void Synther::PostTask(TaskCallBack taskCallBack, void* data, int delay)
 	{
-		SyntherEvent* ev = SyntherEvent::New();
-		ev->synther = this;
-		ev->processCallBack = RenderTask;
-		isFrameRenderCompleted = false;
-		taskProcesser->PostTask(ev);
+		taskProcesser->PostTask(taskCallBack, data, delay);
 	}
 
-	void Synther::RenderTask(Task* ev)
+	//投递任务
+	void Synther::PostTask(Task* task, int delay)
 	{
-		SyntherEvent* se = (SyntherEvent*)ev;
-		Synther& synther = (Synther&)*(se->synther);
-
-		if (synther.isMainSynther)
-		{
-			synther.computedFrameBufSyntherCount = synther.assistSynthers.size() + 1;
-			synther.computedFrameBufSyntherCount += synther.waitSoundEndRemoveAssistSynthers.size();
-
-			for (int i = 0; i < synther.assistSynthers.size(); i++)
-				synther.assistSynthers[i]->ReqRender();
-
-			for (int i = 0; i < synther.waitSoundEndRemoveAssistSynthers.size(); i++)
-				synther.waitSoundEndRemoveAssistSynthers[i]->ReqRender();
-		}
-
-		synther.Render();
-
+		taskProcesser->PostTask(task, delay);
 	}
-
-	// 渲染每帧音频
-	void Synther::Render()
-	{
-
-	}
-
 
 	// 帧渲染
 	void Synther::FrameRender(uint8_t* stream, int len)
 	{
-		while (true)
+		while (audio)
 		{
 			if (isFrameRenderCompleted)
 			{
@@ -242,17 +288,32 @@ namespace tau
 		}
 	}
 
-	//投递任务
-	void Synther::PostTask(TaskCallBack taskCallBack, void* data, int delay)
+	// 请求帧渲染事件
+	void Synther::ReqRender(float delay)
 	{
-		taskProcesser->PostTask(taskCallBack, data, delay);
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = RenderTask;
+		isFrameRenderCompleted = false;
+		taskProcesser->PostTask(ev, delay);
 	}
 
-	//投递任务
-	void Synther::PostTask(Task* task, int delay)
+	void Synther::RenderTask(Task* ev)
 	{
-		taskProcesser->PostTask(task, delay);
+		SyntherEvent* se = (SyntherEvent*)ev;
+		Synther& synther = (Synther&)*(se->synther);
+
+		if (synther.isMainSynther && (synther.maxCacheSize <= 0 || !synther.isEnableCache))
+		{
+			synther.processedSyntherCount = 1 + synther.slaveSynthers.size();
+			for (int i = 0; i < synther.slaveSynthers.size(); i++)
+				synther.slaveSynthers[i]->ReqRender();
+		}
+
+		synther.Render();
+
 	}
+
 
 	//是否包含指定的虚拟乐器
 	bool Synther::IsHavVirInstrument(VirInstrument* virInst)
@@ -366,7 +427,7 @@ namespace tau
 		{
 			virInst = new VirInstrument(this, channel, nullptr);
 			virInst->ChangeProgram(bankSelectMSB, bankSelectLSB, instrumentNum);
-			virInst->OnExecute(false);
+			virInst->On(false);
 			AppendToVirInstList(virInst);
 		}
 		else
@@ -405,24 +466,20 @@ namespace tau
 		RemoveVirInstrument(virInst, isFade);
 	}
 
-
 	//移除虚拟乐器
 	void Synther::RemoveVirInstrument(VirInstrument* virInst, bool isFade)
 	{
 		if (!IsHavVirInstrument(virInst))
 			return;
 
-		try
-		{
-			virInst->Remove(isFade);
-		}
-		catch (exception e)
-		{
-			string error(e.what());
-			cout << "移除乐器错误原因:" << error << endl;
-		}
+		virInst->Remove(isFade);
 	}
 
+
+	void Synther::AddNeedDelVirInstrument(VirInstrument* virInst)
+	{
+		needDeleteVirInsts.push_back(virInst);
+	}
 
 	// 删除虚拟乐器
 	void Synther::DelVirInstrument(VirInstrument* virInst)
@@ -431,8 +488,6 @@ namespace tau
 			return;
 
 		RemoveVirInstFromList(virInst);
-
-		//
 		DEL(virInst);
 	}
 
@@ -527,6 +582,7 @@ namespace tau
 		}
 
 		virInstSet.erase(virInst);
+
 	}
 
 	//获取虚拟乐器列表的备份
@@ -547,17 +603,12 @@ namespace tau
 		memset(leftChannelSamples, 0, sizeof(float) * frameSampleCount);
 		memset(rightChannelSamples, 0, sizeof(float) * frameSampleCount);
 
-		isVirInstSoundEnd = true;
 		for (int i = 0; i < virInstList.size(); i++)
 		{
 			VirInstrument& virInst = *virInstList[i];
-			if (virInst.IsSoundEnd())
-				continue;
-
 			virInst.ClearChannelSamples();
 		}
 	}
-
 
 	// 渲染虚拟乐器区域发声
 	void Synther::RenderVirInstRegionSound()
@@ -605,6 +656,26 @@ namespace tau
 			regionSounderThreadPool->Wait();
 		}
 
+	}
+
+	//移除需要删除的乐器
+	void Synther::RemoveNeedDeleteVirInsts(bool isDirectRemove)
+	{
+		if (needDeleteVirInsts.empty())
+			return;
+
+		VirInstrument* virInst;
+		vector<VirInstrument*>::iterator it = needDeleteVirInsts.begin();
+		for (; it != needDeleteVirInsts.end();)
+		{
+			virInst = *it;
+			if (isDirectRemove || virInst->GetState() == VirInstrumentState::REMOVED) {
+				it = needDeleteVirInsts.erase(it);
+				DelVirInstrument(virInst);
+			}
+			else
+				it++;
+		}
 	}
 
 	//快速释音超过限制的区域发声
@@ -728,16 +799,13 @@ namespace tau
 
 	bool Synther::SounderCountCompare(VirInstrument* a, VirInstrument* b)
 	{
-		int regionCountA = a->GetRegionSounderCount();
-		int regionCountB = b->GetRegionSounderCount();
-		return regionCountA < regionCountB;//升序
+		return a->GetRegionSounderCount() < b->GetRegionSounderCount();//升序
 	}
 
 
 	//混合所有乐器中的样本到synther的声道buffer中
 	void Synther::MixVirInstsSamplesToChannelBuffer()
 	{
-		isVirInstSoundEnd = true;
 		for (int i = 0; i < virInstList.size(); i++)
 		{
 			VirInstrument& virInst = *virInstList[i];
@@ -745,12 +813,10 @@ namespace tau
 				continue;
 
 			isSoundEnd = false;
-			isVirInstSoundEnd = false;
 			virInst.ApplyEffectsToChannelBuffer();
 
 			float* instLeftChannelSamples = virInst.GetLeftChannelSamples();
 			float* instRightChannelSamples = virInst.GetRightChannelSamples();
-
 
 			switch (tau->channelOutputMode)
 			{
@@ -769,198 +835,132 @@ namespace tau
 				break;
 			}
 		}
-
 	}
 
-	//复合各个合成器中的framebuf
-	void Synther::CombineSynthersFrameBufs()
+	//合成采样buffer
+	void Synther::SynthSampleBuffer()
 	{
 		if (isMainSynther)
 		{
-			computedFrameBufSyntherCount--;
-			if (computedFrameBufSyntherCount <= 0)
-				_CombineSynthersFrameBufs();
+			if (maxCacheSize > 0 && isEnableCache)
+				MainSynthBuffer();
+			else
+				SyntherProcessCompleted();
 		}
 		else
 		{
-			ApplyEffectsToChannelBuffer();
-
-			Synther& mainSynther = *(Synther*)(tau->mainEditorSynther);
-			mainSynther.computedFrameBufSyntherCount--;
-			if (mainSynther.computedFrameBufSyntherCount <= 0)
-				mainSynther.CombineSynthersFrameBufsTask();
+			//缓存处理
+			if (maxCacheSize > 0 && isEnableCache)
+			{
+				CacheRender();
+			}
+			else
+			{
+				TestSoundEnd();
+				Synther* mainSynther = (Synther*)(tau->mainSynther);
+				mainSynther->SlaveSyntherProcessCompletedTask();
+			}
 		}
 	}
 
-	void Synther::_CombineSynthersFrameBufs()
+	void Synther::MainSynthBuffer()
 	{
-		CombineAssistToMainBuffer();
-		ApplyEffectsToChannelBuffer();
-		CombineChannelBufferToStream();
-		isFrameRenderCompleted = true;
-
-		if (!waitSoundEndRemoveAssistSynthers.empty())
+		//缓存处理
+		if (maxCacheSize > 0 && isEnableCache)
 		{
-			Synther* removeSynther = nullptr;
-			vector<Synther*>::iterator it = waitSoundEndRemoveAssistSynthers.begin();
-			for (; it != waitSoundEndRemoveAssistSynthers.end(); )
-			{
-				if ((*it)->isSoundEnd) {
-					removeSynther = *it;
-					it = waitSoundEndRemoveAssistSynthers.erase(it);
-					if (removeSynther != nullptr) {
-						removeSynther->isMainSynther = true;
-						removeSynther->isReqDelete = true;
-					}
-					DEL(removeSynther);
+			CacheProcess();
+		}
+		else
+		{
+			if (tau->sampleStreamCacheSec <= 0)
+				SynthSlavesBuffer();
+			else
+				CacheSynthSlavesBuffer();
+		}
 
-				}
-				else {
-					++it;
-				}
+		effects->Process();
+		TestSoundEnd();
+
+		CombineChannelBufferToStream();
+		WaitSoundEndRemoveSlaveSynthers();
+
+		isFrameRenderCompleted = true;
+	}
+
+
+	//检测由发音是否完全结束
+	bool Synther::_TestSoundEnd()
+	{
+		//检测由效果器带来的尾音是否结束
+		int offset = (int)(frameSampleCount * 0.02f);
+		for (int i = 0; i < frameSampleCount; i += offset)
+		{
+			// 此处值需要非常小，不然会产生杂音
+			if (fabsf(leftChannelSamples[i]) > 0.0001f ||
+				fabsf(rightChannelSamples[i]) > 0.0001f) {
+				return false;
 			}
 		}
 
-
+		return true;
 	}
+
 
 	//等待发声结束移除对应的从合成器
-	void Synther::WaitSoundEndRemoveAssistSynthers()
+	void Synther::WaitSoundEndRemoveSlaveSynthers()
 	{
-		if (!waitSoundEndRemoveAssistSynthers.empty())
+		Synther* synther;
+		vector<Synther*>::iterator it = slaveSynthers.begin();
+		for (; it != slaveSynthers.end(); )
 		{
-			Synther* removeSynther = nullptr;
-			vector<Synther*>::iterator it = waitSoundEndRemoveAssistSynthers.begin();
-			for (; it != waitSoundEndRemoveAssistSynthers.end(); )
-			{
-				if ((*it)->isSoundEnd) {
-					removeSynther = *it;
-					it = waitSoundEndRemoveAssistSynthers.erase(it);
-					if (removeSynther != nullptr) {
-						removeSynther->isMainSynther = true;
-						removeSynther->isReqDelete = true;
-					}
-					DEL(removeSynther);
+			synther = *it;
 
-				}
-				else {
+			if (synther == nullptr ||
+				!synther->isSoundEndRemove ||
+				!synther->isSoundEnd ||
+				!synther->fallSamples.empty()) {
+				++it;
+				continue;
+			}
+
+			if (tau->sampleStreamCacheSec > 0 && synther->isEnableCache) {
+				synther->isReqDelete = true;
+				if (synther->state != CacheState::Remove) {
 					++it;
+					continue;
 				}
 			}
+
+			DEL(synther);
+			it = slaveSynthers.erase(it);
+
+			if (cmdWait)
+				cmdWait->set();
 		}
 
 	}
 
-
-	//合并辅助合成器buffer到主buffer中
-	void Synther::CombineAssistToMainBuffer()
+	void Synther::SynthSlavesBuffer()
 	{
-		CombineAssistToMainBuffer(assistSynthers);
-		CombineAssistToMainBuffer(waitSoundEndRemoveAssistSynthers);
-	}
+		curtCachePlaySec = 0;
 
-
-	//合并辅助合成器buffer到主buffer中
-	void Synther::CombineAssistToMainBuffer(vector<Synther*>& aSynthers)
-	{
-		Synther* synther;
-		for (int i = 0; i < aSynthers.size(); i++)
+		for (int i = 0; i < slaveSynthers.size(); i++)
 		{
-			synther = aSynthers[i];
-
+			//
 			switch (tau->channelOutputMode)
 			{
 			case ChannelOutputMode::Stereo:
-				for (int n = 0; n < frameSampleCount; n++)
-				{
-					leftChannelSamples[n] += synther->leftChannelSamples[n];
-					rightChannelSamples[n] += synther->rightChannelSamples[n];
+				for (int n = 0; n < frameSampleCount; n++) {
+					leftChannelSamples[n] += slaveSynthers[i]->leftChannelSamples[n];
+					rightChannelSamples[n] += slaveSynthers[i]->rightChannelSamples[n];
 				}
-
 				break;
 
 			case ChannelOutputMode::Mono:
-				for (int n = 0; n < frameSampleCount; n++)
-					leftChannelSamples[n] += synther->leftChannelSamples[n];
+				for (int n = 0; n < frameSampleCount; n++) {
+					leftChannelSamples[n] += slaveSynthers[i]->leftChannelSamples[n];
+				}
 				break;
-			}
-		}
-	}
-
-	//应用效果器到乐器的声道buffer
-	void Synther::ApplyEffectsToChannelBuffer()
-	{
-		if (isSoundEnd)
-		{
-			for (int i = 0; i < assistSynthers.size(); i++)
-			{
-				isSoundEnd &= assistSynthers[i]->isSoundEnd;
-				if (!isSoundEnd)
-					break;
-			}
-
-			for (int i = 0; i < waitSoundEndRemoveAssistSynthers.size(); i++)
-			{
-				isSoundEnd &= waitSoundEndRemoveAssistSynthers[i]->isSoundEnd;
-				if (!isSoundEnd)
-					break;
-			}
-
-			if (isSoundEnd)
-				return;
-		}
-
-		//对声道应用效果器
-		effects->Process();
-
-		if (isVirInstSoundEnd)
-		{
-			for (int i = 0; i < assistSynthers.size(); i++)
-			{
-				isVirInstSoundEnd &= assistSynthers[i]->isVirInstSoundEnd;
-				if (!isVirInstSoundEnd)
-					break;
-			}
-
-			for (int i = 0; i < waitSoundEndRemoveAssistSynthers.size(); i++)
-			{
-				isVirInstSoundEnd &= waitSoundEndRemoveAssistSynthers[i]->isVirInstSoundEnd;
-				if (!isVirInstSoundEnd)
-					break;
-			}
-		}
-
-		if (isVirInstSoundEnd)
-		{
-			//检测由效果器带来的尾音是否结束
-			int offset = (int)(frameSampleCount * 0.02f);
-			for (int i = 0; i < frameSampleCount; i += offset)
-			{
-				// 此处值需要非常小，不然会产生杂音
-				if (fabsf(leftChannelSamples[i]) > 0.0001f ||
-					fabsf(rightChannelSamples[i]) > 0.0001f)
-					return;
-			}
-
-			isSoundEnd = true;
-		}
-	}
-
-
-
-	//设置过渡效果深度信息
-	void Synther::SettingFadeEffectDepthInfo(float curtEffectDepth, FadeEffectDepthInfo& fadeEffectDepthInfo)
-	{
-		if (abs(curtEffectDepth - fadeEffectDepthInfo.dstDepth) > 0.001)
-		{
-			fadeEffectDepthInfo.startDepth = fadeEffectDepthInfo.curtDepth;
-			fadeEffectDepthInfo.dstDepth = curtEffectDepth;
-
-			if (abs(fadeEffectDepthInfo.dstDepth - fadeEffectDepthInfo.startDepth) < 0.001)
-				fadeEffectDepthInfo.isFadeDepth = false;
-			else {
-				fadeEffectDepthInfo.isFadeDepth = true;
-				fadeEffectDepthInfo.startFadeSec = sec;
 			}
 		}
 	}
@@ -974,19 +974,136 @@ namespace tau
 		switch (tau->channelOutputMode)
 		{
 		case ChannelOutputMode::Stereo:
-
+		{
 			for (int i = 0; i < frameSampleCount; i++)
 			{
 				*out++ = leftChannelSamples[i];
 				*out++ = rightChannelSamples[i];
 			}
-			break;
+		}
+		break;
 
 		case ChannelOutputMode::Mono:
 			for (int i = 0; i < frameSampleCount; i++)
 				*out++ = leftChannelSamples[i];
 			break;
 		}
+
+		//生成通道采样值的频谱
+		CreateChannelSamplesFreqSpectrum();
+	}
+
+
+
+
+	//生成通道采样值的频谱
+	void Synther::CreateChannelSamplesFreqSpectrum()
+	{
+		if (!isMainSynther || !tau->isEnableCreateFreqSpectrums)
+		{
+			cacheSampleStreamIdx = 0;
+			return;
+		}
+
+		float* out = (float*)synthSampleStream;
+
+		switch (tau->channelOutputMode)
+		{
+		case ChannelOutputMode::Stereo:
+			for (int i = 0; i < frameSampleCount; i++)
+			{
+				cacheLeftChannelSampleStream[cacheSampleStreamIdx] = out[i * 2];
+				cacheLeftChannelSampleStream[cacheSampleStreamIdx + 1] = 0;
+
+				cacheRightChannelSampleStream[cacheSampleStreamIdx] = out[i * 2 + 1];
+				cacheRightChannelSampleStream[cacheSampleStreamIdx + 1] = 0;
+
+				cacheSampleStreamIdx += 2;
+			}
+			break;
+
+		case ChannelOutputMode::Mono:
+			for (int i = 0; i < frameSampleCount; i++)
+			{
+				cacheLeftChannelSampleStream[cacheSampleStreamIdx] = out[i];
+				cacheLeftChannelSampleStream[cacheSampleStreamIdx + 1] = 0;
+				cacheSampleStreamIdx += 2;
+			}
+			break;
+		}
+
+		if (cacheSampleStreamIdx < tau->freqSpectrumsCount * 2)
+			return;
+
+		HanningWin(cacheLeftChannelSampleStream, cacheSampleStreamIdx);
+
+
+		if (tau->channelOutputMode != ChannelOutputMode::Mono)
+			HanningWin(cacheRightChannelSampleStream, cacheSampleStreamIdx);
+
+		createFreqSpecLocker.lock();
+
+		freqSpectrumsCount = cacheSampleStreamIdx;
+
+		kiss_fft_cfg  kiss_fft_state;
+		size_t n = 102400 * sizeof(double);
+		size_t len = n;
+		kiss_fft_state = kiss_fft_alloc(freqSpectrumsCount / 2, 0, channelFFTState, &len);
+		kiss_fft(kiss_fft_state, (kiss_fft_cpx*)cacheLeftChannelSampleStream, (kiss_fft_cpx*)leftChannelFreqSpectrums);
+
+		if (tau->channelOutputMode != ChannelOutputMode::Mono)
+		{
+			len = n;
+			kiss_fft_state = kiss_fft_alloc(freqSpectrumsCount / 2, 0, channelFFTState, &len);
+			kiss_fft(kiss_fft_state, (kiss_fft_cpx*)cacheRightChannelSampleStream, (kiss_fft_cpx*)rightChannelFreqSpectrums);
+		}
+
+		//归一化
+		double invN = 1.0 / freqSpectrumsCount;
+		for (int n = 0; n < freqSpectrumsCount; n++)
+		{
+			leftChannelFreqSpectrums[n] *= invN;
+
+			if (tau->channelOutputMode != ChannelOutputMode::Mono)
+				rightChannelFreqSpectrums[n] *= invN;
+		}
+
+		createFreqSpecLocker.unlock();
+
+		cacheSampleStreamIdx = 0;
+
+	}
+
+	void Synther::HanningWin(double* data, int len)
+	{
+		double t = 0.0;
+		for (int n = 0; n < len; n++)
+		{
+			t = (double)n / (len - 1);
+			data[n * 2] *= 0.5 * (1 - FastCos(2 * M_PI * t));
+		}
+	}
+
+	//获取采样流的频谱
+	int Synther::GetSampleStreamFreqSpectrums(int channel, double* outLeft, double* outRight)
+	{
+		int count;
+		createFreqSpecLocker.lock();
+
+		count = freqSpectrumsCount;
+
+		if (channel == 0 || channel == 2)
+		{
+			memcpy(outLeft, leftChannelFreqSpectrums, count * sizeof(double));
+		}
+		else if (channel == 1 || channel == 2)
+		{
+			memcpy(outRight, rightChannelFreqSpectrums, count * sizeof(double));
+		}
+
+		createFreqSpecLocker.unlock();
+
+		return count;
 	}
 
 
@@ -1081,5 +1198,6 @@ namespace tau
 		return midiTracks;
 	}
 
-
 }
+
+

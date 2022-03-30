@@ -13,6 +13,7 @@ import android.widget.Button;
 import com.tbruyelle.rxpermissions3.RxPermissions;
 
 import cymheart.tau.effect.Equalizer;
+import cymheart.tau.utils.dsignal.Filter;
 
 public class MainActivity extends AppCompatActivity   {
 
@@ -130,20 +131,37 @@ public class MainActivity extends AppCompatActivity   {
 
        // eqCmd.SetFreqBandGain(0, 1);
 
+//        tau.SetFrameSampleCount(256);
+//        tau.SetSampleProcessRate(44100);
+//        tau.SetChannelCount(2);
+//        tau.SetSoundFont(sf);
+//        tau.SetUnitProcessMidiTrackCount(20);
+//        tau.SetEnableAllVirInstEffects(false);
+//        tau.SetLimitRegionSounderCount(64);
+//        tau.SetLimitOnKeySpeed(100);
+//        tau.SetEnableMidiEventCountOptimize(true);
+//        tau.SetMidiKeepSameTimeNoteOnCount(10);
+
+        tau.SetSoundFont(sf);
         tau.SetFrameSampleCount(256);
         tau.SetSampleProcessRate(44100);
         tau.SetChannelCount(2);
-        tau.SetSoundFont(sf);
-        tau.SetUnitProcessMidiTrackCount(20);
-        tau.SetEnableAllVirInstEffects(false);
         tau.SetLimitRegionSounderCount(64);
         tau.SetLimitOnKeySpeed(100);
         tau.SetEnableMidiEventCountOptimize(true);
         tau.SetMidiKeepSameTimeNoteOnCount(10);
+        tau.SetUnitProcessMidiTrackCount(20);
+        tau.ConntectMidiDevice(0);
+        tau.SetSampleStreamCacheSec(10);
+        tau.SetEnableAllVirInstEffects(false);
+        tau.SetEnableCreateFreqSpectrums(true, 4096);
 
 
         tau.Open();
 
+       // eq = new Equalizer();
+       // Filter[] filters = eq.GetFilter();
+        
 
       //  tau.Load("/storage/emulated/0/紅蓮の弓矢.mid", true);
       //  tau.Play();
@@ -192,14 +210,14 @@ public class MainActivity extends AppCompatActivity   {
 
 
                                         //for(int i=0; i<1; i++) {
-                                            tau.Load("/storage/emulated/0/tau2.5.9.mid", false);
+                                            tau.Load("/storage/emulated/0/(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid", true);
 
 //                                            while (!tau.IsLoadCompleted())
 //                                            {
 //                                                Thread.sleep(50);
 //                                            }
 //
-//                                            tau.Play();
+                                           tau.Play();
                                             //tau.Release();
                                            // tau.Release();
                                            // Thread.sleep(6000);

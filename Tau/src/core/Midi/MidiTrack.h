@@ -119,9 +119,43 @@ namespace tau
 		/// <returns></returns>
 		LinkedListNode<MidiEvent*>* FindNoteOnEvent(int note, int channel);
 
+
+		//获取轨道名称
+		inline string& GetTrackName(int pos)
+		{
+			return GetText(MidiTextType::TrackName, pos);
+		}
+
+		//获取乐器名称
+		inline string& GetInstName()
+		{
+			return GetText(MidiTextType::InstrumentName);
+		}
+
+		//获取歌曲文件名字
+		inline string& GetProgramName()
+		{
+			return GetText(MidiTextType::ProgramName);
+		}
+
+		//获取歌曲版权
+		inline string& GetCopyright()
+		{
+			return GetText(MidiTextType::Copyright);
+		}
+
+		//获取歌曲备注
+		inline string& GetComment()
+		{
+			return GetText(MidiTextType::Comment);
+		}
+
 	private:
 		//获取下一个TempoIndex
 		int GetNextTempoIndex(vector<RecordTempo>& tempos, int curtIndex);
+
+		//获取文本
+		string& GetText(MidiTextType textType, int pos = 1);
 
 	private:
 		int channelNum = -1;
@@ -131,6 +165,8 @@ namespace tau
 
 		ProgramChangeEvent* defaultProgramChangeEvent = nullptr;
 
+
+		string _emptyStr = "";
 
 		//一个四分音符所要弹奏的tick数,默认值120
 		float tickForQuarterNote = 120;

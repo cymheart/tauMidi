@@ -124,6 +124,9 @@
     <Filter Include="core\Synth\Editor">
       <UniqueIdentifier>{e7c0b1d2-fbf4-440d-b5b5-c3c7911b6ece}</UniqueIdentifier>
     </Filter>
+    <Filter Include="thrids\kissfft">
+      <UniqueIdentifier>{880e6422-ee3a-4297-8b76-263b91134acb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\Synth\Envelope.cpp">
@@ -617,6 +620,18 @@
     </ClCompile>
     <ClCompile Include="..\..\src\thrids\task\WheelSlot.cpp">
       <Filter>thrids\task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Editor\EditorPlayMode.cpp">
+      <Filter>core\Synth\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\kissfft\kiss_fft.cpp">
+      <Filter>thrids\kissfft</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\kissfft\kiss_fftr.cpp">
+      <Filter>thrids\kissfft</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Synther\SynthCache.cpp">
+      <Filter>core\Synth\Synther</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1186,6 +1201,21 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\FX\FxTypes.h">
       <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\kissfft\_kiss_fft_guts.h">
+      <Filter>thrids\kissfft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\kissfft\kiss_fft.h">
+      <Filter>thrids\kissfft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\kissfft\kiss_fftr.h">
+      <Filter>thrids\kissfft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\looper.h">
+      <Filter>thrids\DaisySP\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\ArrayPool.h">
+      <Filter>thrids\scutils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

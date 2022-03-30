@@ -163,29 +163,55 @@ namespace tau
 
 			if (ev->type != MidiEventType::Tempo &&
 				ev->type != MidiEventType::TimeSignature &&
-				ev->type != MidiEventType::KeySignature)
+				ev->type != MidiEventType::KeySignature &&
+				ev->type != MidiEventType::Text)
 			{
 				continue;
+			}
+
+			if (ev->type == MidiEventType::Text)
+			{
+				TextEvent* textEvent = (TextEvent*)ev;
+				if (textEvent->textType != MidiTextType::Marker)
+				{
+					continue;
+				}
 			}
 
 			//
 			midiMarker = new MidiMarker();
 			midiMarker->SetStartTick(ev->startTick);
 
-			if (ev->type == MidiEventType::Tempo)
+			switch (ev->type)
 			{
+			case MidiEventType::Tempo:
 				tempoEvent = (TempoEvent*)ev;
 				midiMarker->SetTempo(tempoEvent->microTempo, tickForQuarterNote, true);
-			}
-			else if (ev->type == MidiEventType::TimeSignature)
-			{
+				break;
+
+			case MidiEventType::TimeSignature:
 				timeSignEvent = (TimeSignatureEvent*)ev;
 				midiMarker->SetTimeSignature(timeSignEvent->denominator, timeSignEvent->numerator, true);
-			}
-			else if (ev->type == MidiEventType::KeySignature)
-			{
+				break;
+
+			case MidiEventType::KeySignature:
 				keySignEvent = (KeySignatureEvent*)ev;
 				midiMarker->SetKeySignature(keySignEvent->sf, keySignEvent->mi, true);
+				break;
+
+			case MidiEventType::Text:
+			{
+				TextEvent* textEvent = (TextEvent*)ev;
+				if (textEvent->textType == MidiTextType::Marker)
+				{
+					midiMarker->SetTitleName(textEvent->text);
+				}
+			}
+			break;
+
+
+			default:
+				break;
 			}
 
 			midiMarkers.push_back(midiMarker);

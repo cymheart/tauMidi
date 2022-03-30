@@ -29,7 +29,6 @@ namespace tau {
 
 		regionModulation = new RegionModulation();
 
-
 		for (int i = 0; i < (int)LfoEnvTarget::ModCount; i++)
 		{
 			lfoInfoLists[i] = new LfoModInfoList;
@@ -178,6 +177,8 @@ namespace tau {
 	//初始化
 	void RegionSounder::Init()
 	{
+		regionModulation->SetUseCommonModulator(tau->UseCommonModulator());
+
 		//
 		if (tau->UseRegionInnerChorusEffect())
 		{
@@ -1211,7 +1212,7 @@ namespace tau {
 		int idx = 0;
 		int sampleCount = tau->GetChildFrameSampleCount();
 		float sampleValue;
-		float volGain;
+		float volGain = 1;
 		float volGainSampleValue;
 		float startVolGain = 0;
 		float endVolGain = 0;

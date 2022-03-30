@@ -106,8 +106,8 @@ namespace dsignal
 		//滤波衰减值
 		float atten_ = 1;
 
-		BodeFreqzProcessCallBack bodeFreqz;
-		void* bodeFreqzData;
+		BodeFreqzProcessCallBack bodeFreqz = nullptr;
+		void* bodeFreqzData = nullptr;
 		//是否启用BodeFreqzProcess 
 		bool isEnableBodeFreqzProcess = false;
 

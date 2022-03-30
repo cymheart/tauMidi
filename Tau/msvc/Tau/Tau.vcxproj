@@ -57,6 +57,7 @@
     <ClCompile Include="..\..\src\core\Synth\Editor\MidiEditor.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\MidiMarker.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\MidiMarkerList.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Editor\EditorPlayMode.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\Tempo.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\Track.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Envelope.cpp" />
@@ -78,6 +79,7 @@
     <ClCompile Include="..\..\src\core\Synth\Synther\MidiEditorSyntherTask.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Synther\RealtimeSynther.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Synther\RealtimeSyntherTask.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Synther\SynthCache.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Synther\Synther.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Synther\SyntherTask.cpp" />
     <ClCompile Include="..\..\src\core\Synth\TauEditor.cpp" />
@@ -160,6 +162,8 @@
     <ClCompile Include="..\..\src\thrids\iir\Custom.cpp" />
     <ClCompile Include="..\..\src\thrids\iir\PoleFilter.cpp" />
     <ClCompile Include="..\..\src\thrids\iir\RBJ.cpp" />
+    <ClCompile Include="..\..\src\thrids\kissfft\kiss_fft.cpp" />
+    <ClCompile Include="..\..\src\thrids\kissfft\kiss_fftr.cpp" />
     <ClCompile Include="..\..\src\thrids\scutils\ByteStream.cpp" />
     <ClCompile Include="..\..\src\thrids\scutils\MathUtils.cpp" />
     <ClCompile Include="..\..\src\thrids\scutils\RingBuffer.cpp" />
@@ -310,6 +314,7 @@
     <ClInclude Include="..\..\src\thrids\DaisySP\Utility\delayline.h" />
     <ClInclude Include="..\..\src\thrids\DaisySP\Utility\dsp.h" />
     <ClInclude Include="..\..\src\thrids\DaisySP\Utility\jitter.h" />
+    <ClInclude Include="..\..\src\thrids\DaisySP\Utility\looper.h" />
     <ClInclude Include="..\..\src\thrids\DaisySP\Utility\maytrig.h" />
     <ClInclude Include="..\..\src\thrids\DaisySP\Utility\metro.h" />
     <ClInclude Include="..\..\src\thrids\DaisySP\Utility\port.h" />
@@ -341,6 +346,10 @@
     <ClInclude Include="..\..\src\thrids\iir\RBJ.h" />
     <ClInclude Include="..\..\src\thrids\iir\State.h" />
     <ClInclude Include="..\..\src\thrids\iir\Types.h" />
+    <ClInclude Include="..\..\src\thrids\kissfft\kiss_fft.h" />
+    <ClInclude Include="..\..\src\thrids\kissfft\kiss_fftr.h" />
+    <ClInclude Include="..\..\src\thrids\kissfft\_kiss_fft_guts.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\ArrayPool.h" />
     <ClInclude Include="..\..\src\thrids\scutils\ByteStream.h" />
     <ClInclude Include="..\..\src\thrids\scutils\LinkedList.h" />
     <ClInclude Include="..\..\src\thrids\scutils\LinkedListNode.h" />
@@ -487,7 +496,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;TAU_EXPORT;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;TAU_EXPORT;_WINDOWS;_USRDLL;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -511,7 +520,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;TAU_EXPORT;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TAU_EXPORT;_WINDOWS;_USRDLL;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>

@@ -29,8 +29,9 @@ namespace tau
 		//建立MidiEditor
 		MidiEditor* CreateMidiEditor();
 
-		void EnterWaitPlayModeTask(Semaphore* waitSem);
-		void LeaveWaitPlayModeTask(Semaphore* waitSem);
+		void EnterPlayModeTask(EditorPlayMode playMode, Semaphore* waitSem);
+		void LeavePlayModeTask(Semaphore* waitSem);
+
 
 		//播放
 		void PlayTask(Semaphore* waitSem);
@@ -48,6 +49,15 @@ namespace tau
 
 		//指定播放的起始时间点
 		void GotoTask(Semaphore* waitSem, double sec);
+
+		// 重新缓存
+		void ReCacheTask(Semaphore* waitSem);
+
+		//获取播放状态(通用)
+		EditorState GetPlayStateCommonTask();
+
+		//获取播放时间(通用)
+		double GetPlaySecCommonTask();
 
 		//获取状态
 		EditorState GetStateTask();
@@ -98,8 +108,8 @@ namespace tau
 
 	private:
 		//
-		static void _EnterWaitPlayModeTask(Task* ev);
-		static void _LeaveWaitPlayModeTask(Task* ev);
+		static void _EnterPlayModeTask(Task* ev);
+		static void _LeavePlayModeTask(Task* ev);
 
 		static void _PlayTask(Task* ev);
 		static void _StopTask(Task* ev);
@@ -107,6 +117,9 @@ namespace tau
 		static void _RemoveTask(Task* ev);
 		static void _RuntoTask(Task* ev);
 		static void _GotoTask(Task* ev);
+		static void _ReCacheTask(Task* ev);
+		static void _GetPlayStateCommonTask(Task* ev);
+		static void _GetPlaySecCommonTask(Task* ev);
 		static void _GetStateTask(Task* ev);
 		static void _GetEndSecTask(Task* ev);
 		static void _SetEndSecTask(Task* ev);
@@ -129,12 +142,6 @@ namespace tau
 
 	protected:
 
-		// 处理播放midi文件事件
-		virtual void ProcessMidiEvents();
-
-		void EnterWaitPlayMode();
-		void LeaveWaitPlayMode();
-
 		//播放midi
 		void Play();
 
@@ -144,19 +151,31 @@ namespace tau
 		//暂停播放midiEditor
 		void Pause();
 
+		//midi快进到指定位置
+		void Goto(double sec);
+
+		//重新缓存
+		void ReCache();
+
 		//移除midiEditor
 		void Remove();
 
 		void Runto(double sec);
 
-		//midi快进到指定位置
-		void Goto(double sec);
+		void EnterPlayMode(EditorPlayMode playMode);
+		void LeavePlayMode();
+
+		//获取播放状态(通用)
+		EditorState GetPlayStateCommon();
+
+		//获取播放时间(通用)
+		double GetPlaySecCommon();
 
 		//获取midi播放时间
-		double GetPlaySec();
+		virtual	double GetPlaySec();
 
 		//获取midi状态
-		EditorState GetState();
+		EditorState GetPlayState();
 
 		//获取midi结束时间(单位:秒)
 		double GetEndSec();
@@ -209,6 +228,10 @@ namespace tau
 
 		//计算结束时间点
 		void ComputeEndSec();
+
+		// 处理播放midi文件事件
+		virtual void ProcessMidiEvents();
+		virtual bool CanCache();
 
 	protected:
 

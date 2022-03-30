@@ -5,6 +5,9 @@
 #include "Midi/MidiTypes.h"
 #include "EditorTypes.h"
 #include"MidiMarkerList.h"
+#include"task/Task.h"
+
+using namespace task;
 
 namespace tau
 {
@@ -58,21 +61,27 @@ namespace tau
 		}
 
 		//获取轨道数量
-		int GetTrackCount()
+		inline int GetTrackCount()
 		{
 			return trackCount;
 		}
 
-		//进入到等待播放模式
-		void EnterWaitPlayMode()
+		//获取播放模式
+		inline EditorPlayMode GetPlayMode()
 		{
-			isWaitPlayMode = true;
+			return playMode;
 		}
 
-		//离开等待播放模式
-		void LeaveWaitPlayMode()
+		//进入播放模式
+		inline void EnterPlayMode(EditorPlayMode _playMode)
 		{
-			isWaitPlayMode = false;
+			playMode = _playMode;
+		}
+
+		//离开播放模式
+		inline void LeavePlayMode()
+		{
+			playMode = EditorPlayMode::Common;
 		}
 
 		//停止播放
@@ -117,8 +126,10 @@ namespace tau
 		//计算结束时间点
 		void ComputeEndSec();
 
-		//运行
+
+		//当前时间curtPlaySec往前处理一个sec的时间长度的所有midi事件
 		void Process(double sec, bool isStepOp = false);
+
 		void DisableTrack(Track* track);
 		void DisableAllTrack();
 		void EnableTrack(Track* track);
@@ -137,7 +148,9 @@ namespace tau
 
 	private:
 
+		//当前时间curtPlaySec往前处理一个sec的时间长度的所有midi事件
 		void ProcessCore(double sec, bool isDirectGoto = false);
+
 		void ProcessTrack(Track* track, bool isDirectGoto);
 
 		//处理轨道事件
@@ -165,13 +178,11 @@ namespace tau
 		//播放速率(相对于正常播放速率1.0的倍率)
 		float speed = 1;
 
-		//是否是等待播放模式
-		bool isWaitPlayMode = false;
-
+		//播放模式
+		EditorPlayMode playMode = EditorPlayMode::Common;
 
 		//当前播放时间
-		atomic<double> curtPlaySec;
-
+		double curtPlaySec;
 
 		friend class Editor;
 		friend class Track;

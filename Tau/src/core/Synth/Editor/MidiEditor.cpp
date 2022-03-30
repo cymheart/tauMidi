@@ -23,7 +23,7 @@ namespace tau
 		//初始化值
 		curtPlaySec = editor->GetPlaySec();
 		speed = editor->GetSpeed();
-		isWaitPlayMode = editor->isWaitPlayMode;
+		playMode = editor->playMode;
 		state = editor->GetState();
 		midiMarkerList.Copy(editor->midiMarkerList);
 	}
@@ -197,7 +197,6 @@ namespace tau
 		if (state == EditorState::PLAY)
 			return;
 
-
 		if (state == EditorState::STOP) {
 			curtPlaySec = 0;
 			for (int i = 0; i < trackList.size(); i++)
@@ -205,7 +204,7 @@ namespace tau
 		}
 
 		for (int i = 0; i < trackList.size(); i++)
-			midiSynther->OnVirInstrument(trackList[i]->GetChannel());
+			midiSynther->OnVirInstrument(trackList[i]->GetChannel(), false);
 
 		state = EditorState::PLAY;
 
@@ -224,6 +223,8 @@ namespace tau
 		state = EditorState::PAUSE;
 	}
 
+
+
 	//停止播放
 	void MidiEditor::Stop()
 	{
@@ -237,6 +238,7 @@ namespace tau
 
 		curtPlaySec = 0;
 		state = EditorState::STOP;
+
 	}
 
 
@@ -257,7 +259,7 @@ namespace tau
 	void MidiEditor::Runto(double sec)
 	{
 		//当状态不是处于播放状态时，可以直接使用goto到目标位置（使用goto会关闭当前发音）
-		if (state != EditorState::PLAY || !editor->isStepPlayMode) {
+		if (state != EditorState::PLAY || playMode != EditorPlayMode::Step) {
 			Goto(sec);
 			return;
 		}
@@ -277,6 +279,9 @@ namespace tau
 			midiSynther->OffVirInstrumentAllKeys(trackList[i]->GetChannel());
 			trackList[i]->Clear();
 		}
+
+		if (sec > endSec)
+			sec = endSec;
 
 		curtPlaySec = 0;
 		ProcessCore(sec / speed, true);
@@ -395,12 +400,15 @@ namespace tau
 	}
 
 
-	//处理
+	//当前时间curtPlaySec往前处理一个sec的时间长度的所有midi事件
 	void MidiEditor::Process(double sec, bool isStepOp)
 	{
-		if (editor->isStepPlayMode && !isStepOp)
+		//这个选项控制了是由非步进模式进入处理，还是步进模式进入处理
+		//非步进模式，如果不是由Runto()进入处理的，将直接返回不进行Process
+		if (playMode == EditorPlayMode::Step && !isStepOp)
 			return;
 
+		//如果进入等待,将不步进一个时间长度sec
 		if (editor->isWait)
 			sec = 0;
 
@@ -417,6 +425,7 @@ namespace tau
 	}
 
 
+	//当前时间curtPlaySec往前处理一个sec的时间长度的所有midi事件
 	void MidiEditor::ProcessCore(double sec, bool isDirectGoto)
 	{
 		curtPlaySec = curtPlaySec + sec * speed;
@@ -508,7 +517,7 @@ namespace tau
 
 			NoteOnEvent* noteOnEv = (NoteOnEvent*)midEv;
 
-			if (!isWaitPlayMode ||
+			if (playMode != EditorPlayMode::Wait ||
 				track->playType == MidiEventPlayType::Background ||
 				(track->playType == MidiEventPlayType::Custom &&
 					midEv->playType != MidiEventPlayType::Background))
@@ -531,7 +540,7 @@ namespace tau
 			if (noteOffEv->noteOnEvent == nullptr)
 				break;
 
-			if (!isWaitPlayMode ||
+			if (playMode != EditorPlayMode::Wait ||
 				track->playType == MidiEventPlayType::Background ||
 				(track->playType == MidiEventPlayType::Custom &&
 					midEv->playType != MidiEventPlayType::Background))

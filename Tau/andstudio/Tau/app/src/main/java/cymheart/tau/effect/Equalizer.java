@@ -1,6 +1,6 @@
 package cymheart.tau.effect;
 
-import cymheart.tau.dsignal.Filter;
+import cymheart.tau.utils.dsignal.Filter;
 
 public class Equalizer extends Effect {
     public Equalizer()

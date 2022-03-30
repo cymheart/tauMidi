@@ -49,9 +49,16 @@ namespace tau
 			return tickForQuarterNote;
 		}
 
+		//设置标题
+		inline void SetTitleName(string& name)
+		{
+			titleName = name;
+		}
+
 		//速度设置
 		inline void SetTempo(float microTempo_, int32_t tickForQuarterNote_, bool isEnable)
 		{
+			titleName = "速度变更";
 			isEnableTempo = isEnable;
 			tickForQuarterNote = tickForQuarterNote_;
 			microTempo = microTempo_;
@@ -60,6 +67,7 @@ namespace tau
 		//节拍设置
 		inline void SetTimeSignature(float numerator_, float denominator_, bool isEnable)
 		{
+			titleName = "节拍变更";
 			isEnableTimeSignature = isEnable;
 			numerator = numerator_;
 			denominator = denominator_;
@@ -69,6 +77,7 @@ namespace tau
 		//调号设置
 		inline void SetKeySignature(float sf_, float mi_, bool isEnable)
 		{
+			titleName = "调号变更";
 			isEnableKeySignature = isEnable;
 			sf = sf_;
 			mi = mi_;
@@ -78,6 +87,8 @@ namespace tau
 		void ComputeTempo();
 
 	private:
+
+		string titleName;
 
 		//是否开启速度设置
 		bool isEnableTempo = false;

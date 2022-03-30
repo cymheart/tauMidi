@@ -18,9 +18,6 @@ namespace tau
 	{
 		this->tau = tau;
 		computedPerSyntherLimitTrackCount = tau->perSyntherLimitTrackCount;
-
-		//
-		isStepPlayMode = false;
 		isWait = false;
 	}
 
@@ -143,7 +140,7 @@ namespace tau
 	void Editor::PrintProjectInfo()
 	{
 		printf("\n=================================== \n");
-		printf("synther总数:%d \n", tau->syntherCount);
+		printf("synther总数:%d \n", tau->midiEditorSyntherCount);
 		printf("midi文件总时长:%.2f秒 \n", endSec);
 		printf("midi轨道总数:%zd \n", tracks.size());
 	}
@@ -168,10 +165,10 @@ namespace tau
 	//移除核心
 	void Editor::RemoveCore()
 	{
-		if (tau->syntherCount != 0)
+		if (tau->midiEditorSyntherCount != 0)
 		{
 			int openedCount = 0;
-			for (int i = 0; i < tau->syntherCount; i++)
+			for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 			{
 				if (tau->midiEditorSynthers[i]->IsOpened())
 					openedCount++;
@@ -180,7 +177,7 @@ namespace tau
 			if (openedCount > 0)
 			{
 				waitSem.reset(openedCount - 1);
-				for (int i = 0; i < tau->syntherCount; i++)
+				for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 				{
 					if (tau->midiEditorSynthers[i]->IsOpened())
 						tau->midiEditorSynthers[i]->RemoveTask(&waitSem);
@@ -190,9 +187,7 @@ namespace tau
 			}
 		}
 
-
-		DelEmptyTrackRealtimeSynther();
-
+		DelEmptyTrackSynther();
 
 		//等所有发音结束后删除轨道事件
 		for (int i = 0; i < tracks.size(); i++)
@@ -204,16 +199,17 @@ namespace tau
 	}
 
 
-	//删除空轨实时RealtimeSynther
-	void Editor::DelEmptyTrackRealtimeSynther()
+	//删除空轨Synther
+	void Editor::DelEmptyTrackSynther()
 	{
-		int idx = 1;
-		for (int i = 1; i < tau->syntherCount; i++)
+		int idx = 1;  //保留一个默认midiEditorSynther
+		vector<Synther*> removeSynthers;
+		for (int i = 1; i < tau->midiEditorSyntherCount; i++)
 		{
 			MidiEditor* midiEditor = tau->midiEditorSynthers[i]->GetMidiEditor();
 			if (midiEditor == nullptr || midiEditor->GetTrackCount() == 0)
 			{
-				tau->mainEditorSynther->RemoveAssistSyntherTask(tau->midiEditorSynthers[i]);
+				removeSynthers.push_back(tau->midiEditorSynthers[i]);
 			}
 			else
 			{
@@ -222,17 +218,24 @@ namespace tau
 			}
 		}
 
-		tau->syntherCount = idx;
+		waitSem.reset(removeSynthers.size() - 1);
+		for (int i = 0; i < removeSynthers.size(); i++)
+		{
+			tau->mainSynther->RemoveSlaveSyntherTask(&waitSem, removeSynthers[i]);
+		}
+		waitSem.wait();
 
+		tau->midiEditorSyntherCount = idx;
+		tau->syntherCount = idx + 1;
 	}
 
 
 	//播放
 	void Editor::Play()
 	{
-		waitSem.reset(tau->syntherCount - 1);
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
 
-		for (int i = 0; i < tau->syntherCount; i++)
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 			tau->midiEditorSynthers[i]->PlayTask(&waitSem);
 
 		waitSem.wait();
@@ -244,9 +247,9 @@ namespace tau
 		if (loadMidiFileState == 1)
 			return;
 
-		waitSem.reset(tau->syntherCount - 1);
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
 
-		for (int i = 0; i < tau->syntherCount; i++)
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 			tau->midiEditorSynthers[i]->StopTask(&waitSem);
 
 		waitSem.wait();
@@ -256,229 +259,12 @@ namespace tau
 	//暂停
 	void Editor::Pause()
 	{
-		waitSem.reset(tau->syntherCount - 1);
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
 
-		for (int i = 0; i < tau->syntherCount; i++)
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 			tau->midiEditorSynthers[i]->PauseTask(&waitSem);
 
 		waitSem.wait();
-	}
-
-
-	//进入到步进播放模式
-	void Editor::EnterStepPlayMode()
-	{
-		if (isWaitPlayMode) {
-			printf("当前模式为:等待播放模式，需要离开等待播放模式! \n");
-			return;
-		}
-
-		isStepPlayMode = true;
-		isWait = false;
-	}
-
-	//离开步进播放模式
-	void Editor::LeaveStepPlayMode()
-	{
-		if (isWaitPlayMode)
-			return;
-
-		isStepPlayMode = false;
-	}
-
-	//进入到等待播放模式
-	void Editor::EnterWaitPlayMode()
-	{
-		if (isStepPlayMode) {
-			printf("当前模式为:步进播放模式，需要离开步进播放模式! \n");
-			return;
-		}
-
-		isWaitPlayMode = true;
-		isWait = false;
-		memset(onkey, 0, sizeof(int) * 128);
-		memset(needOnkey, 0, sizeof(int) * 128);
-		memset(needOffkey, 0, sizeof(int) * 128);
-		needOnKeyCount = 0;
-		needOffKeyCount = 0;
-
-		waitSem.reset(tau->syntherCount - 1);
-		for (int i = 0; i < tau->syntherCount; i++)
-			tau->midiEditorSynthers[i]->EnterWaitPlayModeTask(&waitSem);
-
-		waitSem.wait();
-
-	}
-
-	//离开等待播放模式
-	void Editor::LeaveWaitPlayMode()
-	{
-		if (isStepPlayMode)
-			return;
-
-		isWaitPlayMode = false;
-
-		waitSem.reset(tau->syntherCount - 1);
-		for (int i = 0; i < tau->syntherCount; i++)
-			tau->midiEditorSynthers[i]->LeaveWaitPlayModeTask(&waitSem);
-
-		waitSem.wait();
-
-	}
-
-
-	//移动到指定时间点
-	void Editor::Runto(double sec)
-	{
-		//如果是等待播放模式，将清空等待播放模式的数据
-		if (isWaitPlayMode) {
-			memset(onkey, 0, sizeof(int) * 128);
-			memset(needOnkey, 0, sizeof(int) * 128);
-			memset(needOffkey, 0, sizeof(int) * 128);
-			needOnKeyCount = 0;
-			needOffKeyCount = 0;
-			isWait = false;
-		}
-
-		waitSem.reset(tau->syntherCount - 1);
-		for (int i = 0; i < tau->syntherCount; i++)
-			tau->midiEditorSynthers[i]->RuntoTask(&waitSem, sec);
-
-		waitSem.wait();
-	}
-
-	//等待(区别于暂停，等待相当于在原始位置播放)
-	void Editor::Wait()
-	{
-		if (isStepPlayMode || isWaitPlayMode)
-			return;
-
-		isWait = true;
-	}
-
-	//继续，相对于等待命令
-	void Editor::Continue()
-	{
-		if (isStepPlayMode || isWaitPlayMode)
-			return;
-
-		isWait = false;
-	}
-
-	//需要按键信号
-	void Editor::NeedOnKeySignal(int key)
-	{
-		waitOnKeyLock.lock();
-
-		needOnkey[key]++;
-
-		if (needOnkey[key] > 0)
-			needOnKeyCount++;
-
-		if (needOnKeyCount > 0)
-		{
-			isWait = true;
-			printf("等待按键:%d \n", key);
-		}
-
-		waitOnKeyLock.unlock();
-	}
-
-	//需要松开按键信号
-	void Editor::NeedOffKeySignal(int key)
-	{
-		waitOnKeyLock.lock();
-
-		if (onkey[key] == 0) {
-			waitOnKeyLock.unlock();
-			return;
-		}
-
-		needOffkey[key]++;
-
-		if (needOffkey[key] > 0)
-			needOffKeyCount++;
-
-		if (needOffKeyCount > 0) {
-			isWait = true;
-			printf("等待松开键:%d \n", key);
-		}
-
-
-		waitOnKeyLock.unlock();
-	}
-
-	//按键信号
-	void Editor::OnKeySignal(int key)
-	{
-		waitOnKeyLock.lock();
-
-		needOnkey[key]--;
-		onkey[key]++;
-
-		if (needOnkey[key] >= 0)
-			needOnKeyCount--;
-
-		if (needOnKeyCount <= 0 && needOffKeyCount <= 0) {
-			isWait = false;
-			printf("按下按键,继续:%d \n", key);
-		}
-		else
-		{
-			printf("按下按键:%d \n", key);
-		}
-
-		waitOnKeyLock.unlock();
-	}
-
-	//松开按键信号
-	void Editor::OffKeySignal(int key)
-	{
-		waitOnKeyLock.lock();
-
-		if (onkey[key] > 0 && needOffkey[key] == 0 && needOnkey[key] == 0)
-		{
-			needOnkey[key]++;
-			needOnKeyCount++;
-			onkey[key]--;
-
-			if (needOnKeyCount > 0) {
-				isWait = true;
-				printf("等待按键:%d \n", key);
-			}
-
-			waitOnKeyLock.unlock();
-			return;
-		}
-
-
-		if (needOffkey[key] == 0)
-		{
-			if (onkey[key] > 0)
-				onkey[key]--;
-
-			waitOnKeyLock.unlock();
-			return;
-		}
-
-		needOffkey[key]--;
-
-		if (onkey[key] > 0)
-			onkey[key]--;
-
-		if (needOffkey[key] >= 0)
-			needOffKeyCount--;
-
-		if (needOnKeyCount <= 0 && needOffKeyCount <= 0) {
-			isWait = false;
-			printf("松开按键，继续:%d \n", key);
-		}
-		else
-		{
-			printf("松开按键:%d \n", key);
-		}
-
-		waitOnKeyLock.unlock();
 	}
 
 
@@ -486,9 +272,9 @@ namespace tau
 	void Editor::Goto(double sec)
 	{
 
-		waitSem.reset(tau->syntherCount - 1);
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
 
-		for (int i = 0; i < tau->syntherCount; i++)
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 			tau->midiEditorSynthers[i]->GotoTask(&waitSem, sec);
 
 		waitSem.wait();
@@ -503,32 +289,23 @@ namespace tau
 		if (midiEditor == nullptr)
 			return EditorState::STOP;
 
-		return tau->midiEditorSynthers[0]->GetStateTask();
+		return tau->midiEditorSynthers[0]->GetPlayStateCommonTask();
 	}
 
 	//获取当前播放时间点
 	double Editor::GetPlaySec()
 	{
-		MidiEditor* midiEditor = tau->midiEditorSynthers[0]->GetMidiEditor();
-		if (midiEditor == nullptr)
-			return 0;
-
-		return midiEditor->GetPlaySec();
+		return tau->midiEditorSynthers[0]->GetPlaySecCommonTask();
 	}
-
 
 	// 设定速度
 	void Editor::SetSpeed(float speed_)
 	{
 		speed = speed_;
 
-		waitSem.reset(tau->syntherCount - 1);
-
-		for (int i = 0; i < tau->syntherCount; i++)
-		{
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 			tau->midiEditorSynthers[i]->SetSpeedTask(&waitSem, speed);
-		}
-
 		waitSem.wait();
 	}
 
@@ -553,15 +330,19 @@ namespace tau
 			synther = tracks[trackIdxs[i]]->GetMidiEditor()->GetSynther();
 			synther->DisableTrackTask(&waitSem, tracks[trackIdxs[i]]);
 		}
+
 		waitSem.wait();
+
+		//如果启用了缓存播放，将重新缓存
+		ReCache();
 	}
 
 	// 禁止播放所有轨道
 	void Editor::DisableAllTrack()
 	{
-		waitSem.reset(tau->syntherCount - 1);
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
 
-		for (int i = 0; i < tau->syntherCount; i++)
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 			tau->midiEditorSynthers[i]->DisableAllTrackTask(&waitSem);
 
 		waitSem.wait();
@@ -588,15 +369,19 @@ namespace tau
 			synther = tracks[trackIdxs[i]]->GetMidiEditor()->GetSynther();
 			synther->EnableTrackTask(&waitSem, tracks[trackIdxs[i]]);
 		}
+
 		waitSem.wait();
+
+		//如果启用了缓存播放，将重新缓存
+		ReCache();
 	}
 
 	// 启用播放所有轨道
 	void Editor::EnableAllTrack()
 	{
-		waitSem.reset(tau->syntherCount - 1);
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
 
-		for (int i = 0; i < tau->syntherCount; i++)
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 			tau->midiEditorSynthers[i]->EnableAllTrackTask(&waitSem);
 
 		waitSem.wait();
@@ -617,9 +402,11 @@ namespace tau
 		for (auto it = syntherSet.begin(); it != syntherSet.end(); ++it) {
 			(*it)->DisableChannelTask(&waitSem, channelIdx);
 		}
-		waitSem.wait();
 
+		waitSem.wait();
 		syntherSet.clear();
+
+		ReCache();
 	}
 
 
@@ -637,18 +424,22 @@ namespace tau
 		for (auto it = syntherSet.begin(); it != syntherSet.end(); ++it) {
 			(*it)->EnableChannelTask(&waitSem, channelIdx);
 		}
-		waitSem.wait();
 
+		waitSem.wait();
 		syntherSet.clear();
+
+		//如果启用了缓存播放，将重新缓存
+		ReCache();
 	}
 
-	//设置轨道事件演奏方式
-	void Editor::SetTrackPlayType(int trackIdx, MidiEventPlayType playType)
+
+	//获取采样流的频谱
+	int Editor::GetSampleStreamFreqSpectrums(int channel, double* outLeft, double* outRight)
 	{
-		waitSem.reset(0);
-		MidiEditorSynther* synther = tracks[trackIdx]->GetMidiEditor()->GetSynther();
-		synther->SetTrackPlayTypeTask(&waitSem, tracks[trackIdx], playType);
-		waitSem.wait();
+		if (tau->mainSynther == nullptr)
+			return 0;
+
+		return tau->mainSynther->GetSampleStreamFreqSpectrums(channel, outLeft, outRight);
 	}
 
 	// 设置对应轨道的乐器
@@ -659,13 +450,16 @@ namespace tau
 		waitSem.reset(0);
 		synther->SetVirInstrumentTask(&waitSem, tracks[trackIdx], bankSelectMSB, bankSelectLSB, instrumentNum);
 		waitSem.wait();
+
+		//如果启用了缓存播放，将重新缓存
+		ReCache();
 	}
 
 
 	//设置打击乐号
 	void Editor::SetMidiBeatVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
-		for (int i = 0; i < tau->syntherCount; i++)
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 		{
 			tau->midiEditorSynthers[i]->SetBeatVirInstrumentTask(bankSelectMSB, bankSelectLSB, instrumentNum);
 		}
@@ -683,7 +477,6 @@ namespace tau
 			SetVirInstrument(i, msb, lsb, num);
 		}
 	}
-
 
 
 	//增加轨道，来自于MidiTrackList
@@ -705,7 +498,7 @@ namespace tau
 		for (int i = start; i <= end; i++)
 		{
 			instFrag = new InstFragment();
-
+			instFrag->SetName(midiTracks[i]->GetTrackName(1));
 			LinkedList<MidiEvent*>& eventList = *midiTracks[i]->GetEventList();
 			instFrag->AddMidiEvents(eventList);
 			eventList.Release();
@@ -722,6 +515,7 @@ namespace tau
 			//给轨道设置默认乐器
 			for (int i = start; i <= end; i++)
 			{
+				tracks[trackIdx]->SetName(midiTracks[i]->GetTrackName(1));
 				tracks[trackIdx]->SetChannelNum(midiTracks[i]->GetChannelNum());
 
 				auto program = midiTracks[i]->GetDefaultProgramChangeEvent();
@@ -761,7 +555,7 @@ namespace tau
 
 				for (int j = dstFirstBranchIdx; j < tracks[i]->GetBranchCount(); j++)
 				{
-					dstTracks.push_back(tracks[i]);
+					dstTracks.push_back(tracks[j]);
 					dstBranchIdxs.push_back(j);
 					n++;
 
@@ -776,6 +570,9 @@ namespace tau
 				dstFirstBranchIdx = 0;
 			}
 		}
+
+		//如果启用了缓存播放，将重新缓存
+		ReCache();
 	}
 
 	//增加标记，来自于midi事件列表中
@@ -783,8 +580,8 @@ namespace tau
 	{
 		midiMarkerList.AppendFromMidiEvents(midiEvents);
 
-		waitSem.reset(tau->syntherCount - 1);
-		for (int i = 0; i < tau->syntherCount; i++)
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 		{
 			tau->midiEditorSynthers[i]->SetMarkerListTask(&waitSem, &midiMarkerList);
 		}
@@ -796,14 +593,14 @@ namespace tau
 	void Editor::NewTracks(int count)
 	{
 		MidiEditorSynther* synther;
-		for (int i = 0; i < tau->syntherCount; i++)
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 		{
 			count = _NewTracks(tau->midiEditorSynthers[i], count);
 			if (count == 0)
 				break;
 		}
 
-		if (count != 0 && tau->syntherCount >= tau->limitSyntherCount)
+		if (count != 0 && tau->midiEditorSyntherCount >= tau->limitSyntherCount)
 			count = ResetTrackCountNewTracks(count);
 
 		while (count != 0)
@@ -811,7 +608,7 @@ namespace tau
 			synther = tau->CreateMidiEditorSynther();
 			count = _NewTracks(synther, count);
 
-			if (count != 0 && tau->syntherCount >= tau->limitSyntherCount)
+			if (count != 0 && tau->midiEditorSyntherCount >= tau->limitSyntherCount)
 				count = ResetTrackCountNewTracks(count);
 		}
 	}
@@ -819,11 +616,11 @@ namespace tau
 	int Editor::ResetTrackCountNewTracks(int count)
 	{
 		int needTrackCount = count + tracks.size();
-		computedPerSyntherLimitTrackCount = needTrackCount / tau->syntherCount;
-		if (needTrackCount % tau->syntherCount != 0)
+		computedPerSyntherLimitTrackCount = needTrackCount / tau->midiEditorSyntherCount;
+		if (needTrackCount % tau->midiEditorSyntherCount != 0)
 			computedPerSyntherLimitTrackCount++;
 
-		for (int i = 0; i < tau->syntherCount; i++)
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 		{
 			count = _NewTracks(tau->midiEditorSynthers[i], count);
 			if (count == 0)
@@ -880,10 +677,14 @@ namespace tau
 		}
 		waitSem.wait();
 
-		DelEmptyTrackRealtimeSynther();
+		DelEmptyTrackSynther();
 
 		//重新给每个MidiEditor设置相同的最大结束时间
 		ComputeMidiEditorMaxSec();
+
+
+		//如果启用了缓存播放，将重新缓存
+		ReCache();
 	}
 
 
@@ -939,6 +740,7 @@ namespace tau
 		secs.push_back(sec);
 
 		MoveSelectedInstFragments(dstTracks, dstBranchIdxs, secs);
+
 	}
 
 
@@ -1147,7 +949,7 @@ namespace tau
 
 
 		//如果是等待播放模式，将清空等待播放模式的数据
-		if (isWaitPlayMode) {
+		if (playMode == EditorPlayMode::Wait) {
 			memset(onkey, 0, sizeof(int) * 128);
 			memset(needOnkey, 0, sizeof(int) * 128);
 			memset(needOffkey, 0, sizeof(int) * 128);
@@ -1155,6 +957,10 @@ namespace tau
 			needOffKeyCount = 0;
 			isWait = false;
 		}
+
+
+		//如果启用了缓存播放，将重新缓存
+		ReCache();
 
 	}
 
@@ -1219,18 +1025,30 @@ namespace tau
 	{
 		MidiEditor* midiEditor;
 		endSec = 0;
-		for (int i = 0; i < tau->syntherCount; i++)
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 		{
 			midiEditor = tau->midiEditorSynthers[i]->GetMidiEditor();
 			if (midiEditor->GetEndSec() > endSec)
 				endSec = midiEditor->GetEndSec();
 		}
 
-		waitSem.reset(tau->syntherCount - 1);
-		for (int i = 0; i < tau->syntherCount; i++)
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 		{
 			tau->midiEditorSynthers[i]->SetEndSecTask(&waitSem, endSec);
 		}
+		waitSem.wait();
+	}
+
+	//如果启用了缓存播放，将重新缓存
+	void Editor::ReCache()
+	{
+		if (tau->sampleStreamCacheSec <= 0)
+			return;
+
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
+			tau->midiEditorSynthers[i]->ReCacheTask(&waitSem);
 		waitSem.wait();
 	}
 }

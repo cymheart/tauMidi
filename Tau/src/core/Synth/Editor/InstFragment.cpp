@@ -24,6 +24,11 @@ namespace tau
 		eventOffsetNode = midiEvents.GetHeadNode();
 	}
 
+	void InstFragment::SetName(string& _name)
+	{
+		name = _name;
+	}
+
 	void InstFragment::AddMidiEvents(LinkedList<MidiEvent*>& midiEvents_)
 	{
 		midiEvents.Merge(midiEvents_);

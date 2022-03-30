@@ -267,6 +267,12 @@ public class Editor {
         return ndkGetEndSec(ndkEditor);
     }
 
+    //获取采样流的频谱
+    public int GetSampleStreamFreqSpectrums(int channel, double[] outLeft, double[] outRight)
+    {
+        return ndkGetSampleStreamFreqSpectrums(ndkEditor, channel, outLeft, outRight);
+    }
+
     //处理
     public void Process()
     {
@@ -479,4 +485,5 @@ public class Editor {
     private static native void ndkGoto(long ndkEditor, double sec);
     private static native double ndkGetPlaySec(long ndkEditor);
     private static native double ndkGetEndSec(long ndkEditor);
+    private static native int ndkGetSampleStreamFreqSpectrums(long ndkEditor, int channel, double[] outLeft, double[] outRight);
 }

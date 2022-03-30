@@ -102,6 +102,12 @@ public class Tau
         ndkSetUnitProcessMidiTrackCount(ndkTau, count);
     }
 
+    //设置采样流缓存最大时长(单位:秒， 默认值:0s)
+    public void SetSampleStreamCacheSec(float sec)
+    {
+        ndkSetSampleStreamCacheSec(ndkTau, sec);
+    }
+
     //获取所有发声区域的数量
     public int GetTotalRegionSounderCount()
     {
@@ -167,6 +173,17 @@ public class Tau
         ndkSetMidiKeepSameTimeNoteOnCount(ndkTau, count);
     }
 
+    //设置是否启用midi文件解析极限时间(默认值:2s)
+    public void SetEnableMidiEventParseLimitTime(boolean enable, float limitSec)
+    {
+        ndkSetEnableMidiEventParseLimitTime(ndkTau, enable, limitSec);
+    }
+
+    //设置是否开启生成采样频谱,频谱点采样数量(默认值: 2048)
+    public void SetEnableCreateFreqSpectrums(boolean enable, int count)
+    {
+        ndkSetEnableCreateFreqSpectrums(ndkTau, enable, count);
+    }
 
     //判断是否读取完成
     public boolean IsLoadCompleted()
@@ -237,6 +254,11 @@ public class Tau
         return editor.GetBackgroundEndSec();
     }
 
+    //获取采样流的频谱
+    public int GetSampleStreamFreqSpectrums(int channel, double[] outLeft, double[] outRight)
+    {
+        return editor.GetSampleStreamFreqSpectrums(channel, outLeft, outRight);
+    }
 
     // 禁止播放指定编号Midi文件的轨道
     public void DisableTrack(int trackIdx)
@@ -399,10 +421,13 @@ public class Tau
     private static native void ndkSetSampleProcessRate(long ndkTau, int sampleRate);
     private static native void ndkSetChannelCount(long ndkTau, int channelCount);
     private static native void ndkSetUnitProcessMidiTrackCount(long ndkTau, int count);
+    private static native void ndkSetSampleStreamCacheSec(long ndkTau, float sec);
     private static native void ndkSetLimitRegionSounderCount(long ndkTau, int count);
     private static native void ndkSetSetLimitOnKeySpeed(long ndkTau, float speed);
     private static native void ndkSetEnableMidiEventCountOptimize(long ndkTau, boolean enable);
     private static native void ndkSetMidiKeepSameTimeNoteOnCount(long ndkTau, int count);
+    private static native void ndkSetEnableMidiEventParseLimitTime(long ndkTau, boolean enable, float limitSec);
+    private static native void ndkSetEnableCreateFreqSpectrums(long ndkTau, boolean enable, int count);
 
     private static native void ndkAddEffect(long ndkTau, long ndkEffect);
     private static native void ndkSetEnableAllVirInstEffects(long ndkTau, boolean isEnable);

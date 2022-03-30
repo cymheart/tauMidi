@@ -5,6 +5,7 @@
 #include"MidiEvent.h"
 #include <algorithm>
 #include <chrono>
+#include <codecvt>
 
 using namespace std;
 
@@ -306,6 +307,33 @@ namespace tau
 			{
 				globalMidiEvents->AddLast(*it);
 			}
+
+			LinkedList<MidiEvent*>* midiEvents;
+			for (int i = 1; i < midiTrackList.size(); i++)
+			{
+				midiEvents = midiTrackList[i]->GetGolbalEventList();
+				for (auto node = midiEvents->GetHeadNode(); node; node = node->next)
+				{
+					if (node->elem->type == MidiEventType::Text)
+					{
+						TextEvent* textEv = (TextEvent*)node->elem;
+
+						if (textEv->textType == MidiTextType::Marker ||
+							textEv->textType == MidiTextType::ProgramName ||
+							textEv->textType == MidiTextType::Title ||
+							textEv->textType == MidiTextType::Copyright ||
+							textEv->textType == MidiTextType::Comment)
+						{
+							globalMidiEvents->AddLast(node->elem);
+						}
+					}
+					else
+					{
+						globalMidiEvents->AddLast(node->elem);
+					}
+				}
+			}
+
 
 			globalMidiEvents->Sort(MidiEventTickCompare);
 
@@ -766,25 +794,53 @@ namespace tau
 			byte type = midiReader->read<byte>();
 			switch (type)
 			{
-			case 0x03:
-			case 0x04:
+			case 0x00:  //轨道音序
+				midiReader->read<byte>();
+				midiReader->read<uint16_t>();
+				break;
+
+			case 0x01:case 0x02:case 0x03:
+			case 0x04:case 0x05:case 0x06:
+			case 0x07:case 0x08:case 0x09:
 			{
 				TextEvent* textEvent = new TextEvent();
 
 				switch (type)
 				{
-				case 0x03: textEvent->textType = MidiTextType::TrackName; break;
+				case 0x01:
+					if (midiTrackList.empty())
+						textEvent->textType = MidiTextType::Comment;
+					else
+						textEvent->textType = MidiTextType::GeneralText;
+					break;
+
+				case 0x02:
+					textEvent->textType = MidiTextType::Copyright;
+					break;
+
+				case 0x03:
+					if (midiTrackList.empty())
+						textEvent->textType = MidiTextType::Title;
+					else
+						textEvent->textType = MidiTextType::TrackName;
+					break;
+
 				case 0x04: textEvent->textType = MidiTextType::InstrumentName; break;
+				case 0x05: textEvent->textType = MidiTextType::Lyric; break;
+				case 0x06: textEvent->textType = MidiTextType::Marker; break;
+				case 0x07: textEvent->textType = MidiTextType::StartPos; break;
+				case 0x08: textEvent->textType = MidiTextType::ProgramName; break;
+				case 0x09: textEvent->textType = MidiTextType::DeviceName; break;
 				}
 
 				uint32_t len = ReadDynamicValue(*midiReader);
 				if (len != 0)
 				{
-					byte* byteCodes = (byte*)malloc(len);
+					byte* byteCodes = (byte*)malloc(len + 1);
 					if (byteCodes != nullptr)
 					{
 						midiReader->read(byteCodes, 0, len);
-						byteCodes[len - 1] = 0;
+						byteCodes[len] = 0;
 						textEvent->text.assign((const char*)byteCodes);
 						free(byteCodes);
 					}
@@ -952,6 +1008,9 @@ namespace tau
 
 			switch (type)
 			{
+			case 0x00:
+				midiReader->setReadCursor(midiReader->getReadCursor() + 3);
+				break;
 			case 0x03:
 			case 0x04:
 			{

@@ -10,37 +10,38 @@
 namespace tau
 {
 
-	void MidiEditorSynther::EnterWaitPlayModeTask(Semaphore* waitSem)
+	void MidiEditorSynther::EnterPlayModeTask(EditorPlayMode playMode, Semaphore* waitSem)
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
-		ev->processCallBack = _EnterWaitPlayModeTask;
+		ev->processCallBack = _EnterPlayModeTask;
+		ev->value = (int)playMode;
 		ev->sem = waitSem;
 		PostTask(ev);
 	}
 
-	void MidiEditorSynther::_EnterWaitPlayModeTask(Task* ev)
+	void MidiEditorSynther::_EnterPlayModeTask(Task* ev)
 	{
 		SyntherEvent* se = (SyntherEvent*)ev;
 		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
-		midiSynther.EnterWaitPlayMode();
+		midiSynther.EnterPlayMode((EditorPlayMode)se->value);
 		se->sem->set();
 	}
 
-	void MidiEditorSynther::LeaveWaitPlayModeTask(Semaphore* waitSem)
+	void MidiEditorSynther::LeavePlayModeTask(Semaphore* waitSem)
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
-		ev->processCallBack = _LeaveWaitPlayModeTask;
+		ev->processCallBack = _LeavePlayModeTask;
 		ev->sem = waitSem;
 		PostTask(ev);
 	}
 
-	void MidiEditorSynther::_LeaveWaitPlayModeTask(Task* ev)
+	void MidiEditorSynther::_LeavePlayModeTask(Task* ev)
 	{
 		SyntherEvent* se = (SyntherEvent*)ev;
 		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
-		midiSynther.LeaveWaitPlayMode();
+		midiSynther.LeavePlayMode();
 		se->sem->set();
 	}
 
@@ -116,6 +117,45 @@ namespace tau
 		se->sem->set();
 	}
 
+	// 指定播放的起始时间点
+	void MidiEditorSynther::GotoTask(Semaphore* waitSem, double sec)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _GotoTask;
+		ev->exValue[0] = sec;
+		ev->sem = waitSem;
+		PostTask(ev);
+	}
+
+	void MidiEditorSynther::_GotoTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.Goto(se->exValue[0]);
+		se->sem->set();
+	}
+
+
+	// 重新缓存
+	void MidiEditorSynther::ReCacheTask(Semaphore* waitSem)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _ReCacheTask;
+		ev->sem = waitSem;
+		PostTask(ev);
+	}
+
+	void MidiEditorSynther::_ReCacheTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.ReCache();
+		se->sem->set();
+	}
+
+
 	void MidiEditorSynther::RuntoTask(Semaphore* waitSem, double sec)
 	{
 		SyntherEvent* ev = SyntherEvent::New();
@@ -136,25 +176,63 @@ namespace tau
 			se->sem->set();
 	}
 
-
-	// 指定播放的起始时间点
-	void MidiEditorSynther::GotoTask(Semaphore* waitSem, double sec)
+	//获取播放状态(通用)
+	EditorState MidiEditorSynther::GetPlayStateCommonTask()
 	{
+		EditorState midiState;
+		Semaphore waitSem;
+
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
-		ev->processCallBack = _GotoTask;
-		ev->exValue[0] = sec;
-		ev->sem = waitSem;
+		ev->processCallBack = _GetPlayStateCommonTask;
+		ev->ptr = (void*)&midiState;
+		ev->sem = &waitSem;
 		PostTask(ev);
+
+		//
+		waitSem.wait();
+		return midiState;
 	}
 
-	void MidiEditorSynther::_GotoTask(Task* ev)
+	void MidiEditorSynther::_GetPlayStateCommonTask(Task* ev)
 	{
 		SyntherEvent* se = (SyntherEvent*)ev;
 		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
-		midiSynther.Goto(se->exValue[0]);
+
+		EditorState* midEditorState = (EditorState*)se->ptr;
+		*midEditorState = midiSynther.GetPlayStateCommon();
 		se->sem->set();
 	}
+
+
+	//获取缓存播放时间(单位:秒)
+	double MidiEditorSynther::GetPlaySecCommonTask()
+	{
+		double playSec;
+		Semaphore waitSem;
+
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _GetPlaySecCommonTask;
+		ev->ptr = (void*)&playSec;
+		ev->sem = &waitSem;
+		PostTask(ev);
+
+		//
+		waitSem.wait();
+		return playSec;
+	}
+
+	void MidiEditorSynther::_GetPlaySecCommonTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+
+		double* playSec = (double*)se->ptr;
+		*playSec = midiSynther.GetPlaySecCommon();
+		se->sem->set();
+	}
+
 
 	//获取状态
 	EditorState MidiEditorSynther::GetStateTask()
@@ -180,9 +258,11 @@ namespace tau
 		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
 
 		EditorState* midEditorState = (EditorState*)se->ptr;
-		*midEditorState = midiSynther.GetState();
+		*midEditorState = midiSynther.GetPlayState();
 		se->sem->set();
 	}
+
+
 
 
 	//获取结束时间(单位:秒)
@@ -453,7 +533,6 @@ namespace tau
 		SyntherEvent* se = (SyntherEvent*)ev;
 		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
 		midiSynther.NewTrack();
-
 		se->sem->set();
 	}
 

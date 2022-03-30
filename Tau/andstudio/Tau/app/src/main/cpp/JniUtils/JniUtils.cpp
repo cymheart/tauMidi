@@ -63,7 +63,7 @@ int SetStringField(JNIEnv *jenv, jobject obj, const char* field, jstring str)
 
 jobjectArray CreateJFilters(JNIEnv *env, vector<dsignal::Filter*>& filters)
 {
-    jclass jFilterClass = env->FindClass("cymheart/tau/dsignal/Filter");
+    jclass jFilterClass = env->FindClass("cymheart/tau/utils/dsignal/Filter");
 // 获取类的构造函数，记住这里是调用无参的构造函数
     jmethodID id = env->GetMethodID(jFilterClass, "<init>", "()V");
     jfieldID intPtrField = env->GetFieldID(jFilterClass, "ndkFilter", "J");

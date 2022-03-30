@@ -109,6 +109,14 @@ Java_cymheart_tau_Tau_ndkSetUnitProcessMidiTrackCount(JNIEnv *env, jclass clazz,
 
 extern "C"
 JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkSetSampleStreamCacheSec(JNIEnv *env, jclass clazz, jlong ndk_tau,
+                                              jfloat sec) {
+    Tau* tau = (Tau*)ndk_tau;
+    tau->SetSampleStreamCacheSec(sec);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
 Java_cymheart_tau_Tau_ndkSetLimitRegionSounderCount(JNIEnv *env, jclass clazz,
                                                         jlong ndk_tau, jint count) {
     Tau* tau = (Tau*)ndk_tau;
@@ -137,6 +145,22 @@ Java_cymheart_tau_Tau_ndkSetMidiKeepSameTimeNoteOnCount(JNIEnv *env, jclass claz
                                                         jint count) {
     Tau* tau = (Tau*)ndk_tau;
     tau->SetMidiKeepSameTimeNoteOnCount(count);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkSetEnableMidiEventParseLimitTime(JNIEnv *env, jclass clazz, jlong ndk_tau,
+                                                          jboolean enable, jfloat limit_sec) {
+    Tau* tau = (Tau*)ndk_tau;
+    tau->SetEnableMidiEventParseLimitTime(enable, limit_sec);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkSetEnableCreateFreqSpectrums(JNIEnv *env, jclass clazz, jlong ndk_tau,
+                                                      jboolean enable, jint count) {
+    Tau* tau = (Tau*)ndk_tau;
+    tau->SetEnableCreateFreqSpectrums(enable, count);
 }
 
 extern "C"
@@ -311,8 +335,5 @@ Java_cymheart_tau_Tau_ndkAddEffect(JNIEnv *env, jclass clazz, jlong ndk_tau,
     TauEffect* effect = (TauEffect*)ndk_effect;
     tau->AddEffect(effect);
 }
-
-
-
 
 

@@ -57,7 +57,7 @@ namespace tau
 		synther = virInst->synther;
 		isOnningKey = true;
 		downKey = key;
-		downKeySec = synther->sec;
+		downKeySec = synther->GetCurtSec();
 		this->velocity = velocity;
 		CreateActiveRegionSounderList();
 
@@ -156,7 +156,7 @@ namespace tau
 		}
 
 		isSoundEnd = true;
-		soundEndSec = synther->sec;
+		soundEndSec = synther->GetCurtSec();
 		return true;
 	}
 
@@ -172,7 +172,7 @@ namespace tau
 		}
 
 		isSoundEnd = true;
-		soundEndSec = synther->sec;
+		soundEndSec = synther->GetCurtSec();
 	}
 
 

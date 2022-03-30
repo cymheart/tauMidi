@@ -65,6 +65,11 @@ namespace tau
 		channel->SetChannelNum(channelNum);
 	}
 
+	void Track::SetName(string& _name)
+	{
+		name = _name;
+	}
+
 	int Track::GetChannelNum()
 	{
 		return channel->GetChannelNum();

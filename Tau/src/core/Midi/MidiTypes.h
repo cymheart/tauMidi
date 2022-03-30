@@ -244,13 +244,38 @@ namespace tau
 	/// </summary>
 	enum class MidiTextType
 	{
+		//通用文本
 		GeneralText,
+
+		//歌曲版权
 		Copyright,
+
+		//歌曲标题
+		Title,
+
+		//音轨名称
 		TrackName,
+
+		//乐器名称
 		InstrumentName,
+
+		//歌曲文件的名字
+		ProgramName,
+
+		//MIDI设备的名字
+		DeviceName,
+
+		//歌词
 		Lyric,
+
+		//标记
 		Marker,
-		Comment
+
+		//歌曲备注
+		Comment,
+
+		//开始点
+		StartPos
 	};
 
 	/// <summary>
