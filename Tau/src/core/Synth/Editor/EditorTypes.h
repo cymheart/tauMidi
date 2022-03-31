@@ -31,7 +31,9 @@ namespace tau
 		//播放
 		PLAY,
 		//暂停
-		PAUSE
+		PAUSE,
+		//结束暂停
+		ENDPAUSE
 	};
 
 	//instFragMode

@@ -122,6 +122,13 @@ Java_cymheart_tau_editor_Editor_ndkGetPlaySec(JNIEnv *env, jclass clazz, jlong n
 
 extern "C"
 JNIEXPORT jint JNICALL
+Java_cymheart_tau_editor_Editor_ndkGetPlayState(JNIEnv *env, jclass clazz, jlong ndk_editor) {
+    Editor* editor = (Editor*)ndk_editor;
+    return (int)editor->GetState();
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
 Java_cymheart_tau_editor_Editor_ndkGetSampleStreamFreqSpectrums(JNIEnv *env, jclass clazz, jlong ndk_editor,
                                                                 jint channel, jdoubleArray out_left,
                                                                 jdoubleArray out_right) {

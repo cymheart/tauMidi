@@ -230,7 +230,7 @@ public class Tau
 
     public int GetState()
     {
-        return 0;
+        return editor.GetState();
     }
 
     public double GetPlaySec()
@@ -248,10 +248,13 @@ public class Tau
     {
         return editor.GetBackgroundPlaySec();
     }
-
     public double GetBackgroundEndSec()
     {
         return editor.GetBackgroundEndSec();
+    }
+    public int GetBackgroundPlayState()
+    {
+        return editor.GetBackgroundPlayState();
     }
 
     //获取采样流的频谱

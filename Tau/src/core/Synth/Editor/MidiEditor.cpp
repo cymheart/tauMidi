@@ -198,7 +198,6 @@ namespace tau
 			return;
 
 		if (state == EditorState::STOP) {
-			curtPlaySec = 0;
 			for (int i = 0; i < trackList.size(); i++)
 				trackList[i]->Clear();
 		}
@@ -421,6 +420,7 @@ namespace tau
 		if (curtPlaySec >= endSec) {
 			printf("当前轨道midi时间处理结束! \n");
 			Pause();
+			state = EditorState::ENDPAUSE;
 		}
 	}
 

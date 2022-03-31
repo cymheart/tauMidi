@@ -20,6 +20,8 @@ public class Editor {
     static public final int PLAY = 1;
     //暂停
     static public final int PAUSE = 2;
+    //结束暂停
+    static public final int ENDPAUSE = 3;
 
     protected List<Track> tracks = new ArrayList<>();
 
@@ -30,6 +32,7 @@ public class Editor {
     protected boolean isLoadCompleted = false;
 
     protected int state = STOP;
+    public int GetState(){return state;}
 
     protected float speed = 1;
     protected double curtPlaySec = 0;
@@ -267,6 +270,12 @@ public class Editor {
         return ndkGetEndSec(ndkEditor);
     }
 
+    public int GetBackgroundPlayState()
+    {
+        return ndkGetPlayState(ndkEditor);
+    }
+
+
     //获取采样流的频谱
     public int GetSampleStreamFreqSpectrums(int channel, double[] outLeft, double[] outRight)
     {
@@ -297,10 +306,11 @@ public class Editor {
 
         ProcessCore(sec, false);
 
-        if(curtPlaySec >= endSec)
+        if(curtPlaySec >= endSec) {
             _Pause();
+            state = ENDPAUSE;
+        }
     }
-
 
     protected void ProcessCore(double sec, boolean isDirectGoto)
     {
@@ -485,5 +495,6 @@ public class Editor {
     private static native void ndkGoto(long ndkEditor, double sec);
     private static native double ndkGetPlaySec(long ndkEditor);
     private static native double ndkGetEndSec(long ndkEditor);
+    private static native int ndkGetPlayState(long ndkEditor);
     private static native int ndkGetSampleStreamFreqSpectrums(long ndkEditor, int channel, double[] outLeft, double[] outRight);
 }

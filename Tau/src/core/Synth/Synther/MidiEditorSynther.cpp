@@ -85,13 +85,10 @@ namespace tau
 		if (sec > endsec)
 			sec = endsec;
 
-
+		midiEditor->Goto(sec);
 		if (maxCacheSize > 0 && isEnableCache) {
 			if (CacheGoto(sec))
-				midiEditor->Goto(sec);
-		}
-		else {
-			midiEditor->Goto(sec);
+				midiEditor->Play();
 		}
 	}
 
@@ -382,6 +379,7 @@ namespace tau
 			(midiEditor != nullptr && midiEditor->GetState() == EditorState::PLAY))
 			return true;
 
+		isCacheWriteSoundEnd = true;
 		return false;
 	}
 

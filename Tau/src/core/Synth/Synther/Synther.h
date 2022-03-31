@@ -234,6 +234,12 @@ namespace tau
 			return curtCachePlaySec;
 		}
 
+		//获取midi结束时间(单位:秒)
+		virtual double GetEndSec()
+		{
+			return 0;
+		}
+
 		//设置帧样本数量
 		//这个值越小，声音的实时性越高（在实时演奏时，值最好在1024以下，最合适的值为512）,
 		//当这个值比较小时，cpu内耗增加

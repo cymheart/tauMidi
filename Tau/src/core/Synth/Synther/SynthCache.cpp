@@ -64,7 +64,9 @@ namespace tau
 			else if (cachedSize <= minCacheSize)
 			{
 				CreateFallCacheSamples();
+				cacheGain = 0;
 				state = CacheState::CachingNotRead;
+				ReqRender();
 			}
 			else if (cachedSize <= maxCacheSize) {
 				ReqRender();
@@ -91,7 +93,11 @@ namespace tau
 			break;
 
 		case CacheState::CachingPauseRead:
-			if (cachedSize <= maxCacheSize)
+			if (!CanCache())
+			{
+				state = CacheState::PauseWaitRead;
+			}
+			else if (cachedSize <= maxCacheSize)
 				ReqRender();
 			else
 				state = CacheState::PauseWaitRead;
@@ -99,6 +105,7 @@ namespace tau
 
 
 		case CacheState::CacheStoping:
+			isCacheWriteSoundEnd = true;
 			cacheBuffer->Clear();
 			state = CacheState::CacheStop;
 			break;
@@ -154,8 +161,9 @@ namespace tau
 
 			if (cacheBuffer->GetNeedReadSize() <= 0)
 			{
+				cacheBuffer->Clear();
 				state = CacheState::CacheStop;
-				cachePlayState = EditorState::STOP;
+				cachePlayState = EditorState::ENDPAUSE;
 				break;
 			}
 
@@ -243,9 +251,7 @@ namespace tau
 		lock_guard<mutex> lock(mainSynther->cacheLocker);
 
 		if (cachePlayState != EditorState::PAUSE)
-		{
 			CreateFallCacheSamples();
-		}
 
 		cachePlayState = EditorState::STOP;
 		curtCachePlaySec = 0;
@@ -269,6 +275,7 @@ namespace tau
 			break;
 
 		default:
+			isCacheWriteSoundEnd = true;
 			cacheBuffer->Clear();
 			state = CacheState::CacheStop;
 			break;
@@ -282,7 +289,10 @@ namespace tau
 		lock_guard<mutex> lock(mainSynther->cacheLocker);
 
 		if (state == CacheState::CacheStop)
-			return false;
+		{
+			curtCachePlaySec = sec;
+			return true;
+		}
 
 		int offsetCacheReadPosLen = -1;
 		if (!isMustReset && sec >= curtCachePlaySec)
@@ -308,6 +318,34 @@ namespace tau
 #define _CacheClear() \
 		if(offsetCacheReadPosLen < 0) {cacheBuffer->Clear();isReset = true;}\
 		else {cacheBuffer->OffsetReadPos(offsetCacheReadPosLen);}\
+
+
+		if (sec >= GetEndSec())
+		{
+			cachePlayState = EditorState::ENDPAUSE;
+			switch (state)
+			{
+			case CacheState::CacheStoping:
+				break;
+
+			case CacheState::CachingPauseRead:
+			case CacheState::CachingAndRead:
+			case CacheState::CachingNotRead:
+				CreateFallCacheSamples();
+				state = CacheState::CacheStoping;
+				break;
+
+			default:
+				CreateFallCacheSamples();
+				isCacheWriteSoundEnd = true;
+				cacheBuffer->Clear();
+				state = CacheState::CacheStop;
+				break;
+			}
+
+			return false;
+		}
+
 
 		//
 		switch (state)

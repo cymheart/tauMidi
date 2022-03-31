@@ -171,14 +171,14 @@ namespace tau
 		//获取播放时间(通用)
 		double GetPlaySecCommon();
 
-		//获取midi播放时间
-		virtual	double GetPlaySec();
-
 		//获取midi状态
 		EditorState GetPlayState();
 
+		//获取midi播放时间
+		virtual	double GetPlaySec();
+
 		//获取midi结束时间(单位:秒)
-		double GetEndSec();
+		virtual double GetEndSec();
 
 		//设置midi结束时间(单位:秒)
 		void SetEndSec(double sec);
