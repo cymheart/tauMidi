@@ -1,0 +1,9 @@
+G:/cymheart/tau/SDL2/out/build/x64-Debug (默认值)/CMakeFiles/rebuild_cache.dir
+G:/cymheart/tau/SDL2/out/build/x64-Debug (默认值)/CMakeFiles/SDL2-static.dir
+G:/cymheart/tau/SDL2/out/build/x64-Debug (默认值)/CMakeFiles/SDL2main.dir
+G:/cymheart/tau/SDL2/out/build/x64-Debug (默认值)/CMakeFiles/install/local.dir
+G:/cymheart/tau/SDL2/out/build/x64-Debug (默认值)/CMakeFiles/install.dir
+G:/cymheart/tau/SDL2/out/build/x64-Debug (默认值)/CMakeFiles/edit_cache.dir
+G:/cymheart/tau/SDL2/out/build/x64-Debug (默认值)/CMakeFiles/SDL2.dir
+G:/cymheart/tau/SDL2/out/build/x64-Debug (默认值)/CMakeFiles/uninstall.dir
+G:/cymheart/tau/SDL2/out/build/x64-Debug (默认值)/CMakeFiles/list_install_components.dir
