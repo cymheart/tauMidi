@@ -139,6 +139,15 @@ Java_cymheart_tau_Tau_ndkSetEnableMidiEventCountOptimize(JNIEnv *env, jclass cla
     Tau* tau = (Tau*)ndk_tau;
     tau->SetEnableMidiEventCountOptimize(enable);
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkSetEnableCopySameChannelControlEvents(JNIEnv *env, jclass clazz,
+                                                               jlong ndk_tau, jboolean enable) {
+    Tau* tau = (Tau*)ndk_tau;
+    tau->SetEnableCopySameChannelControlEvents(enable);
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_cymheart_tau_Tau_ndkSetMidiKeepSameTimeNoteOnCount(JNIEnv *env, jclass clazz, jlong ndk_tau,
@@ -335,5 +344,3 @@ Java_cymheart_tau_Tau_ndkAddEffect(JNIEnv *env, jclass clazz, jlong ndk_tau,
     TauEffect* effect = (TauEffect*)ndk_effect;
     tau->AddEffect(effect);
 }
-
-

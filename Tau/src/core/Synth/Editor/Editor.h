@@ -128,6 +128,9 @@ namespace tau
 		//设置轨道事件演奏方式
 		void SetTrackPlayType(int trackIdx, MidiEventPlayType playType);
 
+		//设置演奏类型
+		void SetPlayType(MidiEventPlayType playType);
+
 		// 设置对应轨道的乐器
 		void SetVirInstrument(int trackIdx, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
@@ -245,6 +248,8 @@ namespace tau
 		static void ReadMidiFileThread(void* param);
 		void ReadMidiFile();
 
+		//获取当前时间之后的notekeys
+		void GetCurTimeLateNoteKeys(float lateSec);
 
 	private:
 
@@ -266,19 +271,35 @@ namespace tau
 		//播放模式
 		EditorPlayMode playMode = EditorPlayMode::Common;
 
+		//演奏类型
+		MidiEventPlayType playType = MidiEventPlayType::DoubleHand;
+
+
 		//是否等待
 		atomic_bool isWait;
 
 		mutex waitOnKeyLock;
-		int onkey[128] = { 0 };
 
+		//按下的按键次数，以键号分类计数
+		int onkey[128] = { 0 };
+		//按下的按键总个数
+		int onKeyCount = 0;
+
+		//需要按下的按键次数，以键号分类计数
 		int needOnkey[128] = { 0 };
+		//需要按下的按键总个数
 		int needOnKeyCount = 0;
 
+		//需要松开的按键次数，以键号分类计数
 		int needOffkey[128] = { 0 };
+		//需要松开的按键总个数
 		int needOffKeyCount = 0;
 
+		//当前时间后几秒钟是否有按键存在
+		bool lateHavKeys[128] = { 0 };
 
+
+		//
 		SelectInstFragMode selectInstFragMode = SelectInstFragMode::SingleSelect;
 		vector<SelectInstFragmentInfo> selectedInstFrags;
 

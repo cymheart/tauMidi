@@ -29,6 +29,9 @@ namespace tau
 		//建立MidiEditor
 		MidiEditor* CreateMidiEditor();
 
+
+		void GetCurTimeLateNoteKeysTask(float lateSec, Semaphore* waitSem);
+		void SetPlayTypeTask(MidiEventPlayType playType, Semaphore* waitSem);
 		void EnterPlayModeTask(EditorPlayMode playMode, Semaphore* waitSem);
 		void LeavePlayModeTask(Semaphore* waitSem);
 
@@ -108,6 +111,8 @@ namespace tau
 
 	private:
 		//
+		static void _GetCurTimeLateNoteKeysTask(Task* ev);
+		static void _SetPlayTypeTask(Task* ev);
 		static void _EnterPlayModeTask(Task* ev);
 		static void _LeavePlayModeTask(Task* ev);
 
@@ -162,6 +167,8 @@ namespace tau
 
 		void Runto(double sec);
 
+		void GetCurTimeLateNoteKeys(float lateSec);
+		void SetPlayType(MidiEventPlayType playType);
 		void EnterPlayMode(EditorPlayMode playMode);
 		void LeavePlayMode();
 

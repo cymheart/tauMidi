@@ -26,8 +26,6 @@ namespace task
 		int count;
 		LinkedList<Task*>* taskList;
 		long tm = curtTimeMS + 1;
-		if (curTimeMS - tm > 20)
-			tm = GetNearestExecuteTimeMS();
 
 		for (; tm <= curTimeMS; tm++)
 		{
@@ -337,6 +335,7 @@ namespace task
 				for (; node != nullptr; node = node->next) {
 					if (node->elem == task)
 					{
+						wheelSlots[i]->AddElemCount(-1);
 						taskList->Remove(node);
 						TaskObjectPool::GetInstance().NodePool().Push(node);
 						return true;

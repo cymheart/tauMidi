@@ -1,5 +1,5 @@
 #include <jni.h>
-#include<FX/jniReverb.h>
+#include<FX/Reverb.h>
 #include"../../JniUtils/JniUtils.h"
 #include <jni.h>
 

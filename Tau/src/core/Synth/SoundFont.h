@@ -2,6 +2,8 @@
 #define _SoundFont_h_
 
 #include "TauTypes.h"
+#include"SampleGenerator.h"
+
 
 namespace tau
 {
@@ -14,6 +16,9 @@ namespace tau
 		//根据格式类型,解析soundfont文件
 		void Parse(string formatName, string path);
 
+		//开启物理钢琴
+		void EnablePhysicsPiano(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
+
 		// 增加一个样本到样本列表
 		Sample* AddSample(string name, short* samples, size_t size, uint8_t* sm24 = nullptr);
 
@@ -21,6 +26,9 @@ namespace tau
 		{
 			return sampleList;
 		}
+
+		// 增加一个样本生成器到样本列表
+		void AddSampleGen(SampleGenerator* sampleGen);
 
 		// 增加一个乐器到乐器列表
 		Instrument* AddInstrument(string name);
@@ -42,6 +50,9 @@ namespace tau
 		// 样本绑定到乐器上
 		Region* SampleBindToInstrument(Sample* sample, Instrument* inst);
 
+		// 样本发生器绑定到乐器上
+		Region* SampleGenBindToInstrument(SampleGenerator* sampleGen, Instrument* inst);
+
 		// 乐器绑定到预设上 
 		Region* InstrumentBindToPreset(Instrument* inst, Preset* preset);
 
@@ -62,9 +73,14 @@ namespace tau
 	private:
 		//
 		SampleList* sampleList = nullptr;
+		SampleGenList* sampleGenList = nullptr;
 		InstrumentList* instList = nullptr;
 		PresetList* presetList = nullptr;
 		PresetMap* presetBankDict = nullptr;
+
+		//是否开启物理钢琴
+		bool isEnablePhysicsPiano = false;
+
 
 		//音源解析格式
 		SoundFontParserMap* sfParserMap;

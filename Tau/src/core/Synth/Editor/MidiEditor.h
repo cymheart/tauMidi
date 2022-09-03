@@ -66,6 +66,12 @@ namespace tau
 			return trackCount;
 		}
 
+		//设置弹奏方式
+		inline void SetPlayType(MidiEventPlayType _playType)
+		{
+			playType = _playType;
+		}
+
 		//获取播放模式
 		inline EditorPlayMode GetPlayMode()
 		{
@@ -126,6 +132,12 @@ namespace tau
 		//计算结束时间点
 		void ComputeEndSec();
 
+		/// <summary>
+		/// 获取当前时间之后的notekeys
+		/// </summary>
+		/// <param name="lateSec">当前时间之后的秒数</param>
+		void GetCurTimeLateNoteKeys(double lateSec);
+
 
 		//当前时间curtPlaySec往前处理一个sec的时间长度的所有midi事件
 		void Process(double sec, bool isStepOp = false);
@@ -156,6 +168,10 @@ namespace tau
 		//处理轨道事件
 		void ProcessEvent(MidiEvent* midEv, Track* track, bool isDirectGoto);
 
+		bool PlayModeAndTypeTest(MidiEvent* midEv, Track* track);
+
+		void GetNoteKeys(Track* track, double curtSec);
+
 	private:
 
 		Tau* tau;
@@ -163,7 +179,8 @@ namespace tau
 		MidiEditorSynther* midiSynther;
 		MidiMarkerList midiMarkerList;
 
-		EditorState state = EditorState::STOP;
+		atomic<EditorState> state;
+
 
 		// 轨道
 		vector<Track*> trackList;
@@ -171,6 +188,9 @@ namespace tau
 
 		//轨道缓存
 		vector<Track*> tempTracks;
+
+		//
+		vector<int> tempNoteKeys;
 
 		//结束时间点
 		double endSec = 0;
@@ -181,8 +201,11 @@ namespace tau
 		//播放模式
 		EditorPlayMode playMode = EditorPlayMode::Common;
 
+		//演奏类型
+		MidiEventPlayType playType = MidiEventPlayType::DoubleHand;
+
 		//当前播放时间
-		double curtPlaySec;
+		atomic<double> curtPlaySec;
 
 		friend class Editor;
 		friend class Track;

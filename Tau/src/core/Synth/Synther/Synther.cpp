@@ -22,6 +22,10 @@ namespace tau
 		isReqDelete = false;
 		isSoundEnd = true;
 
+		cachePlayState = EditorState::STOP;
+		curtCachePlaySec = 0;
+
+
 		//
 		presetBankReplaceMap = new unordered_map<uint32_t, uint32_t>;
 
@@ -142,7 +146,7 @@ namespace tau
 		taskProcesser->Start();
 		isOpened = true;
 
-		ShowCacheInfo();
+		//ShowCacheInfo();
 	}
 
 	void Synther::Close()
@@ -866,15 +870,18 @@ namespace tau
 	void Synther::MainSynthBuffer()
 	{
 		//缓存处理
+		//isEnableCache 为true时，说明还有部分从合成器未完成数据采样，
+		//需要继续调用CacheProcess()来处理从合成器中的数据采样
 		if (maxCacheSize > 0 && isEnableCache)
 		{
 			CacheProcess();
 		}
-		else
+		else //可能是没有分配缓存，或者所有从合成器完成了数据采样
 		{
-			if (tau->sampleStreamCacheSec <= 0)
+			//没有分配缓存
+			if (maxCacheSize <= 0)
 				SynthSlavesBuffer();
-			else
+			else  //所有从合成器完成了数据采样，把从合成器采样数据合并到主合成器中
 				CacheSynthSlavesBuffer();
 		}
 

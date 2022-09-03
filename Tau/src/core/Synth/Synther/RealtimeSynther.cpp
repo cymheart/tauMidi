@@ -133,7 +133,7 @@ namespace tau
 		ev.key = key;
 		ev.velocity = velocity;
 		ev.virInst = virInst;
-		ev.timeSec = GetCurrentTimeMsec() * 0.001f;
+		ev.timeSec = GetCurrentTimeMsec() * 0.001;
 
 		cmdLock.lock();
 
@@ -160,7 +160,7 @@ namespace tau
 		ev.key = key;
 		ev.velocity = velocity;
 		ev.virInst = virInst;
-		ev.timeSec = GetCurrentTimeMsec() * 0.001f;
+		ev.timeSec = GetCurrentTimeMsec() * 0.001;
 
 		cmdLock.lock();
 

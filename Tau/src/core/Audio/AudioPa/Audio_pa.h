@@ -19,8 +19,8 @@ namespace tau
 
 		virtual int SetSampleCount(int sampleCount)
 		{
-			if (sampleCount <= 256)
-				sampleCount = 256;
+			if (sampleCount <= 64)
+				sampleCount = 64;
 			this->sampleCount = sampleCount;
 			return this->sampleCount;
 		}

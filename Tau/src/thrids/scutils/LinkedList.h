@@ -241,6 +241,30 @@ namespace scutils
 			return startNode;
 		}
 
+		bool Contains(T elem)
+		{
+			return (ContainsAtNode(elem) != nullptr ? true : false);
+		}
+
+		LinkedListNode<T>* ContainsAtNode(T elem)
+		{
+			LinkedListNode<T>* nd = head;
+			for (; nd; nd = nd->next) {
+				if (nd->elem == elem)
+					return nd;
+			}
+			return nullptr;
+		}
+
+		bool Remove(T elem)
+		{
+			LinkedListNode<T>* nd = ContainsAtNode(elem);
+			if (nd)
+				return false;
+			Remove(nd);
+			return true;
+		}
+
 		LinkedListNode<T>* Remove(LinkedListNode<T>* node)
 		{
 			return Remove(node, node, 1);
@@ -250,6 +274,10 @@ namespace scutils
 		LinkedListNode<T>* Remove(LinkedListNode<T>* startNode, LinkedListNode<T>* endNode, int count)
 		{
 			if (startNode == nullptr || endNode == nullptr)
+				return nullptr;
+
+			if ((startNode->prev == nullptr && startNode != head) ||
+				(endNode->next == nullptr && endNode != tail))
 				return nullptr;
 
 			LinkedListNode<T>* prev = startNode->prev;

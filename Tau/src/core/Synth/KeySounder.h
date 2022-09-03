@@ -147,7 +147,7 @@ namespace tau
 		void CreateActiveRegionSounderList();
 
 		RegionSounder* CreateRegionSounder(
-			Sample* sample,
+			Sample* sample, SampleGenerator* sampleGen,
 			Region* activeInstRegion, Region* activeInstGlobalRegion,
 			Region* activePresetRegion, Region* activePresetGlobalRegion);
 

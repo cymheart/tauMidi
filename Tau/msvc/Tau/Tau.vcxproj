@@ -52,6 +52,7 @@
     <ClCompile Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.cpp" />
     <ClCompile Include="..\..\src\core\SoundFormat\Wav\WavReader.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Channel.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\PhysicsPiano.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\Editor.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\InstFragment.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\MidiEditor.cpp" />
@@ -164,6 +165,12 @@
     <ClCompile Include="..\..\src\thrids\iir\RBJ.cpp" />
     <ClCompile Include="..\..\src\thrids\kissfft\kiss_fft.cpp" />
     <ClCompile Include="..\..\src\thrids\kissfft\kiss_fftr.cpp" />
+    <ClCompile Include="..\..\src\thrids\OteyPiano\DWG.cpp" />
+    <ClCompile Include="..\..\src\thrids\OteyPiano\dwgs.cpp" />
+    <ClCompile Include="..\..\src\thrids\OteyPiano\filter.cpp" />
+    <ClCompile Include="..\..\src\thrids\OteyPiano\hammer.cpp" />
+    <ClCompile Include="..\..\src\thrids\OteyPiano\Piano.cpp" />
+    <ClCompile Include="..\..\src\thrids\OteyPiano\reverb.cpp" />
     <ClCompile Include="..\..\src\thrids\scutils\ByteStream.cpp" />
     <ClCompile Include="..\..\src\thrids\scutils\MathUtils.cpp" />
     <ClCompile Include="..\..\src\thrids\scutils\RingBuffer.cpp" />
@@ -202,8 +209,8 @@
     <ClInclude Include="..\..\src\core\FX\Equalizer.h" />
     <ClInclude Include="..\..\src\core\FX\EffectList.h" />
     <ClInclude Include="..\..\src\core\FX\FxTypes.h" />
-    <ClInclude Include="..\..\src\core\FX\Reverb.h" />
     <ClInclude Include="..\..\src\core\FX\EffectTask.h" />
+    <ClInclude Include="..\..\src\core\FX\Reverb.h" />
     <ClInclude Include="..\..\src\core\FX\Tremolo.h" />
     <ClInclude Include="..\..\src\core\FX\TauEffect.h" />
     <ClInclude Include="..\..\src\core\Midi\MidiEvent.h" />
@@ -218,6 +225,7 @@
     <ClInclude Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.h" />
     <ClInclude Include="..\..\src\core\SoundFormat\Wav\WavReader.h" />
     <ClInclude Include="..\..\src\core\Synth\Channel.h" />
+    <ClInclude Include="..\..\src\core\Synth\PhysicsPiano.h" />
     <ClInclude Include="..\..\src\core\Synth\Editor\Editor.h" />
     <ClInclude Include="..\..\src\core\Synth\Editor\EditorTypes.h" />
     <ClInclude Include="..\..\src\core\Synth\Editor\InstFragment.h" />
@@ -235,6 +243,7 @@
     <ClInclude Include="..\..\src\core\Synth\Lfo.h" />
     <ClInclude Include="..\..\src\core\Synth\Modulator.h" />
     <ClInclude Include="..\..\src\core\Synth\ModulatorList.h" />
+    <ClInclude Include="..\..\src\core\Synth\SampleGenerator.h" />
     <ClInclude Include="..\..\src\core\Synth\SoundFont.h" />
     <ClInclude Include="..\..\src\core\Synth\SyntherEvent.h" />
     <ClInclude Include="..\..\src\core\Synth\Synther\MidiEditorSynther.h" />
@@ -349,6 +358,13 @@
     <ClInclude Include="..\..\src\thrids\kissfft\kiss_fft.h" />
     <ClInclude Include="..\..\src\thrids\kissfft\kiss_fftr.h" />
     <ClInclude Include="..\..\src\thrids\kissfft\_kiss_fft_guts.h" />
+    <ClInclude Include="..\..\src\thrids\OteyPiano\DWG.h" />
+    <ClInclude Include="..\..\src\thrids\OteyPiano\dwgs.h" />
+    <ClInclude Include="..\..\src\thrids\OteyPiano\filter.h" />
+    <ClInclude Include="..\..\src\thrids\OteyPiano\hammer.h" />
+    <ClInclude Include="..\..\src\thrids\OteyPiano\Piano.h" />
+    <ClInclude Include="..\..\src\thrids\OteyPiano\PianoParams.h" />
+    <ClInclude Include="..\..\src\thrids\OteyPiano\reverb.h" />
     <ClInclude Include="..\..\src\thrids\scutils\ArrayPool.h" />
     <ClInclude Include="..\..\src\thrids\scutils\ByteStream.h" />
     <ClInclude Include="..\..\src\thrids\scutils\LinkedList.h" />

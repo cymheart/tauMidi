@@ -20,10 +20,13 @@ namespace tau
 		tau = midiSynther->tau;
 		editor = tau->editor;
 
+		state = EditorState::STOP;
+
 		//初始化值
 		curtPlaySec = editor->GetPlaySec();
 		speed = editor->GetSpeed();
 		playMode = editor->playMode;
+		playType = editor->playType;
 		state = editor->GetState();
 		midiMarkerList.Copy(editor->midiMarkerList);
 	}
@@ -190,6 +193,59 @@ namespace tau
 				endSec = trackList[i]->endSec;
 		}
 	}
+
+
+	/// <summary>
+	/// 获取当前时间之后的notekeys
+	/// </summary>
+	/// <param name="lateSec">当前时间之后的秒数</param>
+	void MidiEditor::GetCurTimeLateNoteKeys(double lateSec)
+	{
+		tempNoteKeys.clear();
+		for (int i = 0; i < trackList.size(); i++)
+			GetNoteKeys(trackList[i], lateSec);
+	}
+
+	void MidiEditor::GetNoteKeys(Track* track, double lateSec)
+	{
+		LinkedList<MidiEvent*>* eventList;
+		InstFragment* instFrag;
+		MidiEvent* ev;
+		double sec;
+		double minSec = lateSec + 1;
+		auto& instFragmentBranchs = track->instFragmentBranchs;
+		for (int j = 0; j < instFragmentBranchs.size(); j++)
+		{
+			list<InstFragment*>::iterator frag_it = instFragmentBranchs[j]->begin();
+			list<InstFragment*>::iterator frag_end = instFragmentBranchs[j]->end();
+			for (; frag_it != frag_end; frag_it++)
+			{
+				instFrag = *frag_it;
+				eventList = &(instFrag->midiEvents);
+
+				LinkedListNode<MidiEvent*>* node = instFrag->eventOffsetNode;
+				for (; node; node = node->next)
+				{
+					ev = node->elem;
+					sec = ev->startSec - curtPlaySec;
+					if (sec > lateSec)
+						break;
+
+					if (ev->type == MidiEventType::NoteOn &&
+						sec <= minSec &&
+						!PlayModeAndTypeTest(ev, track))
+					{
+						if (sec < minSec)
+							tempNoteKeys.clear();
+						minSec = sec;
+						tempNoteKeys.push_back(((NoteOnEvent*)ev)->note);
+
+					}
+				}
+			}
+		}
+	}
+
 
 	//开始播放
 	void MidiEditor::Play()
@@ -445,6 +501,11 @@ namespace tau
 		}
 	}
 
+	/// <summary>
+	/// 处理轨道事件
+	/// </summary>
+	/// <param name="track">待处理的轨道</param>
+	/// <param name="isDirectGoto">是否直接指定播放位置</param>
 	void MidiEditor::ProcessTrack(Track* track, bool isDirectGoto)
 	{
 		LinkedList<MidiEvent*>* eventList;
@@ -466,7 +527,8 @@ namespace tau
 				{
 					ev = node->elem;
 
-					//重新处理当前时间点在事件处理时间中间时，可以重新启用此事件
+					//当直接指定播放位置时,
+					//如果当前时间点在事件处理时间中间，将会重新启用此发声音符事件
 					if (isDirectGoto &&
 						ev->startSec < curtPlaySec &&
 						ev->endSec > curtPlaySec)
@@ -511,16 +573,12 @@ namespace tau
 		{
 		case MidiEventType::NoteOn:
 		{
-			if (isDirectGoto ||
-				track->isDisablePlay)
+			if (isDirectGoto || track->isDisablePlay)
 				break;
 
 			NoteOnEvent* noteOnEv = (NoteOnEvent*)midEv;
 
-			if (playMode != EditorPlayMode::Wait ||
-				track->playType == MidiEventPlayType::Background ||
-				(track->playType == MidiEventPlayType::Custom &&
-					midEv->playType != MidiEventPlayType::Background))
+			if (PlayModeAndTypeTest(midEv, track))
 			{
 				virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1);
 			}
@@ -532,18 +590,14 @@ namespace tau
 
 		case MidiEventType::NoteOff:
 		{
-			if (isDirectGoto ||
-				track->isDisablePlay)
+			if (isDirectGoto || track->isDisablePlay)
 				break;
 
 			NoteOffEvent* noteOffEv = (NoteOffEvent*)midEv;
 			if (noteOffEv->noteOnEvent == nullptr)
 				break;
 
-			if (playMode != EditorPlayMode::Wait ||
-				track->playType == MidiEventPlayType::Background ||
-				(track->playType == MidiEventPlayType::Custom &&
-					midEv->playType != MidiEventPlayType::Background))
+			if (PlayModeAndTypeTest(midEv, track))
 			{
 				virInst->OffKey(noteOffEv->note, (float)noteOffEv->velocity);
 			}
@@ -581,6 +635,39 @@ namespace tau
 		}
 		break;
 		}
+	}
+
+	bool MidiEditor::PlayModeAndTypeTest(MidiEvent* midEv, Track* track)
+	{
+		if (playMode != EditorPlayMode::Wait)
+			return true;
+
+
+		if (track->playType == MidiEventPlayType::Custom)
+		{
+			if ((playType == MidiEventPlayType::DoubleHand &&
+				midEv->playType != MidiEventPlayType::Background) ||
+
+				(playType == MidiEventPlayType::LeftHand &&
+					midEv->playType == MidiEventPlayType::LeftHand) ||
+
+				(playType == MidiEventPlayType::RightHand &&
+					midEv->playType == MidiEventPlayType::RightHand))
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		if (playType == MidiEventPlayType::DoubleHand &&
+			track->playType != MidiEventPlayType::Background)
+			return false;
+
+		if (playType == track->playType)
+			return false;
+
+		return true;
 	}
 
 }

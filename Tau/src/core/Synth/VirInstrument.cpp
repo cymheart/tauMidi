@@ -461,7 +461,6 @@ namespace tau
 		if (CanIgroneOnKey(key, velocity, tickCount, isRealtime))
 			return;
 
-
 		//如果是实时乐器，按键将不会重复按下，先前按下的按键将会被释放
 		if (isRealtime)
 		{

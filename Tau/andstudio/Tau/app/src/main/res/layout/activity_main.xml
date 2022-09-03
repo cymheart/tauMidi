@@ -3,13 +3,96 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:textDirection="ltr"
     tools:context=".MainActivity">
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:scrollbars="vertical">
+
+        <Button
+            android:id="@+id/button4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Button4" />
+
+        <Button
+            android:id="@+id/button5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Button5" />
+
+        <EditText
+            android:id="@+id/editTextTextPersonName2"
+            android:layout_width="307dp"
+            android:layout_height="136dp"
+            android:breakStrategy="simple"
+            android:ellipsize="end"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:maxLines="2"
+            android:singleLine="false"
+            android:text="Name sdfas f asdfasdfa dfsdf asdfasdf asdfasdf asdf dasdf asdf" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="212dp"
+            android:background="#FFFFFF"
+            android:editable="false"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="2"
+            android:scrollbars="vertical"
+            android:singleLine="false"
+            android:text="文本测试 sd本测gdfsdfasdfsdfsdfasd sdf asdf asdf sdf sdfa sdf  "
+            android:textDirection="ltr"
+            android:textSize="20sp" />
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="76dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/button6"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Button" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/button7"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Button" />
+        </TableRow>
+
+        <EditText
+            android:id="@+id/editTextTextPersonName3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:text="Name" />
+
+        <EditText
+            android:id="@+id/editTextTextPersonName4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:editable="true"
+            android:ellipsize="end"
+            android:inputType="text"
+            android:maxLines="2"
+            android:singleLine="false"
+            android:text="Namesdasdddddddddddddddddddddddddddddddddsssssssssssssssssssssssssssadasdaddddddddddddddddddddddddddddddddddddddddddddweeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeddddddddd" />
 
         <Button
             android:id="@+id/button"
@@ -32,17 +115,10 @@
             android:layout_height="wrap_content"
             android:text="Button3" />
 
-        <Button
-            android:id="@+id/button4"
+        <TableRow
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Button4" />
+            android:layout_height="match_parent" />
 
-        <Button
-            android:id="@+id/button5"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Button5" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

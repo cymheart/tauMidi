@@ -1,13 +1,11 @@
-#include"Synther.h"
+﻿#include"Synther.h"
 #include"Synth/Tau.h"
 #include"Synth/SyntherEvent.h"
-#include"Synth//VirInstrument.h"
+#include"Synth/VirInstrument.h"
 #include"Synth/Tau.h"
 
 namespace tau
 {
-
-	//缓存处理
 	void Synther::CacheProcess()
 	{
 		cacheLocker.lock();
@@ -23,10 +21,11 @@ namespace tau
 		}
 
 		if (!slaveSynthers.empty()) {
-			cachePlayState = slaveSynthers[0]->cachePlayState;
-			curtCachePlaySec = slaveSynthers[0]->curtCachePlaySec;
+			cachePlayState = slaveSynthers[0]->cachePlayState.load();
+			curtCachePlaySec = slaveSynthers[0]->curtCachePlaySec.load();
 		}
 
+		//当所有从合成器进入步进模式后,主合成器关闭缓存
 		if (stepModeCount != 0 &&
 			stepModeCount == slaveSynthers.size())
 		{
@@ -382,6 +381,7 @@ namespace tau
 	}
 
 
+	//关闭了缓存，将进入通常播放模式
 	void Synther::CacheEnterStepPlayMode()
 	{
 		lock_guard<mutex> lock(mainSynther->cacheLocker);
@@ -490,7 +490,9 @@ namespace tau
 		}
 
 		//
-		curtCachePlaySec += frameSec;
+		curtCachePlaySec = curtCachePlaySec + frameSec;
+
+		//curtCachePlaySec.store(curtCachePlaySec + frameSec);
 	}
 
 
@@ -544,6 +546,8 @@ namespace tau
 		}
 	}
 
+	//所有从合成器完成了数据采样，把从合成器采样数据合并到主合成器中
+	//此时仅合成从合成器中的buffer，当合成所有从buffer后，主合成器再次开启缓存
 	void Synther::CacheSynthSlavesBuffer()
 	{
 		int n = 0;

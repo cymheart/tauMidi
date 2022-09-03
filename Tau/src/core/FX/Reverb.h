@@ -1,5 +1,5 @@
-﻿#ifndef _EffectReverb_h_
-#define _EffectReverb_h_
+﻿#ifndef _SyntherReverb_h_
+#define _SyntherReverb_h_
 
 #include <stk\FreeVerb.h>
 #include"TauEffect.h"

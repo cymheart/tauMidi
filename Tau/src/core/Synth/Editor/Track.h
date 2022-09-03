@@ -75,6 +75,7 @@ namespace tau
 
 		string name;
 
+
 		//重新处理当前时间点在事件处理时间中间时，可以重新启用此时间
 		vector<MidiEvent*> reProcessMidiEvents;
 		vector<InstFragment*> _updateInstFrags;

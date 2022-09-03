@@ -29,7 +29,7 @@ namespace tau
 			return (bankSelectMSB << 16 | bankSelectLSB << 8 | instrumentNum);
 		}
 
-		InstLinkToPresetRegionInfoList* GetPresetRegionLinkInfoList();
+		vector<InstLinkToPresetRegionInfo>* GetPresetRegionLinkInfoList();
 
 		// 连接一个乐器到一个presetRegion
 		Region* LinkInstrument(Instrument* inst);
@@ -41,7 +41,7 @@ namespace tau
 		int instrumentNum = 0;
 
 		Region* globalRegion;
-		InstLinkToPresetRegionInfoList* presetRegionLinkInfoList;
+		vector<InstLinkToPresetRegionInfo>* presetRegionLinkInfoList;
 	};
 }
 

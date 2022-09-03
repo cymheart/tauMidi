@@ -6,7 +6,7 @@ namespace tau
 	Preset::Preset()
 	{
 		globalRegion = new Region(RegionType::Preset);
-		presetRegionLinkInfoList = new InstLinkToPresetRegionInfoList;
+		presetRegionLinkInfoList = new vector<InstLinkToPresetRegionInfo>;
 	}
 
 	Preset::~Preset()
@@ -15,7 +15,7 @@ namespace tau
 		DEL(presetRegionLinkInfoList);
 	}
 
-	InstLinkToPresetRegionInfoList* Preset::GetPresetRegionLinkInfoList()
+	vector<InstLinkToPresetRegionInfo>* Preset::GetPresetRegionLinkInfoList()
 	{
 		return presetRegionLinkInfoList;
 	}

@@ -8,6 +8,7 @@ import cymheart.tau.editor.Editor;
 import cymheart.tau.effect.Effect;
 import cymheart.tau.midi.MidiControllerType;
 import cymheart.tau.mididevice.MidiFramer;
+import cymheart.tau.mididevice.MidiInputPortSelector;
 import cymheart.tau.mididevice.MidiOutputPortSelector;
 import cymheart.tau.utils.Utils;
 
@@ -44,6 +45,11 @@ public class Tau
         MidiFramer connectFramer = new MidiFramer(midiReceiver);
         outputPortSelector = new MidiOutputPortSelector(midiManager);
         outputPortSelector.getSender().connect(connectFramer);
+
+
+
+        //MidiInputPortSelector inputPortSelector = new MidiInputPortSelector(midiManager);
+       // inputPortSelector.getReceiver().send();
     }
 
     @Override
@@ -165,6 +171,12 @@ public class Tau
     public void SetEnableMidiEventCountOptimize(boolean enable)
     {
         ndkSetEnableMidiEventCountOptimize(ndkTau, enable);
+    }
+
+    //设置是否开启拷贝相同通道控制事件(默认:开启)
+    public void SetEnableCopySameChannelControlEvents(boolean enable)
+    {
+        ndkSetEnableCopySameChannelControlEvents(ndkTau, enable);
     }
 
     //设置midi文件中保持同时按键的数量 (默认值:-1 无限制)
@@ -428,6 +440,7 @@ public class Tau
     private static native void ndkSetLimitRegionSounderCount(long ndkTau, int count);
     private static native void ndkSetSetLimitOnKeySpeed(long ndkTau, float speed);
     private static native void ndkSetEnableMidiEventCountOptimize(long ndkTau, boolean enable);
+    private static native void ndkSetEnableCopySameChannelControlEvents(long ndkTau, boolean enable);
     private static native void ndkSetMidiKeepSameTimeNoteOnCount(long ndkTau, int count);
     private static native void ndkSetEnableMidiEventParseLimitTime(long ndkTau, boolean enable, float limitSec);
     private static native void ndkSetEnableCreateFreqSpectrums(long ndkTau, boolean enable, int count);

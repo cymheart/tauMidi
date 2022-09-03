@@ -8,6 +8,7 @@
 #include"VirInstrument.h"
 #include"Preset.h"
 #include"TauPool.h"
+#include"SampleGenerator.h"
 using namespace dsignal;
 
 namespace tau {
@@ -72,6 +73,8 @@ namespace tau {
 		virInst = nullptr;
 		keySounder = nullptr;
 		sample = nullptr;
+		sampleGen = nullptr;
+		regionSampleGen = nullptr;
 		instRegion = nullptr;
 		instGlobalRegion = nullptr;
 		presetRegion = nullptr;
@@ -140,7 +143,7 @@ namespace tau {
 		rightChannelSamples = nullptr;
 
 		modifyedGenList->Clear();
-		modifyedGenList->SetType(RegionType::Insttrument);
+		modifyedGenList->SetType(RegionType::Instrument);
 
 		for (int i = 0; i < (int)LfoEnvTarget::ModCount; i++)
 		{
@@ -163,6 +166,11 @@ namespace tau {
 	// 释放
 	void RegionSounder::Release()
 	{
+		if (regionSampleGen != nullptr) {
+			sampleGen->ReleaseRegionSampleGen(regionSampleGen);
+			regionSampleGen = nullptr;
+		}
+
 		TauPool::GetInstance().RegionSounderPool().Push(this);
 	}
 
@@ -177,6 +185,10 @@ namespace tau {
 	//初始化
 	void RegionSounder::Init()
 	{
+		if (sampleGen != nullptr)
+			regionSampleGen = sampleGen->CreateRegionSampleGen(keySounder->GetOnKey());
+
+		//
 		regionModulation->SetUseCommonModulator(tau->UseCommonModulator());
 
 		//
@@ -248,6 +260,9 @@ namespace tau {
 
 		OpenLfos();
 		OpenEnvs();
+
+		if (regionSampleGen != nullptr)
+			regionSampleGen->Trigger(this->velocity);
 
 	}
 
@@ -615,8 +630,9 @@ namespace tau {
 	//设置样本起始位置
 	void RegionSounder::SetSampleStartIdx()
 	{
+		int startIdx = sample != nullptr ? sample->startIdx : 0;
 		sampleStartIdx =
-			sample->startIdx
+			startIdx
 			+ (int)modifyedGenList->GetAmount(GeneratorType::StartAddrsOffset)
 			+ (int)modifyedGenList->GetAmount(GeneratorType::StartAddrsCoarseOffset) * 32768;
 	}
@@ -624,7 +640,9 @@ namespace tau {
 	//设置样本结束位置
 	void RegionSounder::SetSampleEndIdx()
 	{
-		sampleEndIdx = sample->endIdx
+		int endIdx = sample != nullptr ? sample->endIdx : 0;
+		sampleEndIdx =
+			endIdx
 			+ (int)modifyedGenList->GetAmount(GeneratorType::EndAddrsOffset)
 			+ (int)modifyedGenList->GetAmount(GeneratorType::EndAddrsCoarseOffset) * 32768;
 	}
@@ -632,8 +650,9 @@ namespace tau {
 	//设置样本循环起始位置
 	void RegionSounder::SetSampleStartLoopIdx()
 	{
+		int startloopIdx = sample != nullptr ? sample->startloopIdx : 0;
 		sampleStartLoopIdx =
-			sample->startloopIdx
+			startloopIdx
 			+ (int)modifyedGenList->GetAmount(GeneratorType::StartloopAddrsOffset)
 			+ (int)modifyedGenList->GetAmount(GeneratorType::StartloopAddrsCoarseOffset) * 32768;
 	}
@@ -641,8 +660,9 @@ namespace tau {
 	//设置样本循环结束位置
 	void RegionSounder::SetSampleEndLoopIdx()
 	{
+		int endloopIdx = sample != nullptr ? sample->endloopIdx : 0;
 		sampleEndLoopIdx =
-			sample->endloopIdx
+			endloopIdx
 			+ (int)modifyedGenList->GetAmount(GeneratorType::EndloopAddrsOffset)
 			+ (int)modifyedGenList->GetAmount(GeneratorType::EndloopAddrsCoarseOffset) * 32768;
 	}
@@ -874,8 +894,7 @@ namespace tau {
 	// 计算按键key相对于根音符的频率偏移倍率
 	float RegionSounder::CalBasePitchMulByKey(int key)
 	{
-
-		float sampleRate = sample->sampleRate;
+		float sampleRate = sample != nullptr ? sample->sampleRate : tau->GetSampleProcessRate();
 		float rateAdjustMul = sampleRate / tau->GetSampleProcessRate();   //频率差矫正倍率
 
 		//
@@ -884,13 +903,14 @@ namespace tau {
 		//
 		float overridingRootKey = modifyedGenList->GetAmount(GeneratorType::OverridingRootKey);
 		if (overridingRootKey < 0 || modifyedGenList->IsEmpty(GeneratorType::OverridingRootKey))
-			overridingRootKey = sample->GetOriginalPitch();
+			overridingRootKey = sample != nullptr ? sample->GetOriginalPitch() : key;
 
 		//按键和根音符之间偏移几个半音
 		float semit = (key - overridingRootKey) * scaleTuning * 0.01f;
 
 		//校音处理
-		float fineTune = modifyedGenList->GetAmount(GeneratorType::FineTune) + sample->GetCentPitchCorrection();  //一个组合的音分偏移值校正
+		float sampleCentPitchCorrection = sample != nullptr ? sample->GetCentPitchCorrection() : 0;
+		float fineTune = modifyedGenList->GetAmount(GeneratorType::FineTune) + sampleCentPitchCorrection;  //一个组合的音分偏移值校正
 		semit += (modifyedGenList->GetAmount(GeneratorType::CoarseTune) + fineTune / 100.0f);
 
 		//限制了按键相对overridingRootKey之间半音的差值的最大数量
@@ -915,8 +935,12 @@ namespace tau {
 		RangeFloat velRange = modifyedGenList->GetAmountRange(GeneratorType::VelRange);
 		if (velocity > velRange.max || velocity < velRange.min)
 			this->velocity = 0;
-		else
-			this->velocity = velocity / sample->velocity; //归一化力度到浮点数
+		else {
+			if (sampleGen != nullptr)
+				this->velocity = velocity / 127.0f;
+			else
+				this->velocity = velocity / sample->velocity; //归一化力度到浮点数
+		}
 
 		velocityFadeInfo.dstValue = this->velocity;
 	}
@@ -1249,7 +1273,6 @@ namespace tau {
 			if (isActiveLowPass) {
 				FadeSetLowPassFilter();
 				ResetLowPassFilter(endSec);
-
 			}
 
 			//采样音调处理
@@ -1294,6 +1317,8 @@ namespace tau {
 				{
 					volGain = LfosAndEnvsModulation(LfoEnvTarget::ModVolume, sec) * atten_mul_vel;
 				}
+
+
 
 				volGainSampleValue = volGain * sampleValue;
 				leftChannelSamples[idx] = channelGain[0] * volGainSampleValue;
@@ -1422,7 +1447,7 @@ namespace tau {
 		int nextIntPos = (int)(prevIntPos >= sampleEndLoopIdx && isComputedLoopSample ? sampleStartLoopIdx : prevIntPos + 1);
 
 		//限制范围不超出样本的前后总范围
-		if (nextIntPos > sampleEndIdx && !isComputedLoopSample)
+		if (sample != nullptr && nextIntPos > sampleEndIdx && !isComputedLoopSample)
 		{
 			isSampleProcessEnd = true;
 			nextIntPos = (uint32_t)sampleEndIdx;
@@ -1432,7 +1457,11 @@ namespace tau {
 
 		//计算采样点插值
 		double a = lastSamplePos - prevIntPos;
-		return (input[prevIntPos] * (1.0f - a) + input[nextIntPos] * a);
+
+		if (input != nullptr)  //如果存在样本，将对样本采样
+			return (input[prevIntPos] * (1.0f - a) + input[nextIntPos] * a);
+		else //否则，如果存在样本生成器，将通过生成器生成当前值
+			return regionSampleGen->Out(prevIntPos, nextIntPos, a);
 
 	}
 

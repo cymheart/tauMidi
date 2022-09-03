@@ -28,8 +28,13 @@ namespace tau
 			this->tickForQuarterNote = tickForQuarterNote;
 		}
 
+		//复制控制事件
+		void CopyControlEvents(LinkedList<MidiEvent*>& outCopyMidiEvents);
+
 		//添加midi事件
 		void AppendMidiEvents(LinkedList<MidiEvent*>& midiEvents);
+
+
 
 		//寻找默认乐器改变事件
 		void FindDefaultProgramChangeEvent();

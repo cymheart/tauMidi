@@ -236,8 +236,7 @@ namespace tau
 	void KeySounder::CreateActiveRegionSounderList()
 	{
 		Preset* preset = virInst->GetPreset();
-		InstLinkToPresetRegionInfoList* presetRegionLinkInfoList = preset->GetPresetRegionLinkInfoList();
-		Region* activeInstRegion;
+		vector<InstLinkToPresetRegionInfo>* presetRegionLinkInfoList = preset->GetPresetRegionLinkInfoList();
 		Instrument* inst;
 		Region* presetRegion;
 		RegionSounder* regionSounder;
@@ -263,11 +262,9 @@ namespace tau
 
 			for (int j = 0; j < sz; j++)
 			{
-				activeInstRegion = activeInstRegionLinkInfos[j].region;
-
 				regionSounder = CreateRegionSounder(
-					activeInstRegionLinkInfos[j].linkSample,
-					activeInstRegion, inst->GetGlobalRegion(),
+					activeInstRegionLinkInfos[j].linkSample, activeInstRegionLinkInfos[j].linkSampleGen,
+					activeInstRegionLinkInfos[j].region, inst->GetGlobalRegion(),
 					(*presetRegionLinkInfoList)[i].region, preset->GetGlobalRegion());
 
 				regionSounderList->push_back(regionSounder);
@@ -276,7 +273,7 @@ namespace tau
 	}
 
 	RegionSounder* KeySounder::CreateRegionSounder(
-		Sample* sample,
+		Sample* sample, SampleGenerator* sampleGen,
 		Region* activeInstRegion, Region* activeInstGlobalRegion,
 		Region* activePresetRegion, Region* activePresetGlobalRegion)
 	{
@@ -290,6 +287,7 @@ namespace tau
 		regionSounder->presetRegion = activePresetRegion;
 		regionSounder->presetGlobalRegion = activePresetGlobalRegion;
 		regionSounder->SetSample(sample);
+		regionSounder->SetSampleGen(sampleGen);
 		regionSounder->Init();
 
 		return regionSounder;

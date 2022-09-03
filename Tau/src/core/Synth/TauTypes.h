@@ -29,6 +29,8 @@ namespace tau
 	class ModInputInfo;
 	class Modulator;
 	class Sample;
+	class SampleGenerator;
+	class RegionSampleGenerator;
 	class RegionSounder;
 	class MidiTrackRecord;
 
@@ -46,6 +48,7 @@ namespace tau
 	class VirInstrument;
 	class SoundFontParser;
 	class SyntherEvent;
+	class PhysicsPiano;
 
 	struct RecordTempo;
 	struct LfoModInfo;
@@ -57,11 +60,11 @@ namespace tau
 
 
 	using SampleList = vector<Sample*>;
+	using SampleGenList = vector<SampleGenerator*>;
 	using InstrumentList = vector<Instrument*>;
 	using PresetList = vector<Preset*>;
 	using ModInputInfoList = vector <ModInputInfo*>;
 	using ModulatorVec = vector <Modulator*>;
-	using SamplesLinkToInstRegionInfoList = vector <SamplesLinkToInstRegionInfo>;
 	using InstLinkToPresetRegionInfoList = vector <InstLinkToPresetRegionInfo>;
 	using LineEquationInfoList = vector <LineEquationInfo>;
 	using LfoModInfoList = vector <LfoModInfo>;
@@ -183,7 +186,7 @@ namespace tau
 	enum class RegionType
 	{
 		//乐器
-		Insttrument,
+		Instrument,
 		//预设
 		Preset
 	};
@@ -540,6 +543,8 @@ namespace tau
 	{
 		Region* region = nullptr;
 		Sample* linkSample = nullptr;
+		SampleGenerator* linkSampleGen = nullptr;
+
 	};
 
 	struct RangeFloat
@@ -608,11 +613,11 @@ namespace tau
 		bool isOnKey;
 		int key;
 		float velocity;
-		VirInstrument* virInst;
+		VirInstrument* virInst = nullptr;
 		//实际时间点
-		float timeSec;
+		double timeSec;
 		//采样时间点
-		float sampleSec;
+		double sampleSec;
 	};
 
 

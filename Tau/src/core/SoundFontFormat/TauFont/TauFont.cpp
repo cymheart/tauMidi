@@ -268,7 +268,7 @@ namespace tau
 					continue;
 
 				XMLElement* regionChildElem = childRegionElem->FirstChildElement();
-				SetGenListByXml(*(region->GetGenList()), regionChildElem, RegionType::Insttrument);
+				SetGenListByXml(*(region->GetGenList()), regionChildElem, RegionType::Instrument);
 			}
 		}
 	}

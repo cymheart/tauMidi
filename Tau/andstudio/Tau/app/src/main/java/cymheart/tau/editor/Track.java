@@ -31,14 +31,10 @@ public class Track {
     //结束时间点
     protected double endSec;
 
-    //重新处理当前时间点在事件处理时间中间时，可以重新启用此时间
-    protected List<MidiEvent> reProcessMidiEvents = new ArrayList<>();
 
 
     public void Clear()
     {
-        reProcessMidiEvents.clear();
-
         //
         InstFragment instFragment;
         for (int i = 0; i < instFragments.size(); i++)

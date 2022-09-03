@@ -125,6 +125,13 @@ namespace tau
 			enableMidiEventCountOptimize = enable;
 		}
 
+		//设置是否开启拷贝相同通道控制事件(默认:开启)
+		inline void SetEnableCopySameChannelControlEvents(bool enable)
+		{
+			enableCopySameChannelControlEvents = enable;
+		}
+
+
 		//设置midi文件中保持同时按键的数量 (默认值:-1 无限制)
 		inline void SetMidiKeepSameTimeNoteOnCount(int count)
 		{
@@ -146,20 +153,7 @@ namespace tau
 			freqSpectrumsCount = count;
 		}
 
-		//设置轨道通道合并模式
-		inline void SetTrackChannelMergeMode(TrackChannelMergeMode mode)
-		{
-			if (isOpened)
-				return;
 
-			midiFileMergeMode = mode;
-		}
-
-		//获取轨道通道合并模式
-		inline TrackChannelMergeMode GetTrackChannelMergeMode()
-		{
-			return midiFileMergeMode;
-		}
 
 		//设置样本处理采样率
 		void SetSampleProcessRate(int rate);
@@ -480,7 +474,6 @@ namespace tau
 		// 获取乐器预设
 		Preset* GetInstrumentPreset(int key);
 
-		void CreateSplitMidiTracksRenders();
 
 	private:
 
@@ -499,6 +492,9 @@ namespace tau
 		//是否开启MidiEvent数量优化
 		bool enableMidiEventCountOptimize = true;
 
+		//设置是否开启拷贝相同通道控制事件
+		bool enableCopySameChannelControlEvents = true;
+
 		//midi文件中保持同时按键的数量 (默认值:15,  -1表示无限制)
 		int midiKeepSameTimeNoteOnCount = 15;
 
@@ -507,8 +503,6 @@ namespace tau
 		//MidiEvent极限解析时间(默认值:2s)
 		float midiEventLimitParseSec = 2.0f;
 
-		//midi文件轨道通道合并模式
-		TrackChannelMergeMode midiFileMergeMode = TrackChannelMergeMode::AutoMerge;
 
 		//立体声，单声道选择
 		ChannelOutputMode channelOutputMode = ChannelOutputMode::Stereo;
@@ -593,8 +587,6 @@ namespace tau
 
 		MidiEditorSynther* midiEditorSynthers[500] = { nullptr };
 		int midiEditorSyntherCount = 1;
-
-
 
 
 		friend class MidiEditorSynther;

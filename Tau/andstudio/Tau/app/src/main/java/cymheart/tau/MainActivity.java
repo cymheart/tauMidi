@@ -3,11 +3,19 @@ package cymheart.tau;
 import androidx.appcompat.app.AppCompatActivity;
 import android.Manifest;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.ImageSpan;
+import android.text.style.RelativeSizeSpan;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 //import com.tbruyelle.rxpermissions3.RxPermissions;
 
 import com.tbruyelle.rxpermissions3.RxPermissions;
@@ -93,6 +101,31 @@ public class MainActivity extends AppCompatActivity   {
 
         // Example of a call to a native method
         Button btn = findViewById(R.id.button);
+
+        // 从布局文件中获取名叫tv_marquee的文本视图
+        TextView textView = findViewById(R.id.textView);
+        // 给tv_marquee设置点击监听器
+        //textView.setOnClickListener(this);
+
+       // textView.setFocusable(true); // 允许获得焦点
+       // textView.setFocusableInTouchMode(true); // 允许在触摸时获得焦点
+       // textView.requestFocus(); // 强制获得焦点，让跑马灯滚起来
+
+                SpannableStringBuilder base = new SpannableStringBuilder("dfasfsdf sdfs adfsdfsddfsfsfsdff dfasdfasd sadf从布局文件中获取名叫tv_marquee的文本视图 asfas asd fsdf asf");
+        int len = base.length() - 1;
+
+       // base.insert(offset, "\u2026");
+      //  base.setSpan(new RelativeSizeSpan(1), 0, len, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+       // base.setSpan(new RelativeSizeSpan(2), 10, len, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+       // base.setSpan(new RelativeSizeSpan(2), 10, len, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
+        ImageSpan imageSpan = new ImageSpan(this, R.drawable.ic_launcher_background);
+        base.setSpan(imageSpan, 33, 36, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+
+        //ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(Color.RED);
+      //  base.setSpan(foregroundColorSpan, 12, len, Spannable.SPAN_INCLUSIVE_INCLUSIVE) ;
+
+       // textView.setText(base);
 
         context = this;
 

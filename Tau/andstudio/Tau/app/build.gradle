@@ -1,12 +1,16 @@
 plugins {
     id 'com.android.library'
-    //id 'com.android.application'
+   // id 'com.android.application'
   //  id 'com.google.protobuf'
 }
 
 android {
     compileSdk 30
     buildToolsVersion '30.0.3'
+
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
 
     repositories {
         maven { url 'https://maven.aliyun.com/repository/public/' }

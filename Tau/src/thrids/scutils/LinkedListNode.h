@@ -17,6 +17,13 @@ namespace scutils
 			prev = nullptr;
 		}
 
+		void Clear()
+		{
+			elem = nullptr;
+			next = nullptr;
+			prev = nullptr;
+		}
+
 	public:
 		T elem;
 		LinkedListNode<T>* next = nullptr;

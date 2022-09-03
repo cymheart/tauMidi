@@ -47,6 +47,7 @@ namespace tau
 
 		midiEditor->Play();
 
+		//在缓存打开时，处理缓存命令操作
 		if (maxCacheSize > 0 && isEnableCache)
 			CachePlay();
 	}
@@ -59,6 +60,7 @@ namespace tau
 
 		midiEditor->Stop();
 
+		//在缓存打开时，处理缓存命令操作
 		if (maxCacheSize > 0 && isEnableCache)
 			CacheStop();
 	}
@@ -69,6 +71,7 @@ namespace tau
 		if (midiEditor == nullptr)
 			return;
 
+		//在缓存打开时，处理缓存命令操作
 		if (maxCacheSize > 0 && isEnableCache)
 			CachePause();
 		else
@@ -86,6 +89,8 @@ namespace tau
 			sec = endsec;
 
 		midiEditor->Goto(sec);
+
+		//在缓存打开时，处理缓存命令操作
 		if (maxCacheSize > 0 && isEnableCache) {
 			if (CacheGoto(sec))
 				midiEditor->Play();
@@ -101,6 +106,7 @@ namespace tau
 		midiEditor->Remove();
 		DEL(midiEditor);
 
+		//在缓存打开时，处理缓存命令操作
 		if (maxCacheSize > 0 && isEnableCache)
 			CacheStop(true);
 	}
@@ -108,8 +114,25 @@ namespace tau
 	//重新缓存
 	void MidiEditorSynther::ReCache()
 	{
+		//在缓存打开时，处理缓存命令操作
 		if (maxCacheSize > 0 && isEnableCache)
 			CacheReset();
+	}
+
+	void MidiEditorSynther::SetPlayType(MidiEventPlayType playType)
+	{
+		if (midiEditor == nullptr)
+			return;
+
+		midiEditor->SetPlayType(playType);
+	}
+
+	void MidiEditorSynther::GetCurTimeLateNoteKeys(float lateSec)
+	{
+		if (midiEditor == nullptr)
+			return;
+
+		midiEditor->GetCurTimeLateNoteKeys(lateSec);
 	}
 
 
@@ -120,12 +143,13 @@ namespace tau
 
 		midiEditor->EnterPlayMode(playMode);
 
-		if (playMode == EditorPlayMode::Step &&
+		if ((playMode == EditorPlayMode::Step ||
+			playMode == EditorPlayMode::Wait) &&
 			maxCacheSize > 0 && isEnableCache)
 		{
 			midiEditor->Goto(curtCachePlaySec);
 			ReCache();
-			CacheEnterStepPlayMode();
+			CacheEnterStepPlayMode(); //关闭缓存
 		}
 
 	}

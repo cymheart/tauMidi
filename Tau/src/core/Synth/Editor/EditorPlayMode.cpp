@@ -23,10 +23,46 @@ namespace tau
 		waitSem.wait();
 	}
 
+	//设置演奏类型
+	void Editor::SetPlayType(MidiEventPlayType playType)
+	{
+		//
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
+			tau->midiEditorSynthers[i]->SetPlayTypeTask(playType, &waitSem);
+		waitSem.wait();
+	}
+
+	//获取当前时间之后的notekeys
+	void Editor::GetCurTimeLateNoteKeys(float lateSec)
+	{
+		memset(lateHavKeys, 0, sizeof(bool) * 128);
+
+		//
+		waitSem.reset(tau->midiEditorSyntherCount - 1);
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
+			tau->midiEditorSynthers[i]->GetCurTimeLateNoteKeysTask(lateSec, &waitSem);
+		waitSem.wait();
+
+		//
+		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
+		{
+			vector<int>& noteKeys = tau->midiEditorSynthers[i]->midiEditor->tempNoteKeys;
+			for (int i = 0; i < noteKeys.size(); i++)
+				lateHavKeys[noteKeys[i]] = true;
+		}
+
+	}
+
 
 	//进入到步进播放模式
 	void Editor::EnterStepPlayMode()
 	{
+		if (playMode == EditorPlayMode::Step) {
+			printf("当前模式已经为步进播放模式! \n");
+			return;
+		}
+
 		if (playMode == EditorPlayMode::Wait) {
 			printf("当前模式为:等待播放模式，需要离开等待播放模式! \n");
 			return;
@@ -46,11 +82,17 @@ namespace tau
 	//进入到等待播放模式
 	void Editor::EnterWaitPlayMode()
 	{
+		if (playMode == EditorPlayMode::Wait) {
+			printf("当前模式已经为等待播放模式! \n");
+			return;
+		}
+
 		if (playMode == EditorPlayMode::Step) {
 			printf("当前模式为:步进播放模式，需要离开步进播放模式! \n");
 			return;
 		}
 
+		waitOnKeyLock.lock();
 		playMode = EditorPlayMode::Wait;
 		isWait = false;
 		memset(onkey, 0, sizeof(int) * 128);
@@ -58,6 +100,7 @@ namespace tau
 		memset(needOffkey, 0, sizeof(int) * 128);
 		needOnKeyCount = 0;
 		needOffKeyCount = 0;
+		waitOnKeyLock.unlock();
 
 		//
 		waitSem.reset(tau->midiEditorSyntherCount - 1);
@@ -84,14 +127,18 @@ namespace tau
 	{
 		//如果是等待播放模式，将清空等待播放模式的数据
 		if (playMode == EditorPlayMode::Wait) {
+			waitOnKeyLock.lock();
 			memset(onkey, 0, sizeof(int) * 128);
 			memset(needOnkey, 0, sizeof(int) * 128);
 			memset(needOffkey, 0, sizeof(int) * 128);
 			needOnKeyCount = 0;
 			needOffKeyCount = 0;
 			isWait = false;
+			waitOnKeyLock.unlock();
 		}
 
+
+		//
 		waitSem.reset(tau->midiEditorSyntherCount - 1);
 		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 			tau->midiEditorSynthers[i]->RuntoTask(&waitSem, sec);
@@ -120,117 +167,84 @@ namespace tau
 	//需要按键信号
 	void Editor::NeedOnKeySignal(int key)
 	{
-		waitOnKeyLock.lock();
+		lock_guard<mutex> lock(waitOnKeyLock);
 
-		needOnkey[key]++;
-
-		if (needOnkey[key] > 0)
-			needOnKeyCount++;
-
-		if (needOnKeyCount > 0)
-		{
-			isWait = true;
-			printf("等待按键:%d \n", key);
+		if (onkey[key] > 0) {
+			onkey[key]--;
+			onKeyCount--;
+			return;
 		}
 
-		waitOnKeyLock.unlock();
+		needOnkey[key]++;
+		needOnKeyCount++;
+		isWait = true;
+		printf("等待按键:%d \n", key);
 	}
 
 	//需要松开按键信号
 	void Editor::NeedOffKeySignal(int key)
 	{
-		waitOnKeyLock.lock();
+		lock_guard<mutex> lock(waitOnKeyLock);
 
-		if (onkey[key] == 0) {
-			waitOnKeyLock.unlock();
+		if (onkey[key] == 0)
 			return;
-		}
 
 		needOffkey[key]++;
-
-		if (needOffkey[key] > 0)
-			needOffKeyCount++;
-
-		if (needOffKeyCount > 0) {
-			isWait = true;
-			printf("等待松开键:%d \n", key);
-		}
-
-
-		waitOnKeyLock.unlock();
+		needOffKeyCount++;
+		isWait = true;
+		printf("等待松开键:%d \n", key);
 	}
 
 	//按键信号
 	void Editor::OnKeySignal(int key)
 	{
-		waitOnKeyLock.lock();
+		GetCurTimeLateNoteKeys(2);
 
-		needOnkey[key]--;
+		lock_guard<mutex> lock(waitOnKeyLock);
+
+		printf("按下按键:%d \n", key);
 		onkey[key]++;
+		onKeyCount++;
 
-		if (needOnkey[key] >= 0)
-			needOnKeyCount--;
-
-		if (needOnKeyCount <= 0 && needOffKeyCount <= 0) {
-			isWait = false;
-			printf("按下按键,继续:%d \n", key);
-		}
-		else
+		if (needOnkey[key] > 0) //存在需要对应按下的按键
 		{
-			printf("按下按键:%d \n", key);
+			onkey[key]--;
+			onKeyCount--;
+
+			//
+			needOnkey[key]--;
+			needOnKeyCount--;
+			if (needOnKeyCount == 0 && needOffKeyCount == 0)
+				isWait = false;
+		}
+		else if (!lateHavKeys[key])  //当前时间之后没有这个按键事件
+		{
+			isWait = true;
+			printf("按错键,等待中\n");
 		}
 
-		waitOnKeyLock.unlock();
 	}
 
 	//松开按键信号
 	void Editor::OffKeySignal(int key)
 	{
-		waitOnKeyLock.lock();
-
-		if (onkey[key] > 0 && needOffkey[key] == 0 && needOnkey[key] == 0)
-		{
-			needOnkey[key]++;
-			needOnKeyCount++;
-			onkey[key]--;
-
-			if (needOnKeyCount > 0) {
-				isWait = true;
-				printf("等待按键:%d \n", key);
-			}
-
-			waitOnKeyLock.unlock();
-			return;
-		}
-
-
-		if (needOffkey[key] == 0)
-		{
-			if (onkey[key] > 0)
-				onkey[key]--;
-
-			waitOnKeyLock.unlock();
-			return;
-		}
-
-		needOffkey[key]--;
+		lock_guard<mutex> lock(waitOnKeyLock);
 
 		if (onkey[key] > 0)
-			onkey[key]--;
-
-		if (needOffkey[key] >= 0)
-			needOffKeyCount--;
-
-		if (needOnKeyCount <= 0 && needOffKeyCount <= 0) {
-			isWait = false;
-			printf("松开按键，继续:%d \n", key);
-		}
-		else
 		{
 			printf("松开按键:%d \n", key);
-		}
+			onkey[key]--;
+			onKeyCount--;
 
-		waitOnKeyLock.unlock();
+			if (needOffkey[key] > 0) {
+				needOffkey[key]--;
+				needOffKeyCount--;
+			}
+
+			if (needOnKeyCount == 0 && needOffKeyCount == 0 && onKeyCount == 0) {
+				isWait = false;
+			}
+		}
 	}
 
 }

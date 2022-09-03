@@ -6,6 +6,7 @@
 
 namespace tau
 {
+	
 	class Channel
 	{
 

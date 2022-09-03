@@ -207,6 +207,39 @@ namespace tau
 		return idx;
 	}
 
+	//复制控制事件
+	void MidiTrack::CopyControlEvents(LinkedList<MidiEvent*>& outCopyMidiEvents)
+	{
+		MidiEvent* cpyMidiEvent;
+		LinkedListNode<MidiEvent*>* node = midiEventList.GetHeadNode();
+		for (; node; node = node->next)
+		{
+			cpyMidiEvent = nullptr;
+			MidiEvent* midiEvent = node->elem;
+			switch (midiEvent->type)
+			{
+			case MidiEventType::Controller:
+				cpyMidiEvent = new ControllerEvent(*(ControllerEvent*)midiEvent);
+				break;
+
+			case MidiEventType::ProgramChange:
+				cpyMidiEvent = new ProgramChangeEvent(*(ProgramChangeEvent*)midiEvent);
+				break;
+
+			case MidiEventType::ChannelPressure:
+				cpyMidiEvent = new ChannelPressureEvent(*(ChannelPressureEvent*)midiEvent);
+				break;
+
+			case MidiEventType::PitchBend:
+				cpyMidiEvent = new PitchBendEvent(*(PitchBendEvent*)midiEvent);
+				break;
+			}
+
+			if (cpyMidiEvent != nullptr)
+				outCopyMidiEvents.AddLast(cpyMidiEvent);
+		}
+	}
+
 	//添加midi事件
 	void MidiTrack::AppendMidiEvents(LinkedList<MidiEvent*>& midiEvents)
 	{
@@ -385,5 +418,7 @@ namespace tau
 		}
 		return nullptr;
 	}
+
+
 
 }

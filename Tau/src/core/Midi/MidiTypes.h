@@ -299,19 +299,6 @@ namespace tau
 		AsyncTracks,
 	};
 
-	/// <summary>
-	/// 轨道通道合并模式
-	/// </summary>
-	enum TrackChannelMergeMode
-	{
-		//自动判断合并
-		AutoMerge,
-		//总是合并
-		AlwaysMerge,
-		//从不合并
-		NoMerge
-	};
-
 
 	/// <summary>
 	/// 弹奏方式
@@ -322,10 +309,12 @@ namespace tau
 		LeftHand,
 		//右手
 		RightHand,
+		//双手
+		DoubleHand,
 		//背景
 		Background,
 		//自定
-		Custom
+		Custom,
 	};
 }
 

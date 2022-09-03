@@ -29,6 +29,12 @@ namespace tau
 			keepSameStartTickNoteOnEventsCount = count;
 		}
 
+		//设置是否开启拷贝相同通道控制事件(默认:开启)
+		inline void SetEnableCopySameChannelControlEvents(bool enable)
+		{
+			enableCopySameChannelControlEvents = enable;
+		}
+
 		//设置是否启用解析极限时间(默认值:2s)
 		inline void SetEnableParseLimitTime(bool enable, float limitSec = 2.0)
 		{
@@ -42,11 +48,6 @@ namespace tau
 			return isFullParsed;
 		}
 
-		//设置轨道通道合并模式
-		inline void SetTrackChannelMergeMode(TrackChannelMergeMode mode)
-		{
-			mergeMode = mode;
-		}
 
 		// 获取文件格式
 		inline MidiFileFormat GetFormat()
@@ -117,17 +118,11 @@ namespace tau
 
 	private:
 
-		// 是否两个通道具有相同的乐器改变事件
-		//即合并任何多个轨道上相同的通道事件到一个轨道，删除被合并轨道上对应通道的事件
-		//如果一个轨道上所有通道事件都被合并完了，那这个轨道也会被相应删除
-		void SetChannelSameProgram();
-
-		//是否两个通道可以具有相同的乐器改变事件
-		//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
-		bool IsSameProgramChannel(LinkedList<MidiEvent*>* eventListA, LinkedList<MidiEvent*>* eventListB);
-
 		//每个通道midi事件分配到每一个轨道
 		void PerChannelMidiEventToPerTrack();
+
+		//拷贝相同通道控制事件
+		void CopySameChannelControlEvents();
 
 		//寻找轨道默认乐器改变事件
 		void FindTracksDefaultProgramChangeEvent();
@@ -178,9 +173,8 @@ namespace tau
 		//保持相同StartTick按键事件的数量 (默认值:15 )
 		int keepSameStartTickNoteOnEventsCount = 15;
 
-
-		//轨道通道合并模式
-		TrackChannelMergeMode mergeMode = TrackChannelMergeMode::AutoMerge;
+		//是否开启拷贝相同通道控制事件
+		bool enableCopySameChannelControlEvents = true;
 
 		bool isLittleEndianSystem = true;
 

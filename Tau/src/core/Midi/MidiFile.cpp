@@ -67,112 +67,6 @@ namespace tau
 		return ret;
 	}
 
-	//是否两个通道可以具有相同的乐器改变事件
-	//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
-	bool MidiFile::IsSameProgramChannel(LinkedList<MidiEvent*>* eventListA, LinkedList<MidiEvent*>* eventListB)
-	{
-		programChangeA = -1;
-		programChangeB = -1;
-
-		LinkedListNode<MidiEvent*>* node = eventListA->GetHeadNode();
-		MidiEvent* evA;
-		bool isHavProgramChangeA = false;
-		for (; node; node = node->next)
-		{
-			evA = node->elem;
-			if (evA->type == MidiEventType::NoteOn)
-				break;
-
-			if (evA->type == MidiEventType::ProgramChange) {
-				isHavProgramChangeA = true;
-				programChangeA = ((ProgramChangeEvent*)evA)->value;
-				break;
-			}
-
-		}
-
-		node = eventListB->GetHeadNode();
-		MidiEvent* evB;
-		bool isHavProgramChangeB = false;
-		for (; node; node = node->next)
-		{
-			evB = node->elem;
-			if (evB->type == MidiEventType::NoteOn)
-				break;
-
-			if (evB->type == MidiEventType::ProgramChange) {
-				isHavProgramChangeB = true;
-				programChangeB = ((ProgramChangeEvent*)evB)->value;
-				break;
-			}
-		}
-
-		//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
-		if ((isHavProgramChangeA && isHavProgramChangeB) ||
-			(!isHavProgramChangeA && !isHavProgramChangeB))
-			return false;
-
-		return true;
-	}
-
-
-
-	//是否两个通道具有相同的乐器改变事件
-	//即合并任何多个轨道上相同的通道事件到一个轨道，删除被合并轨道上对应通道的事件
-	//如果一个轨道上所有通道事件都被合并完了，那这个轨道也会被相应删除
-	void MidiFile::SetChannelSameProgram()
-	{
-		LinkedList<MidiEvent*>* eventListAtChannelA;
-		LinkedList<MidiEvent*>* eventListAtChannelB;
-
-		for (int i = 0; i < midiTrackList.size() - 1; i++)
-		{
-			eventListAtChannelA = midiTrackList[i]->GetEventListAtChannel();
-			bool isEmptyChannelA = true;
-			for (int n = 0; n < 16; n++)
-			{
-				if (!eventListAtChannelA[n].Empty()) {
-					isEmptyChannelA = false;
-					break;
-				}
-			}
-
-			if (isEmptyChannelA)
-				continue;
-
-			for (int j = i + 1; j < midiTrackList.size(); j++)
-			{
-				eventListAtChannelB = midiTrackList[j]->GetEventListAtChannel();
-
-				for (int n = 0; n < 16; n++)
-				{
-					if (eventListAtChannelA[n].Empty() ||
-						eventListAtChannelB[n].Empty())
-						continue;
-
-					//是否可以合并轨道通道事件的标准是:两个轨道通道事件，
-					//只能其中一个有乐器改变事件，两者都有或都没有都不符合自动合并的要求
-					if (mergeMode == AutoMerge &&
-						!IsSameProgramChannel(&(midiTrackList[i]->GetEventListAtChannel())[n], &(midiTrackList[j]->GetEventListAtChannel())[n]))
-						continue;
-
-					if (programChangeA >= 0)
-					{
-						ProgramChangeEvent* pcev = new ProgramChangeEvent();
-						pcev->value = programChangeA;
-						eventListAtChannelB[n].AddBefore(eventListAtChannelB[n].GetHeadNode(), pcev);
-					}
-					else
-					{
-						ProgramChangeEvent* pcev = new ProgramChangeEvent();
-						pcev->value = programChangeB;
-						eventListAtChannelA[n].AddBefore(eventListAtChannelA[n].GetHeadNode(), pcev);
-					}
-				}
-			}
-		}
-	}
-
 
 	//每个通道midi事件分配到每一个轨道
 	void MidiFile::PerChannelMidiEventToPerTrack()
@@ -182,7 +76,7 @@ namespace tau
 		if (format == MidiFileFormat::SingleTrack)
 			format = MidiFileFormat::SyncTracks;
 
-		bool isHavChannelMidiEvents = false;
+		bool isHavChannelMidiEvents = false; //是否在当前轨道上已经存在通道事件组了
 		int len = midiTrackList.size();
 		for (int j = 0; j < len; j++)
 		{
@@ -193,6 +87,7 @@ namespace tau
 				if (eventListAtChannel[n].Size() == 0)
 					continue;
 
+				//如果在当前轨道上不存在通道事件组，将为当前轨道保存通道事件
 				if (!isHavChannelMidiEvents)
 				{
 					int count = midiTrackList[j]->GetEventCount();
@@ -202,7 +97,7 @@ namespace tau
 					if (count != 0)
 						midiTrackList[j]->GetEventList()->Sort(MidiEventTickCompare);
 				}
-				else
+				else //如果在当前轨道上已存在通道事件组，将增加一个轨道到尾部，并把当前通道事件保存到这个尾部轨道中
 				{
 					bool isHavKey = false;
 					LinkedListNode<MidiEvent*>* node = eventListAtChannel[n].GetHeadNode();
@@ -227,6 +122,40 @@ namespace tau
 				eventListAtChannel[n].Release();
 				isHavChannelMidiEvents = true;
 			}
+		}
+	}
+
+	//拷贝相同通道控制事件
+	void MidiFile::CopySameChannelControlEvents()
+	{
+		int c1, c2;
+		int len = midiTrackList.size();
+		LinkedList<MidiEvent*>* copyMidiEvents = new LinkedList<MidiEvent*>[len];
+
+		for (int i = 0; i < len; i++)
+		{
+			c1 = midiTrackList[i]->GetChannelNum();
+
+			for (int j = 0; j < len; j++)
+			{
+				if (j == i)
+					continue;
+
+				c2 = midiTrackList[j]->GetChannelNum();
+				if (c1 != c2)
+					continue;
+
+				midiTrackList[i]->CopyControlEvents(copyMidiEvents[j]);
+			}
+		}
+
+		for (int i = 0; i < len; i++)
+		{
+			if (copyMidiEvents[i].Empty())
+				continue;
+
+			midiTrackList[i]->AppendMidiEvents(copyMidiEvents[i]);
+			midiTrackList[i]->GetEventList()->Sort(MidiEventTickCompare);
 		}
 	}
 
@@ -341,14 +270,13 @@ namespace tau
 			RemoveSameAndOverrideGlobalEvents(globalMidiEvents);
 		}
 
-		//合并任何多个轨道上相同的通道事件到一个轨道，删除被合并轨道上对应通道的事件
-		//如果一个轨道上所有通道事件都被合并完了，那这个轨道也会被相应删除
-		if (mergeMode == AutoMerge || mergeMode == AlwaysMerge)
-			SetChannelSameProgram();
-
 
 		//每个通道midi事件分配到每一个轨道
 		PerChannelMidiEventToPerTrack();
+
+		//拷贝相同通道控制事件
+		if (enableCopySameChannelControlEvents)
+			CopySameChannelControlEvents();
 
 		FindTracksDefaultProgramChangeEvent();
 

@@ -15,6 +15,7 @@ namespace tau
 	{
 		//通常播放模式
 		Common,
+
 		//等待播放模式
 		Wait,
 

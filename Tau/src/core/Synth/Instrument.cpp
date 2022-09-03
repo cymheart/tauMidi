@@ -3,8 +3,8 @@ namespace tau
 {
 	Instrument::Instrument()
 	{
-		globalRegion = new Region(RegionType::Insttrument);
-		instRegionLinkInfoList = new SamplesLinkToInstRegionInfoList;
+		globalRegion = new Region(RegionType::Instrument);
+		instRegionLinkInfoList = new vector<SamplesLinkToInstRegionInfo>;
 	}
 
 	Instrument::~Instrument()
@@ -15,10 +15,23 @@ namespace tau
 	// 连接一个样本到一个instRegion
 	Region* Instrument::LinkSamples(Sample* sample)
 	{
-		Region* instRegion = new Region(RegionType::Insttrument);
+		Region* instRegion = new Region(RegionType::Instrument);
 		SamplesLinkToInstRegionInfo linkInfo;
 		linkInfo.region = instRegion;
+		linkInfo.linkSampleGen = nullptr;
 		linkInfo.linkSample = sample;
+		instRegionLinkInfoList->push_back(linkInfo);
+		return instRegion;
+	}
+
+	// 连接一个样本发生器到一个instRegion
+	Region* Instrument::LinkSamplesGen(SampleGenerator* sampleGen)
+	{
+		Region* instRegion = new Region(RegionType::Instrument);
+		SamplesLinkToInstRegionInfo linkInfo;
+		linkInfo.region = instRegion;
+		linkInfo.linkSample = nullptr;
+		linkInfo.linkSampleGen = sampleGen;
 		instRegionLinkInfoList->push_back(linkInfo);
 		return instRegion;
 	}

@@ -174,6 +174,8 @@ int main(int argc, char* argv[])
 	//sf.Parse("SF2", sfPath + "Farfisa Grand Piano V4.sf2");
 	//sf.Parse("SF2", sfPath + "SGM-V2.01.sf2");
 
+	sf.EnablePhysicsPiano(0, 1, 0);
+
 
 	//建立tau
 	Tau* tau = new Tau();
@@ -197,6 +199,9 @@ int main(int argc, char* argv[])
 	//tau->SetRenderQuality(RenderQuality::SuperHigh);
 	//tau->SetUseMulThread(true);
 
+	//替换sf的0号钢琴为物理钢琴
+	tau->AppendReplaceInstrument(0, 0, 0, 0, 1, 0);
+
 	//添加压缩器效果
 //	Compressor* compressor = new Compressor();
 //	tau->AddEffect(compressor);
@@ -211,7 +216,7 @@ int main(int argc, char* argv[])
 	reverb->SetWidth(0.5f);
 	reverb->SetDamping(0.5f);
 	reverb->SetEffectMix(0.6f);
-	//tau->AddEffect(reverb);
+	tau->AddEffect(reverb);
 
 	//Chorus* chorus = new Chorus();
 	//chorus->SetModDepth(0.2);
@@ -309,7 +314,7 @@ int main(int argc, char* argv[])
 	//midiFiles.push_back(midiPath + "黑乐谱Victory.mid");
 	//midiFiles.push_back(midiPath + "黑乐谱 ASGORE.mid");
 
-	tau->Load(midiFiles[1]);
+	tau->Load(midiFiles[12]);
 	tau->Play();
 
 	//art(tau);

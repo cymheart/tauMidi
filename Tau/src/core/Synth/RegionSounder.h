@@ -105,9 +105,14 @@ namespace tau
 		void SetSample(Sample* sample)
 		{
 			this->sample = sample;
-			input = sample->pcm;
+			if (sample != nullptr)
+				input = sample->pcm;
 		}
 
+		void SetSampleGen(SampleGenerator* sampleGen)
+		{
+			this->sampleGen = sampleGen;
+		}
 
 		// 获取最终修改后的生成器数据表
 		inline GeneratorList* GetModifyedGenList()
@@ -346,8 +351,14 @@ namespace tau
 
 		unordered_set<int> modifyedGenTypes;
 
+		//发声样本
 		Sample* sample = nullptr;
 		float* input = nullptr;
+
+		//样本生成器
+		SampleGenerator* sampleGen = nullptr;
+		RegionSampleGenerator* regionSampleGen = nullptr;
+
 
 		daisysp::Chorus* chorus[2];
 

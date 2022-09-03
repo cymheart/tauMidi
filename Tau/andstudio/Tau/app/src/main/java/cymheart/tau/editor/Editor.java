@@ -231,6 +231,7 @@ public class Editor {
     //移动到指定时间点
     public void Runto(double sec)
     {
+
         if (state != PLAY || !isStepPlayMode) {
             Goto(sec);
             return;
@@ -324,20 +325,11 @@ public class Editor {
         for (int i = 0; i < tracks.size(); i++)
         {
             track = tracks.get(i);
-
-            //重新处理当前时间点在事件处理时间中间时，可以重新启用此时间
-            List<MidiEvent> evs = track.reProcessMidiEvents;
-            if (!evs.isEmpty()) {
-                for (int j = 0; j < evs.size(); j++)
-                    ProcessEvent(evs.get(j), track, isDirectGoto);
-                evs.clear();
-            }
-
             ProcessTrack(track, isDirectGoto);
         }
     }
 
-    void ProcessTrack(Track track, boolean isDirectGoto)
+    protected void ProcessTrack(Track track, boolean isDirectGoto)
     {
         MidiEvent ev;
         List<LinkedList<InstFragment>> instFragments = track.instFragments;
@@ -355,14 +347,6 @@ public class Editor {
                     if(ev == null)
                         continue;
 
-                    //重新处理当前时间点在事件处理时间中间时，可以重新启用此事件
-                    if (isDirectGoto &&
-                            ev.startSec < curtPlaySec &&
-                            ev.endSec > curtPlaySec)
-                    {
-                        track.reProcessMidiEvents.add(ev);
-                    }
-
                     //
                     if (ev.startSec > curtPlaySec)
                         break;
@@ -378,7 +362,7 @@ public class Editor {
 
 
     //处理轨道事件
-    void ProcessEvent(MidiEvent midEv, Track track, boolean isDirectGoto)
+    protected void ProcessEvent(MidiEvent midEv, Track track, boolean isDirectGoto)
     {
         switch (midEv.type) {
             case MidiEvent.NoteOn:

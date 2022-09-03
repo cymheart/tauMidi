@@ -127,6 +127,9 @@
     <Filter Include="thrids\kissfft">
       <UniqueIdentifier>{880e6422-ee3a-4297-8b76-263b91134acb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="thrids\OteyPiano">
+      <UniqueIdentifier>{abc00e77-5921-4a1c-b894-3963e5fc045f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\Synth\Envelope.cpp">
@@ -633,6 +636,27 @@
     <ClCompile Include="..\..\src\core\Synth\Synther\SynthCache.cpp">
       <Filter>core\Synth\Synther</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\thrids\OteyPiano\DWG.cpp">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\OteyPiano\dwgs.cpp">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\OteyPiano\filter.cpp">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\OteyPiano\hammer.cpp">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\OteyPiano\reverb.cpp">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\OteyPiano\Piano.cpp">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\PhysicsPiano.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\Synth\Envelope.h">
@@ -1118,9 +1142,6 @@
     <ClInclude Include="..\..\src\core\FX\Equalizer.h">
       <Filter>core\FX\Eq</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\FX\Reverb.h">
-      <Filter>core\FX\Reverb</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\FX\Tremolo.h">
       <Filter>core\FX\Tremolo</Filter>
     </ClInclude>
@@ -1216,6 +1237,36 @@
     </ClInclude>
     <ClInclude Include="..\..\src\thrids\scutils\ArrayPool.h">
       <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Reverb.h">
+      <Filter>core\FX\Reverb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\OteyPiano\DWG.h">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\OteyPiano\dwgs.h">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\OteyPiano\filter.h">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\OteyPiano\hammer.h">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\OteyPiano\reverb.h">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\OteyPiano\PianoParams.h">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\OteyPiano\Piano.h">
+      <Filter>thrids\OteyPiano</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\SampleGenerator.h">
+      <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\PhysicsPiano.h">
+      <Filter>core\Synth</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

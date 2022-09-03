@@ -4,12 +4,14 @@
 #include"SoundFontParser.h"
 #include"SoundFontFormat/SF2/SF2Parser.h"
 #include"SoundFontFormat/TauFont/TauFont.h"
+#include"PhysicsPiano.h"
 
 namespace tau
 {
 	SoundFont::SoundFont()
 	{
 		sampleList = new SampleList;
+		sampleGenList = new SampleGenList;
 		instList = new InstrumentList;
 		presetList = new PresetList;
 		presetBankDict = new PresetMap;
@@ -22,6 +24,7 @@ namespace tau
 	SoundFont::~SoundFont()
 	{
 		DEL_OBJS_VECTOR(sampleList);
+		DEL_OBJS_VECTOR(sampleGenList);
 		DEL_OBJS_VECTOR(instList);
 		DEL_OBJS_VECTOR(presetList);
 		DEL(presetBankDict);
@@ -63,6 +66,17 @@ namespace tau
 			sfParser->Parse(path);
 	}
 
+	//开启物理钢琴
+	void SoundFont::EnablePhysicsPiano(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
+	{
+		if (isEnablePhysicsPiano)
+			return;
+
+		isEnablePhysicsPiano = true;
+		PhysicsPiano* physicsPiano = new PhysicsPiano();
+		physicsPiano->Create(this, bankSelectMSB, bankSelectLSB, instrumentNum);
+	}
+
 	// 增加一个样本到样本列表
 	Sample* SoundFont::AddSample(string name, short* samples, size_t size, uint8_t* sm24)
 	{
@@ -71,6 +85,12 @@ namespace tau
 		sample->SetSamples(samples, (uint32_t)size, sm24);
 		sampleList->push_back(sample);
 		return sample;
+	}
+
+	// 增加一个样本生成器到样本列表
+	void SoundFont::AddSampleGen(SampleGenerator* sampleGen)
+	{
+		sampleGenList->push_back(sampleGen);
 	}
 
 	// 增加一个乐器到乐器列表
@@ -104,6 +124,13 @@ namespace tau
 	{
 		return inst->LinkSamples(sample);
 	}
+
+	// 样本发生器绑定到乐器上
+	Region* SoundFont::SampleGenBindToInstrument(SampleGenerator* sampleGen, Instrument* inst)
+	{
+		return inst->LinkSamplesGen(sampleGen);
+	}
+
 	// 获取乐器预设
 	Preset* SoundFont::GetInstrumentPreset(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{

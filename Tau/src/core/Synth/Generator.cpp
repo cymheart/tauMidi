@@ -97,17 +97,17 @@ namespace tau
 		case GeneratorType::AttackModEnv:
 			//此处需要设置到0.001，比如鼓，吉他，一些需要立即启音的发声，
 			//必须设置非常小的值，不然发音会有杂音
-			if (type == RegionType::Insttrument)
+			if (type == RegionType::Instrument)
 				return 0.001f;
 			return 1;
 
 		case GeneratorType::ReleaseModEnv:
-			if (type == RegionType::Insttrument)
+			if (type == RegionType::Instrument)
 				return 0.01f;
 			return 1;
 
 		case GeneratorType::ReleaseVolEnv:
-			if (type == RegionType::Insttrument)
+			if (type == RegionType::Instrument)
 				return 0.01f;
 			return 1;
 
@@ -115,7 +115,7 @@ namespace tau
 		case GeneratorType::HoldVolEnv:
 		case GeneratorType::DecayModEnv:
 		case GeneratorType::HoldModEnv:
-			if (type == RegionType::Insttrument)
+			if (type == RegionType::Instrument)
 				return 0.001f;
 			return 1;
 
@@ -167,7 +167,7 @@ namespace tau
 		switch (genType)
 		{
 		case GeneratorType::InitialFilterFc:
-			if (type == RegionType::Insttrument)
+			if (type == RegionType::Instrument)
 			{
 				if (value > 19912) value = 19912;
 				else if (value < 19) value = 19;
@@ -179,7 +179,7 @@ namespace tau
 			return  value;
 
 		case GeneratorType::InitialAttenuation:
-			if (type == RegionType::Insttrument)
+			if (type == RegionType::Instrument)
 			{
 				if (value > 0) value = 0;
 				else if (value < -144) value = -144;
@@ -192,7 +192,7 @@ namespace tau
 			return value;
 
 		case GeneratorType::Pan:
-			if (type == RegionType::Insttrument)
+			if (type == RegionType::Instrument)
 			{
 				if (value > 50) value = 50;
 				else if (value < -50) value = -50;

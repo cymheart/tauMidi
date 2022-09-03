@@ -17,12 +17,12 @@ namespace tau
 		presetGlobalRegionModGenList->SetType(RegionType::Preset);
 
 		instCombGenList = new GeneratorList();
-		instCombGenList->SetType(RegionType::Insttrument);
+		instCombGenList->SetType(RegionType::Instrument);
 
 		instRegionModGenList = new GeneratorList();
-		instRegionModGenList->SetType(RegionType::Insttrument);
+		instRegionModGenList->SetType(RegionType::Instrument);
 		instGlobalRegionModGenList = new GeneratorList();
-		instGlobalRegionModGenList->SetType(RegionType::Insttrument);
+		instGlobalRegionModGenList->SetType(RegionType::Instrument);
 
 		modsModGenList = new GeneratorList();
 	}

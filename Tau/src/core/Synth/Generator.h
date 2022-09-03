@@ -94,7 +94,7 @@ namespace tau
 
 	private:
 		Generator* gens[64] = { nullptr };
-		RegionType type = RegionType::Insttrument;
+		RegionType type = RegionType::Instrument;
 
 	};
 }

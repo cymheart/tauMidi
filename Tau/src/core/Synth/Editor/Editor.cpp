@@ -31,7 +31,8 @@ namespace tau
 
 	//载入
 	//在非阻塞模式isWaitLoadCompleted = false下，
-	//Load前面不能有任何与之相冲突的调用（play(), pasue(),stop()等,因为这些函数出于效率考虑没有加互斥锁）
+	//Load完成前不能有任何与之相冲突的调用（play(), pasue(),stop() goto()等,因为这些函数出于效率考虑没有加互斥锁）
+	//在调用play(), pasue(),stop() goto()等操作时，需要调用IsLoadCompleted()进行确认判断
 	void Editor::Load(string& midiFilePath, bool isWaitLoadCompleted)
 	{
 		loadingMidiFilelocker.lock();
@@ -57,7 +58,7 @@ namespace tau
 		midiFile = new MidiFile();
 		midiFile->SetEnableMidiEventCountOptimize(tau->enableMidiEventCountOptimize);
 		midiFile->SetKeepSameStartTickNoteOnEventsCount(tau->midiKeepSameTimeNoteOnCount);
-		midiFile->SetTrackChannelMergeMode(tau->midiFileMergeMode);
+		midiFile->SetEnableCopySameChannelControlEvents(tau->enableCopySameChannelControlEvents);
 		midiFile->SetEnableParseLimitTime(tau->isEnableMidiEventParseLimitTime, tau->midiEventLimitParseSec);
 
 		//
@@ -271,7 +272,6 @@ namespace tau
 	// 设置播放时间点
 	void Editor::Goto(double sec)
 	{
-
 		waitSem.reset(tau->midiEditorSyntherCount - 1);
 
 		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
@@ -289,13 +289,13 @@ namespace tau
 		if (midiEditor == nullptr)
 			return EditorState::STOP;
 
-		return tau->midiEditorSynthers[0]->GetPlayStateCommonTask();
+		return tau->midiEditorSynthers[0]->GetPlayStateCommon();
 	}
 
 	//获取当前播放时间点
 	double Editor::GetPlaySec()
 	{
-		return tau->midiEditorSynthers[0]->GetPlaySecCommonTask();
+		return tau->midiEditorSynthers[0]->GetPlaySecCommon();
 	}
 
 	// 设定速度

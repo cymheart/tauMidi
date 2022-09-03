@@ -161,7 +161,7 @@ namespace tau
 		if (region == nullptr)
 			return nullptr;
 
-		SetGenList(*region->GetGenList(), gens, genStart, genEnd, RegionType::Insttrument);
+		SetGenList(*region->GetGenList(), gens, genStart, genEnd, RegionType::Instrument);
 		return region;
 	}
 

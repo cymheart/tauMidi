@@ -10,6 +10,44 @@
 namespace tau
 {
 
+	void MidiEditorSynther::SetPlayTypeTask(MidiEventPlayType playType, Semaphore* waitSem)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _SetPlayTypeTask;
+		ev->value = (int)playType;
+		ev->sem = waitSem;
+		PostTask(ev);
+	}
+
+	void MidiEditorSynther::_SetPlayTypeTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.SetPlayType((MidiEventPlayType)se->value);
+		se->sem->set();
+	}
+
+
+	void MidiEditorSynther::GetCurTimeLateNoteKeysTask(float lateSec, Semaphore* waitSem)
+	{
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = _GetCurTimeLateNoteKeysTask;
+		ev->exValue[0] = lateSec;
+		ev->sem = waitSem;
+		PostTask(ev);
+	}
+
+	void MidiEditorSynther::_GetCurTimeLateNoteKeysTask(Task* ev)
+	{
+		SyntherEvent* se = (SyntherEvent*)ev;
+		MidiEditorSynther& midiSynther = (MidiEditorSynther&)*(se->synther);
+		midiSynther.GetCurTimeLateNoteKeys(se->exValue[0]);
+		se->sem->set();
+	}
+
+
 	void MidiEditorSynther::EnterPlayModeTask(EditorPlayMode playMode, Semaphore* waitSem)
 	{
 		SyntherEvent* ev = SyntherEvent::New();

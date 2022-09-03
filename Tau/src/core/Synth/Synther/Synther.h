@@ -440,7 +440,8 @@ namespace tau
 		//在主合成器中的缓存处理
 		void CacheReadToMain(Synther* mainSynther);
 
-
+		//所有从合成器完成了数据采样，把从合成器采样数据合并到主合成器中
+		//此时仅合成从合成器中的buffer，当合成所有从buffer后，主合成器再次开启缓存
 		void CacheSynthSlavesBuffer();
 
 		void CacheSynthToMain(Synther* mainSynther);
@@ -646,6 +647,8 @@ namespace tau
 		//	
 		//是否开启缓存
 		bool isEnableCache = true;
+
+		//是否为步进播放模式
 		bool isStepPlayMode = false;
 
 		double cacheGainStep = 0;
@@ -661,10 +664,10 @@ namespace tau
 		int maxCacheSize = 0;
 		int reCacheSize = 0;
 
-		EditorState cachePlayState = EditorState::STOP;
+		atomic<EditorState> cachePlayState;
 		CacheState state = CacheState::CacheStop;
 
-		double curtCachePlaySec = 0;
+		atomic<double> curtCachePlaySec;
 
 		vector<FadeSamplesInfo> fallSamples;
 		ArrayPool<float>* fallSamplesPool = nullptr;
