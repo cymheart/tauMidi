@@ -19,7 +19,7 @@ TauTest(C++)
 VS工程启动 直接运行编译
 
 ### Android Studio 编译
-AS工程启动 直接运行编译Cancel changes
+AS工程启动 直接运行编译
 
 
 ### 提供接口
