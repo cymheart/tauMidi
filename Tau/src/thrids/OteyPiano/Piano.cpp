@@ -134,7 +134,6 @@ namespace oteypiano
 
 	void PianoKey::Init(PianoKeyParams& param)
 	{
-		Clear();
 
 		//this->amp = amp * 100.0;
 		float f0 = 27.5;

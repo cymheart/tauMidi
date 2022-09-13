@@ -95,16 +95,16 @@ namespace oteypiano
 			free(pObject);
 		}
 
-		float v0;
-		float Fs;
-		float Z;
-		float Zb;
-		float Zh;
-		float f;
+		float v0 = 0;
+		float Fs = 0;
+		float Z = 0;
+		float Zb = 0;
+		float Zh = 0;
+		float f = 0;
 
-		int nstrings;
-		dwgs* string[3];
-		Hammer* hammer;
+		int nstrings = 0;
+		dwgs* string[3] = { nullptr };
+		Hammer* hammer = { nullptr };
 	};
 
 
