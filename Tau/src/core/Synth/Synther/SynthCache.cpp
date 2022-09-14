@@ -3,6 +3,7 @@
 #include"Synth/SyntherEvent.h"
 #include"Synth/VirInstrument.h"
 #include"Synth/Tau.h"
+#include"Synth/Editor/Editor.h"
 
 namespace tau
 {
@@ -21,8 +22,8 @@ namespace tau
 		}
 
 		if (!slaveSynthers.empty()) {
-			cachePlayState = slaveSynthers[0]->cachePlayState.load();
-			curtCachePlaySec = slaveSynthers[0]->curtCachePlaySec.load();
+			SetCachePlayState(slaveSynthers[0]->cachePlayState);
+			SetCurtCachePlaySec(slaveSynthers[0]->curtCachePlaySec);
 		}
 
 		//当所有从合成器进入步进模式后,主合成器关闭缓存
@@ -108,6 +109,9 @@ namespace tau
 			cacheBuffer->Clear();
 			state = CacheState::CacheStop;
 			break;
+
+		default:
+			break;
 		}
 
 
@@ -162,7 +166,7 @@ namespace tau
 			{
 				cacheBuffer->Clear();
 				state = CacheState::CacheStop;
-				cachePlayState = EditorState::ENDPAUSE;
+				SetCachePlayState(EditorState::ENDPAUSE);
 				break;
 			}
 
@@ -171,7 +175,7 @@ namespace tau
 
 
 		case CacheState::LeaveStep:
-			curtCachePlaySec = GetPlaySec();
+			SetCurtCachePlaySec(GetPlaySec());
 			isEnableCache = true;
 			cacheBuffer->Clear();
 			cacheGain = dstCacheGain = 0;
@@ -187,6 +191,10 @@ namespace tau
 		case CacheState::Removing:
 			state = CacheState::Remove;
 			break;
+
+		default:
+			break;
+
 		}
 
 	}
@@ -196,7 +204,7 @@ namespace tau
 	{
 		lock_guard<mutex> lock(mainSynther->cacheLocker);
 
-		cachePlayState = EditorState::PLAY;
+		SetCachePlayState(EditorState::PLAY);
 
 		switch (state)
 		{
@@ -215,6 +223,9 @@ namespace tau
 			CreateRiseCacheGain();
 			state = CacheState::OnlyRead;
 			break;
+
+		default:
+			break;
 		}
 
 	}
@@ -223,7 +234,7 @@ namespace tau
 	{
 		lock_guard<mutex> lock(mainSynther->cacheLocker);
 
-		cachePlayState = EditorState::PAUSE;
+		SetCachePlayState(EditorState::PAUSE);
 
 		switch (state)
 		{
@@ -252,8 +263,8 @@ namespace tau
 		if (cachePlayState != EditorState::PAUSE)
 			CreateFallCacheSamples();
 
-		cachePlayState = EditorState::STOP;
-		curtCachePlaySec = 0;
+		SetCachePlayState(EditorState::STOP);
+		SetCurtCachePlaySec(0);
 
 		for (int i = 0; i < virInstList.size(); i++)
 			virInstList[i]->ClearSoundDatas();
@@ -289,7 +300,7 @@ namespace tau
 
 		if (state == CacheState::CacheStop)
 		{
-			curtCachePlaySec = sec;
+			SetCurtCachePlaySec(sec);
 			return true;
 		}
 
@@ -311,7 +322,7 @@ namespace tau
 
 		//
 		bool isReset = false;
-		curtCachePlaySec = sec;
+		SetCurtCachePlaySec(sec);
 
 		//
 #define _CacheClear() \
@@ -321,7 +332,7 @@ namespace tau
 
 		if (sec >= GetEndSec())
 		{
-			cachePlayState = EditorState::ENDPAUSE;
+			SetCachePlayState(EditorState::ENDPAUSE);
 			switch (state)
 			{
 			case CacheState::CacheStoping:
@@ -490,9 +501,7 @@ namespace tau
 		}
 
 		//
-		curtCachePlaySec = curtCachePlaySec + frameSec;
-
-		//curtCachePlaySec.store(curtCachePlaySec + frameSec);
+		SetCurtCachePlaySec(curtCachePlaySec + frameSec);
 	}
 
 
@@ -552,12 +561,13 @@ namespace tau
 	{
 		int n = 0;
 		double s;
-		curtCachePlaySec = 0;
+
+		SetCurtCachePlaySec(0);
 		for (int i = 0; i < slaveSynthers.size(); i++)
 		{
 			s = slaveSynthers[i]->GetPlaySec();
 			if (s > curtCachePlaySec)
-				curtCachePlaySec = s;
+				SetCurtCachePlaySec(s);
 
 			slaveSynthers[i]->CacheReadFallSamples(this);
 			slaveSynthers[i]->CacheSynthToMain(this);
@@ -598,6 +608,24 @@ namespace tau
 		}
 	}
 
+
+	//设置当前缓存播放时间
+	void Synther::SetCurtCachePlaySec(double sec)
+	{
+		curtCachePlaySec = sec;
+		if (tau->GetMainMidiSynther() == this &&
+			maxCacheSize > 0 && isEnableCache)
+			tau->editor->curtPlaySec = curtCachePlaySec;
+	}
+
+	//设置缓存状态
+	void Synther::SetCachePlayState(EditorState s)
+	{
+		cachePlayState = s;
+		if (tau->GetMainMidiSynther() == this &&
+			maxCacheSize > 0 && isEnableCache)
+			tau->editor->playState = cachePlayState;
+	}
 
 	void Synther::ShowCacheInfo()
 	{

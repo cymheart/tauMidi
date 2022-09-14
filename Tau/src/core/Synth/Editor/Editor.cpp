@@ -19,6 +19,8 @@ namespace tau
 		this->tau = tau;
 		computedPerSyntherLimitTrackCount = tau->perSyntherLimitTrackCount;
 		isWait = false;
+		curtPlaySec = 0;
+		playState = EditorState::STOP;
 	}
 
 	Editor::~Editor()
@@ -285,28 +287,27 @@ namespace tau
 	//获取状态
 	EditorState Editor::GetState()
 	{
-		MidiEditor* midiEditor = tau->midiEditorSynthers[0]->GetMidiEditor();
-		if (midiEditor == nullptr)
-			return EditorState::STOP;
-
-		return tau->midiEditorSynthers[0]->GetPlayStateCommon();
+		return playState;
 	}
 
 	//获取当前播放时间点
 	double Editor::GetPlaySec()
 	{
-		return tau->midiEditorSynthers[0]->GetPlaySecCommon();
+		return curtPlaySec;
+	}
+
+	//获取主MidiEditor
+	MidiEditor* Editor::GetMainMidiEditor()
+	{
+		return tau->GetMainMidiEditor();
 	}
 
 	// 设定速度
 	void Editor::SetSpeed(float speed_)
 	{
 		speed = speed_;
-
-		waitSem.reset(tau->midiEditorSyntherCount - 1);
 		for (int i = 0; i < tau->midiEditorSyntherCount; i++)
 			tau->midiEditorSynthers[i]->SetSpeedTask(&waitSem, speed);
-		waitSem.wait();
 	}
 
 	// 禁止播放指定编号的轨道

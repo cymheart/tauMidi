@@ -20,14 +20,14 @@ namespace tau
 		tau = midiSynther->tau;
 		editor = tau->editor;
 
-		state = EditorState::STOP;
 
 		//初始化值
-		curtPlaySec = editor->GetPlaySec();
+		SetCurtPlaySec(editor->GetPlaySec());
+		SetState(editor->GetState());
 		speed = editor->GetSpeed();
 		playMode = editor->playMode;
 		playType = editor->playType;
-		state = editor->GetState();
+
 		midiMarkerList.Copy(editor->midiMarkerList);
 	}
 
@@ -261,8 +261,7 @@ namespace tau
 		for (int i = 0; i < trackList.size(); i++)
 			midiSynther->OnVirInstrument(trackList[i]->GetChannel(), false);
 
-		state = EditorState::PLAY;
-
+		SetState(EditorState::PLAY);
 	}
 
 	//暂停播放
@@ -275,7 +274,7 @@ namespace tau
 			midiSynther->OffVirInstrumentAllKeys(trackList[i]->GetChannel());
 		}
 
-		state = EditorState::PAUSE;
+		SetState(EditorState::PAUSE);
 	}
 
 
@@ -291,8 +290,8 @@ namespace tau
 			trackList[i]->Clear();
 		}
 
-		curtPlaySec = 0;
-		state = EditorState::STOP;
+		SetCurtPlaySec(0);
+		SetState(EditorState::STOP);
 
 	}
 
@@ -305,8 +304,8 @@ namespace tau
 			trackList[i]->Clear();
 		}
 
-		curtPlaySec = 0;
-		state = EditorState::STOP;
+		SetCurtPlaySec(0);
+		SetState(EditorState::STOP);
 	}
 
 
@@ -338,7 +337,7 @@ namespace tau
 		if (sec > endSec)
 			sec = endSec;
 
-		curtPlaySec = 0;
+		SetCurtPlaySec(0);
 		ProcessCore(sec / speed, true);
 	}
 
@@ -428,6 +427,24 @@ namespace tau
 		speed = speed_;
 	}
 
+	//设置当前播放时间
+	void MidiEditor::SetCurtPlaySec(double sec)
+	{
+		curtPlaySec = sec;
+		if (editor->GetMainMidiEditor() == this &&
+			midiSynther->maxCacheSize <= 0 || !midiSynther->isEnableCache)
+			editor->curtPlaySec = curtPlaySec;
+	}
+
+	//设置状态
+	void MidiEditor::SetState(EditorState s)
+	{
+		state = s;
+		if (editor->GetMainMidiEditor() == this &&
+			midiSynther->maxCacheSize <= 0 || !midiSynther->isEnableCache)
+			editor->playState = state;
+	}
+
 	//设置轨道乐器
 	void MidiEditor::SetVirInstrument(Track* track, int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
@@ -476,7 +493,7 @@ namespace tau
 		if (curtPlaySec >= endSec) {
 			printf("当前轨道midi时间处理结束! \n");
 			Pause();
-			state = EditorState::ENDPAUSE;
+			SetState(EditorState::ENDPAUSE);
 		}
 	}
 
@@ -484,7 +501,7 @@ namespace tau
 	//当前时间curtPlaySec往前处理一个sec的时间长度的所有midi事件
 	void MidiEditor::ProcessCore(double sec, bool isDirectGoto)
 	{
-		curtPlaySec = curtPlaySec + sec * speed;
+		SetCurtPlaySec(curtPlaySec + sec * speed);
 
 		for (int i = 0; i < trackList.size(); i++)
 		{
@@ -500,6 +517,8 @@ namespace tau
 			ProcessTrack(trackList[i], isDirectGoto);
 		}
 	}
+
+
 
 	/// <summary>
 	/// 处理轨道事件
@@ -634,6 +653,9 @@ namespace tau
 			virInst->SetController(ev->ctrlType, ev->value);
 		}
 		break;
+
+		default:
+			break;
 		}
 	}
 

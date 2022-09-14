@@ -1,4 +1,4 @@
-#include"Editor.h"
+ï»¿#include"Editor.h"
 #include"Track.h"
 #include"MidiEditor.h"
 #include"Synth/Tau.h"
@@ -14,7 +14,7 @@
 
 namespace tau
 {
-	//ÉèÖÃ¹ìµÀÊÂ¼şÑİ×à·½Ê½
+	//è®¾ç½®è½¨é“äº‹ä»¶æ¼”å¥æ–¹å¼
 	void Editor::SetTrackPlayType(int trackIdx, MidiEventPlayType playType)
 	{
 		waitSem.reset(0);
@@ -23,7 +23,7 @@ namespace tau
 		waitSem.wait();
 	}
 
-	//ÉèÖÃÑİ×àÀàĞÍ
+	//è®¾ç½®æ¼”å¥ç±»å‹
 	void Editor::SetPlayType(MidiEventPlayType playType)
 	{
 		//
@@ -33,7 +33,7 @@ namespace tau
 		waitSem.wait();
 	}
 
-	//»ñÈ¡µ±Ç°Ê±¼äÖ®ºóµÄnotekeys
+	//è·å–å½“å‰æ—¶é—´ä¹‹åçš„notekeys
 	void Editor::GetCurTimeLateNoteKeys(float lateSec)
 	{
 		memset(lateHavKeys, 0, sizeof(bool) * 128);
@@ -55,16 +55,16 @@ namespace tau
 	}
 
 
-	//½øÈëµ½²½½ø²¥·ÅÄ£Ê½
+	//è¿›å…¥åˆ°æ­¥è¿›æ’­æ”¾æ¨¡å¼
 	void Editor::EnterStepPlayMode()
 	{
 		if (playMode == EditorPlayMode::Step) {
-			printf("µ±Ç°Ä£Ê½ÒÑ¾­Îª²½½ø²¥·ÅÄ£Ê½! \n");
+			printf("å½“å‰æ¨¡å¼å·²ç»ä¸ºæ­¥è¿›æ’­æ”¾æ¨¡å¼! \n");
 			return;
 		}
 
 		if (playMode == EditorPlayMode::Wait) {
-			printf("µ±Ç°Ä£Ê½Îª:µÈ´ı²¥·ÅÄ£Ê½£¬ĞèÒªÀë¿ªµÈ´ı²¥·ÅÄ£Ê½! \n");
+			printf("å½“å‰æ¨¡å¼ä¸º:ç­‰å¾…æ’­æ”¾æ¨¡å¼ï¼Œéœ€è¦ç¦»å¼€ç­‰å¾…æ’­æ”¾æ¨¡å¼! \n");
 			return;
 		}
 
@@ -79,16 +79,16 @@ namespace tau
 	}
 
 
-	//½øÈëµ½µÈ´ı²¥·ÅÄ£Ê½
+	//è¿›å…¥åˆ°ç­‰å¾…æ’­æ”¾æ¨¡å¼
 	void Editor::EnterWaitPlayMode()
 	{
 		if (playMode == EditorPlayMode::Wait) {
-			printf("µ±Ç°Ä£Ê½ÒÑ¾­ÎªµÈ´ı²¥·ÅÄ£Ê½! \n");
+			printf("å½“å‰æ¨¡å¼å·²ç»ä¸ºç­‰å¾…æ’­æ”¾æ¨¡å¼! \n");
 			return;
 		}
 
 		if (playMode == EditorPlayMode::Step) {
-			printf("µ±Ç°Ä£Ê½Îª:²½½ø²¥·ÅÄ£Ê½£¬ĞèÒªÀë¿ª²½½ø²¥·ÅÄ£Ê½! \n");
+			printf("å½“å‰æ¨¡å¼ä¸º:æ­¥è¿›æ’­æ”¾æ¨¡å¼ï¼Œéœ€è¦ç¦»å¼€æ­¥è¿›æ’­æ”¾æ¨¡å¼! \n");
 			return;
 		}
 
@@ -110,7 +110,7 @@ namespace tau
 
 	}
 
-	//Àë¿ªµ±Ç°²¥·ÅÄ£Ê½
+	//ç¦»å¼€å½“å‰æ’­æ”¾æ¨¡å¼
 	void Editor::LeavePlayMode()
 	{
 		playMode = EditorPlayMode::Common;
@@ -122,10 +122,10 @@ namespace tau
 	}
 
 
-	//ÒÆ¶¯µ½Ö¸¶¨Ê±¼äµã
+	//ç§»åŠ¨åˆ°æŒ‡å®šæ—¶é—´ç‚¹
 	void Editor::Runto(double sec)
 	{
-		//Èç¹ûÊÇµÈ´ı²¥·ÅÄ£Ê½£¬½«Çå¿ÕµÈ´ı²¥·ÅÄ£Ê½µÄÊı¾İ
+		//å¦‚æœæ˜¯ç­‰å¾…æ’­æ”¾æ¨¡å¼ï¼Œå°†æ¸…ç©ºç­‰å¾…æ’­æ”¾æ¨¡å¼çš„æ•°æ®
 		if (playMode == EditorPlayMode::Wait) {
 			waitOnKeyLock.lock();
 			memset(onkey, 0, sizeof(int) * 128);
@@ -146,7 +146,7 @@ namespace tau
 		waitSem.wait();
 	}
 
-	//µÈ´ı(Çø±ğÓÚÔİÍ££¬µÈ´ıÏàµ±ÓÚÔÚÔ­Ê¼Î»ÖÃ²¥·Å)
+	//ç­‰å¾…(åŒºåˆ«äºæš‚åœï¼Œç­‰å¾…ç›¸å½“äºåœ¨åŸå§‹ä½ç½®æ’­æ”¾)
 	void Editor::Wait()
 	{
 		if (playMode != EditorPlayMode::Common)
@@ -155,7 +155,7 @@ namespace tau
 		isWait = true;
 	}
 
-	//¼ÌĞø£¬Ïà¶ÔÓÚµÈ´ıÃüÁî
+	//ç»§ç»­ï¼Œç›¸å¯¹äºç­‰å¾…å‘½ä»¤
 	void Editor::Continue()
 	{
 		if (playMode != EditorPlayMode::Common)
@@ -164,7 +164,7 @@ namespace tau
 		isWait = false;
 	}
 
-	//ĞèÒª°´¼üĞÅºÅ
+	//éœ€è¦æŒ‰é”®ä¿¡å·
 	void Editor::NeedOnKeySignal(int key)
 	{
 		lock_guard<mutex> lock(waitOnKeyLock);
@@ -178,10 +178,10 @@ namespace tau
 		needOnkey[key]++;
 		needOnKeyCount++;
 		isWait = true;
-		printf("µÈ´ı°´¼ü:%d \n", key);
+		printf("ç­‰å¾…æŒ‰é”®:%d \n", key);
 	}
 
-	//ĞèÒªËÉ¿ª°´¼üĞÅºÅ
+	//éœ€è¦æ¾å¼€æŒ‰é”®ä¿¡å·
 	void Editor::NeedOffKeySignal(int key)
 	{
 		lock_guard<mutex> lock(waitOnKeyLock);
@@ -192,21 +192,21 @@ namespace tau
 		needOffkey[key]++;
 		needOffKeyCount++;
 		isWait = true;
-		printf("µÈ´ıËÉ¿ª¼ü:%d \n", key);
+		printf("ç­‰å¾…æ¾å¼€é”®:%d \n", key);
 	}
 
-	//°´¼üĞÅºÅ
+	//æŒ‰é”®ä¿¡å·
 	void Editor::OnKeySignal(int key)
 	{
 		GetCurTimeLateNoteKeys(2);
 
 		lock_guard<mutex> lock(waitOnKeyLock);
 
-		printf("°´ÏÂ°´¼ü:%d \n", key);
+		printf("æŒ‰ä¸‹æŒ‰é”®:%d \n", key);
 		onkey[key]++;
 		onKeyCount++;
 
-		if (needOnkey[key] > 0) //´æÔÚĞèÒª¶ÔÓ¦°´ÏÂµÄ°´¼ü
+		if (needOnkey[key] > 0) //å­˜åœ¨éœ€è¦å¯¹åº”æŒ‰ä¸‹çš„æŒ‰é”®
 		{
 			onkey[key]--;
 			onKeyCount--;
@@ -217,22 +217,22 @@ namespace tau
 			if (needOnKeyCount == 0 && needOffKeyCount == 0)
 				isWait = false;
 		}
-		else if (!lateHavKeys[key])  //µ±Ç°Ê±¼äÖ®ºóÃ»ÓĞÕâ¸ö°´¼üÊÂ¼ş
+		else if (!lateHavKeys[key])  //å½“å‰æ—¶é—´ä¹‹åæ²¡æœ‰è¿™ä¸ªæŒ‰é”®äº‹ä»¶
 		{
 			isWait = true;
-			printf("°´´í¼ü,µÈ´ıÖĞ\n");
+			printf("æŒ‰é”™é”®,ç­‰å¾…ä¸­\n");
 		}
 
 	}
 
-	//ËÉ¿ª°´¼üĞÅºÅ
+	//æ¾å¼€æŒ‰é”®ä¿¡å·
 	void Editor::OffKeySignal(int key)
 	{
 		lock_guard<mutex> lock(waitOnKeyLock);
 
 		if (onkey[key] > 0)
 		{
-			printf("ËÉ¿ª°´¼ü:%d \n", key);
+			printf("æ¾å¼€æŒ‰é”®:%d \n", key);
 			onkey[key]--;
 			onKeyCount--;
 

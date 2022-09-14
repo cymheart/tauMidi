@@ -55,7 +55,7 @@ namespace scutils
 
 			if (pos >= objList.size())
 			{
-				printf("注意重复存取!\n");
+				//printf("注锟斤拷锟截革拷锟斤拷取!\n");
 				objList.push_back(obj);
 			}
 			else

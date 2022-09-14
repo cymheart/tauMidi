@@ -128,6 +128,14 @@ Java_cymheart_tau_editor_Editor_ndkGetPlayState(JNIEnv *env, jclass clazz, jlong
 }
 
 extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkSetSpeed(JNIEnv *env, jclass clazz, jlong ndk_editor,
+                                            jfloat speed) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->SetSpeed(speed);
+}
+
+extern "C"
 JNIEXPORT jint JNICALL
 Java_cymheart_tau_editor_Editor_ndkGetSampleStreamFreqSpectrums(JNIEnv *env, jclass clazz, jlong ndk_editor,
                                                                 jint channel, jdoubleArray out_left,

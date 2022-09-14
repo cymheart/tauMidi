@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.ListIterator;
 
 import cymheart.tau.midi.MidiEvent;
+import cymheart.tau.utils.ScLinkedList;
+import cymheart.tau.utils.ScLinkedListNode;
 
 public class InstFragment {
 
@@ -17,18 +19,17 @@ public class InstFragment {
 
     //
     protected MidiEvent[] _ndkMidiEvent;
-    protected List<MidiEvent> midiEvents = new LinkedList<>();
-    protected ListIterator<MidiEvent> eventOffsetIter;
-    protected ListIterator<MidiEvent> eventFirstIter;
+    protected ScLinkedList<MidiEvent> midiEvents = new ScLinkedList<>();
+    protected ScLinkedListNode<MidiEvent> eventOffsetNode;
+    protected ScLinkedListNode<MidiEvent> eventFirstNode;
 
-    public List<MidiEvent> GetMidiEvents() {
+    public ScLinkedList<MidiEvent> GetMidiEvents() {
         return midiEvents;
     }
 
     void Clear()
     {
-        eventOffsetIter = midiEvents.listIterator();
-        eventFirstIter = midiEvents.listIterator();
+        eventOffsetNode = eventFirstNode = midiEvents.GetHeadNode();
     }
 
 }

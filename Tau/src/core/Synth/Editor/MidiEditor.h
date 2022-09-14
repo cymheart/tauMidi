@@ -172,14 +172,20 @@ namespace tau
 
 		void GetNoteKeys(Track* track, double curtSec);
 
+		//设置当前播放时间
+		void SetCurtPlaySec(double sec);
+
+		//设置状态
+		void SetState(EditorState s);
+
 	private:
 
-		Tau* tau;
-		Editor* editor;
-		MidiEditorSynther* midiSynther;
+		Tau* tau = nullptr;
+		Editor* editor = nullptr;
+		MidiEditorSynther* midiSynther = nullptr;
 		MidiMarkerList midiMarkerList;
 
-		atomic<EditorState> state;
+		EditorState state = EditorState::STOP;
 
 
 		// 轨道
@@ -205,7 +211,7 @@ namespace tau
 		MidiEventPlayType playType = MidiEventPlayType::DoubleHand;
 
 		//当前播放时间
-		atomic<double> curtPlaySec;
+		double curtPlaySec = 0;
 
 		friend class Editor;
 		friend class Track;

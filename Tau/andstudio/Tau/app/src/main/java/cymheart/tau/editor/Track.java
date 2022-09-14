@@ -8,6 +8,8 @@ import java.util.ListIterator;
 
 import cymheart.tau.Channel;
 import cymheart.tau.midi.MidiEvent;
+import cymheart.tau.utils.ScLinkedList;
+import cymheart.tau.utils.ScLinkedListNode;
 
 public class Track {
 
@@ -22,9 +24,9 @@ public class Track {
         return channel;
     }
 
-    protected List<LinkedList<InstFragment>> instFragments = new ArrayList<>();
+    protected List<ScLinkedList<InstFragment>> instFragments = new ArrayList<>();
 
-    public List<LinkedList<InstFragment>> GetInstFragments() {
+    public List<ScLinkedList<InstFragment>> GetInstFragments() {
         return instFragments;
     }
 
@@ -39,10 +41,11 @@ public class Track {
         InstFragment instFragment;
         for (int i = 0; i < instFragments.size(); i++)
         {
-            LinkedList<InstFragment> instFragList = instFragments.get(i);
-            for(ListIterator<InstFragment> iter = instFragList.listIterator(); iter.hasNext();)
+            ScLinkedList<InstFragment> instFragList = instFragments.get(i);
+            ScLinkedListNode<InstFragment> node = instFragList.GetHeadNode();
+            for(;node!=null; node=node.next)
             {
-                instFragment = iter.next();
+                instFragment = node.elem;
                 instFragment.Clear();
             }
         }

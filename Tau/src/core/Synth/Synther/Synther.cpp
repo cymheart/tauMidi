@@ -23,8 +23,7 @@ namespace tau
 		isSoundEnd = true;
 
 		cachePlayState = EditorState::STOP;
-		curtCachePlaySec = 0;
-
+		SetCurtCachePlaySec(0);
 
 		//
 		presetBankReplaceMap = new unordered_map<uint32_t, uint32_t>;
@@ -949,7 +948,7 @@ namespace tau
 
 	void Synther::SynthSlavesBuffer()
 	{
-		curtCachePlaySec = 0;
+		SetCurtCachePlaySec(0);
 
 		for (int i = 0; i < slaveSynthers.size(); i++)
 		{

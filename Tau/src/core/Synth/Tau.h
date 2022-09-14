@@ -50,6 +50,12 @@ namespace tau
 			return editor;
 		}
 
+		//获取主MidiEditor
+		MidiEditor* GetMainMidiEditor();
+
+		//获取主MidiSynther
+		Synther* GetMainMidiSynther();
+
 		//设置是否使用多线程
 		//使用多线程渲染处理声音
 		//多线程渲染在childFrameSampleCount比较小的情况下(比如小于64时)，由于在一大帧中线程调用太过频繁，线程切换的消耗大于声音渲染的时间

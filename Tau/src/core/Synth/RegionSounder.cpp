@@ -493,6 +493,9 @@ namespace tau {
 				SetPressure();
 				break;
 
+			default:
+				break;
+
 			}
 		}
 	}

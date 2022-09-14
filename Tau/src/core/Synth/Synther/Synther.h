@@ -240,6 +240,12 @@ namespace tau
 			return 0;
 		}
 
+		//设置当前缓存播放时间
+		void SetCurtCachePlaySec(double sec);
+
+		//设置缓存状态
+		void SetCachePlayState(EditorState s);
+
 		//设置帧样本数量
 		//这个值越小，声音的实时性越高（在实时演奏时，值最好在1024以下，最合适的值为512）,
 		//当这个值比较小时，cpu内耗增加
@@ -664,10 +670,10 @@ namespace tau
 		int maxCacheSize = 0;
 		int reCacheSize = 0;
 
-		atomic<EditorState> cachePlayState;
+		EditorState cachePlayState;
 		CacheState state = CacheState::CacheStop;
 
-		atomic<double> curtCachePlaySec;
+		double curtCachePlaySec = 0;
 
 		vector<FadeSamplesInfo> fallSamples;
 		ArrayPool<float>* fallSamplesPool = nullptr;

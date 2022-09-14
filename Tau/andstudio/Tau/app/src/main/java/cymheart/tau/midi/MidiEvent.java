@@ -44,6 +44,8 @@ public class MidiEvent {
     public float endSec = 0;
     //事件相关通道
     public int channel = -1;
+    //事件相关轨道
+    public int track = -1;
 
     InstFragment instFragment;
 }

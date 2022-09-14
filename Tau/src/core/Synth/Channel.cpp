@@ -142,6 +142,9 @@ namespace tau
 				AddUsedPresetType(ModInputPreset::CoarseTune);
 			}
 			break;
+
+			default:
+				break;
 		}
 	}
 
@@ -228,10 +231,12 @@ namespace tau
 		{
 			float val = ccComputedValue[(int)MidiControllerType::ChannelVolumeMSB] *
 				ccComputedValue[(int)MidiControllerType::ExpressionControllerMSB];
-			val = powf(val, 3.0f);
+			val = powf(val, 2.0f);
 			return val;
 		}
-		break;
+
+		default:
+			break;
 		}
 
 

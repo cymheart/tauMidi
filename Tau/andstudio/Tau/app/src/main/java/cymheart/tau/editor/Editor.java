@@ -1,5 +1,9 @@
 package cymheart.tau.editor;
 
+import android.content.Context;
+import android.view.Display;
+import android.view.WindowManager;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -10,6 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import cymheart.tau.midi.MidiEvent;
 import cymheart.tau.midi.NoteOnEvent;
+import cymheart.tau.utils.ScLinkedList;
+import cymheart.tau.utils.ScLinkedListNode;
 import cymheart.tau.utils.Utils;
 
 public class Editor {
@@ -35,6 +41,13 @@ public class Editor {
     public int GetState(){return state;}
 
     protected float speed = 1;
+    public float GetSpeed(){return speed;}
+    public void SetSpeed(float speed)
+    {
+        this.speed = speed;
+        ndkSetSpeed(ndkEditor, speed);
+    }
+
     protected double curtPlaySec = 0;
     public double GetPlaySec()
     {
@@ -55,6 +68,14 @@ public class Editor {
 
     protected List<MidiEvent> curtProcessMidiEvent = new ArrayList<>();
     protected VisualMidiEvents visualMidiEvents = new VisualMidiEvents();
+
+    /**每帧花费秒数*/
+    protected double perFrameCostSec = 1/60.0;
+    /**设置每帧花费秒数*/
+    public void SetPreFrameCostSec(double costSec)
+    {
+        perFrameCostSec = costSec;
+    }
 
 
     private void Init()
@@ -91,13 +112,12 @@ public class Editor {
         _Remove();
     }
 
-    private void _JniLoadCompleted()
+    private void  _JniLoadCompleted()
     {
         ndkCreateDatas(this, ndkEditor);
         _Load();
         isLoadCompleted = true;
     }
-
 
     private void _Load()
     {
@@ -114,12 +134,14 @@ public class Editor {
 
             for (Object o : a) {
                 InstFragment[] instFrags = (InstFragment[]) o;
-                LinkedList<InstFragment> instFragList = new LinkedList<>();
+                ScLinkedList<InstFragment> instFragList = new ScLinkedList<>();
                 for (InstFragment instFrag : instFrags) {
-                    instFrag.midiEvents.addAll(Arrays.asList(instFrag._ndkMidiEvent));
+                    instFrag.midiEvents.AddLast(instFrag._ndkMidiEvent);
                     instFrag._ndkMidiEvent = null;
                     instFrag.track = track;
-                    instFragList.add(instFrag);
+                    instFrag.Clear();
+                    instFragList.AddLast(instFrag);
+
                 }
 
                 track.instFragments.add(instFragList);
@@ -283,17 +305,16 @@ public class Editor {
         return ndkGetSampleStreamFreqSpectrums(ndkEditor, channel, outLeft, outRight);
     }
 
-    //处理
-    public void Process()
+    //每帧处理
+    public void ProcessForPerFrame()
     {
-        Process(false);
+        ProcessForPerFrame(false);
     }
 
-    //处理
-    public void Process(boolean isStepOp)
+    //每帧处理
+    public void ProcessForPerFrame(boolean isStepOp)
     {
-        double ndkPlaySec = ndkGetPlaySec(ndkEditor);
-        Process(ndkPlaySec - curtPlaySec, isStepOp);
+        Process(perFrameCostSec, isStepOp);
     }
 
     //处理
@@ -316,11 +337,14 @@ public class Editor {
     protected void ProcessCore(double sec, boolean isDirectGoto)
     {
         curtProcessMidiEvent.clear();
-        curtPlaySec += sec;
+        curtPlaySec += sec * speed;
 
-        if(_ndkTracks == null)
-            return;
+        //
+        double ndkPlaySec = ndkGetPlaySec(ndkEditor);
+        if(ndkPlaySec - curtPlaySec > 0.002f)
+           curtPlaySec = ndkPlaySec;
 
+        //
         Track track;
         for (int i = 0; i < tracks.size(); i++)
         {
@@ -332,29 +356,30 @@ public class Editor {
     protected void ProcessTrack(Track track, boolean isDirectGoto)
     {
         MidiEvent ev;
-        List<LinkedList<InstFragment>> instFragments = track.instFragments;
-        LinkedList<InstFragment> instFragmentList;
+        List<ScLinkedList<InstFragment>> instFragments = track.instFragments;
+        ScLinkedList<InstFragment> instFragmentList;
+        ScLinkedListNode<MidiEvent> evNode;
         for (int j = 0; j < instFragments.size(); j++)
         {
             instFragmentList = instFragments.get(j);
-            for (InstFragment instFrag : instFragmentList) {
 
-                ListIterator<MidiEvent> it = instFrag.eventOffsetIter;
-                while (it.hasNext())
+            ScLinkedListNode<InstFragment> node = instFragmentList.GetHeadNode();
+            for(;node != null; node = node.next)
+            {
+                InstFragment instFrag = node.elem;
+                evNode = instFrag.eventOffsetNode;
+                for(;evNode != null; evNode = evNode.next)
                 {
-                    ev = it.next();
-
+                    ev = evNode.elem;
                     if(ev == null)
                         continue;
 
-                    //
                     if (ev.startSec > curtPlaySec)
                         break;
-
                     ProcessEvent(ev, track, isDirectGoto);
                 }
 
-                instFrag.eventOffsetIter = it;
+                instFrag.eventOffsetNode = evNode;
             }
         }
     }
@@ -397,10 +422,11 @@ public class Editor {
     public void CreateCurtVisualMidiEvents(float secWidth, int[] trackFilter)
     {
         List<List<NoteOnEvent>> noteOnEvents = visualMidiEvents.GetAllKeyEvents();
-        Set<Integer> noteSet = visualMidiEvents.GetNoteSet();
-        for (int note : noteSet)
-            noteOnEvents.get(note).clear();
-        noteSet.clear();
+
+        //
+        visualMidiEvents.ClearNoteUsedMark();
+        visualMidiEvents.usedNoteCount = 0;
+        int[] usedNotes = visualMidiEvents.GetUsedNotes();
 
         //
         Track track;
@@ -410,36 +436,54 @@ public class Editor {
 
         for (int i = 0; i < tracks.size(); i++)
         {
-            if(trackFilter!=null && !Utils.IsContainIntValue(trackFilter,i))
+            if(trackFilter != null && !Utils.IsContainIntValue(trackFilter,i))
                 continue;
 
             track = tracks.get(i);
-
-            List<LinkedList<InstFragment>> instFragments = track.instFragments;
-            LinkedList<InstFragment> instFragmentList;
+            List<ScLinkedList<InstFragment>> instFragments = track.instFragments;
+            ScLinkedList<InstFragment> instFragmentList;
             for (int j = 0; j < instFragments.size(); j++)
             {
                 instFragmentList = instFragments.get(j);
-                for (InstFragment instFragment : instFragmentList) {
-                    instFrag = instFragment;
-                    ListIterator<MidiEvent> it = instFrag.eventOffsetIter;
-                    while (it.hasPrevious()) {
-                        ev = it.previous();
 
+                ScLinkedListNode<InstFragment> node = instFragmentList.GetHeadNode();
+                for(;node != null; node = node.next)
+                {
+                    instFrag = node.elem;
+                    ScLinkedListNode<MidiEvent> evNode = instFrag.eventOffsetNode;
+                    if(evNode != null)
+                        evNode = evNode.prev;
+
+                    for(;evNode!=null; evNode = evNode.prev)
+                    {
+                        ev = evNode.elem;
                         if (ev == null || ev.type != MidiEvent.NoteOn || ev.endSec < curtPlaySec)
                             continue;
 
-                        instFrag.eventFirstIter = it;
+
                         NoteOnEvent noteOnEvent = (NoteOnEvent) ev;
+                        if(noteOnEvent.note > 127 || noteOnEvent.note < 0)
+                            continue;
+
+                        ev.track = i;
                         List<NoteOnEvent> noteEvlist = noteOnEvents.get(noteOnEvent.note);
                         noteEvlist.add(noteOnEvent);
-                        noteSet.add(noteOnEvent.note);
+
+                        if(visualMidiEvents.noteUsedMark[noteOnEvent.note] != true) {
+                            usedNotes[visualMidiEvents.usedNoteCount++] = noteOnEvent.note;
+                            visualMidiEvents.noteUsedMark[noteOnEvent.note] = true;
+                        }
+
+                        if(evNode == instFrag.eventFirstNode)
+                            break;
+
+                        instFrag.eventFirstNode = evNode;
                     }
 
-                    it = instFrag.eventOffsetIter;
-                    while (it.hasNext()) {
-                        ev = it.next();
-
+                    evNode = instFrag.eventOffsetNode;
+                    for(;evNode != null; evNode = evNode.next)
+                    {
+                        ev = evNode.elem;
                         if (ev == null || ev.type != MidiEvent.NoteOn)
                             continue;
 
@@ -447,15 +491,54 @@ public class Editor {
                             break;
 
                         NoteOnEvent noteOnEvent = (NoteOnEvent) ev;
+                        if(noteOnEvent.note > 127 || noteOnEvent.note < 0)
+                            continue;
+
+                        ev.track = i;
                         List<NoteOnEvent> noteEvlist = noteOnEvents.get(noteOnEvent.note);
                         noteEvlist.add(noteOnEvent);
-                        noteSet.add(noteOnEvent.note);
+
+                        if(visualMidiEvents.noteUsedMark[noteOnEvent.note] != true) {
+                            usedNotes[visualMidiEvents.usedNoteCount++] = noteOnEvent.note;
+                            visualMidiEvents.noteUsedMark[noteOnEvent.note] = true;
+                        }
 
                     }
                 }
             }
         }
+
+
+        //生成noteOn轨道分组
+        List<int[]> noteOnTrackGroups = visualMidiEvents.noteOnTrackGroups;
+        int m;
+        List<NoteOnEvent> visualKey;
+        int[] noteOnTrackGroup;
+        int trackidx;
+        int visualKeyCount;
+
+        for(int j=0; j<visualMidiEvents.usedNoteCount; j++){
+            m = 0;
+            trackidx = -1;
+            visualKey = noteOnEvents.get(usedNotes[j]);
+            visualKeyCount = visualKey.size();
+            noteOnTrackGroup = noteOnTrackGroups.get(usedNotes[j]);
+            noteOnTrackGroup[0] = 1;  //保存最后位置到数组0位
+            noteOnTrackGroup[1] = visualKeyCount;
+
+            for (int i = 0; i < visualKeyCount; i++) {
+                NoteOnEvent noteOnEV = visualKey.get(i);
+                if(noteOnEV.track != trackidx) {
+                    noteOnTrackGroup[++m] = i;
+                    noteOnTrackGroup[m + 1] = visualKeyCount;
+                    noteOnTrackGroup[0] = m + 1; //保存最后位置到数组0位
+                    trackidx = noteOnEV.track;
+                }
+            }
+        }
     }
+
+
 
 
     //
@@ -479,6 +562,7 @@ public class Editor {
     private static native void ndkGoto(long ndkEditor, double sec);
     private static native double ndkGetPlaySec(long ndkEditor);
     private static native double ndkGetEndSec(long ndkEditor);
+    private static native void ndkSetSpeed(long ndkEditor, float speed);
     private static native int ndkGetPlayState(long ndkEditor);
     private static native int ndkGetSampleStreamFreqSpectrums(long ndkEditor, int channel, double[] outLeft, double[] outRight);
 }

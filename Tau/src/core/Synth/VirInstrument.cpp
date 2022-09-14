@@ -926,6 +926,12 @@ namespace tau
 			}
 			gain = startGain + (dstGain - startGain) * scale;
 			break;
+			case VirInstrumentState::ONED:
+				break;
+			case VirInstrumentState::OFFED:
+				break;
+			case VirInstrumentState::REMOVED:
+				break;
 		}
 	}
 
@@ -981,9 +987,9 @@ namespace tau
 
 			if (abs(fadeReverbDepthInfo.curtDepth - regionReverb->GetEffectMix()) > 0.001f)
 			{
-				regionReverb->SetRoomSize(0.8f);
+				regionReverb->SetRoomSize(0.6f);
 				regionReverb->SetWidth(0.5f);
-				regionReverb->SetDamping(0.3f);
+				regionReverb->SetDamping(0.1f);
 				regionReverb->SetEffectMix(fadeReverbDepthInfo.curtDepth);
 			}
 		}

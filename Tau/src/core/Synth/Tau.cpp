@@ -94,6 +94,18 @@ namespace tau {
 		isOpened = false;
 	}
 
+	//获取主MidiEditor
+	MidiEditor* Tau::GetMainMidiEditor()
+	{
+		return midiEditorSynthers[0]->midiEditor;
+	}
+
+	//获取主MidiSynther
+	Synther* Tau::GetMainMidiSynther()
+	{
+		return midiEditorSynthers[0];
+	}
+
 	// 设置样本处理采样率
 	void Tau::SetSampleProcessRate(int rate)
 	{

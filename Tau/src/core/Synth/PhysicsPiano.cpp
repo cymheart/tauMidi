@@ -12,6 +12,7 @@ namespace tau
 		param = (PianoKeyParams*)piano_params_default;
 	}
 
+
 	void PhysicsPianoSampleGen::Init(int key)
 	{
 		pianoKey.Init(param[key - 21]);
@@ -78,7 +79,7 @@ namespace tau
 
 		Instrument* inst = sf->AddInstrument("Physics Piano");
 		Region* instGlobalRegion = inst->GetGlobalRegion();
-		//instGlobalRegion->GetGenList()->SetAmount(GeneratorType::AttackVolEnv, 0.01f);
+		//instGlobalRegion->GetGenList()->SetAmount(GeneratorType::AttackVolEnv, 0.1f);
 		instGlobalRegion->GetGenList()->SetAmount(GeneratorType::ReleaseVolEnv, 0.5f);
 
 		sf->SampleGenBindToInstrument(this, inst);

@@ -76,6 +76,9 @@ namespace tau
 		//获取状态
 		EditorState GetState();
 
+		//获取主MidiEditor
+		MidiEditor* GetMainMidiEditor();
+
 		//获取当前播放时间点
 		double GetPlaySec();
 
@@ -259,6 +262,12 @@ namespace tau
 		vector<Track*> tracks;
 		MidiMarkerList midiMarkerList;
 
+		//当前播放时间
+		atomic<double> curtPlaySec;
+
+		//播放状态
+		atomic<EditorState> playState;
+
 		//结束时间点
 		double endSec = 0;
 
@@ -330,6 +339,7 @@ namespace tau
 		void* userData = nullptr;
 
 		friend class MidiEditor;
+		friend class Synther;
 
 	};
 }

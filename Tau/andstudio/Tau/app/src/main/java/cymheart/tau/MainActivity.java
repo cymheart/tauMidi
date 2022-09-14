@@ -127,12 +127,17 @@ public class MainActivity extends AppCompatActivity   {
 
        // textView.setText(base);
 
+       // RxPermissions permissions = new RxPermissions(this);
+       // permissions.setLogging(true);
+      //  permissions.request(permissionsGroup);
+
         context = this;
 
             System.loadLibrary("tau");
 
         sf = new SoundFont();
         sf.Parse("SF2", "/storage/emulated/0/gnusmas_gm_soundfont_2.01.sf2");
+        sf.EnablePhysicsPiano(0,1,0);
         tau = new Tau(this);
 
 
@@ -185,13 +190,25 @@ public class MainActivity extends AppCompatActivity   {
         tau.SetMidiKeepSameTimeNoteOnCount(10);
         tau.SetUnitProcessMidiTrackCount(20);
         tau.ConntectMidiDevice(0);
-        tau.SetSampleStreamCacheSec(10);
+        tau.SetSampleStreamCacheSec(5);
         tau.SetEnableAllVirInstEffects(false);
-        tau.SetEnableCreateFreqSpectrums(true, 4096);
+        tau.SetEnableCreateFreqSpectrums(false, 4096);
+        tau.AppendReplaceInstrument(0,0,0,0,1,0);
 
 
         tau.Open();
 
+//        tau.Load("/storage/emulated/0/QianQianQueGe.mid", true);
+//
+//        try {
+//
+//
+//            Thread.sleep(5000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//
+//        tau.Play();
        // eq = new Equalizer();
        // Filter[] filters = eq.GetFilter();
         
@@ -243,14 +260,14 @@ public class MainActivity extends AppCompatActivity   {
 
 
                                         //for(int i=0; i<1; i++) {
-                                            tau.Load("/storage/emulated/0/(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid", true);
+                                            tau.Load("/storage/emulated/0/QianQianQueGe.mid", true);
 
 //                                            while (!tau.IsLoadCompleted())
 //                                            {
 //                                                Thread.sleep(50);
 //                                            }
 //
-                                           tau.Play();
+                                            tau.Play();
                                             //tau.Release();
                                            // tau.Release();
                                            // Thread.sleep(6000);

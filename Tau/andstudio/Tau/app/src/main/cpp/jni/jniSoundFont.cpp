@@ -33,6 +33,14 @@ Java_cymheart_tau_SoundFont_ndkParse(JNIEnv *env, jclass clazz, jlong nkd_sound_
     sf->Parse(_formatName, cpath);
 }
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_SoundFont_ndkEnablePhysicsPiano(JNIEnv *env, jclass clazz, jlong nkd_sound_font,
+                                                  jint bank_select_msb, jint bank_select_lsb,
+                                                  jint instrument_num) {
+    SoundFont* sf = (SoundFont*)nkd_sound_font;
+    sf->EnablePhysicsPiano(bank_select_msb, bank_select_lsb, instrument_num);
+}
 
 extern "C"
 JNIEXPORT jobjectArray JNICALL

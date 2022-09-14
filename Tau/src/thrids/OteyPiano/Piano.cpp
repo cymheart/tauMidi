@@ -134,7 +134,6 @@ namespace oteypiano
 
 	void PianoKey::Init(PianoKeyParams& param)
 	{
-
 		//this->amp = amp * 100.0;
 		float f0 = 27.5;
 		float midinote = 12 * log(param.f / f0) / log(2) + 21;
@@ -202,6 +201,48 @@ namespace oteypiano
 	{
 		hammer->trigger(v * v0);
 	}
+
+
+	//long PianoKey::Go(float* out, int samples)
+	//{
+	//	/*long n = 0;
+	//	float Zx2 = 2 * Z;
+	//	float facZ = Zx2 / (Z * nstrings + Zb);*/
+
+	//	//for (int i = 0; i < samples; i++) {
+
+	//	//	n++;
+	//	//	float vstring = 0.0;
+	//	//	for (int k = 0; k < nstrings; k++) {
+	//	//		vstring += string[k]->input_velocity();
+	//	//	}
+
+	//	//	/*float hload = hammer->load(vstring / nstrings);
+	//	//	float load = 0;
+
+	//	//	for (int k = 0; k < nstrings; k++) {
+	//	//		load += string[k]->go_hammer(hload / (Zx2));
+	//	//	}
+	//	//	load *= facZ;
+	//	//	float output = 0.0;
+	//	//	for (int k = 0; k < nstrings; k++) {
+	//	//		output += string[k]->go_soundboard(load);
+	//	//	}*/
+
+
+	//	//	//output = soundboard->reverb(output);
+	//	//	/*
+	//	//	output += filter(output,&shaping1);
+	//	//	output = filter(output,&shaping2);
+	//	//	output += filter(output,&shaping3);
+	//	//*/
+	//	////t += dt;
+	//	////sample++;
+	//	//	//out[i] = 1 * 100;
+	//	//}
+	//	return 0;
+	//}
+
 
 
 	long PianoKey::Go(float* out, int samples)

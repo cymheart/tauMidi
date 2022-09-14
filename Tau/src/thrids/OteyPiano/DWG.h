@@ -406,7 +406,7 @@ namespace oteypiano
 			return sum;
 		}
 		float groupdelay(float f, float FS) {
-			return ::groupdelay(f, KernelB, kernel_sizeB, 0, 0, FS);
+			return oteypiano::groupdelay(f, KernelB, kernel_sizeB, 0, 0, FS);
 		}
 	};
 
