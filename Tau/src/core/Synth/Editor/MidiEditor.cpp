@@ -233,7 +233,7 @@ namespace tau
 
 					if (ev->type == MidiEventType::NoteOn &&
 						sec <= minSec &&
-						!PlayModeAndTypeTest(ev, track))
+						IsNeedWaitKeySignal(ev, track))
 					{
 						if (sec < minSec)
 							tempNoteKeys.clear();
@@ -597,7 +597,7 @@ namespace tau
 
 			NoteOnEvent* noteOnEv = (NoteOnEvent*)midEv;
 
-			if (PlayModeAndTypeTest(midEv, track))
+			if (!IsNeedWaitKeySignal(midEv, track))
 			{
 				virInst->OnKey(noteOnEv->note, (float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1);
 			}
@@ -616,7 +616,7 @@ namespace tau
 			if (noteOffEv->noteOnEvent == nullptr)
 				break;
 
-			if (PlayModeAndTypeTest(midEv, track))
+			if (!IsNeedWaitKeySignal(midEv, track))
 			{
 				virInst->OffKey(noteOffEv->note, (float)noteOffEv->velocity);
 			}
@@ -659,10 +659,11 @@ namespace tau
 		}
 	}
 
-	bool MidiEditor::PlayModeAndTypeTest(MidiEvent* midEv, Track* track)
+	//是否需要等待按键信号
+	bool MidiEditor::IsNeedWaitKeySignal(MidiEvent* midEv, Track* track)
 	{
 		if (playMode != EditorPlayMode::Wait)
-			return true;
+			return false;
 
 
 		if (track->playType == MidiEventPlayType::Custom)
@@ -676,20 +677,20 @@ namespace tau
 				(playType == MidiEventPlayType::RightHand &&
 					midEv->playType == MidiEventPlayType::RightHand))
 			{
-				return false;
+				return true;
 			}
 
-			return true;
+			return false;
 		}
 
 		if (playType == MidiEventPlayType::DoubleHand &&
 			track->playType != MidiEventPlayType::Background)
-			return false;
+			return true;
 
 		if (playType == track->playType)
-			return false;
+			return true;
 
-		return true;
+		return false;
 	}
 
 }

@@ -1,5 +1,11 @@
 package cymheart.tau.editor;
 
+import android.graphics.Color;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -19,31 +25,54 @@ public class Track {
 
     // 通道
     Channel channel;
-
     public Channel GetChannel() {
         return channel;
     }
 
-    protected List<ScLinkedList<InstFragment>> instFragments = new ArrayList<>();
+    protected JSONObject jsonTrack;
+    public void SetByInnerJson()
+    {
+        try {
+            playType = jsonTrack.getInt("PlayType");
+            noteColor = jsonTrack.getInt("NoteColor");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 
-    public List<ScLinkedList<InstFragment>> GetInstFragments() {
-        return instFragments;
+    public void SetInnerJson()
+    {
+        if(jsonTrack == null)
+            return;
+
+        try {
+            jsonTrack.put("PlayType", playType);
+            jsonTrack.put("NoteColor", noteColor);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    protected List<ScLinkedList<InstFragment>> instFragmentBranchs = new ArrayList<>();
+    public List<ScLinkedList<InstFragment>> GetInstFragmentBranchs() {
+        return instFragmentBranchs;
     }
 
     //结束时间点
     protected double endSec;
-
-
+    protected int playType = MidiEvent.PlayType_Background;
+    protected int noteColor = MidiEvent.NoteColor_None;
 
     public void Clear()
     {
         //
         InstFragment instFragment;
-        for (int i = 0; i < instFragments.size(); i++)
+        for (int i = 0; i < instFragmentBranchs.size(); i++)
         {
-            ScLinkedList<InstFragment> instFragList = instFragments.get(i);
+            ScLinkedList<InstFragment> instFragList = instFragmentBranchs.get(i);
             ScLinkedListNode<InstFragment> node = instFragList.GetHeadNode();
-            for(;node!=null; node=node.next)
+            for(;node != null; node = node.next)
             {
                 instFragment = node.elem;
                 instFragment.Clear();

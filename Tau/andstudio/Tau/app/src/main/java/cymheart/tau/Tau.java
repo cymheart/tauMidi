@@ -197,10 +197,35 @@ public class Tau
         ndkSetEnableCreateFreqSpectrums(ndkTau, enable, count);
     }
 
+    //按键信号
+    public void OnKeySignal(int key)
+    {
+        editor.OnKeySignal(key);
+    }
+
+    //按键信号
+    public void OffKeySignal(int key)
+    {
+        editor.OffKeySignal(key);
+    }
+
+
     //判断是否读取完成
     public boolean IsLoadCompleted()
     {
         return editor.IsLoadCompleted();
+    }
+
+    //载入
+    public void Load(String midifile, boolean isWaitLoadCompleted,  boolean isLoadMidiExInfo)
+    {
+        editor.Load(midifile, isWaitLoadCompleted, isLoadMidiExInfo);
+    }
+
+    //载入
+    public void Load(String midifile, boolean isWaitLoadCompleted,  boolean isLoadMidiExInfo, String user)
+    {
+        editor.Load(midifile, isWaitLoadCompleted, isLoadMidiExInfo, user);
     }
 
     //载入
@@ -360,7 +385,6 @@ public class Tau
     {
         ndkCancelOffKey(ndkTau, key, velocity, virInst.GetNdkVirInstrument(), delayMS);
     }
-
 
     /**
      *     在虚拟乐器列表中，启用指定的虚拟乐器,如果不存在，将在虚拟乐器列表中自动创建它

@@ -306,7 +306,7 @@ namespace tau
 	enum MidiEventPlayType
 	{
 		//左手
-		LeftHand,
+		LeftHand = 0,
 		//右手
 		RightHand,
 		//双手

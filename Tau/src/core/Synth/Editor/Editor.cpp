@@ -274,6 +274,18 @@ namespace tau
 	// 设置播放时间点
 	void Editor::Goto(double sec)
 	{
+		//如果是等待播放模式，将清空等待播放模式的数据
+		if (playMode == EditorPlayMode::Wait) {
+			waitOnKeyLock.lock();
+			memset(onkey, 0, sizeof(int) * 128);
+			memset(needOnkey, 0, sizeof(int) * 128);
+			memset(needOffkey, 0, sizeof(int) * 128);
+			needOnKeyCount = 0;
+			needOffKeyCount = 0;
+			isWait = false;
+			waitOnKeyLock.unlock();
+		}
+
 		waitSem.reset(tau->midiEditorSyntherCount - 1);
 
 		for (int i = 0; i < tau->midiEditorSyntherCount; i++)

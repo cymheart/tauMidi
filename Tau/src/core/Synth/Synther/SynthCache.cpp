@@ -234,20 +234,27 @@ namespace tau
 	{
 		lock_guard<mutex> lock(mainSynther->cacheLocker);
 
+		if (cachePlayState == EditorState::PAUSE)
+			return;
+
 		SetCachePlayState(EditorState::PAUSE);
 
 		switch (state)
 		{
+			//此时当前缓存未发声，可以直接暂停
 		case CacheState::CacheStoping:
 		case CacheState::CachingPauseRead:
 			break;
 
+			//此时当前缓存还在发声中，需要生成消隐样本处理(使得发音可以渐渐减弱直到消失)
 		case CacheState::CachingAndRead:
 		case CacheState::CachingNotRead:
 			CreateFallCacheSamples();
 			state = CacheState::CachingPauseRead;
 			break;
 
+
+			//其它状态下将会转入到CachingPauseRead状态
 		default:
 			CreateFallCacheSamples();
 			state = CacheState::CachingPauseRead;
@@ -403,16 +410,17 @@ namespace tau
 		state = CacheState::EnterStep;
 	}
 
+	//建立剩余缓存样本的消隐样本处理(使得发音可以渐渐减弱直到消失)
 	void Synther::CreateFallCacheSamples()
 	{
-		int64_t size = cacheBuffer->GetNeedReadSize();
-		int sampleSize = size / (sizeof(float) * channelCount);
-		int limitSize = 0.4 / tau->invSampleProcessRate;
-		if (sampleSize > limitSize)
-			sampleSize = limitSize;
+		int64_t size = cacheBuffer->GetNeedReadSize();  //获取缓存buffer中还剩余多少数据未读取
+		int sampleSize = size / (sizeof(float) * channelCount);  //根据通道个数等计算总样本数量
+		int limitSampleSize = 0.4 / tau->invSampleProcessRate;  //计算以0.4sec的消隐时间需要多少样本数量
+		if (sampleSize > limitSampleSize)
+			sampleSize = limitSampleSize;        //需要的样本数量
 
-		int n = sampleSize / frameSampleCount;
-		sampleSize = n * frameSampleCount;
+		int nFrame = sampleSize / frameSampleCount;   //计算总共有多少帧样本
+		sampleSize = nFrame * frameSampleCount;  //往下取整样本数量
 		if (sampleSize == 0)
 			return;
 
@@ -422,6 +430,7 @@ namespace tau
 		fadeSamplesInfo.gainStep = 1.0 / sampleSize;
 		fadeSamplesInfo.size = sampleSize * channelCount;
 
+		//读取剩余的样本到渐隐缓存中
 		cacheBuffer->PeekToDst(fadeSamplesInfo.samples, sampleSize * sizeof(float) * channelCount);
 		fallSamples.push_back(fadeSamplesInfo);
 	}
@@ -505,6 +514,7 @@ namespace tau
 	}
 
 
+	//合成渐隐的尾音样本到主发声通道中
 	void Synther::CacheReadFallSamples(Synther* mainSynther)
 	{
 		if (fallSamples.empty())

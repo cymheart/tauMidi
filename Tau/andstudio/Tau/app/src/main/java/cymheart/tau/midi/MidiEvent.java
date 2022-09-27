@@ -1,5 +1,8 @@
 package cymheart.tau.midi;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import cymheart.tau.editor.InstFragment;
 
 public class MidiEvent {
@@ -33,8 +36,48 @@ public class MidiEvent {
     //元事件
     static public final int Meta = 12;
 
+    //左手
+    static public final int PlayType_LeftHand = 0;
+    //右手
+    static public final int PlayType_RightHand = 1;
+    //双手
+    static public final int PlayType_DoubleHand = 2;
+    //背景
+    static public final int PlayType_Background = 3;
+    //自定
+    static public final int PlayType_Custom = 4;
 
+    //
+    public final static int NoteColor_None = -1;
+    public final static int NoteColor_Red = 2;
+    public final static int NoteColor_Green = 3;
+    public final static int NoteColor_Blue = 4;
+    public final static int NoteColor_Yellow = 5;
+    public final static int NoteColor_Orange = 6;
+    public final static int NoteColor_Purple = 7;
+
+
+    //
     public int type = Unknown;
+    protected int playType = PlayType_Background;
+    public void SetPlayType(int type)
+    {
+        playType = type;
+        ndkSetPlayType(ndkMidiEvent, playType);
+        SetPlayTypeToInnerJson(playType);
+    }
+
+    protected void SetPlayTypeToInnerJson(int type)
+    {
+        if(jsonMidiEvent == null)
+            return;
+
+        try {
+            jsonMidiEvent.put("PlayType", type);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 
     // 起始tick
     public int startTick = 0;
@@ -47,5 +90,25 @@ public class MidiEvent {
     //事件相关轨道
     public int track = -1;
 
+    public JSONObject jsonMidiEvent;
+    public void SetByInnerJson()
+    {
+        try {
+            playType = jsonMidiEvent.getInt("PlayType");
+            ndkSetPlayType(ndkMidiEvent, playType);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void SetInnerJson()
+    {
+        SetPlayTypeToInnerJson(playType);
+    }
+
     InstFragment instFragment;
+    private long ndkMidiEvent;
+
+
+    protected static native void ndkSetPlayType(long ndkMidiEvent, int playType);
 }

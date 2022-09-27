@@ -68,8 +68,10 @@ namespace tau
 			return;
 		}
 
+		waitOnKeyLock.lock();
 		playMode = EditorPlayMode::Step;
 		isWait = false;
+		waitOnKeyLock.unlock();
 
 		//
 		waitSem.reset(tau->midiEditorSyntherCount - 1);
@@ -184,15 +186,15 @@ namespace tau
 	//需要松开按键信号
 	void Editor::NeedOffKeySignal(int key)
 	{
-		lock_guard<mutex> lock(waitOnKeyLock);
+		/*	lock_guard<mutex> lock(waitOnKeyLock);
 
-		if (onkey[key] == 0)
-			return;
+			if (onkey[key] == 0)
+				return;
 
-		needOffkey[key]++;
-		needOffKeyCount++;
-		isWait = true;
-		printf("等待松开键:%d \n", key);
+			needOffkey[key]++;
+			needOffKeyCount++;
+			isWait = true;
+			printf("等待松开键:%d \n", key);*/
 	}
 
 	//按键信号

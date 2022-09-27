@@ -77,6 +77,12 @@ namespace tau
 		editor->LeavePlayMode();
 	}
 
+	//设置事件演奏方式
+	void Tau::SetPlayType(MidiEventPlayType playType)
+	{
+		editor->SetPlayType(playType);
+	}
+
 	//等待(区别于暂停，等待相当于在原始位置播放)
 	void Tau::Wait()
 	{

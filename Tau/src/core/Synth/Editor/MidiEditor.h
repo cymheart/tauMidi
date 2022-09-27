@@ -168,7 +168,8 @@ namespace tau
 		//处理轨道事件
 		void ProcessEvent(MidiEvent* midEv, Track* track, bool isDirectGoto);
 
-		bool PlayModeAndTypeTest(MidiEvent* midEv, Track* track);
+		//是否需要等待按键信号
+		bool IsNeedWaitKeySignal(MidiEvent* midEv, Track* track);
 
 		void GetNoteKeys(Track* track, double curtSec);
 

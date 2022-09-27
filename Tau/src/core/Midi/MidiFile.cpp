@@ -562,7 +562,7 @@ namespace tau
 				NoteOnEvent* noteOnEvent = (NoteOnEvent*)noteOnEventNode->elem;
 
 				//优化midi音符数量，对于tick数(时长)非常小的NoteOn事件采取忽略策略
-				if (enableMidiEventCountOptimize && curtParseTickCount - noteOnEvent->startTick < 5)
+				if (enableMidiEventCountOptimize && curtParseTickCount - noteOnEvent->startTick < 5 && noteOnEvent->channel != 9)
 				{
 					track.RemoveEvent(noteOnEventNode);
 					break;
@@ -586,7 +586,7 @@ namespace tau
 			{
 				bool isNeed = true;
 
-				//开启按键数量控制优化(根据按键事件的startTick相同情况下，维持一定的数量)
+				//开启按键数量控制优化(根据按键事件的startTick相同情况下，维持一定的数量的midievent, 超过的将不计数)
 				if (enableMidiEventCountOptimize)
 					isNeed = track.IsNeedNoteOnEvents(lastParseEventChannel, curtParseTickCount, keepSameStartTickNoteOnEventsCount);
 				if (!isNeed)

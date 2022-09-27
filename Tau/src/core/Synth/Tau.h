@@ -318,6 +318,9 @@ namespace tau
 		//离开播放模式
 		void LeavePlayMode();
 
+		//设置事件演奏方式
+		void SetPlayType(MidiEventPlayType playType);
+
 		//等待(区别于暂停，等待相当于在原始位置播放)
 		void Wait();
 		//继续，相对于等待命令

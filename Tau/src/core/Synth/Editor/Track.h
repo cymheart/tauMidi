@@ -31,6 +31,11 @@ namespace tau
 			return endSec;
 		}
 
+		inline MidiEventPlayType GetPlayType()
+		{
+			return playType;
+		}
+
 		void SetChannelNum(int channelNum);
 		int GetChannelNum();
 

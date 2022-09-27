@@ -58,6 +58,52 @@ Java_cymheart_tau_editor_Editor_ndkInit(JNIEnv *env, jclass clazz, jobject jedit
     editor->SetUserData((void*)cbData);
 }
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkSetPlayType(JNIEnv *env, jclass clazz, jlong ndk_editor,
+                                               jint play_type) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->SetPlayType((MidiEventPlayType)play_type);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkEnterWaitPlayMode(JNIEnv *env, jclass clazz, jlong ndk_editor) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->EnterWaitPlayMode();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkLeavePlayMode(JNIEnv *env, jclass clazz, jlong ndk_editor) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->LeavePlayMode();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkSetTrackPlayType(JNIEnv *env, jclass clazz, jlong ndk_editor,
+                                                    jint track_idx, jint play_type) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->SetTrackPlayType(track_idx, (MidiEventPlayType)play_type);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkOnKeySignal(JNIEnv *env, jclass clazz, jlong ndk_editor,
+                                               jint key) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->OnKeySignal(key);
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkOffKeySignal(JNIEnv *env, jclass clazz, jlong ndk_editor,
+                                                 jint key) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->OffKeySignal(key);
+}
 
 extern "C"
 JNIEXPORT jboolean JNICALL
@@ -216,6 +262,7 @@ void CreateDatas(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* edit
     jmethodID jTrackClassInitMethod = env->GetMethodID(jTrackClass, "<init>", "()V");
     jfieldID jTrackClassChannelField = env->GetFieldID(jTrackClass, "channel","Lcymheart/tau/Channel;");
     jfieldID jTrackClassEndSecField = env->GetFieldID(jTrackClass, "endSec", "D");
+    jfieldID jTrackClassPlayTypeField = env->GetFieldID(jTrackClass, "playType", "I");
 
     //Channel
     jclass jChannelClass = env->FindClass("cymheart/tau/Channel");
@@ -259,6 +306,7 @@ void CreateDatas(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* edit
         env->DeleteLocalRef(jVirInst);
 
         env->SetDoubleField(jTrack, jTrackClassEndSecField, tracks[i]->GetEndSec());
+        env->SetIntField(jTrack, jTrackClassPlayTypeField, (int)(tracks[i]->GetPlayType()));
         env->SetObjectField(jTrack, jTrackClassChannelField, jChannel);
         env->DeleteLocalRef(jChannel);
 
@@ -281,13 +329,24 @@ void CreateDatas(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* edit
 
                 //
                 int m = 0;
-                LinkedList<MidiEvent*>& midiEvents =  (*it)->GetMidiEvents();
-                jobjectArray jMidiEvents = (jobjectArray)env->NewObjectArray(midiEvents.Size(), jMidiEventClass, NULL);
+                LinkedList<MidiEvent*>& midiEvents = (*it)->GetMidiEvents();
+
+                //计算noteon的数量
+                int count = 0;
                 for(auto node = midiEvents.GetHeadNode(); node; node = node->next)
                 {
                     jobject jMidiEvent;
                     MidiEvent* midiEvent = node->elem;
+                    if(midiEvent->type == MidiEventType::NoteOn)
+                        count++;
+                }
 
+                //
+                jobjectArray jMidiEvents = (jobjectArray)env->NewObjectArray(count, jMidiEventClass, NULL);
+                for(auto node = midiEvents.GetHeadNode(); node; node = node->next)
+                {
+                    jobject jMidiEvent;
+                    MidiEvent* midiEvent = node->elem;
 
                     switch (midiEvent->type) {
                         case MidiEventType::NoteOn:
@@ -296,11 +355,11 @@ void CreateDatas(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* edit
                         }
                         break;
 
-                        case MidiEventType::NoteOff:
-                        {
-                            jMidiEvent = CreateJNoteOffEvent(env, (NoteOffEvent*)midiEvent);
-                        }
-                        break;
+//                        case MidiEventType::NoteOff:
+//                        {
+//                            jMidiEvent = CreateJNoteOffEvent(env, (NoteOffEvent*)midiEvent);
+//                        }
+//                        break;
 
                         default:
                             continue;
@@ -348,6 +407,15 @@ void CreateDatas(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* edit
     env->DeleteLocalRef(jVirInstClass);
     env->DeleteLocalRef(jInstFragmentClass);
     env->DeleteLocalRef(jMidiEventClass);
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_midi_MidiEvent_ndkSetPlayType(JNIEnv *env, jclass clazz, jlong ndk_midi_event,
+                                                jint play_type) {
+    MidiEvent* midiEvent = (MidiEvent*)ndk_midi_event;
+    midiEvent->playType = (MidiEventPlayType)play_type;
 }
 
 

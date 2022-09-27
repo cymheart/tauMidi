@@ -675,7 +675,9 @@ namespace tau
 
 		double curtCachePlaySec = 0;
 
+		//剩余缓存样本的消隐样本处理(使得发音可以渐渐减弱直到消失)
 		vector<FadeSamplesInfo> fallSamples;
+
 		ArrayPool<float>* fallSamplesPool = nullptr;
 
 

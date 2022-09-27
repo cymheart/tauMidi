@@ -399,6 +399,7 @@ namespace tau
 
 	bool MidiEditorSynther::CanCache()
 	{
+		//仅当state == play时，才可以缓存
 		if (!isCacheWriteSoundEnd ||
 			(midiEditor != nullptr && midiEditor->GetState() == EditorState::PLAY))
 			return true;

@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
 	tau->SetSoundFont(&sf);
 	tau->SetEnableMidiEventCountOptimize(true);
 	tau->SetMidiKeepSameTimeNoteOnCount(20);
-	tau->SetSampleStreamCacheSec(10);
+	tau->SetSampleStreamCacheSec(5);
 	tau->SetUseRegionInnerChorusEffect(false);
 	tau->SetEnableAllVirInstEffects(false);
 	//tau->SetAudioEngine(Audio::EngineType::PortAudio);
@@ -314,7 +314,8 @@ int main(int argc, char* argv[])
 	//midiFiles.push_back(midiPath + "黑乐谱Victory.mid");
 	//midiFiles.push_back(midiPath + "黑乐谱 ASGORE.mid");
 
-	tau->Load(midiFiles[12]);
+	string path = midiPath + "爱江山更爱美人-李丽芬.mid";
+	tau->Load(path);
 	tau->Play();
 
 	//art(tau);

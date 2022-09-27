@@ -1,24 +1,92 @@
 package cymheart.tau.editor;
 
-import android.content.Context;
-import android.view.Display;
-import android.view.WindowManager;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import cymheart.tau.midi.MidiEvent;
 import cymheart.tau.midi.NoteOnEvent;
+import cymheart.tau.utils.FileUtils;
 import cymheart.tau.utils.ScLinkedList;
 import cymheart.tau.utils.ScLinkedListNode;
 import cymheart.tau.utils.Utils;
 
+/**
+ * ----JsonMidiFile结构----
+ *
+ * [
+ *   track0:
+ *   {
+ *      PlayType: value,
+ *      NoteColor:value,
+ *      instFragmentBranchs:
+ *     [
+ *       instFragmentBranch0:
+ *       [
+ *         instFragmentList0:
+ *         [
+ *           instFragment0:
+ *           [
+ *                midiEvent0:
+ *                {
+ *                 name0:value0,
+ *                 name1:value1,
+ *                    ...
+ *                 namen:valuen
+ *                }
+ *                    ...
+ *                midiEventn:
+ *                {
+ *                    ...
+ *                }
+ *          ],
+ *
+ *               ...,
+ *
+ *          instFragmentn:
+ *          [
+ *               ...
+ *          ]
+ *      ],
+ *           ...
+ *      instFragmentListn:
+ *      [
+ *           ...
+ *      ]
+ *    ],
+ *         ...
+ *    instFragmentBranchn:
+ *    [
+ *        ...
+ *    ]
+ *  ]
+ *  },
+ *    ...
+ *  trackn:
+ *  {
+ *    ...
+ *  }
+ * ]
+ *
+ * */
 public class Editor {
+
+    /**无标签*/
+    static public final int TagType_Empty = 0;
+    /**八度*/
+    static public final int TagType_Octave = 1;
+    /**手指提示*/
+    static public final int TagType_Finger = 2;
+    /**字母音符名称*/
+    static public final int TagType_NoteName = 3;
+    /**固定唱名音符*/
+    static public final int TagType_FixedDoNoteName = 4;
 
     //停止
     static public final int STOP = 0;
@@ -30,12 +98,23 @@ public class Editor {
     static public final int ENDPAUSE = 3;
 
     protected List<Track> tracks = new ArrayList<>();
-
     public List<Track> GetTracks() {
         return tracks;
     }
 
+    /**tracks的json*/
+    protected JSONArray jsonTracks = null;
+
     protected boolean isLoadCompleted = false;
+
+    /**是否载入midi扩展信息*/
+    protected boolean isLoadMidiExInfo = false;
+    protected String midiFilePath;
+    protected String midiExFilePath;
+    protected String user;
+
+    /**音符标签类型*/
+    public int noteTagType = TagType_Empty;
 
     protected int state = STOP;
     public int GetState(){return state;}
@@ -94,11 +173,69 @@ public class Editor {
         return isLoadCompleted;
     }
 
-    //载入
-    public void Load(String midifile, boolean isWaitLoadCompleted)
+
+    //设置演奏类型
+    public void SetPlayType(int playType)
     {
+        ndkSetPlayType(ndkEditor, playType);
+    }
+
+    //进入到等待播放模式
+    public void EnterWaitPlayMode()
+    {
+        ndkEnterWaitPlayMode(ndkEditor);
+    }
+
+    //离开播放模式
+    public void LeavePlayMode()
+    {
+        ndkLeavePlayMode(ndkEditor);
+    }
+
+    //设置轨道事件演奏方式
+    public void SetTrackPlayType(int trackIdx, int playType)
+    {
+        ndkSetTrackPlayType(ndkEditor, trackIdx, playType);
+    }
+
+    //按键信号
+    public void OnKeySignal(int key)
+    {
+        ndkOnKeySignal(ndkEditor, key);
+    }
+
+    //按键信号
+    public void OffKeySignal(int key)
+    {
+        ndkOffKeySignal(ndkEditor, key);
+    }
+
+
+    //载入
+    public void Load(String midifile, boolean isWaitLoadCompleted,  boolean isLoadMidiExInfo, String user)
+    {
+        jsonTracks = null;
+        midiExFilePath = null;
+        midiFilePath = midifile;
+        this.isLoadMidiExInfo = isLoadMidiExInfo;
+        this.user = (user == null ? "" : user);
+
+        //
         ndkLoad(this, ndkEditor, midifile, isWaitLoadCompleted);
     }
+
+    //载入
+    public void Load(String midifile, boolean isWaitLoadCompleted,  boolean isLoadMidiExInfo)
+    {
+        Load(midifile, isWaitLoadCompleted, isLoadMidiExInfo, null);
+    }
+
+    //载入
+    public void Load(String midifile,  boolean isWaitLoadCompleted)
+    {
+        Load(midifile, isWaitLoadCompleted,  false, null);
+    }
+
 
     //载入
     public void Load(String midifile)
@@ -115,36 +252,119 @@ public class Editor {
     private void  _JniLoadCompleted()
     {
         ndkCreateDatas(this, ndkEditor);
-        _Load();
+
+        try {
+            _Load();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         isLoadCompleted = true;
     }
 
-    private void _Load()
-    {
+
+    private void _Load() throws JSONException {
         if(_ndkTracks == null)
             return;
 
-        Track track;
-        for(int i=0; i<_ndkTracks.length; i++)
+        //是否存在midi扩展信息
+        boolean isExistMidiExInfo = false;
+
+        //
+        if(isLoadMidiExInfo)
         {
+            int end = midiFilePath.lastIndexOf('.');
+            midiExFilePath = midiFilePath.substring(0, end) + "." + user + ".midexinfo";
+            if(FileUtils.getInstance().IsFileExist(midiExFilePath)) {
+                jsonTracks = new JSONArray(midiExFilePath);
+                isExistMidiExInfo = true;
+            } else {
+                jsonTracks = new JSONArray();
+                isExistMidiExInfo = false;
+            }
+        }
+
+        //
+        Track track;
+        for(int i=0; i<_ndkTracks.length; i++) {
             track = _ndkTracks[i];
+
+            if (isLoadMidiExInfo){
+                if (isExistMidiExInfo) {
+                    track.jsonTrack = jsonTracks.getJSONObject(i);
+                    track.SetByInnerJson();
+                    ndkSetTrackPlayType(ndkEditor, i, track.playType);
+                } else {
+                    JSONObject jsonTrack = new JSONObject();
+                    JSONArray jsonInstFragmentBranchs = new JSONArray();
+                    jsonTrack.put("InstFragmentBranchs", jsonInstFragmentBranchs);
+                    jsonTracks.put(jsonTrack);
+                    track.jsonTrack = jsonTrack;
+                    track.SetInnerJson();
+                }
+            }
+
             tracks.add(track);
+            JSONArray jsonInstFragmentBranchs = null;
+            if(track.jsonTrack != null)
+                jsonInstFragmentBranchs = track.jsonTrack.getJSONArray("InstFragmentBranchs");
 
             Object[] a = (Object[])(_ndkInstFragmentArray[i]);
 
+            int j = 0;
+            JSONArray jsonInstFragList = null;
             for (Object o : a) {
+
+                if(isLoadMidiExInfo) {
+                    if (isExistMidiExInfo) {
+                        jsonInstFragList = jsonInstFragmentBranchs.getJSONArray(j++);
+                    } else {
+                        jsonInstFragList = new JSONArray();
+                        jsonInstFragmentBranchs.put(jsonInstFragList);
+                    }
+                }
+
                 InstFragment[] instFrags = (InstFragment[]) o;
                 ScLinkedList<InstFragment> instFragList = new ScLinkedList<>();
+                track.instFragmentBranchs.add(instFragList);
+
+                int k = 0;
+                JSONArray jsonInstFrag;
                 for (InstFragment instFrag : instFrags) {
-                    instFrag.midiEvents.AddLast(instFrag._ndkMidiEvent);
+
+                    if(isLoadMidiExInfo) {
+                        if (isExistMidiExInfo) {
+                            jsonInstFrag = jsonInstFragList.getJSONArray(k++);
+                            for (int m = 0; m < instFrag._ndkMidiEvent.length; m++) {
+                                instFrag._ndkMidiEvent[m].jsonMidiEvent = jsonInstFrag.getJSONObject(m);
+                                instFrag.midiEvents.AddLast(instFrag._ndkMidiEvent[m]);
+                                instFrag._ndkMidiEvent[m].SetByInnerJson();
+                            }
+
+                        } else {
+                            jsonInstFrag = new JSONArray();
+                            jsonInstFragList.put(jsonInstFrag);
+
+                            JSONObject jsonMidiEvent;
+                            for (int m = 0; m < instFrag._ndkMidiEvent.length; m++) {
+                                jsonMidiEvent = new JSONObject();
+                                jsonInstFrag.put(jsonMidiEvent);
+                                instFrag._ndkMidiEvent[m].jsonMidiEvent = jsonMidiEvent;
+                                instFrag.midiEvents.AddLast(instFrag._ndkMidiEvent[m]);
+                                instFrag._ndkMidiEvent[m].SetInnerJson();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        instFrag.midiEvents.AddLast(instFrag._ndkMidiEvent);
+                    }
+
                     instFrag._ndkMidiEvent = null;
                     instFrag.track = track;
                     instFrag.Clear();
                     instFragList.AddLast(instFrag);
-
                 }
-
-                track.instFragments.add(instFragList);
             }
         }
 
@@ -152,6 +372,37 @@ public class Editor {
         _ndkInstFragmentArray = null;
     }
 
+    public void SaveMidiExInfo()
+    {
+        if(jsonTracks == null || midiExFilePath == null || midiExFilePath.isEmpty())
+            return;
+
+        String jsonStr = jsonTracks.toString();
+        InputStream jsonStream = new ByteArrayInputStream(jsonStr.getBytes(StandardCharsets.UTF_8));
+        FileUtils.getInstance().WriteToFile(midiExFilePath, jsonStream);
+    }
+
+    public double GetBackgroundPlaySec()
+    {
+        return ndkGetPlaySec(ndkEditor);
+    }
+
+    public double GetBackgroundEndSec()
+    {
+        return ndkGetEndSec(ndkEditor);
+    }
+
+    public int GetBackgroundPlayState()
+    {
+        return ndkGetPlayState(ndkEditor);
+    }
+
+
+    //获取采样流的频谱
+    public int GetSampleStreamFreqSpectrums(int channel, double[] outLeft, double[] outRight)
+    {
+        return ndkGetSampleStreamFreqSpectrums(ndkEditor, channel, outLeft, outRight);
+    }
 
     //开始播放
     public void Play()
@@ -205,6 +456,7 @@ public class Editor {
     //移除
     public void Remove()
     {
+
         ndkRemove(ndkEditor);
         _Remove();
     }
@@ -217,7 +469,8 @@ public class Editor {
         tracks.clear();
         curtPlaySec = 0;
         state = STOP;
-
+        jsonTracks = null;
+        midiExFilePath = null;
         System.gc();
     }
 
@@ -228,9 +481,13 @@ public class Editor {
         _Goto(sec);
     }
 
+
     //设置播放的起始时间点
     protected void _Goto(double sec)
     {
+        if(curtPlaySec == sec)
+            return;
+
         for (int i = 0; i < tracks.size(); i++)
             tracks.get(i).Clear();
 
@@ -253,7 +510,6 @@ public class Editor {
     //移动到指定时间点
     public void Runto(double sec)
     {
-
         if (state != PLAY || !isStepPlayMode) {
             Goto(sec);
             return;
@@ -281,28 +537,6 @@ public class Editor {
         else {
             _Goto(sec);
         }
-    }
-
-    public double GetBackgroundPlaySec()
-    {
-        return ndkGetPlaySec(ndkEditor);
-    }
-
-    public double GetBackgroundEndSec()
-    {
-        return ndkGetEndSec(ndkEditor);
-    }
-
-    public int GetBackgroundPlayState()
-    {
-        return ndkGetPlayState(ndkEditor);
-    }
-
-
-    //获取采样流的频谱
-    public int GetSampleStreamFreqSpectrums(int channel, double[] outLeft, double[] outRight)
-    {
-        return ndkGetSampleStreamFreqSpectrums(ndkEditor, channel, outLeft, outRight);
     }
 
     //每帧处理
@@ -340,9 +574,13 @@ public class Editor {
         curtPlaySec += sec * speed;
 
         //
-        double ndkPlaySec = ndkGetPlaySec(ndkEditor);
-        if(ndkPlaySec - curtPlaySec > 0.002f)
-           curtPlaySec = ndkPlaySec;
+        if(!isDirectGoto) {
+            double ndkPlaySec = ndkGetPlaySec(ndkEditor);
+            if (ndkPlaySec - curtPlaySec > 0.002f)
+                curtPlaySec = ndkPlaySec;
+            else if(ndkPlaySec - curtPlaySec < -0.03f)
+                curtPlaySec = ndkPlaySec;
+        }
 
         //
         Track track;
@@ -356,19 +594,19 @@ public class Editor {
     protected void ProcessTrack(Track track, boolean isDirectGoto)
     {
         MidiEvent ev;
-        List<ScLinkedList<InstFragment>> instFragments = track.instFragments;
+        List<ScLinkedList<InstFragment>> instFragmentBranchs = track.instFragmentBranchs;
         ScLinkedList<InstFragment> instFragmentList;
         ScLinkedListNode<MidiEvent> evNode;
-        for (int j = 0; j < instFragments.size(); j++)
+        for (int j = 0; j < instFragmentBranchs.size(); j++)
         {
-            instFragmentList = instFragments.get(j);
+            instFragmentList = instFragmentBranchs.get(j);
 
             ScLinkedListNode<InstFragment> node = instFragmentList.GetHeadNode();
             for(;node != null; node = node.next)
             {
                 InstFragment instFrag = node.elem;
                 evNode = instFrag.eventOffsetNode;
-                for(;evNode != null; evNode = evNode.next)
+                for(; evNode != null; evNode = evNode.next)
                 {
                     ev = evNode.elem;
                     if(ev == null)
@@ -376,10 +614,12 @@ public class Editor {
 
                     if (ev.startSec > curtPlaySec)
                         break;
-                    ProcessEvent(ev, track, isDirectGoto);
+
+                   // ProcessEvent(ev, track, isDirectGoto);
                 }
 
-                instFrag.eventOffsetNode = evNode;
+                if(evNode != null)
+                    instFrag.eventOffsetNode = evNode;
             }
         }
     }
@@ -440,11 +680,11 @@ public class Editor {
                 continue;
 
             track = tracks.get(i);
-            List<ScLinkedList<InstFragment>> instFragments = track.instFragments;
+            List<ScLinkedList<InstFragment>> instFragmentBranchs = track.instFragmentBranchs;
             ScLinkedList<InstFragment> instFragmentList;
-            for (int j = 0; j < instFragments.size(); j++)
+            for (int j = 0; j < instFragmentBranchs.size(); j++)
             {
-                instFragmentList = instFragments.get(j);
+                instFragmentList = instFragmentBranchs.get(j);
 
                 ScLinkedListNode<InstFragment> node = instFragmentList.GetHeadNode();
                 for(;node != null; node = node.next)
@@ -454,12 +694,11 @@ public class Editor {
                     if(evNode != null)
                         evNode = evNode.prev;
 
-                    for(;evNode!=null; evNode = evNode.prev)
+                    for(; evNode!=null; evNode = evNode.prev)
                     {
                         ev = evNode.elem;
                         if (ev == null || ev.type != MidiEvent.NoteOn || ev.endSec < curtPlaySec)
                             continue;
-
 
                         NoteOnEvent noteOnEvent = (NoteOnEvent) ev;
                         if(noteOnEvent.note > 127 || noteOnEvent.note < 0)
@@ -551,6 +790,13 @@ public class Editor {
 
     //
     private static native void ndkInit(Editor editor, long ndkEditor);
+
+    private static native void ndkSetPlayType(long ndkEditor, int playType);
+    private static native void ndkEnterWaitPlayMode(long ndkEditor);
+    private static native void ndkLeavePlayMode(long ndkEditor);
+    private static native void ndkSetTrackPlayType(long ndkEditor, int trackIdx, int playType);
+    private static native void ndkOnKeySignal(long ndkEditor, int key);
+    private static native void ndkOffKeySignal(long ndkEditor, int key);
 
     private static native boolean ndkIsLoadCompleted(long ndkEditor);
     private static native void ndkLoad(Editor editor, long ndkEditor, String midifile, boolean isWaitLoadCompleted);
