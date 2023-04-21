@@ -2,6 +2,22 @@
 
 namespace tau
 {
+	string MidiMarker::majorName[] = {
+	"C","G","D","A","E","B","#F","#C","F","bB","bE","bA","bD","bG","bC"
+	};
+
+	string MidiMarker::majorFullName[] = {
+		"C","G","D","A","E","B","F sharp","C sharp","F","B flat","E flat","A flat","D flat","G flat","C flat"
+	};
+
+	string MidiMarker::minorName[] = {
+		"A","E","B","#F","#C","#G","#D","#A","D","G","C","F","bB","bE","bA"
+	};
+
+	string MidiMarker::minorFullName[] = {
+		"A","E","B","F sharp","C sharp","G sharp","D sharp","A sharp","D","G","C","F","B flat","E flat","A flat"
+	};
+
 	MidiMarker::MidiMarker()
 	{
 
@@ -14,6 +30,8 @@ namespace tau
 
 	void MidiMarker::Copy(MidiMarker& cpyMidiMarker)
 	{
+		track = cpyMidiMarker.track;
+		isEnableMarkerText = cpyMidiMarker.isEnableMarkerText;
 		isEnableTempo = cpyMidiMarker.isEnableTempo;
 		startTick = cpyMidiMarker.startTick;
 		startSec = cpyMidiMarker.startSec;

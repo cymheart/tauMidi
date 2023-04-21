@@ -9,6 +9,7 @@
 #include"FX/TauEffect.h"
 #include"FX/EffectList.h"
 #include"MidiTrackRecord.h"
+
 using namespace tauFX;
 
 
@@ -21,9 +22,9 @@ namespace tau
 		this->channel = channel;
 		this->preset = preset;
 
-		channel->SetVirInstrument(this);
+		channel->AddVirInstrument(this);
 
-		keySounders = new KeySounderList;
+		keySounders = new list<KeySounder*>;
 		onKeySounders = new vector<KeySounder*>;
 		keyEvents = new vector<KeyEvent>;
 		onKeySecHistorys = new list<float>;
@@ -62,7 +63,7 @@ namespace tau
 		if (!FindKeySounderFromKeySounders(lastKeySounder))
 			DEL(lastKeySounder);
 
-		DEL_OBJS_LIST(keySounders, KeySounderList);
+		DEL_OBJS_LIST(keySounders, list<KeySounder*>);
 		DEL(onKeySounders);
 		DEL(keyEvents);
 		DEL(onKeySecHistorys);
@@ -71,7 +72,7 @@ namespace tau
 		DEL(rightChannelSamples);
 
 		if (channel != nullptr) {
-			channel->SetVirInstrument(nullptr);
+			channel->DelVirInstrument(this);
 			channel = nullptr;
 		}
 
@@ -86,8 +87,8 @@ namespace tau
 
 		if (keySounders != nullptr)
 		{
-			KeySounderList::iterator it = keySounders->begin();
-			KeySounderList::iterator end = keySounders->end();
+			list<KeySounder*>::iterator it = keySounders->begin();
+			list<KeySounder*>::iterator end = keySounders->end();
 			for (; it != end; it++)
 				DEL(*it);
 
@@ -126,7 +127,7 @@ namespace tau
 
 
 	//打开乐器
-	void VirInstrument::On(bool isFade)
+	void VirInstrument::Open(bool isFade)
 	{
 		if (state == VirInstrumentState::ONING ||
 			state == VirInstrumentState::ONED)
@@ -145,7 +146,7 @@ namespace tau
 	}
 
 	//关闭乐器
-	void VirInstrument::Off(bool isFade)
+	void VirInstrument::Close(bool isFade)
 	{
 		if (state == VirInstrumentState::OFFING ||
 			state == VirInstrumentState::OFFED)
@@ -200,8 +201,8 @@ namespace tau
 	//调制生成器参数
 	void VirInstrument::ModulationParams()
 	{
-		KeySounderList::iterator it = keySounders->begin();
-		KeySounderList::iterator end = keySounders->end();
+		list<KeySounder*>::iterator it = keySounders->begin();
+		list<KeySounder*>::iterator end = keySounders->end();
 		for (; it != end; it++)
 		{
 			KeySounder& keySounder = *(*it);
@@ -212,8 +213,8 @@ namespace tau
 	//调制生成器参数
 	void VirInstrument::ModulationParams(int key)
 	{
-		KeySounderList::iterator it = keySounders->begin();
-		KeySounderList::iterator end = keySounders->end();
+		list<KeySounder*>::iterator it = keySounders->begin();
+		list<KeySounder*>::iterator end = keySounders->end();
 		for (; it != end; it++)
 		{
 			KeySounder& keySounder = *(*it);
@@ -227,8 +228,8 @@ namespace tau
 	//调制输入按键生成器参数
 	void VirInstrument::ModulationInputKeyParams()
 	{
-		KeySounderList::iterator it = keySounders->begin();
-		KeySounderList::iterator end = keySounders->end();
+		list<KeySounder*>::iterator it = keySounders->begin();
+		list<KeySounder*>::iterator end = keySounders->end();
 		for (; it != end; it++)
 		{
 			KeySounder& keySounder = *(*it);
@@ -273,8 +274,8 @@ namespace tau
 		if (state == VirInstrumentState::OFFED)
 			return true;
 
-		KeySounderList::iterator it = keySounders->begin();
-		KeySounderList::iterator end = keySounders->end();
+		list<KeySounder*>::iterator it = keySounders->begin();
+		list<KeySounder*>::iterator end = keySounders->end();
 		for (; it != end; it++)
 		{
 			if (!(*it)->IsSoundEnd())
@@ -411,14 +412,14 @@ namespace tau
 	}
 
 	//是否可以忽略按键
-	bool VirInstrument::CanIgroneOnKey(int key, float velocity, int tickCount, bool isRealTime)
+	bool VirInstrument::CanIgroneOnKey(int key, float velocity, int tickCount)
 	{
 		//对同时产生的大量发音按键进行忽略
 		//忽略算法:如果当前所有区域发音数量超过极限值的一半
 		//并且当前非实时按键发音....
 		if (synther->totalRegionSounderCount > tau->limitRegionSounderCount * 0.5f)
 		{
-			if (!isRealTime && tickCount <= 5)
+			if (tickCount <= 5)
 			{
 				//录制	
 				if (isEnableRecordFunction && channel != nullptr)
@@ -450,7 +451,7 @@ namespace tau
 
 
 	//按键
-	void VirInstrument::OnKey(int key, float velocity, int tickCount)
+	void VirInstrument::OnKey(int key, float velocity, int tickCount, int id)
 	{
 		if (state == VirInstrumentState::OFFED ||
 			state == VirInstrumentState::REMOVED ||
@@ -458,21 +459,26 @@ namespace tau
 			return;
 
 		//判断是否可以忽略按键
-		if (CanIgroneOnKey(key, velocity, tickCount, isRealtime))
+		if (tickCount >= 0 &&
+			CanIgroneOnKey(key, velocity, tickCount))
 			return;
 
-		//如果是实时乐器，按键将不会重复按下，先前按下的按键将会被释放
-		if (isRealtime)
-		{
-			for (int i = 0; i < onKeySounders->size(); i++)
-			{
-				if ((*onKeySounders)[i]->GetOnKey() == key)
-					OffKey(key, 127);
-			}
-		}
+		//
+		bool isRealtime = tickCount < 0;
+
+		////如果是实时乐器，按键将不会重复按下，先前按下的按键将会被释放
+		//if (isRealtime)
+		//{
+		//	for (int i = 0; i < onKeySounders->size(); i++)
+		//	{
+		//		if ((*onKeySounders)[i]->GetOnKey() == key)
+		//			OffKey(key, 127);
+		//	}
+		//}
 
 		//
 		KeyEvent keyEvent;
+		keyEvent.id = id;
 		keyEvent.isOnKey = true;
 		keyEvent.key = key;
 		keyEvent.velocity = velocity;
@@ -481,7 +487,7 @@ namespace tau
 	}
 
 	//松开按键
-	void VirInstrument::OffKey(int key, float velocity)
+	void VirInstrument::OffKey(int key, float velocity, int id)
 	{
 		if (state == VirInstrumentState::OFFED ||
 			state == VirInstrumentState::REMOVED ||
@@ -489,10 +495,11 @@ namespace tau
 			return;
 
 		KeyEvent keyEvent;
+		keyEvent.id = id;
 		keyEvent.isOnKey = false;
 		keyEvent.key = key;
 		keyEvent.velocity = velocity;
-		keyEvent.isRealTime = isRealtime;
+		keyEvent.isRealTime = false;
 		keyEvents->push_back(keyEvent);
 	}
 
@@ -510,35 +517,29 @@ namespace tau
 		KeySounder* keySounder = nullptr;
 		for (int i = 0; i < onKeySounders->size(); i++)
 		{
-			(*onKeySounders)[i]->SetForceOffKey(true);
+			keySounder = (*onKeySounders)[i];
+			keySounder->SetForceOffKey(true);
 			KeyEvent keyEvent;
 			keyEvent.isOnKey = false;
-			keyEvent.key = (*onKeySounders)[i]->GetOnKey();
+			keyEvent.key = keySounder->GetOnKey();
 			keyEvent.velocity = 127;
-			keyEvent.isRealTime = isRealtime;
+			keyEvent.isRealTime = false;
+			keyEvent.id = keySounder->GetID();
 			keyEvents->push_back(keyEvent);
 		}
 	}
 
-	//结束所有按键发音
-	void VirInstrument::EndOnKeySounds()
-	{
-		KeySounder* keySounder = nullptr;
-		for (int i = 0; i < onKeySounders->size(); i++)
-		{
-			(*onKeySounders)[i]->EndSound();
-		}
-	}
 
 	//执行按键
-	KeySounder* VirInstrument::OnKeyExecute(int key, float velocity)
+	KeySounder* VirInstrument::OnKeyExecute(int key, float velocity, int id)
 	{
 		//录制
 		if (isEnableRecordFunction && channel != nullptr)
 			midiTrackRecord->RecordOnKey(key, velocity, channel->GetChannelNum());
 
 		KeySounder* keySounder = KeySounder::New();
-		_OnKey(keySounder, key, velocity);
+		keySounder->SetID(id);
+		OnKeyCore(keySounder, key, velocity);
 
 		//
 		channel->SetNoteOnKey(key, velocity);
@@ -562,7 +563,7 @@ namespace tau
 	}
 
 	//执行松开按键
-	void VirInstrument::OffKeyExecute(int key, float velocity)
+	void VirInstrument::OffKeyExecute(int key, float velocity, int id)
 	{
 		//录制	
 		if (isEnableRecordFunction && channel != nullptr)
@@ -572,20 +573,25 @@ namespace tau
 		KeySounder* keySounder = nullptr;
 		for (int i = 0; i < onKeySounders->size(); i++)
 		{
+			KeySounder* kSounder = (*onKeySounders)[i];
+
 			//如果在已按键状态表中查到一个对应的key的keySounder，
 			//同时还需要判断这个keySounder有没有被请求松开过，如果没有被请求松开过，
 			//才可以对应此刻的松开按键
-			if ((*onKeySounders)[i]->IsOnningKey(key) && !(*onKeySounders)[i]->IsNeedOffKey()) {
+			if (kSounder->GetID() == id &&
+				kSounder->IsOnningKey(key) &&
+				!kSounder->IsNeedOffKey())
+			{
 				keySounder = (*onKeySounders)[i];
 				break;
 			}
 		}
 
-		_OffKey(keySounder, velocity);
+		OffKeyCore(keySounder, velocity);
 	}
 
 	//按键动作送入RegionSounder中执行处理
-	void VirInstrument::_OnKey(KeySounder* keySounder, int key, float velocity)
+	void VirInstrument::OnKeyCore(KeySounder* keySounder, int key, float velocity)
 	{
 		isSoundEnd = false;
 		keySounder->OnKey(key, velocity, this);
@@ -600,7 +606,7 @@ namespace tau
 
 
 	// 松开指定发音按键
-	void VirInstrument::_OffKey(KeySounder* keySounder, float velocity)
+	void VirInstrument::OffKeyCore(KeySounder* keySounder, float velocity)
 	{
 		if (keySounder == nullptr)
 			return;
@@ -655,16 +661,16 @@ namespace tau
 		//一个新的发音生成之后，才会重队列中执行移除按键的操作
 		KeySounder* keySounder = KeySounder::New();
 		lastOnKeySounder->OffKey();
-		_RemoveOnKeyStateSounder(lastOnKeySounder);
+		RemoveOnKeyStateSounderCore(lastOnKeySounder);
 
-		_OnKey(keySounder,
+		OnKeyCore(keySounder,
 			lastOnKeySounder->GetOnKey(),
 			lastOnKeySounder->GetVelocity());
 
 	}
 
 	//移除指定按下状态的按键发音器
-	bool VirInstrument::_RemoveOnKeyStateSounder(KeySounder* keySounder)
+	bool VirInstrument::RemoveOnKeyStateSounderCore(KeySounder* keySounder)
 	{
 		vector<KeySounder*>::iterator it = onKeySounders->begin();
 		vector<KeySounder*>::iterator end = onKeySounders->end();
@@ -683,7 +689,7 @@ namespace tau
 	//移除指定按下状态的按键发音器
 	void VirInstrument::RemoveOnKeyStateSounder(KeySounder* keySounder)
 	{
-		_RemoveOnKeyStateSounder(keySounder);
+		RemoveOnKeyStateSounderCore(keySounder);
 
 		//最后一个保持按键状态的keySounder,总是不被直接从内存池中移除，
 	   //而是放入lastKeySounder，供总是保持滑音状态使用，因为“保持滑音状态”
@@ -711,8 +717,8 @@ namespace tau
 	//从正在发音的KeySounders中查找KeySounder
 	bool VirInstrument::FindKeySounderFromKeySounders(KeySounder* keySounder)
 	{
-		KeySounderList::iterator it = keySounders->begin();
-		KeySounderList::iterator end = keySounders->end();
+		list<KeySounder*>::iterator it = keySounders->begin();
+		list<KeySounder*>::iterator end = keySounders->end();
 		for (; it != end; it++)
 		{
 			if (*it == keySounder)
@@ -757,8 +763,8 @@ namespace tau
 			return;
 
 		KeySounder* keySounder;
-		KeySounderList::iterator it = keySounders->begin();
-		KeySounderList::iterator end = keySounders->end();
+		list<KeySounder*>::iterator it = keySounders->begin();
+		list<KeySounder*>::iterator end = keySounders->end();
 		for (; it != end; it++)
 		{
 			keySounder = *it;
@@ -766,7 +772,6 @@ namespace tau
 				keySounder->StopExclusiveClassRegionSounderProcess(exclusiveClasses[j]);
 		}
 	}
-
 
 	//生成发声keySounders
 	void VirInstrument::CreateKeySounders()
@@ -777,7 +782,7 @@ namespace tau
 			KeyEvent& keyEvent = (*keyEvents)[i];
 			if (keyEvent.isOnKey)
 			{
-				keySounder = OnKeyExecute(keyEvent.key, keyEvent.velocity);
+				keySounder = OnKeyExecute(keyEvent.key, keyEvent.velocity, keyEvent.id);
 				if (keySounder)
 					keySounder->SetRealtimeControlType(keyEvent.isRealTime);
 				//
@@ -785,24 +790,7 @@ namespace tau
 			}
 			else
 			{
-				bool isFindSameOnKey = false;
-				if (isRealtime)
-				{
-					for (int j = i - 1; j >= 0; j--)
-					{
-						if ((*keyEvents)[i].key == keyEvent.key && (*keyEvents)[i].isOnKey)
-						{
-							isFindSameOnKey = true;
-							break;
-						}
-					}
-				}
-
-				//当在同一批任务实时按键事件中，发现了松开事件，将对松开按键事件延迟10ms执行，以使实时按键可以发音
-				if (!isFindSameOnKey)
-					OffKeyExecute(keyEvent.key, keyEvent.velocity);
-				else
-					synther->tau->OffKey(keyEvent.key, keyEvent.velocity, this, 10);
+				OffKeyExecute(keyEvent.key, keyEvent.velocity, keyEvent.id);
 			}
 		}
 
@@ -857,8 +845,8 @@ namespace tau
 		float reverbDepth;
 		curtReverbDepth = 0;
 		int idx = startSaveIdx;
-		KeySounderList::reverse_iterator it = keySounders->rbegin();
-		KeySounderList::reverse_iterator rend = keySounders->rend();
+		list<KeySounder*>::reverse_iterator it = keySounders->rbegin();
+		list<KeySounder*>::reverse_iterator rend = keySounders->rend();
 
 		//printf("%s发声按键总数:%d\n", preset->name.c_str(), keySounders->size());
 
@@ -926,12 +914,12 @@ namespace tau
 			}
 			gain = startGain + (dstGain - startGain) * scale;
 			break;
-			case VirInstrumentState::ONED:
-				break;
-			case VirInstrumentState::OFFED:
-				break;
-			case VirInstrumentState::REMOVED:
-				break;
+		case VirInstrumentState::ONED:
+			break;
+		case VirInstrumentState::OFFED:
+			break;
+		case VirInstrumentState::REMOVED:
+			break;
 		}
 	}
 
@@ -1053,7 +1041,7 @@ namespace tau
 	void VirInstrument::RemoveProcessEndedKeySounder()
 	{
 		int offIdx = 0;
-		KeySounderList::iterator it = keySounders->begin();
+		list<KeySounder*>::iterator it = keySounders->begin();
 		for (; it != keySounders->end(); )
 		{
 			KeySounder* keySounder = *it;
@@ -1087,7 +1075,7 @@ namespace tau
 		//处理需要松开的按键
 		for (int i = 0; i < offIdx; i++)
 		{
-			_OffKey(offKeySounder[i], 127);
+			OffKeyCore(offKeySounder[i], 127);
 		}
 
 	}

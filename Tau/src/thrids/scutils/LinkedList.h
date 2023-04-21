@@ -1,4 +1,4 @@
-#ifndef _LinkedList_h_
+ï»¿#ifndef _LinkedList_h_
 #define _LinkedList_h_
 
 #include"LinkedListNode.h"
@@ -20,7 +20,7 @@ namespace scutils
 			return (size == 0);
 		}
 
-		/**¸ù¾İÖ¸¶¨µÄ±êºÅÕÒµ½¶ÔÓ¦µÄ½Úµã*/
+		/**æ ¹æ®æŒ‡å®šçš„æ ‡å·æ‰¾åˆ°å¯¹åº”çš„èŠ‚ç‚¹*/
 		LinkedListNode<T>* GetNode(int idx)
 		{
 			if (idx <= 0) return head;
@@ -68,7 +68,7 @@ namespace scutils
 			return tail;
 		}
 
-		/**ºÏ²¢ÁĞ±í£¬²¢Çå¿Õ±»ºÏ²¢list*/
+		/**åˆå¹¶åˆ—è¡¨ï¼Œå¹¶æ¸…ç©ºè¢«åˆå¹¶list*/
 		void Merge(LinkedList<T>& mergeList)
 		{
 			if (mergeList.Empty())
@@ -91,39 +91,39 @@ namespace scutils
 			mergeList.Clear();
 		}
 
-		// ÍùÁ´±íÄ©Î²¼ÓÈë½Úµã
+		// å¾€é“¾è¡¨æœ«å°¾åŠ å…¥èŠ‚ç‚¹
 		LinkedListNode<T>* AddLast(T elem)
 		{
 			return AddBack(tail, elem);
 		}
 
-		// ÍùÁ´±íÄ©Î²¼ÓÈë½Úµã
+		// å¾€é“¾è¡¨æœ«å°¾åŠ å…¥èŠ‚ç‚¹
 		LinkedListNode<T>* AddLast(LinkedListNode<T>* node)
 		{
 			return AddBack(tail, node);
 		}
 
 
-		// ÍùÁ´±íÄ©Î²¼ÓÈë½Úµã
+		// å¾€é“¾è¡¨æœ«å°¾åŠ å…¥èŠ‚ç‚¹
 		LinkedListNode<T>* AddLast(LinkedListNode<T>* startNode, LinkedListNode<T>* endNode, int count)
 		{
 			return AddBack(tail, startNode, endNode, count);
 		}
 
 
-		// ÍùÁ´±íÍ·¼ÓÈë½Úµã
+		// å¾€é“¾è¡¨å¤´åŠ å…¥èŠ‚ç‚¹
 		LinkedListNode<T>* AddFirst(T elem)
 		{
 			return AddBefore(head, elem);
 		}
 
-		// ÍùÁ´±íÍ·¼ÓÈë½Úµã
+		// å¾€é“¾è¡¨å¤´åŠ å…¥èŠ‚ç‚¹
 		LinkedListNode<T>* AddFirst(LinkedListNode<T>* node)
 		{
 			return AddBefore(head, node);
 		}
 
-		// ÍùÁ´±íÍ·¼ÓÈë½Úµã
+		// å¾€é“¾è¡¨å¤´åŠ å…¥èŠ‚ç‚¹
 		LinkedListNode<T>* AddFirst(LinkedListNode<T>* startNode, LinkedListNode<T>* endNode, int count)
 		{
 			return AddBefore(head, startNode, endNode, count);

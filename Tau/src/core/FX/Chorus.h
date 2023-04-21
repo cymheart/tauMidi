@@ -13,6 +13,7 @@ namespace tauFX
 		Chorus(Synther* synther = nullptr);
 		virtual ~Chorus();
 
+		void Clear();
 		void SetSynther(Synther* synther);
 		void Init(float sample_rate);
 		float GetEffectMix();

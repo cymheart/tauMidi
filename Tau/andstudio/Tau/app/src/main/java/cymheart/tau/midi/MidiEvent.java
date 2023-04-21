@@ -3,7 +3,7 @@ package cymheart.tau.midi;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import cymheart.tau.editor.InstFragment;
+import cymheart.tau.editor.Track;
 
 public class MidiEvent {
 
@@ -49,21 +49,25 @@ public class MidiEvent {
 
     //
     public final static int NoteColor_None = -1;
-    public final static int NoteColor_Red = 2;
-    public final static int NoteColor_Green = 3;
-    public final static int NoteColor_Blue = 4;
-    public final static int NoteColor_Yellow = 5;
-    public final static int NoteColor_Orange = 6;
-    public final static int NoteColor_Purple = 7;
+    public final static int NoteColor_DownBlue = 1;
+    public final static int NoteColor_DownGreen = 2;
+    public final static int NoteColor_DownOrange = 3;
+    public final static int NoteColor_DownYellow = 4;
+    public final static int NoteColor_DownPurple = 5;
+    public final static int NoteColor_DownRed = 6;
 
 
     //
     public int type = Unknown;
     protected int playType = PlayType_Background;
+    public int GetPlayType(){return playType;}
     public void SetPlayType(int type)
     {
         playType = type;
-        ndkSetPlayType(ndkMidiEvent, playType);
+
+        if(ndkMidiEvent != 0)
+            ndkSetPlayType(ndkMidiEvent, playType);
+
         SetPlayTypeToInnerJson(playType);
     }
 
@@ -79,6 +83,8 @@ public class MidiEvent {
         }
     }
 
+    public int index = 0;
+
     // 起始tick
     public int startTick = 0;
     //起始时间点(单位:秒)
@@ -87,12 +93,17 @@ public class MidiEvent {
     public float endSec = 0;
     //事件相关通道
     public int channel = -1;
+    //事件相关轨道编号
+    public int trackIdx = -1;
     //事件相关轨道
-    public int track = -1;
+    public Track track = null;
 
-    public JSONObject jsonMidiEvent;
+    public JSONObject jsonMidiEvent = null;
     public void SetByInnerJson()
     {
+        if(jsonMidiEvent == null)
+            return;
+
         try {
             playType = jsonMidiEvent.getInt("PlayType");
             ndkSetPlayType(ndkMidiEvent, playType);
@@ -106,9 +117,7 @@ public class MidiEvent {
         SetPlayTypeToInnerJson(playType);
     }
 
-    InstFragment instFragment;
-    private long ndkMidiEvent;
-
+    private long ndkMidiEvent = 0;
 
     protected static native void ndkSetPlayType(long ndkMidiEvent, int playType);
 }

@@ -16,6 +16,8 @@ namespace task
 		TimerWheel(TaskProcesser* processer = nullptr);
 		~TimerWheel();
 
+		void Clear();
+
 		/**设置阻塞过滤参数
 		* @param filterNumbers 需要过滤的对应号码表
 		* @param count 过滤数组长度

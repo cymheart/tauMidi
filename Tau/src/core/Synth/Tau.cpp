@@ -1,5 +1,5 @@
 ﻿#include"Tau.h"
-#include"Synther/MidiEditorSynther.h"
+#include"Synther/Synther.h"
 #include"SoundFont.h"
 #include <dsignal/MorphLBHFilter.h>
 #include <dsignal/Bode.h>
@@ -11,7 +11,7 @@ using namespace dsignal;
 
 /*
 * Tau是一个soundfont合成器
-* by cymheart, 2020--2021.
+* by cymheart, 2020--2023.
 */
 namespace tau {
 
@@ -22,23 +22,14 @@ namespace tau {
 #endif
 		presetBankReplaceMap = new unordered_map<uint32_t, uint32_t>;
 
-		//
-		mainSynther = new RealtimeSynther(this);
-		mainSynther->SetMainSynther(true);
-		synthers[0] = mainSynther;
+		mainSynther = new Synther(this);
+		editor = new Editor(this);
+		mainSynther->CreateMidiEditor();
+		editor->SetMidiEditor(mainSynther->midiEditor);
 
-		midiEditorSynthers[0] = new MidiEditorSynther(this);
-		midiEditorSynthers[0]->SetMainSynther(false);
-		mainSynther->AddSlaveSynther(midiEditorSynthers[0]);
-		synthers[1] = midiEditorSynthers[0];
-
-		syntherCount = 2;
-		midiEditorSyntherCount = 1;
 
 		SetFrameSampleCount(frameSampleCount);
 		SetSampleProcessRate(sampleProcessRate);
-
-		editor = new Editor(this);
 
 	}
 
@@ -50,16 +41,7 @@ namespace tau {
 #endif
 
 		DEL(editor);
-
-		//
-		DEL(synthers[0]);
-		if (midiEditorSyntherCount != 0)
-			DEL(synthers[1]);
-
-		syntherCount = 0;
-		midiEditorSyntherCount = 0;
-
-		//
+		DEL(mainSynther);
 		DEL(presetBankReplaceMap);
 
 	}
@@ -70,9 +52,7 @@ namespace tau {
 		if (isOpened)
 			return;
 
-		for (int i = 0; i < syntherCount; i++)
-			synthers[i]->Open();
-
+		mainSynther->Open();
 		isOpened = true;
 	}
 
@@ -84,27 +64,10 @@ namespace tau {
 
 		Remove();
 
-		//
-		syntherCount = 2;
-		midiEditorSyntherCount = 1;
-
-		synthers[0]->Close();
-		synthers[1]->Close();
-
+		mainSynther->Close();
 		isOpened = false;
 	}
 
-	//获取主MidiEditor
-	MidiEditor* Tau::GetMainMidiEditor()
-	{
-		return midiEditorSynthers[0]->midiEditor;
-	}
-
-	//获取主MidiSynther
-	Synther* Tau::GetMainMidiSynther()
-	{
-		return midiEditorSynthers[0];
-	}
 
 	// 设置样本处理采样率
 	void Tau::SetSampleProcessRate(int rate)
@@ -136,8 +99,7 @@ namespace tau {
 		unitSampleSec = invSampleProcessRate * childFrameSampleCount;
 
 		//
-		for (int i = 0; i < syntherCount; i++)
-			synthers[i]->SetFrameSampleCount(count);
+		mainSynther->SetFrameSampleCount(count);
 	}
 
 	//设置是否使用多线程
@@ -154,8 +116,7 @@ namespace tau {
 		useMulThreads = use;
 
 		//
-		for (int i = 0; i < syntherCount; i++)
-			synthers[i]->SetUseMulThread(useMulThreads);
+		mainSynther->SetUseMulThread(useMulThreads);
 	}
 
 
@@ -178,73 +139,26 @@ namespace tau {
 		return soundFont->GetInstrumentPreset(key);
 	}
 
-	//生成MidiEditorSynther
-	MidiEditorSynther* Tau::CreateMidiEditorSynther()
-	{
-		int i = syntherCount;
-		syntherCount++;
-
-		synthers[i] = new MidiEditorSynther(this);
-		synthers[i]->SetUseMulThread(useMulThreads);
-		synthers[i]->SetFrameSampleCount(frameSampleCount);
-		synthers[i]->SetEnableAllVirInstEffects(isEnableVirInstEffects);
-
-		synthers[i]->Open();
-		Semaphore waitSem;
-		mainSynther->AddSlaveSyntherTask(&waitSem, synthers[i]);
-		waitSem.wait();
-
-		for (auto it = presetBankReplaceMap->begin(); it != presetBankReplaceMap->end(); it++)
-		{
-			int orgKey = it->first;
-			int repKey = it->second;
-			int orgBankMSB = orgKey >> 16;
-			int orgBankLSB = (orgKey >> 8) & 0xff;
-			int orgInstNum = orgKey & 0xff;
-			int repBankMSB = repKey >> 16;
-			int repBankLSB = (repKey >> 8) & 0xff;
-			int repInstNum = repKey & 0xff;
-
-			synthers[i]->AppendReplaceInstrumentTask(
-				orgBankMSB, orgBankLSB, orgInstNum,
-				repBankMSB, repBankLSB, repInstNum);
-		}
-
-		midiEditorSynthers[midiEditorSyntherCount] = (MidiEditorSynther*)synthers[i];
-		midiEditorSyntherCount++;
-
-		return midiEditorSynthers[midiEditorSyntherCount - 1];
-	}
-
 
 	//增加效果器
 	void Tau::AddEffect(TauEffect* effect)
 	{
-		mainSynther->AddEffectTask(effect);
+		TauLock(this);
+		mainSynther->AddEffect(effect);
 	}
 
 	// 按下按键
-	void Tau::OnKey(int key, float velocity, VirInstrument* virInst, int delayMS)
+	void Tau::OnKey(int key, float velocity, VirInstrument* virInst, int id)
 	{
-		mainSynther->OnKeyTask(key, velocity, virInst, delayMS);
+		TauLock(this);
+		mainSynther->OnKey(key, velocity, virInst, id);
 	}
 
 	// 释放按键 
-	void Tau::OffKey(int key, float velocity, VirInstrument* virInst, int delayMS)
+	void Tau::OffKey(int key, float velocity, VirInstrument* virInst, int id)
 	{
-		mainSynther->OffKeyTask(key, velocity, virInst, delayMS);
-	}
-
-	// 取消按键 
-	void Tau::CancelDownKey(int key, float velocity, VirInstrument* virInst, int delayMS)
-	{
-		mainSynther->CancelDownKeyTask(key, velocity, virInst, delayMS);
-	}
-
-	// 取消释放按键 
-	void Tau::CancelOffKey(int key, float velocity, VirInstrument* virInst, int delayMS)
-	{
-		mainSynther->CancelOffKeyTask(key, velocity, virInst, delayMS);
+		TauLock(this);
+		mainSynther->OffKey(key, velocity, virInst, id);
 	}
 
 
@@ -258,12 +172,10 @@ namespace tau {
 		(*presetBankReplaceMap)[orgKey] = repKey;
 
 		//
-		for (int i = 0; i < syntherCount; i++)
-		{
-			synthers[i]->AppendReplaceInstrumentTask(
-				orgBankMSB, orgBankLSB, orgInstNum,
-				repBankMSB, repBankLSB, repInstNum);
-		}
+		TauLock(this);
+		mainSynther->AppendReplaceInstrument(
+			orgBankMSB, orgBankLSB, orgInstNum,
+			repBankMSB, repBankLSB, repInstNum);
 	}
 
 
@@ -274,37 +186,31 @@ namespace tau {
 		presetBankReplaceMap->erase(orgKey);
 
 		//
-		for (int i = 0; i < syntherCount; i++)
-			synthers[i]->RemoveReplaceInstrumentTask(orgBankMSB, orgBankLSB, orgInstNum);
+		TauLock(this);
+		mainSynther->RemoveReplaceInstrument(orgBankMSB, orgBankLSB, orgInstNum);
 	}
 
 
 	// 设置乐器Bend值
 	void Tau::SetVirInstrumentPitchBend(VirInstrument* virInst, int value)
 	{
-		for (int i = 0; i < syntherCount; i++)
-		{
-			synthers[i]->SetVirInstrumentPitchBendTask(virInst, value);
-		}
+		TauLock(this);
+		mainSynther->SetVirInstrumentPitchBend(virInst, value);
 	}
 
 	// 设置乐器按键压力值
 	void Tau::SetVirInstrumentPolyPressure(VirInstrument* virInst, int key, int pressure)
 	{
-		for (int i = 0; i < syntherCount; i++)
-		{
-			synthers[i]->SetVirInstrumentPolyPressureTask(virInst, key, pressure);
-		}
+		TauLock(this);
+		mainSynther->SetVirInstrumentPolyPressure(virInst, key, pressure);
 	}
 
 
 	// 设置乐器Midi控制器值
 	void Tau::SetVirInstrumentMidiControllerValue(VirInstrument* virInst, MidiControllerType midiController, int value)
 	{
-		for (int i = 0; i < syntherCount; i++)
-		{
-			synthers[i]->SetVirInstrumentMidiControllerValueTask(virInst, midiController, value);
-		}
+		TauLock(this);
+		mainSynther->SetVirInstrumentMidiControllerValue(virInst, midiController, value);
 	}
 
 	//设置是否开启所有乐器效果器
@@ -314,19 +220,15 @@ namespace tau {
 			return;
 
 		isEnableVirInstEffects = isEnable;
-		for (int i = 0; i < syntherCount; i++)
-		{
-			synthers[i]->SetEnableAllVirInstEffectsTask(isEnable);
-		}
+		TauLock(this);
+		mainSynther->SetEnableAllVirInstEffects(isEnable);
 	}
 
 	// 设置虚拟乐器值
 	void Tau::SetVirInstrumentProgram(VirInstrument* virInst, int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
-		for (int i = 0; i < syntherCount; i++)
-		{
-			synthers[i]->SetVirInstrumentProgramTask(virInst, bankSelectMSB, bankSelectLSB, instrumentNum);
-		}
+		TauLock(this);
+		mainSynther->SetVirInstrumentProgram(virInst, bankSelectMSB, bankSelectLSB, instrumentNum);
 	}
 
 	/// <summary>
@@ -341,7 +243,8 @@ namespace tau {
 	/// <returns></returns>
 	VirInstrument* Tau::EnableVirInstrument(int deviceChannelNum, int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
-		return mainSynther->EnableVirInstrumentTask(deviceChannelNum, bankSelectMSB, bankSelectLSB, instrumentNum);
+		TauLock(this);
+		return mainSynther->EnableVirInstrument(deviceChannelNum, bankSelectMSB, bankSelectLSB, instrumentNum);
 	}
 
 	/// <summary>
@@ -349,10 +252,8 @@ namespace tau {
 	/// </summary>
 	void Tau::RemoveVirInstrument(VirInstrument* virInst, bool isFade)
 	{
-		for (int i = 0; i < syntherCount; i++)
-		{
-			synthers[i]->RemoveVirInstrumentTask(virInst, isFade);
-		}
+		TauLock(this);
+		mainSynther->RemoveVirInstrument(virInst, isFade);
 	}
 
 	/// <summary>
@@ -360,32 +261,26 @@ namespace tau {
 	/// </summary>
 	void Tau::RemoveAllVirInstrument(bool isFade)
 	{
-		for (int i = 0; i < syntherCount; i++)
-		{
-			synthers[i]->RemoveAllVirInstrumentTask(isFade);
-		}
+		TauLock(this);
+		mainSynther->RemoveAllVirInstrument(isFade);
 	}
 
 	/// <summary>
 	/// 打开乐器
 	/// </summary>
-	void Tau::OnVirInstrument(VirInstrument* virInst, bool isFade)
+	void Tau::OpenVirInstrument(VirInstrument* virInst, bool isFade)
 	{
-		for (int i = 0; i < syntherCount; i++)
-		{
-			synthers[i]->OnVirInstrumentTask(virInst, isFade);
-		}
+		TauLock(this);
+		mainSynther->OpenVirInstrument(virInst, isFade);
 	}
 
 	/// <summary>
 	/// 关闭虚拟乐器
 	/// </summary>
-	void Tau::OffVirInstrument(VirInstrument* virInst, bool isFade)
+	void Tau::CloseVirInstrument(VirInstrument* virInst, bool isFade)
 	{
-		for (int i = 0; i < syntherCount; i++)
-		{
-			synthers[i]->OffVirInstrumentTask(virInst, isFade);
-		}
+		TauLock(this);
+		mainSynther->CloseVirInstrument(virInst, isFade);
 	}
 
 	/// <summary>
@@ -393,18 +288,16 @@ namespace tau {
 	/// </summary>
 	vector<VirInstrument*>* Tau::TakeVirInstrumentList()
 	{
+		TauLock(this);
 		vector<VirInstrument*>* virInsts = new vector<VirInstrument*>();
-		vector<VirInstrument*>* curtVirInsts = nullptr;
-		for (int i = 0; i < syntherCount; i++)
-		{
-			curtVirInsts = synthers[i]->TakeVirInstrumentListTask();
-			if (curtVirInsts == nullptr)
-				continue;
+		vector<VirInstrument*>* curtVirInsts = mainSynther->TakeVirInstrumentList();
+		if (curtVirInsts == nullptr)
+			return nullptr;
 
-			for (int j = 0; j < curtVirInsts->size(); j++)
-				virInsts->push_back((*curtVirInsts)[j]);
-			DEL(curtVirInsts);
-		}
+		for (int j = 0; j < curtVirInsts->size(); j++)
+			virInsts->push_back((*curtVirInsts)[j]);
+
+		DEL(curtVirInsts);
 		return virInsts;
 	}
 

@@ -12,5 +12,6 @@ jstring str2jstring(JNIEnv* env, const char* pat);
 
 int SetStringField(JNIEnv *jenv, jobject obj, const char* field, jstring str);
 jobjectArray CreateJFilters(JNIEnv *env, vector<dsignal::Filter*>& filters);
-
+bool is_str_gbk(const char* str);
+bool is_str_utf8(const char* str);
 #endif //VENTRUE_JNIUTILS_H

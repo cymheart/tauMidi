@@ -15,7 +15,6 @@ namespace tau
 	class NoteOffEvent;
 	class MidiTrack;
 
-	using MidiTrackList = vector<MidiTrack*>;
 	using MidiControllerTypeList = vector<MidiControllerType>;
 
 

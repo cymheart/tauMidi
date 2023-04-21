@@ -19,6 +19,21 @@ namespace tau
 
 		void Copy(MidiMarker& cpyMidiMarker);
 
+		inline int GetTrack()
+		{
+			return track;
+		}
+
+		bool IsEnableMarkerText()
+		{
+			return isEnableMarkerText;
+		}
+
+		bool IsEnableTempo()
+		{
+			return isEnableTempo;
+		}
+
 		inline int32_t GetStartTick()
 		{
 			return startTick;
@@ -49,11 +64,56 @@ namespace tau
 			return tickForQuarterNote;
 		}
 
+		bool IsEnableTimeSignature()
+		{
+			return isEnableTimeSignature;
+		}
+
+
+		inline int GetNumerator()
+		{
+			return numerator;
+		}
+
+		inline int GetDenominator()
+		{
+			return denominator;
+		}
+
+		bool IsEnableKeySignature()
+		{
+			return isEnableKeySignature;
+		}
+
+		inline int GetSf()
+		{
+			return sf;
+		}
+
+		inline int GetMi()
+		{
+			return mi;
+		}
+
 		//设置标题
 		inline void SetTitleName(string& name)
 		{
 			titleName = name;
 		}
+
+		//marker文本设置
+		inline void SetMarkerText(string& text)
+		{
+			titleName = text;
+			isEnableMarkerText = true;
+		}
+
+		//获取标题
+		string GetTitle()
+		{
+			return titleName;
+		}
+
 
 		//速度设置
 		inline void SetTempo(float microTempo_, int32_t tickForQuarterNote_, bool isEnable)
@@ -83,10 +143,43 @@ namespace tau
 			mi = mi_;
 		}
 
+		//获取调号序号
+		int GetIdx() {
+			return (sf < 0 ? 7 - sf : sf);
+		}
+
+		//获取调号名称
+		string GetKeySignatureName()
+		{
+			int n = GetIdx();
+			return (mi == 0 ? majorName[n] : minorName[n]);
+		}
+
+
+		// 获取调号全名
+		string GetKeySignatureFullName()
+		{
+			int n = GetIdx();
+			return (mi == 0 ? majorFullName[n] : minorFullName[n]);
+		}
+
 		//计算速度
 		void ComputeTempo();
 
 	private:
+		static string majorName[];
+		static string majorFullName[];
+
+		static string minorName[];
+		static string minorFullName[];
+
+	private:
+
+		//所在轨道
+		int track = 0;
+
+		//是否开启marker文本
+		bool isEnableMarkerText = false;
 
 		string titleName;
 
@@ -139,6 +232,8 @@ namespace tau
 		int mi = 0;
 
 		Tempo tempo;
+
+
 
 		friend class MidiMarkerList;
 	};

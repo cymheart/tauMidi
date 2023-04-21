@@ -14,10 +14,10 @@ namespace tau
 		void Copy(Tempo& cpyTempo);
 
 		// <summary>
-	    /// 设置轨道速度
-	    /// </summary>
-	    /// <param name="bpm">节拍（每分钟的拍子数）</param>
-	    /// <param name="tickForQuarterNote">一个四分音符的tick数</param>
+		/// 设置轨道速度
+		/// </summary>
+		/// <param name="bpm">节拍（每分钟的拍子数）</param>
+		/// <param name="tickForQuarterNote">一个四分音符的tick数</param>
 		void SetTempoByBPM(float bpm, float tickForQuarterNote, int startTickCount, double startSec);
 
 		/// <summary>
@@ -34,6 +34,12 @@ namespace tau
 		//根据给定tick数量获取时间点
 		//speed:播放速率(相对于正常播放速率1.0的倍率)
 		double GetTickSec(uint32_t tickCount, float speed = 1.0f);
+
+		//获取每分钟拍数
+		float GetBPM()
+		{
+			return BPM;
+		}
 
 	private:
 		/// <summary>

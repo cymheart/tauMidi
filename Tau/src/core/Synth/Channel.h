@@ -6,13 +6,19 @@
 
 namespace tau
 {
-	
-	class Channel
+
+	class  Channel
 	{
 
 	public:
 		Channel(int channelNum);
 		~Channel();
+
+		//是否为设备通道
+		inline bool IsDeviceChannel()
+		{
+			return isDeviceChannel;
+		}
 
 		//获取通道号
 		inline int GetChannelNum()
@@ -20,19 +26,37 @@ namespace tau
 			return channelNum;
 		}
 
+
 		//设置通道号
 		void SetChannelNum(int num);
 
-		//设置对应乐器
-		inline void SetVirInstrument(VirInstrument* vinst)
+		//增加对应乐器
+		inline void AddVirInstrument(VirInstrument* vinst)
 		{
-			inst = vinst;
+			insts.push_back(vinst);
+		}
+
+		void DelVirInstrument(VirInstrument* vinst)
+		{
+			for (auto it = insts.begin(); it != insts.end(); ++it)
+			{
+				if (*it == vinst) {
+					insts.erase(it);
+					break;
+				}
+			}
 		}
 
 		//获取对应乐器
-		inline VirInstrument* GetVirInstrument()
+		inline vector<VirInstrument*>& GetVirInstruments()
 		{
-			return inst;
+			return insts;
+		}
+
+		//获取乐器的数量
+		inline int GetVirInstrumentCount()
+		{
+			return insts.size();
 		}
 
 		void Clear();
@@ -97,11 +121,15 @@ namespace tau
 		void AddUsedPresetType(ModInputPreset type);
 
 	private:
+
+		//是否为设备通道
+		bool isDeviceChannel = false;
+
 		//通道号
 		int channelNum = 0;
 
 		//所在乐器
-		VirInstrument* inst = nullptr;
+		vector<VirInstrument*> insts;
 
 		//
 		int bankMSB = 0;

@@ -113,29 +113,29 @@ namespace tau
 		return &(midiMarkers[prevIdx]->tempo);
 	}
 
-	//计算速度
-	void MidiMarkerList::ComputeTempo()
+	//计算速度和起始时间
+	void MidiMarkerList::ComputeTempoAndStartSec()
 	{
 		lastGetTempoIdx = 0;
 
-		//
-		int prevIdx = -1;
 		double startSec;
 		MidiMarker* midiMarker;
+		Tempo* tempo = nullptr;
+
 		for (int i = 0; i < midiMarkers.size(); i++)
 		{
 			midiMarker = midiMarkers[i];
-			if (!midiMarker->isEnableTempo)
-				continue;
-
-			if (prevIdx < 0)
+			if (tempo == nullptr)
 				startSec = 0;
 			else
-				startSec = midiMarkers[prevIdx]->tempo.GetTickSec(midiMarker->GetStartTick());
+				startSec = tempo->GetTickSec(midiMarker->GetStartTick());
 
 			midiMarker->SetStartSec(startSec);
-			midiMarker->ComputeTempo();
-			prevIdx = i;
+
+			if (midiMarker->isEnableTempo) {
+				midiMarker->ComputeTempo();
+				tempo = &(midiMarker->tempo);
+			}
 		}
 	}
 
@@ -143,7 +143,7 @@ namespace tau
 	{
 		midiMarkers.push_back(midiMarker);
 		sort(midiMarkers.begin(), midiMarkers.end(), MidiMarkerTickCompare);
-		ComputeTempo();
+		ComputeTempoAndStartSec();
 	}
 
 	//从midiEvents中发现并添加MidiMarker标记
@@ -191,12 +191,13 @@ namespace tau
 
 			case MidiEventType::TimeSignature:
 				timeSignEvent = (TimeSignatureEvent*)ev;
-				midiMarker->SetTimeSignature(timeSignEvent->denominator, timeSignEvent->numerator, true);
+				midiMarker->SetTimeSignature(timeSignEvent->numerator, timeSignEvent->denominator, true);
 				break;
 
 			case MidiEventType::KeySignature:
 				keySignEvent = (KeySignatureEvent*)ev;
 				midiMarker->SetKeySignature(keySignEvent->sf, keySignEvent->mi, true);
+				midiMarker->track = keySignEvent->track;
 				break;
 
 			case MidiEventType::Text:
@@ -204,7 +205,7 @@ namespace tau
 				TextEvent* textEvent = (TextEvent*)ev;
 				if (textEvent->textType == MidiTextType::Marker)
 				{
-					midiMarker->SetTitleName(textEvent->text);
+					midiMarker->SetMarkerText(textEvent->text);
 				}
 			}
 			break;
@@ -218,11 +219,12 @@ namespace tau
 		}
 
 		sort(midiMarkers.begin(), midiMarkers.end(), MidiMarkerTickCompare);
-		ComputeTempo();
+		ComputeTempoAndStartSec();
 	}
 
 	bool MidiMarkerList::MidiMarkerTickCompare(MidiMarker* a, MidiMarker* b)
 	{
 		return a->GetStartTick() < b->GetStartTick();//升序
 	}
+
 }

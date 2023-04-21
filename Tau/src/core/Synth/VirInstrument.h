@@ -58,16 +58,6 @@ namespace tau
 
 	private:
 
-		inline void SetRealtime(bool isRealtime)
-		{
-			this->isRealtime = isRealtime;
-		}
-
-		inline bool IsRealtime()
-		{
-			return isRealtime;
-		}
-
 		inline bool IsRemove()
 		{
 			return (state == VirInstrumentState::REMOVING ||
@@ -90,10 +80,10 @@ namespace tau
 		}
 
 		//打开乐器
-		void On(bool isFade = true);
+		void Open(bool isFade = true);
 
 		//关闭乐器
-		void Off(bool isFade = true);
+		void Close(bool isFade = true);
 
 		//移除乐器
 		void Remove(bool isFade);
@@ -144,7 +134,7 @@ namespace tau
 		}
 
 		//移除指定按下状态的按键发音器
-		bool _RemoveOnKeyStateSounder(KeySounder* keySounder);
+		bool RemoveOnKeyStateSounderCore(KeySounder* keySounder);
 
 		//移除指定按下状态的按键发音器
 		void RemoveOnKeyStateSounder(KeySounder* keySounder);
@@ -283,29 +273,27 @@ namespace tau
 		void SetController(MidiControllerType ctrlType, int value);
 
 		//按键
-		void OnKey(int key, float velocity, int tickCount = 0);
+		void OnKey(int key, float velocity, int tickCount = 0, int id = 0);
 
 		//松开按键
-		void OffKey(int key, float velocity = 127.0f);
+		void OffKey(int key, float velocity = 127.0f, int id = 0);
 
 		//松开所有按键
 		void OffAllKeys();
 
-		//结束所有按键发音
-		void EndOnKeySounds();
 
 		//执行按键
-		KeySounder* OnKeyExecute(int key, float velocity);
+		KeySounder* OnKeyExecute(int key, float velocity, int id = 0);
 
 		//执行松开按键
-		void OffKeyExecute(int key, float velocity = 127.0f);
+		void OffKeyExecute(int key, float velocity = 127.0f, int id = 0);
 
 
 		// 松开指定发音按键
-		void _OffKey(KeySounder* keySounder, float velocity);
+		void OffKeyCore(KeySounder* keySounder, float velocity);
 
 		//按键执行
-		void _OnKey(KeySounder* keySounder, int key, float velocity);
+		void OnKeyCore(KeySounder* keySounder, int key, float velocity);
 
 		// 设置具有相同独占类的区域将不再处理样本
 		// exclusiveClasses数组以一个小于等于0的值结尾
@@ -332,7 +320,7 @@ namespace tau
 		void PrintOnKeyInfo(int key, float velocity, bool isRealTime);
 
 		//是否可以忽略按键
-		bool CanIgroneOnKey(int key, float velocity, int tickCount, bool isRealTime);
+		bool CanIgroneOnKey(int key, float velocity, int tickCount);
 		//计算按键速度
 		void ComputeOnKeySpeed();
 
@@ -341,9 +329,6 @@ namespace tau
 		VirInstStateChangedCallBack virInstStateChangedCB = nullptr;
 
 	private:
-
-		//是否实时
-		bool isRealtime = true;
 
 		//发音结束,包括效果器作用带来的尾音是否结束
 		bool isSoundEnd = true;
@@ -395,7 +380,7 @@ namespace tau
 		Preset* preset = nullptr;
 
 		// 发音中的按键发声器
-		KeySounderList* keySounders = nullptr;
+		list<KeySounder*>* keySounders = nullptr;
 
 		//按键中的keySounders
 		vector<KeySounder*>* onKeySounders = nullptr;

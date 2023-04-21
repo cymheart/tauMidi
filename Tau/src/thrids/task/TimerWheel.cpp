@@ -20,14 +20,26 @@ namespace task
 			DEL(wheelSlots[i]);
 	}
 
+	void TimerWheel::Clear()
+	{
+		Release();
+
+		for (int i = 0; i < 5; i++)
+			pointer[i] = 0;
+
+		curtTimeMS = -1;
+		blockFilterCount = 0;
+	}
+
+
 	/**步进到指定时间点,并回调处理在时间点之间的所有元素*/
-	bool TimerWheel::Read(int64_t curTimeMS)
+	bool TimerWheel::Read(int64_t timeMS)
 	{
 		int count;
 		LinkedList<Task*>* taskList;
 		long tm = curtTimeMS + 1;
 
-		for (; tm <= curTimeMS; tm++)
+		for (; tm <= timeMS; tm++)
 		{
 			PointerTo(tm);
 
@@ -63,6 +75,7 @@ namespace task
 			}
 		}
 
+
 		//处理超时元素
 		while (!timeOutList.Empty())
 		{
@@ -75,8 +88,9 @@ namespace task
 					continue;
 				}
 
-				if (node->elem != nullptr)
+				if (node->elem != nullptr) {
 					ret = ReadTaskCallback(taskProcesser, node->elem);
+				}
 
 				next = timeOutList.Remove(node);
 				TaskObjectPool::GetInstance().NodePool().Push(node);
@@ -235,6 +249,7 @@ namespace task
 					Task* task = node->elem;
 					task->executeTimeMS = curtTimeMS + task->delay;
 					next = taskList->Remove(node);
+					node->Clear();
 					TaskObjectPool::GetInstance().NodePool().Push(node);
 					Add(task);
 				}

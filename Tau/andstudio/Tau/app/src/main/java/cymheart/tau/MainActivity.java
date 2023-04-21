@@ -21,6 +21,7 @@ import android.widget.TextView;
 import com.tbruyelle.rxpermissions3.RxPermissions;
 
 import cymheart.tau.effect.Equalizer;
+import cymheart.tau.effect.Reverb;
 import cymheart.tau.utils.dsignal.Filter;
 
 public class MainActivity extends AppCompatActivity   {
@@ -103,7 +104,6 @@ public class MainActivity extends AppCompatActivity   {
         Button btn = findViewById(R.id.button);
 
         // 从布局文件中获取名叫tv_marquee的文本视图
-        TextView textView = findViewById(R.id.textView);
         // 给tv_marquee设置点击监听器
         //textView.setOnClickListener(this);
 
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity   {
 
         sf = new SoundFont();
         sf.Parse("SF2", "/storage/emulated/0/gnusmas_gm_soundfont_2.01.sf2");
-        sf.EnablePhysicsPiano(0,1,0);
+      //  sf.EnablePhysicsPiano(0,1,0);
         tau = new Tau(this);
 
 
@@ -181,23 +181,29 @@ public class MainActivity extends AppCompatActivity   {
 //        tau.SetMidiKeepSameTimeNoteOnCount(10);
 
         tau.SetSoundFont(sf);
-        tau.SetFrameSampleCount(256);
+        tau.SetFrameSampleCount(64);
         tau.SetSampleProcessRate(44100);
         tau.SetChannelCount(2);
         tau.SetLimitRegionSounderCount(64);
         tau.SetLimitOnKeySpeed(100);
         tau.SetEnableMidiEventCountOptimize(true);
         tau.SetMidiKeepSameTimeNoteOnCount(10);
-        tau.SetUnitProcessMidiTrackCount(20);
         tau.ConntectMidiDevice(0);
-        tau.SetSampleStreamCacheSec(5);
+       // tau.SetSampleStreamCacheSec(5);
         tau.SetEnableAllVirInstEffects(false);
         tau.SetEnableCreateFreqSpectrums(false, 4096);
-        tau.AppendReplaceInstrument(0,0,0,0,1,0);
+      //  tau.AppendReplaceInstrument(0,0,0,0,1,0);
 
 
+
+
+        Reverb reverb = new Reverb();
+        reverb.SetRoomSize(0.7f);
+        reverb.SetWidth(0.5f);
+        reverb.SetDamping(0.3f);
+        reverb.SetEffectMix(0.5f);
+        tau.AddEffect(reverb);
         tau.Open();
-
 //        tau.Load("/storage/emulated/0/QianQianQueGe.mid", true);
 //
 //        try {
@@ -260,7 +266,13 @@ public class MainActivity extends AppCompatActivity   {
 
 
                                         //for(int i=0; i<1; i++) {
-                                            tau.Load("/storage/emulated/0/QianQianQueGe.mid", true);
+                                            tau.Load("/storage/emulated/0/Just the Way You Are-Bruno Mars.mid", true, true);
+                                            Log.d("MidiMarker", "midiMarker:" + tau.editor.GetMidiMarkers().size());
+
+                                            tau.editor.AddMyMarker(5);
+                                        tau.editor.AddMyMarker(1);
+                                        tau.editor.AddMyMarker(7);
+                                        tau.editor.SaveMidiExInfo();
 
 //                                            while (!tau.IsLoadCompleted())
 //                                            {
@@ -353,7 +365,6 @@ public class MainActivity extends AppCompatActivity   {
         prevtau.SetChannelCount(2);
         prevtau.SetLimitRegionSounderCount(64);
         prevtau.SetLimitOnKeySpeed(100);
-        prevtau.SetUnitProcessMidiTrackCount(20);
         prevtau.SetSoundFont(sf);
         prevtau.Open();
 

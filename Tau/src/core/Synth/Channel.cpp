@@ -14,9 +14,8 @@ namespace tau
 
 	Channel::~Channel()
 	{
-		if (inst != nullptr)
-			inst->channel = nullptr;
-		inst = nullptr;
+		for (int i = 0; i < insts.size(); i++)
+			insts[i]->channel = nullptr;
 	}
 
 	//设置通道号
@@ -81,14 +80,11 @@ namespace tau
 
 		//如果接收道一个0~31的MSB值,那对应的32~63的LSB值被重置为0
 		if (itype <= 31)
-		{
 			ccValue[itype + 32] = 0;
-		}
 
 		if (itype >= 0 && itype <= 63)
 		{
-			if (itype <= 31) { imsbType = itype; }
-			else { imsbType = itype - 32; }
+			imsbType = itype <= 31 ? itype : itype - 32;
 			ComputeControllerHighResValue(imsbType);
 			AddUsedControllerType((MidiControllerType)imsbType);
 		}
@@ -103,25 +99,6 @@ namespace tau
 		switch (type)
 		{
 		case tau::MidiControllerType::DataEntryMSB:
-			if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
-				ccValue[(int)MidiControllerType::RPNLSB] == 0)
-			{
-				pitchBendRange = (float)ccValue[itype];
-			}
-			else if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
-				ccValue[(int)MidiControllerType::RPNLSB] == 1)
-			{
-				fineTune = (float)ccValue[itype];
-				AddUsedPresetType(ModInputPreset::FineTune);
-			}
-			else if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
-				ccValue[(int)MidiControllerType::RPNLSB] == 2)
-			{
-				coarseTune = ccComputedValue[itype];
-				AddUsedPresetType(ModInputPreset::CoarseTune);
-			}
-			break;
-
 		case tau::MidiControllerType::DataEntryLSB:
 			if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
 				ccValue[(int)MidiControllerType::RPNLSB] == 0)
@@ -136,15 +113,16 @@ namespace tau
 				AddUsedPresetType(ModInputPreset::FineTune);
 			}
 			else if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
-				ccValue[(int)MidiControllerType::RPNLSB] == 2)
+				ccValue[(int)MidiControllerType::RPNLSB] == 2 &&
+				type == tau::MidiControllerType::DataEntryMSB)
 			{
-				coarseTune = ccComputedValue[imsbType];
+				coarseTune = ccValue[imsbType];
 				AddUsedPresetType(ModInputPreset::CoarseTune);
 			}
 			break;
 
-			default:
-				break;
+		default:
+			break;
 		}
 	}
 
@@ -252,21 +230,11 @@ namespace tau
 	}
 
 
-	void Channel::ComputeControllerHighResValue(int type)
+	void Channel::ComputeControllerHighResValue(int msbType)
 	{
-		int msbType = type;
-		int lsbType = type + 32;
-
-		if (ccValue[lsbType] != 0)
-		{
-			ccCombValue[msbType] = (float)(ccValue[msbType] << 7 | ccValue[lsbType]);
-			ccComputedValue[type] = MapValueToSys((MidiControllerType)type, ccCombValue[msbType], true);
-		}
-		else
-		{
-			ccCombValue[msbType] = (float)ccValue[msbType];
-			ccComputedValue[type] = MapValueToSys((MidiControllerType)type, (float)ccValue[msbType], false);
-		}
+		int lsbType = msbType + 32;
+		ccCombValue[msbType] = (float)(ccValue[msbType] << 7 | ccValue[msbType + 32]);
+		ccComputedValue[msbType] = MapValueToSys((MidiControllerType)msbType, ccCombValue[msbType], true);
 	}
 
 	float Channel::MapValueToSys(MidiControllerType type, float value, bool isHighResValue)

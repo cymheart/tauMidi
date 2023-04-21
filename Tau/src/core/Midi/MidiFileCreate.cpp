@@ -32,7 +32,7 @@ namespace tau
 
 		CreateHeaderChunk();
 
-		for (int i = 0; i < midiTrackList.size(); i++)
+		for (int i = 0; i < midiTracks.size(); i++)
 		{
 			curtParseTickCount = 0;
 			CreateTrackChuck(i);
@@ -76,7 +76,7 @@ namespace tau
 	//生成轨道块
 	int MidiFile::CreateTrackChuck(int trackIdx)
 	{
-		MidiTrack& track = *midiTrackList[trackIdx];
+		MidiTrack& track = *midiTracks[trackIdx];
 
 		//
 		byte headerType[4] = { 'M','T','r','k' };

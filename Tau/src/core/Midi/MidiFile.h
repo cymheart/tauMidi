@@ -73,9 +73,9 @@ namespace tau
 			this->tickForQuarterNote = (short)tickForQuarterNote;
 		}
 
-		inline MidiTrackList* GetTrackList()
+		inline vector<MidiTrack*>* GetTrackList()
 		{
-			return &midiTrackList;
+			return &midiTracks;
 		}
 
 		//清空midiTracks列表,但并不真正删除事件
@@ -121,11 +121,17 @@ namespace tau
 		//每个通道midi事件分配到每一个轨道
 		void PerChannelMidiEventToPerTrack();
 
+		//复制轨道全局事件到新的轨道
+		void CopyTrackGlobalEventsForNewTrack(int oldTrackIdx, int newTrackIdx);
+
 		//拷贝相同通道控制事件
 		void CopySameChannelControlEvents();
 
 		//寻找轨道默认乐器改变事件
 		void FindTracksDefaultProgramChangeEvent();
+
+		//增加默认全局TimeSignatureEvent， KeySignatureEvent, TempoEvent事件
+		void AddDefaultGlobalEvents(LinkedList<MidiEvent*>* globalMidiEvents);
 
 		//去除前后值相同,以及后值覆盖前值的全局事件
 		void RemoveSameAndOverrideGlobalEvents(LinkedList<MidiEvent*>* globalMidiEvents);
@@ -135,8 +141,8 @@ namespace tau
 		//解析头块
 		bool ParseHeaderChunk();
 		//解析轨道块
-		int ParseTrackChuck();
-		int ParseEvent(MidiTrack& track);
+		int ParseTrackChuck(int trackIdx);
+		int ParseEvent(MidiTrack& track, int trackIdx);
 
 		//跳过解析的事件
 		int PassParseEvent(MidiTrack& track);
@@ -210,7 +216,7 @@ namespace tau
 		float perTrackParseSec = 0;
 		float curtTrackParseSec = 0;
 
-		MidiTrackList midiTrackList;
+		vector<MidiTrack*> midiTracks;
 		list<MidiEvent*> golbalEvents;
 
 		int programChangeA = 0;

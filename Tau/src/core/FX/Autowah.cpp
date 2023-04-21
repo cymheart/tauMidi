@@ -18,6 +18,12 @@ namespace tauFX
 		DEL(rightAutowah);
 	}
 
+	void Autowah::Clear()
+	{
+		leftAutowah->Init(44100);
+		rightAutowah->Init(44100);
+	}
+
 	/** sets wah
 			\param wah : set wah amount, , 0...1.0
 		*/

@@ -4,160 +4,81 @@
 #include"Synth/VirInstrument.h"
 #include"Synth/Tau.h"
 #include"Synth/Editor/Editor.h"
+#include"Synth/Editor/MidiEditor.h"
 
 namespace tau
 {
-	void Synther::CacheProcess()
+
+	bool Synther::CanCache()
+	{
+		//仅当cacheState == play时，才可以缓存
+		if (!isCacheWriteSoundEnd ||
+			(midiEditor->GetState() == EditorState::PLAY))
+			return true;
+
+		isCacheWriteSoundEnd = true;
+		return false;
+	}
+
+	void Synther::CacheOutput()
 	{
 		cacheLocker.lock();
 
-		int stepModeCount = 0;
-		for (int i = 0; i < slaveSynthers.size(); i++) {
+		memset(synthSampleStream, 0, sizeof(float) * frameSampleCount * 2);
 
-			slaveSynthers[i]->CacheReadFallSamples(this);
-			slaveSynthers[i]->CacheReadToMain(this);
+		CacheReadByState();
+		CacheReadFallSamples();
 
-			if (slaveSynthers[i]->state == CacheState::EnterStep)
-				stepModeCount++;
-		}
+		if (tau->editor != nullptr)
+			tau->editor->cacheState = cacheState;
 
-		if (!slaveSynthers.empty()) {
-			SetCachePlayState(slaveSynthers[0]->cachePlayState);
-			SetCurtCachePlaySec(slaveSynthers[0]->curtCachePlaySec);
-		}
-
-		//当所有从合成器进入步进模式后,主合成器关闭缓存
-		if (stepModeCount != 0 &&
-			stepModeCount == slaveSynthers.size())
-		{
+		//进入步进模式后,合成器关闭缓存
+		if (cacheState == CacheState::EnterStep)
 			isEnableCache = false;
-		}
 
 		cacheLocker.unlock();
+
 	}
 
-	void Synther::CacheRender()
-	{
-		mainSynther->cacheLocker.lock();
-
-		if (isReqDelete)
-		{
-			state = CacheState::Removing;
-			mainSynther->cacheLocker.unlock();
-			return;
-		}
-
-		CacheWrite();
-
-		int64_t cachedSize = cacheBuffer->GetNeedReadSize();
-
-		switch (state)
-		{
-		case CacheState::CachingAndRead:
-
-			if (!CanCache())
-			{
-				CreateRiseCacheGain();
-				state = CacheState::CacheReadTail;
-
-			}
-			else if (cachedSize <= minCacheSize)
-			{
-				CreateFallCacheSamples();
-				cacheGain = 0;
-				state = CacheState::CachingNotRead;
-				ReqRender();
-			}
-			else if (cachedSize <= maxCacheSize) {
-				ReqRender();
-			}
-			else
-				state = CacheState::OnlyRead;
-			break;
-
-
-		case CacheState::CachingNotRead:
-			if (!CanCache())
-			{
-				CreateRiseCacheGain();
-				state = CacheState::CacheReadTail;
-			}
-			else if (cachedSize <= reReadCacheSize) {
-				ReqRender();
-			}
-			else {
-				state = CacheState::CachingAndRead;
-				CreateRiseCacheGain();
-				ReqRender();
-			}
-			break;
-
-		case CacheState::CachingPauseRead:
-			if (!CanCache())
-			{
-				state = CacheState::PauseWaitRead;
-			}
-			else if (cachedSize <= maxCacheSize)
-				ReqRender();
-			else
-				state = CacheState::PauseWaitRead;
-			break;
-
-
-		case CacheState::CacheStoping:
-			isCacheWriteSoundEnd = true;
-			cacheBuffer->Clear();
-			state = CacheState::CacheStop;
-			break;
-
-		default:
-			break;
-		}
-
-
-		mainSynther->cacheLocker.unlock();
-	}
-
-	void Synther::CacheReadToMain(Synther* mainSynther)
+	void Synther::CacheReadByState()
 	{
 		if (isReqDelete)
 		{
-			if (state != CacheState::CacheStoping &&
-				state != CacheState::CachingAndRead &&
-				state != CacheState::CachingNotRead &&
-				state != CacheState::CacheStoping)
+			if (cacheState != CacheState::CacheStoping &&
+				cacheState != CacheState::CachingAndRead &&
+				cacheState != CacheState::CachingNotRead &&
+				cacheState != CacheState::CacheStoping)
 			{
-				state = CacheState::Remove;
+				cacheState = CacheState::Remove;
 			}
 		}
 
-		switch (state)
+		switch (cacheState)
 		{
 		case CacheState::CacheStop:
 			if (!CanCache()) {
-				isSoundEnd = true;
 				break;
 			}
 
 			dstCacheGain = cacheGain = 1;
-			state = CacheState::CachingNotRead;
+			cacheState = CacheState::CachingNotRead;
 			ReqRender();
 			break;
 
 
 		case CacheState::CachingAndRead:
-			CacheRead(mainSynther);
+			CacheRead();
 			break;
 
 
 		case CacheState::OnlyRead:
 
 			if (cacheBuffer->GetNeedReadSize() <= reCacheSize) {
-				state = CacheState::CachingAndRead;
+				cacheState = CacheState::CachingAndRead;
 				ReqRender();
 			}
 
-			CacheRead(mainSynther);
+			CacheRead();
 			break;
 
 		case CacheState::CacheReadTail:
@@ -165,12 +86,12 @@ namespace tau
 			if (cacheBuffer->GetNeedReadSize() <= 0)
 			{
 				cacheBuffer->Clear();
-				state = CacheState::CacheStop;
+				cacheState = CacheState::CacheStop;
 				SetCachePlayState(EditorState::ENDPAUSE);
 				break;
 			}
 
-			CacheRead(mainSynther);
+			CacheRead();
 			break;
 
 
@@ -179,49 +100,180 @@ namespace tau
 			isEnableCache = true;
 			cacheBuffer->Clear();
 			cacheGain = dstCacheGain = 0;
-			state = CacheState::CachingNotRead;
+			cacheState = CacheState::CachingNotRead;
 			ReqRender();
-
-			//
-			if (cmdWait)
-				cmdWait->set();
 			break;
 
 
 		case CacheState::Removing:
-			state = CacheState::Remove;
+			cacheState = CacheState::Remove;
 			break;
 
 		default:
 			break;
 
 		}
-
 	}
+
+
+	//合成渐隐的尾音样本到主发声通道中
+	void Synther::CacheReadFallSamples()
+	{
+		if (fallSamples.empty())
+			return;
+
+		float* out = (float*)synthSampleStream;
+
+		vector<FadeSamplesInfo>::iterator it = fallSamples.begin();
+		for (; it != fallSamples.end(); )
+		{
+			FadeSamplesInfo& info = *it;
+			float* samples = info.samples;
+			double gain = info.gain;
+			int n = info.pos;
+
+			int len = min((info.size - info.pos) / channelCount, frameSampleCount);
+
+			switch (tau->channelOutputMode)
+			{
+			case ChannelOutputMode::Stereo:
+				for (; n < info.pos + len; n++) {
+					gain -= info.gainStep;
+					if (gain < 0) { gain = 0; }
+
+					*out++ += samples[n] * gain;
+					*out++ += samples[frameSampleCount + n] * gain;
+				}
+				break;
+
+			case ChannelOutputMode::Mono:
+				for (; n < info.pos + len; n++) {
+					gain -= info.gainStep;
+					if (gain < 0) { gain = 0; }
+					*out++ += samples[n] * gain;
+				}
+				break;
+			}
+
+
+			if (gain <= 0 || len == 0)
+			{
+				fallSamplesPool->Push(samples);
+				it = fallSamples.erase(it);
+			}
+			else
+			{
+				info.gain = gain;
+				info.pos = n + len;
+				it++;
+			}
+		}
+	}
+
+	void Synther::CacheInput()
+	{
+		cacheLocker.lock();
+		if (isReqDelete)
+		{
+			cacheState = CacheState::Removing;
+			cacheLocker.unlock();
+			return;
+		}
+
+		CacheWrite();
+
+		int64_t cachedSize = cacheBuffer->GetNeedReadSize();
+
+		switch (cacheState)
+		{
+		case CacheState::CachingAndRead:
+
+			if (!CanCache())
+			{
+				CreateRiseCacheGain();
+				cacheState = CacheState::CacheReadTail;
+
+			}
+			else if (cachedSize <= minCacheSize)
+			{
+				CreateFallCacheSamples();
+				cacheGain = 0;
+				cacheState = CacheState::CachingNotRead;
+				ReqRender();
+			}
+			else if (cachedSize <= maxCacheSize) {
+				ReqRender();
+			}
+			else if (cachedSize > maxCacheSize)
+				cacheState = CacheState::OnlyRead;
+			break;
+
+
+		case CacheState::CachingNotRead:
+			if (!CanCache())
+			{
+				CreateRiseCacheGain();
+				cacheState = CacheState::CacheReadTail;
+			}
+			else if (cachedSize <= reReadCacheSize) {
+				ReqRender();
+			}
+			else if (cachedSize > reReadCacheSize) {
+				cacheState = CacheState::CachingAndRead;
+				CreateRiseCacheGain();
+				ReqRender();
+			}
+			break;
+
+		case CacheState::CachingPauseRead:
+			if (!CanCache())
+			{
+				cacheState = CacheState::PauseWaitRead;
+			}
+			else if (cachedSize <= maxCacheSize)
+				ReqRender();
+			else
+				cacheState = CacheState::PauseWaitRead;
+			break;
+
+
+		case CacheState::CacheStoping:
+			isCacheWriteSoundEnd = true;
+			cacheBuffer->Clear();
+			cacheState = CacheState::CacheStop;
+			break;
+
+		default:
+			break;
+		}
+
+		cacheLocker.unlock();
+	}
+
 
 
 	void Synther::CachePlay()
 	{
-		lock_guard<mutex> lock(mainSynther->cacheLocker);
+		lock_guard<mutex> lock(cacheLocker);
 
 		SetCachePlayState(EditorState::PLAY);
 
-		switch (state)
+		switch (cacheState)
 		{
 		case CacheState::CacheStoping:
 			cacheGain = 0;
-			state = CacheState::CachingNotRead;
+			cacheState = CacheState::CachingNotRead;
 			break;
 
 		case CacheState::CachingPauseRead:
 			cacheGain = 0;
-			state = CacheState::CachingNotRead;
+			cacheState = CacheState::CachingNotRead;
 			break;
 
 		case CacheState::PauseWaitRead:
 			cacheGain = 0;
 			CreateRiseCacheGain();
-			state = CacheState::OnlyRead;
+			cacheState = CacheState::OnlyRead;
 			break;
 
 		default:
@@ -232,14 +284,14 @@ namespace tau
 
 	void Synther::CachePause()
 	{
-		lock_guard<mutex> lock(mainSynther->cacheLocker);
+		lock_guard<mutex> lock(cacheLocker);
 
 		if (cachePlayState == EditorState::PAUSE)
 			return;
 
 		SetCachePlayState(EditorState::PAUSE);
 
-		switch (state)
+		switch (cacheState)
 		{
 			//此时当前缓存未发声，可以直接暂停
 		case CacheState::CacheStoping:
@@ -250,14 +302,14 @@ namespace tau
 		case CacheState::CachingAndRead:
 		case CacheState::CachingNotRead:
 			CreateFallCacheSamples();
-			state = CacheState::CachingPauseRead;
+			cacheState = CacheState::CachingPauseRead;
 			break;
 
 
 			//其它状态下将会转入到CachingPauseRead状态
 		default:
 			CreateFallCacheSamples();
-			state = CacheState::CachingPauseRead;
+			cacheState = CacheState::CachingPauseRead;
 			ReqRender();
 			break;
 		}
@@ -265,13 +317,13 @@ namespace tau
 
 	void Synther::CacheStop(bool isReset)
 	{
-		lock_guard<mutex> lock(mainSynther->cacheLocker);
+		lock_guard<mutex> lock(cacheLocker);
 
 		if (cachePlayState != EditorState::PAUSE)
 			CreateFallCacheSamples();
 
 		SetCachePlayState(EditorState::STOP);
-		SetCurtCachePlaySec(0);
+		SetCurtCachePlaySec(tau->editor->initStartPlaySec);
 
 		for (int i = 0; i < virInstList.size(); i++)
 			virInstList[i]->ClearSoundDatas();
@@ -280,7 +332,7 @@ namespace tau
 		if (isReset)
 			RemoveNeedDeleteVirInsts(true);
 
-		switch (state)
+		switch (cacheState)
 		{
 		case CacheState::CacheStoping:
 			break;
@@ -288,13 +340,13 @@ namespace tau
 		case CacheState::CachingAndRead:
 		case CacheState::CachingNotRead:
 		case CacheState::CachingPauseRead:
-			state = CacheState::CacheStoping;
+			cacheState = CacheState::CacheStoping;
 			break;
 
 		default:
 			isCacheWriteSoundEnd = true;
 			cacheBuffer->Clear();
-			state = CacheState::CacheStop;
+			cacheState = CacheState::CacheStop;
 			break;
 		}
 
@@ -303,9 +355,9 @@ namespace tau
 
 	bool Synther::CacheGoto(double sec, bool isMustReset)
 	{
-		lock_guard<mutex> lock(mainSynther->cacheLocker);
+		lock_guard<mutex> lock(cacheLocker);
 
-		if (state == CacheState::CacheStop)
+		if (cacheState == CacheState::CacheStop)
 		{
 			SetCurtCachePlaySec(sec);
 			return true;
@@ -321,11 +373,13 @@ namespace tau
 			{
 				float diffSec = sec - curtCachePlaySec;
 				offsetCacheReadPosLen = diffSec * tau->sampleProcessRate * sizeof(float) * channelCount;
-				int n = tau->frameSampleCount * 2 * sizeof(float) * channelCount;
+
+				int n = tau->frameSampleCount * sizeof(float) * channelCount;
 				offsetCacheReadPosLen /= n;
 				offsetCacheReadPosLen *= n;
 			}
 		}
+
 
 		//
 		bool isReset = false;
@@ -340,7 +394,7 @@ namespace tau
 		if (sec >= GetEndSec())
 		{
 			SetCachePlayState(EditorState::ENDPAUSE);
-			switch (state)
+			switch (cacheState)
 			{
 			case CacheState::CacheStoping:
 				break;
@@ -349,14 +403,14 @@ namespace tau
 			case CacheState::CachingAndRead:
 			case CacheState::CachingNotRead:
 				CreateFallCacheSamples();
-				state = CacheState::CacheStoping;
+				cacheState = CacheState::CacheStoping;
 				break;
 
 			default:
 				CreateFallCacheSamples();
 				isCacheWriteSoundEnd = true;
 				cacheBuffer->Clear();
-				state = CacheState::CacheStop;
+				cacheState = CacheState::CacheStop;
 				break;
 			}
 
@@ -365,14 +419,14 @@ namespace tau
 
 
 		//
-		switch (state)
+		switch (cacheState)
 		{
 		case CacheState::CachingAndRead:
 		case CacheState::CacheStoping:
 			CreateFallCacheSamples();
 			_CacheClear();
 			cacheGain = 0;
-			state = CacheState::CachingNotRead;
+			cacheState = CacheState::CachingNotRead;
 			break;
 
 		case CacheState::CachingNotRead:
@@ -382,7 +436,7 @@ namespace tau
 
 		case CacheState::PauseWaitRead:
 			_CacheClear();
-			state = CacheState::CachingPauseRead;
+			cacheState = CacheState::CachingPauseRead;
 			ReqRender();
 			break;
 
@@ -390,7 +444,7 @@ namespace tau
 			CreateFallCacheSamples();
 			_CacheClear();
 			cacheGain = 0;
-			state = CacheState::CachingNotRead;
+			cacheState = CacheState::CachingNotRead;
 			ReqRender();
 			break;
 		}
@@ -402,12 +456,13 @@ namespace tau
 	//关闭了缓存，将进入通常播放模式
 	void Synther::CacheEnterStepPlayMode()
 	{
-		lock_guard<mutex> lock(mainSynther->cacheLocker);
+		lock_guard<mutex> lock(cacheLocker);
+
 		isEnableCache = false;
 		isStepPlayMode = true;
 		cacheGain = dstCacheGain = 1;
 		cacheGainStep = 0.0001;
-		state = CacheState::EnterStep;
+		cacheState = CacheState::EnterStep;
 	}
 
 	//建立剩余缓存样本的消隐样本处理(使得发音可以渐渐减弱直到消失)
@@ -415,7 +470,7 @@ namespace tau
 	{
 		int64_t size = cacheBuffer->GetNeedReadSize();  //获取缓存buffer中还剩余多少数据未读取
 		int sampleSize = size / (sizeof(float) * channelCount);  //根据通道个数等计算总样本数量
-		int limitSampleSize = 0.4 / tau->invSampleProcessRate;  //计算以0.4sec的消隐时间需要多少样本数量
+		int limitSampleSize = 0.4 / tau->invSampleProcessRate;   //计算以0.4sec的消隐时间需要多少样本数量
 		if (sampleSize > limitSampleSize)
 			sampleSize = limitSampleSize;        //需要的样本数量
 
@@ -463,48 +518,45 @@ namespace tau
 		TestCacheWriteSoundEnd();
 	}
 
-	void Synther::CacheRead()
-	{
-		cacheBuffer->ReadToDst(cacheReadLeftChannelSamples, frameSampleCount * sizeof(float));
-		cacheBuffer->ReadToDst(cacheReadRightChannelSamples, frameSampleCount * sizeof(float));
-		TestCacheSoundEnd();
-	}
-
 	//检测由发音是否完全结束
-	void Synther::TestCacheSoundEnd()
+	void Synther::TestCacheWriteSoundEnd()
 	{
-		isSoundEnd = true;
 		//检测由效果器带来的尾音是否结束
 		int offset = (int)(frameSampleCount * 0.02f);
 		for (int i = 0; i < frameSampleCount; i += offset)
 		{
 			// 此处值需要非常小，不然会产生杂音
-			if (fabsf(cacheReadLeftChannelSamples[i]) > 0.0001f ||
-				fabsf(cacheReadRightChannelSamples[i]) > 0.0001f) {
-				isSoundEnd = false;
-				break;
+			if (fabsf(leftChannelSamples[i]) > 0.0001f ||
+				fabsf(rightChannelSamples[i]) > 0.0001f) {
+				isCacheWriteSoundEnd = false;
 			}
 		}
+
+		isCacheWriteSoundEnd = true;
 	}
 
-	void Synther::CacheRead(Synther* mainSynther)
+
+	void Synther::CacheRead()
 	{
-		CacheRead();
+		cacheBuffer->ReadToDst(cacheReadLeftChannelSamples, frameSampleCount * sizeof(float));
+		cacheBuffer->ReadToDst(cacheReadRightChannelSamples, frameSampleCount * sizeof(float));
+
+		float* out = (float*)synthSampleStream;
 
 		switch (tau->channelOutputMode)
 		{
 		case ChannelOutputMode::Stereo:
 			for (int n = 0; n < frameSampleCount; n++) {
 				CacheGainFade();
-				mainSynther->leftChannelSamples[n] += GetLeftCacheChannelSamples(n);
-				mainSynther->rightChannelSamples[n] += GetRightCacheChannelSamples(n);
+				*out++ = cacheReadLeftChannelSamples[n] * cacheGain;
+				*out++ = cacheReadRightChannelSamples[n] * cacheGain;
 			}
 			break;
 
 		case ChannelOutputMode::Mono:
 			for (int n = 0; n < frameSampleCount; n++) {
 				CacheGainFade();
-				mainSynther->leftChannelSamples[n] += GetLeftCacheChannelSamples(n);
+				*out++ = cacheReadLeftChannelSamples[n] * cacheGain;
 			}
 			break;
 		}
@@ -513,141 +565,39 @@ namespace tau
 		SetCurtCachePlaySec(curtCachePlaySec + frameSec);
 	}
 
-
-	//合成渐隐的尾音样本到主发声通道中
-	void Synther::CacheReadFallSamples(Synther* mainSynther)
-	{
-		if (fallSamples.empty())
-			return;
-
-		vector<FadeSamplesInfo>::iterator it = fallSamples.begin();
-		for (; it != fallSamples.end(); )
-		{
-			FadeSamplesInfo& info = *it;
-			float* samples = info.samples;
-			double gain = info.gain;
-			int n = info.pos;
-
-			int len = min((info.size - info.pos) / channelCount, frameSampleCount);
-
-			switch (tau->channelOutputMode)
-			{
-			case ChannelOutputMode::Stereo:
-				for (; n < info.pos + len; n++) {
-					gain -= info.gainStep;
-					if (gain < 0) { gain = 0; }
-					mainSynther->leftChannelSamples[n - info.pos] += samples[n] * gain;
-					mainSynther->rightChannelSamples[n - info.pos] += samples[frameSampleCount + n] * gain;
-				}
-				break;
-
-			case ChannelOutputMode::Mono:
-				for (; n < info.pos + len; n++) {
-					gain -= info.gainStep;
-					if (gain < 0) { gain = 0; }
-					mainSynther->leftChannelSamples[n - info.pos] += samples[n] * gain;
-				}
-				break;
-			}
-
-
-			if (gain <= 0 || len == 0)
-			{
-				fallSamplesPool->Push(samples);
-				it = fallSamples.erase(it);
-			}
-			else
-			{
-				info.gain = gain;
-				info.pos = n + len;
-				it++;
-			}
-		}
-	}
-
-	//所有从合成器完成了数据采样，把从合成器采样数据合并到主合成器中
-	//此时仅合成从合成器中的buffer，当合成所有从buffer后，主合成器再次开启缓存
-	void Synther::CacheSynthSlavesBuffer()
-	{
-		int n = 0;
-		double s;
-
-		SetCurtCachePlaySec(0);
-		for (int i = 0; i < slaveSynthers.size(); i++)
-		{
-			s = slaveSynthers[i]->GetPlaySec();
-			if (s > curtCachePlaySec)
-				SetCurtCachePlaySec(s);
-
-			slaveSynthers[i]->CacheReadFallSamples(this);
-			slaveSynthers[i]->CacheSynthToMain(this);
-			if (slaveSynthers[i]->cacheGain == 0)
-				n++;
-		}
-
-		if (n == slaveSynthers.size())
-			isEnableCache = true;
-	}
-
-
-	void Synther::CacheSynthToMain(Synther* mainSynther)
-	{
-		if (maxCacheSize > 0 && !isStepPlayMode)
-		{
-			cacheGain -= 0.1;
-			if (cacheGain < 0) {
-				cacheGain = 0;
-				state = CacheState::LeaveStep;
-			}
-		}
-
-		switch (tau->channelOutputMode)
-		{
-		case ChannelOutputMode::Stereo:
-			for (int n = 0; n < frameSampleCount; n++) {
-				mainSynther->leftChannelSamples[n] += leftChannelSamples[n] * cacheGain;
-				mainSynther->rightChannelSamples[n] += rightChannelSamples[n] * cacheGain;
-			}
-			break;
-
-		case ChannelOutputMode::Mono:
-			for (int n = 0; n < frameSampleCount; n++) {
-				mainSynther->leftChannelSamples[n] += leftChannelSamples[n] * cacheGain;
-			}
-			break;
-		}
-	}
-
-
 	//设置当前缓存播放时间
 	void Synther::SetCurtCachePlaySec(double sec)
 	{
 		curtCachePlaySec = sec;
-		if (tau->GetMainMidiSynther() == this &&
-			maxCacheSize > 0 && isEnableCache)
+		if (maxCacheSize > 0 && isEnableCache && tau->editor)
 			tau->editor->curtPlaySec = curtCachePlaySec;
 	}
 
-	//设置缓存状态
+	//设置缓存的播放状态
 	void Synther::SetCachePlayState(EditorState s)
 	{
 		cachePlayState = s;
-		if (tau->GetMainMidiSynther() == this &&
-			maxCacheSize > 0 && isEnableCache)
+		if (maxCacheSize > 0 && isEnableCache && tau->editor)
 			tau->editor->playState = cachePlayState;
+	}
+
+
+	//设置缓存的缓存状态
+	void Synther::SetCacheState(CacheState cs)
+	{
+		cacheState = cs;
+		if (maxCacheSize > 0 && isEnableCache && tau->editor)
+			tau->editor->cacheState = cs;
 	}
 
 	void Synther::ShowCacheInfo()
 	{
-		if (!isMainSynther)
-			return;
-
-		if (slaveSynthers.size() == 0 || slaveSynthers[0]->cacheBuffer == nullptr) {
+		if (cacheBuffer == nullptr) {
 			PostTask(_ShowCacheInfoTask, this, 100);
 			return;
 		}
 
-		printf("Cache Size:%d  byte\n", (int)(slaveSynthers[0]->cacheBuffer->GetNeedReadSize()));
+		printf("Cache Size:%d  byte\n", (int)(cacheBuffer->GetNeedReadSize()));
 		printf("Play Time:%.2f sec\n", (float)curtCachePlaySec);
 
 		PostTask(_ShowCacheInfoTask, this, 100);

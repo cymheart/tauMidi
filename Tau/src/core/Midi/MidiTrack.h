@@ -34,7 +34,8 @@ namespace tau
 		//添加midi事件
 		void AppendMidiEvents(LinkedList<MidiEvent*>& midiEvents);
 
-
+		//设置轨道中所midi事件的trackidx
+		void SetAllMidiEventTrackIdx(int trackIdx);
 
 		//寻找默认乐器改变事件
 		void FindDefaultProgramChangeEvent();

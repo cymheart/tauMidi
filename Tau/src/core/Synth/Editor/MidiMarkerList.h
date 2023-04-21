@@ -21,6 +21,11 @@ namespace tau
 
 		void Copy(MidiMarkerList& cpyMidiMarkerList);
 
+		vector<MidiMarker*>& GetMidiMarkers()
+		{
+			return midiMarkers;
+		}
+
 		// 设置一个四分音符的tick数
 		void SetTickForQuarterNote(uint32_t tick)
 		{
@@ -37,7 +42,6 @@ namespace tau
 		void AppendMidiMarker(MidiMarker* midiMarker);
 		void AppendFromMidiEvents(LinkedList<MidiEvent*>& midiEvents);
 
-
 	private:
 
 		//获取当前速度
@@ -45,14 +49,15 @@ namespace tau
 		//sec >= 0 时使用sec判断
 		Tempo* GetTempo(int tick, double sec, int startIdx = 0);
 
-		//计算速度
-		void ComputeTempo();
+		//计算速度和起始时间
+		void ComputeTempoAndStartSec();
 		static bool MidiMarkerTickCompare(MidiMarker* a, MidiMarker* b);
 
 	private:
 		vector<MidiMarker*> midiMarkers;
 		int lastGetTempoIdx = 0;
 
+		// 一个四分音符的tick数
 		uint32_t tickForQuarterNote;
 
 		//默认速度

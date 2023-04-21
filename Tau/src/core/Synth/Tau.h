@@ -5,15 +5,18 @@
 #include"Midi/MidiTypes.h"
 #include <Audio/Audio.h>
 #include"Editor/EditorTypes.h"
+#include"scutils/Semaphore.h"
 #include"FX/FxTypes.h"
+
 using namespace tauFX;
+
 
 namespace tau
 {
 
 	/*
 	* Tau是一个soundfont合成器
-	* by cymheart, 2020--2021.
+	* by cymheart, 2020--2023.
 	*/
 	class DLL_CLASS Tau
 	{
@@ -49,12 +52,6 @@ namespace tau
 		{
 			return editor;
 		}
-
-		//获取主MidiEditor
-		MidiEditor* GetMainMidiEditor();
-
-		//获取主MidiSynther
-		Synther* GetMainMidiSynther();
 
 		//设置是否使用多线程
 		//使用多线程渲染处理声音
@@ -92,23 +89,9 @@ namespace tau
 			sampleStreamCacheSec = sec;
 		}
 
-		//设置每个合成器中最大轨道数量
-		inline void SetPerSyntherLimitTrackCount(int count)
-		{
-			if (isOpened)
-				return;
+		//设置初始化开始播放时间点
+		void SetInitStartPlaySec(double sec);
 
-			perSyntherLimitTrackCount = count;
-		}
-
-		//设置最大合成器数量(默认值:12)
-		inline void SetLimitSyntherCount(int count)
-		{
-			if (isOpened)
-				return;
-
-			limitSyntherCount = count;
-		}
 
 		//设置渲染品质
 		inline void SetRenderQuality(RenderQuality quality)
@@ -252,20 +235,14 @@ namespace tau
 			return useRegionInnerChorusEffect;
 		}
 
-		//生成MidiEditorSynther
-		MidiEditorSynther* CreateMidiEditorSynther();
 
 		//增加效果器
 		void AddEffect(TauEffect* effect);
 
 		// 按下按键
-		void OnKey(int key, float velocity, VirInstrument* virInst, int delayMS = 0);
+		void OnKey(int key, float velocity, VirInstrument* virInst, int id = 0);
 		// 释放按键 
-		void OffKey(int key, float velocity, VirInstrument* virInst, int delayMS = 0);
-		// 取消按键 
-		void CancelDownKey(int key, float velocity, VirInstrument* virInst, int delayMS = 0);
-		// 取消释放按键 
-		void CancelOffKey(int key, float velocity, VirInstrument* virInst, int delayMS = 0);
+		void OffKey(int key, float velocity, VirInstrument* virInst, int id = 0);
 
 		//添加替换乐器
 		void AppendReplaceInstrument(
@@ -294,8 +271,32 @@ namespace tau
 		//Load前面不能有任何与之相冲突的调用（play(), pasue(),stop()等,因为这些函数出于效率考虑没有加互斥锁）
 		void Load(string& midiFilePath, bool isWaitLoadCompleted = true);
 
+		//设置简单模式下, 白色按键的数量
+		void SetSimpleModePlayWhiteKeyCount(int count);
+
+		//生成简单模式音符轨道
+		void CreateSimpleModeTrack();
+
 		//新建轨道
 		void NewTracks(int count);
+
+		//是否等待中
+		bool IsWait();
+
+		//获取播放模式
+		EditorPlayMode GetPlayMode();
+
+		// 按下按键
+		void OnKey(int key, float velocity, int trackIdx, int id = 0);
+
+		// 释放按键 
+		void OffKey(int key, float velocity, int trackIdx, int id = 0);
+
+		// 释放指定轨道的所有按键 
+		void OffAllKeys(int trackIdx);
+
+		// 释放所有按键 
+		void OffAllKeys();
 
 		//播放
 		void Play();
@@ -315,6 +316,9 @@ namespace tau
 		//进入到等待播放模式
 		void EnterWaitPlayMode();
 
+		//进入到静音模式
+		void EnterMuteMode();
+
 		//离开播放模式
 		void LeavePlayMode();
 
@@ -325,6 +329,15 @@ namespace tau
 		void Wait();
 		//继续，相对于等待命令
 		void Continue();
+
+		//设置编辑器排除需要等待的按键
+		void EditorSetExcludeNeedWaitKeys(int* excludeKeys, int size);
+
+		//设置编辑器排除需要等待的按键
+		void EditorSetExcludeNeedWaitKey(int key);
+
+		//设置编辑器包含需要等待的按键
+		void  EditorSetIncludeNeedWaitKey(int key);
 
 		//发送编辑器按键信号
 		void EditorOnKeySignal(int key);
@@ -337,14 +350,20 @@ namespace tau
 		// 指定播放的起始时间点
 		void Goto(float sec);
 
-		//获取midi状态
-		EditorState GetEditorState();
+		//获取midi播放状态
+		EditorState GetPlayState();
 
 		//获取当前播放时间点
 		double GetPlaySec();
 
 		//获取结束时间点
 		double GetEndSec();
+
+		//获取当前bpm
+		float GetCurtBPM();
+
+		//根据指定tick数秒数获取时间点
+		double GetTickSec(uint32_t tick);
 
 		// 设定播放速度
 		void SetSpeed(float speed);
@@ -419,12 +438,12 @@ namespace tau
 		/// <summary>
 		/// 打开乐器
 		/// </summary>
-		void OnVirInstrument(VirInstrument* virInst, bool isFade = true);
+		void OpenVirInstrument(VirInstrument* virInst, bool isFade = true);
 
 		/// <summary>
 		/// 关闭虚拟乐器
 		/// </summary>
-		void OffVirInstrument(VirInstrument* virInst, bool isFade = true);
+		void CloseVirInstrument(VirInstrument* virInst, bool isFade = true);
 
 		/// <summary>
 		/// 获取虚拟乐器列表的备份
@@ -538,12 +557,6 @@ namespace tau
 		//按键速率最大限制
 		float limitOnKeySpeed = 600;
 
-		//每个合成器中最大轨道数量
-		int perSyntherLimitTrackCount = 20;
-
-		//最大合成器数量
-		int limitSyntherCount = 12;
-
 		//是否开启乐器效果器
 		bool isEnableVirInstEffects = true;
 
@@ -587,18 +600,13 @@ namespace tau
 		unordered_map<uint32_t, uint32_t>* presetBankReplaceMap = nullptr;
 
 
+		mutex lockMutex;
+
 		Editor* editor;
 
-
-		RealtimeSynther* mainSynther = nullptr;
-		RealtimeSynther* synthers[500] = { nullptr };
-		int syntherCount = 1;
-
-		MidiEditorSynther* midiEditorSynthers[500] = { nullptr };
-		int midiEditorSyntherCount = 1;
+		Synther* mainSynther = nullptr;
 
 
-		friend class MidiEditorSynther;
 		friend class VirInstrument;
 		friend class MidiEditor;
 		friend class RegionSounderThread;

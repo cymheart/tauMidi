@@ -27,6 +27,8 @@ namespace tauFX
 			this->synther = synther;
 		}
 
+		virtual void Clear() {}
+
 		//设置是否开启效果
 		void SetEnable(bool isEnable)
 		{

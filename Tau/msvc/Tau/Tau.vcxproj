@@ -52,6 +52,8 @@
     <ClCompile Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.cpp" />
     <ClCompile Include="..\..\src\core\SoundFormat\Wav\WavReader.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Channel.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Editor\MeasureInfo.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Editor\SimpleModeTrack.cpp" />
     <ClCompile Include="..\..\src\core\Synth\PhysicsPiano.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\Editor.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\InstFragment.cpp" />
@@ -76,14 +78,12 @@
     <ClCompile Include="..\..\src\core\Synth\RegionSounderThread.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Sample.cpp" />
     <ClCompile Include="..\..\src\core\Synth\SoundFont.cpp" />
-    <ClCompile Include="..\..\src\core\Synth\Synther\MidiEditorSynther.cpp" />
-    <ClCompile Include="..\..\src\core\Synth\Synther\MidiEditorSyntherTask.cpp" />
-    <ClCompile Include="..\..\src\core\Synth\Synther\RealtimeSynther.cpp" />
-    <ClCompile Include="..\..\src\core\Synth\Synther\RealtimeSyntherTask.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Synther\SyntherMidiEditor.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\Synther\SyntherRealtime.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Synther\SynthCache.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Synther\Synther.cpp" />
-    <ClCompile Include="..\..\src\core\Synth\Synther\SyntherTask.cpp" />
     <ClCompile Include="..\..\src\core\Synth\TauEditor.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\TauTypes.cpp" />
     <ClCompile Include="..\..\src\core\Synth\UnitTransform.cpp" />
     <ClCompile Include="..\..\src\core\Synth\SyntherEvent.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Tau.cpp" />
@@ -225,6 +225,7 @@
     <ClInclude Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.h" />
     <ClInclude Include="..\..\src\core\SoundFormat\Wav\WavReader.h" />
     <ClInclude Include="..\..\src\core\Synth\Channel.h" />
+    <ClInclude Include="..\..\src\core\Synth\Editor\MeasureInfo.h" />
     <ClInclude Include="..\..\src\core\Synth\PhysicsPiano.h" />
     <ClInclude Include="..\..\src\core\Synth\Editor\Editor.h" />
     <ClInclude Include="..\..\src\core\Synth\Editor\EditorTypes.h" />
@@ -246,8 +247,6 @@
     <ClInclude Include="..\..\src\core\Synth\SampleGenerator.h" />
     <ClInclude Include="..\..\src\core\Synth\SoundFont.h" />
     <ClInclude Include="..\..\src\core\Synth\SyntherEvent.h" />
-    <ClInclude Include="..\..\src\core\Synth\Synther\MidiEditorSynther.h" />
-    <ClInclude Include="..\..\src\core\Synth\Synther\RealtimeSynther.h" />
     <ClInclude Include="..\..\src\core\Synth\Synther\Synther.h" />
     <ClInclude Include="..\..\src\core\Synth\Tau.h" />
     <ClInclude Include="..\..\src\core\Synth\TauPool.h" />
@@ -372,8 +371,10 @@
     <ClInclude Include="..\..\src\thrids\scutils\MathUtils.h" />
     <ClInclude Include="..\..\src\thrids\scutils\ObjectPool.h" />
     <ClInclude Include="..\..\src\thrids\scutils\RingBuffer.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\rlcg.h" />
     <ClInclude Include="..\..\src\thrids\scutils\Semaphore.h" />
     <ClInclude Include="..\..\src\thrids\scutils\SingletonDefine.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\CodeConvert.h" />
     <ClInclude Include="..\..\src\thrids\scutils\UniqueID.h" />
     <ClInclude Include="..\..\src\thrids\scutils\Utils.h" />
     <ClInclude Include="..\..\src\thrids\scutils\Vec2.h" />
@@ -518,7 +519,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>..\..\src\core;..\..\src\thrids;..\..\src\thrids\DaisySP</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)Obj\tmp\tmp\%(RelativeDir)</ObjectFileName>
-      <DisableSpecificWarnings>26812;26495;4244;4305;4267;26451</DisableSpecificWarnings>
+      <DisableSpecificWarnings>26812;26495;4244;4305;4267;26451;4251</DisableSpecificWarnings>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
     </ClCompile>
@@ -541,7 +542,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>..\..\src\core;..\..\src\thrids;..\..\src\thrids\DaisySP</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>26812;26495;4244;4305;4267;26451</DisableSpecificWarnings>
+      <DisableSpecificWarnings>26812;26495;4244;4305;4267;26451;4251</DisableSpecificWarnings>
       <ObjectFileName>$(IntDir)Obj\tmp\tmp\%(RelativeDir)</ObjectFileName>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ModuleOutputFile>$(IntDir)</ModuleOutputFile>

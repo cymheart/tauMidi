@@ -8,6 +8,7 @@
 #include"scutils/Semaphore.h"
 using namespace scutils;
 
+
 namespace tau
 {
 
@@ -15,21 +16,46 @@ namespace tau
 	/// 编辑类
 	/// by cymheart, 2020--2021.
 	/// </summary> 
-	class Editor
+	class DLL_CLASS Editor
 	{
-
-
 	public:
 		Editor(Tau* tau);
 		~Editor();
 
-		inline const vector<Track*>& GetTracks()
-		{
-			return tracks;
-		}
+		//设置简单模式下, 白色按键的数量
+		void SetSimpleModePlayWhiteKeyCount(int count);
+		//获取简单模式下, 白色按键的数量
+		int GetSimpleModePlayWhiteKeyCount();
+
+		//被合并音符的最大时长
+		void SetMergeSimpleSrcNoteLimitSec(float sec);
+		//合并到目标音符的最大时长
+		void SetMergeSimpleDestNoteLimitSec(float sec);
+		//获取被合并音符的最大时长
+		float GetMergeSimpleSrcNoteLimitSec();
+		//获取合并到目标音符的最大时长
+		float GetMergeSimpleDestNoteLimitSec();
+		//生成简单模式音符轨道
+		void CreateSimpleModeTrack();
+		//获取简单模式轨道音符
+		LinkedList<MidiEvent*>& GetSimpleModeTrackNotes();
 
 		//是否读取完成
 		bool IsLoadCompleted();
+
+		void SetMidiEditor(MidiEditor* midiEditor)
+		{
+			this->midiEditor = midiEditor;
+		}
+
+		// 按下按键
+		void OnKey(int key, float velocity, int trackIdx, int id = 0);
+		// 释放按键 
+		void OffKey(int key, float velocity, int trackIdx, int id = 0);
+		// 释放指定轨道的所有按键 
+		void OffAllKeys(int trackIdx);
+		// 释放所有按键 
+		void OffAllKeys();
 
 		//载入
 		//在非阻塞模式isWaitLoadCompleted = false下，
@@ -54,6 +80,9 @@ namespace tau
 		//进入到等待播放模式
 		void EnterWaitPlayMode();
 
+		//进入到静音模式
+		void EnterMuteMode();
+
 		//离开当前播放模式
 		void LeavePlayMode();
 
@@ -64,6 +93,9 @@ namespace tau
 
 		//按键信号
 		void OnKeySignal(int key);
+		//所有等待按键信号
+		void OnWaitKeysSignal();
+
 		//松开按键信号
 		void OffKeySignal(int key);
 
@@ -74,10 +106,47 @@ namespace tau
 		void Goto(double sec);
 
 		//获取状态
-		EditorState GetState();
+		EditorState GetPlayState();
 
-		//获取主MidiEditor
-		MidiEditor* GetMainMidiEditor();
+		//获取缓存状态
+		CacheState GetCacheState();
+
+		//获取初始化开始播放时间点
+		double GetInitStartPlaySec()
+		{
+			return initStartPlaySec;
+		}
+
+		//设置初始化开始播放时间点
+		void SetInitStartPlaySec(double sec)
+		{
+			initStartPlaySec = sec;
+		}
+
+		//是否等待中
+		bool IsWait()
+		{
+			return isWait;
+		}
+
+		//是否有等待中的按键
+		bool HavWaitKey()
+		{
+			return needOnKeyCount > 0;
+		}
+
+		//是否是等待中的按键
+		bool IsWaitKey(int key)
+		{
+			return needOnkey[key] > 0;
+		}
+
+		//获取播放模式
+		EditorPlayMode GetPlayMode()
+		{
+			return playMode;
+		}
+
 
 		//获取当前播放时间点
 		double GetPlaySec();
@@ -88,11 +157,39 @@ namespace tau
 			return endSec;
 		}
 
+		//获取当前bpm
+		float GetCurtBPM();
+
+		//根据指定秒数获取tick数
+		uint32_t GetSecTickCount(double sec);
+
+		//根据指定tick数秒数获取时间点
+		double GetTickSec(uint32_t tick);
+
+		//设置音符发音开始时间点
+		void SetNoteSoundStartSec(double sec)
+		{
+			noteSoundStartSec = sec;
+		}
+
+		//设置音符发音结束时间点
+		void SetNoteSoundEndSec(double sec)
+		{
+			noteSoundEndSec = sec;
+		}
+
+		void SetLateNoteSec(float sec)
+		{
+			lateNoteSec = sec;
+		}
+
+
 		//获取播放速率(相对于正常播放速率1.0的倍率)
 		inline float GetSpeed()
 		{
 			return speed;
 		}
+
 
 		//判断是否全部解析了midiFile
 		inline bool IsFullParsedMidiFile()
@@ -128,6 +225,23 @@ namespace tau
 		// 启用播放指定编号通道
 		void EnableChannel(int channelIdx);
 
+		//设置排除需要等待的按键
+		void SetExcludeNeedWaitKeys(int* excludeKeys, int size);
+
+		//设置排除需要等待的按键
+		void SetExcludeNeedWaitKey(int key);
+
+		//设置包含需要等待的按键
+		void SetIncludeNeedWaitKey(int key);
+
+		int GetCurtNeedOnKeyTrackIdx();
+
+
+		float GetCurtNeedOnKeyVel()
+		{
+			return curtNeedOnKeyVel;
+		}
+
 		//设置轨道事件演奏方式
 		void SetTrackPlayType(int trackIdx, MidiEventPlayType playType);
 
@@ -153,12 +267,25 @@ namespace tau
 		//增加标记，来自于midi事件列表中
 		void AddMarkers(LinkedList<MidiEvent*>& midiEvents);
 
+		MidiMarkerList* GetMidiMarkerList()
+		{
+			return &midiMarkerList;
+		}
+
+		//获取小节信息
+		MeasureInfo* GetMeasureInfo()
+		{
+			return measureInfo;
+		}
+
 		//新建轨道
 		void NewTracks(int count);
 
 		//删除轨道
 		void DeleteTracks(vector<Track*>& tracks);
 
+		/**获取轨道乐器*/
+		vector<VirInstrument*>& GetTrackInst(int idx);
 
 		void SetSelectInstFragMode(SelectInstFragMode mode)
 		{
@@ -195,8 +322,9 @@ namespace tau
 		//获取采样流的频谱
 		int GetSampleStreamFreqSpectrums(int channel, double* outLeft, double* outRight);
 
-		//如果启用了缓存播放，将重新缓存
-		void ReCache();
+
+		vector<Track*>& GetTracks();
+
 
 	public:
 
@@ -205,6 +333,14 @@ namespace tau
 		EditorProcessCB releaseCallBack = nullptr;
 
 	private:
+
+
+		// 按下按键
+		void OnKey(int key, float velocity, Track* track, int id = 0);
+		// 释放按键
+		void OffKey(int key, float velocity, Track* track, int id = 0);
+
+		void ResetParams();
 
 		//载入
 		void _Load();
@@ -230,37 +366,31 @@ namespace tau
 		void MoveInstFragment(InstFragment* instFragment, float sec);
 
 		//需要按键信号
-		void NeedOnKeySignal(int key);
+		void NeedOnKeySignal(int key, float velocity, Track* track);
 
 		//需要松开按键信号
-		void NeedOffKeySignal(int key);
+		void NeedOffKeySignal(int key, float velocity, Track* track);
 
-		//删除空轨Synther
-		void DelEmptyTrackSynther();
-
-		int ResetTrackCountNewTracks(int count);
-		int _NewTracks(MidiEditorSynther* synther, int count);
-
-		//重新给每个MidiEditor设置相同的最大结束时间
-		void ComputeMidiEditorMaxSec();
 
 		//打印工程信息
 		void PrintProjectInfo();
 
-
 		static void ReadMidiFileThread(void* param);
 		void ReadMidiFile();
 
-		//获取当前时间之后的notekeys
-		void GetCurTimeLateNoteKeys(float lateSec);
+		//获取当前时间之后需要等待按键信号的notes
+		void GetNeedWaitKeySignalNote(int note, float lateSec);
 
 	private:
 
 		Tau* tau = nullptr;
-
-		// 音轨
-		vector<Track*> tracks;
+		Synther* mainSynther = nullptr;
+		MidiEditor* midiEditor;
 		MidiMarkerList midiMarkerList;
+
+
+		//初始化播放时间点
+		double initStartPlaySec = 0;
 
 		//当前播放时间
 		atomic<double> curtPlaySec;
@@ -268,14 +398,15 @@ namespace tau
 		//播放状态
 		atomic<EditorState> playState;
 
+		//缓存状态
+		atomic<CacheState> cacheState;
+
 		//结束时间点
 		double endSec = 0;
 
 		//播放速率(相对于正常播放速率1.0的倍率)
 		float speed = 1;
 
-		//计算的每个合成器中最大轨道数量
-		int computedPerSyntherLimitTrackCount = 20;
 
 		//播放模式
 		EditorPlayMode playMode = EditorPlayMode::Common;
@@ -287,12 +418,22 @@ namespace tau
 		//是否等待
 		atomic_bool isWait;
 
-		mutex waitOnKeyLock;
+
+		//排除需要等待按键信号的按键
+		atomic_bool excludeNeedWaitKey[128];
 
 		//按下的按键次数，以键号分类计数
 		int onkey[128] = { 0 };
 		//按下的按键总个数
 		int onKeyCount = 0;
+
+		//需要按下的按键所在轨道，以键号分类计数
+		deque<Track*> needOnKeyTrack[128];
+		Track* curtNeedOnKeyTrack = nullptr;
+
+		//需要按下的按键的力度，以键号分类计数
+		deque<float> needOnKeyVelocity[128];
+		float curtNeedOnKeyVel = 1;
 
 		//需要按下的按键次数，以键号分类计数
 		int needOnkey[128] = { 0 };
@@ -305,7 +446,19 @@ namespace tau
 		int needOffKeyCount = 0;
 
 		//当前时间后几秒钟是否有按键存在
-		bool lateHavKeys[128] = { 0 };
+		LateNoteInfo lateNoteInfo;
+		LateNoteInfo noteOffLateNoteInfo;
+		bool needWaitKey[128] = { false };
+
+		float lateNoteSec = 1;
+
+		//小节信息
+		MeasureInfo* measureInfo;
+
+		//音符发音开始时间点
+		double noteSoundStartSec = -1;
+		//音符发音结束时间点
+		double noteSoundEndSec = -1;
 
 
 		//
@@ -316,7 +469,9 @@ namespace tau
 		//
 		int loadMidiFileState = 0;
 
-		string loadingMidiFilePath;
+
+		string midiName;
+		string midiFilePath;
 		MidiFile* midiFile = nullptr;
 		mutex loadingMidiFilelocker;
 		Semaphore loadingMidiFileWaitSem;
@@ -327,13 +482,6 @@ namespace tau
 		//midifile是否全部解析完成
 		bool isFullParsedMidiFile = true;
 
-
-		//
-		list<InstFragmentToTrackInfo> orgList;
-		unordered_map<MidiEditorSynther*, vector<InstFragmentToTrackInfo>> dataGroup;
-		unordered_map<MidiEditorSynther*, unordered_set<Track*>> modifyTrackMap;
-		unordered_set<MidiEditorSynther*> syntherSet;
-		Semaphore waitSem;
 
 		//
 		void* userData = nullptr;

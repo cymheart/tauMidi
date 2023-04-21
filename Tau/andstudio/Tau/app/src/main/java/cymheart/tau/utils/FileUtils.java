@@ -1,6 +1,7 @@
 package cymheart.tau.utils;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.os.Build;
 
 import java.io.BufferedInputStream;
@@ -35,6 +36,17 @@ public class FileUtils
         return SingletonClassInstance.instance;
     }
 
+    /**
+     * 获取sd卡外部存储文件目录
+     该目录下的文件数据是属于外部存储卡存储当前应用的文件目录  该目录需要申请权限
+     * 对应的目录  /sdCard/Androida/data/applicaion包名/files
+     * 对于外部存储的内置TF卡，应用一旦被卸载，对应sdCard中该目录的文件将全部被清除
+     * 对于外部存储的外置TF卡，应用一旦被卸载，数据任然不会被删除
+     */
+    public String GetExtralFilePath(Context context){
+        File extralFile = context.getExternalFilesDir(null);
+        return extralFile.getAbsolutePath();
+    }
 
     /**创建文件*/
     public File CreateFile(String path) {

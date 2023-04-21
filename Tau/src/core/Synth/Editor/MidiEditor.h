@@ -12,8 +12,6 @@ using namespace task;
 namespace tau
 {
 
-
-
 	/// <summary>
 	/// Midi编辑类
 	/// by cymheart, 2020--2021.
@@ -21,14 +19,8 @@ namespace tau
 	class MidiEditor
 	{
 	public:
-		MidiEditor(MidiEditorSynther* midiSynther);
+		MidiEditor(Synther* synther);
 		~MidiEditor();
-
-		MidiEditorSynther* GetSynther()
-		{
-			return midiSynther;
-		}
-
 
 		inline EditorState GetState()
 		{
@@ -133,18 +125,20 @@ namespace tau
 		void ComputeEndSec();
 
 		/// <summary>
-		/// 获取当前时间之后的notekeys
+		/// 获取当前时间之后的需要等待按键信号的notes
 		/// </summary>
 		/// <param name="lateSec">当前时间之后的秒数</param>
-		void GetCurTimeLateNoteKeys(double lateSec);
+		void GetCurTimeLateNeedWaitKeySignalNote(int note, double lateSec);
 
 
 		//当前时间curtPlaySec往前处理一个sec的时间长度的所有midi事件
 		void Process(double sec, bool isStepOp = false);
 
 		void DisableTrack(Track* track);
+		void DisableTrack(int trackIdx);
 		void DisableAllTrack();
 		void EnableTrack(Track* track);
+		void EnableTrack(int trackIdx);
 		void EnableAllTrack();
 		void DisableChannel(int channelIdx);
 		void EnableChannel(int channelIdx);
@@ -154,11 +148,31 @@ namespace tau
 
 		//设置轨道乐器
 		void SetVirInstrument(Track* track, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
+		//设置轨道乐器
+		void SetVirInstrument(int trackIdx, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
 		//设置打击乐器
 		void SetBeatVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
+
 	private:
+
+		//设置简单模式下, 白色按键的数量
+		void SetSimpleModePlayWhiteKeyCount(int count)
+		{
+			simpleModePlayWhiteKeyCount = count;
+		}
+
+		//生成简单模式音符轨道
+		void CreateSimpleModeTrack();
+
+		LinkedListNode<MidiEvent*>* FindFitNoteOffEventNode(LinkedListNode<MidiEvent*>* startNode);
+
+		void CopyChildNoteOnEv(
+			NoteOnEvent* newNoteEv, NoteOffEvent* newNoteOffEv,
+			NoteOnEvent* ev, int note);
+
+		static bool NoteCmp(MidiEvent* a, MidiEvent* b);
 
 		//当前时间curtPlaySec往前处理一个sec的时间长度的所有midi事件
 		void ProcessCore(double sec, bool isDirectGoto = false);
@@ -168,10 +182,17 @@ namespace tau
 		//处理轨道事件
 		void ProcessEvent(MidiEvent* midEv, Track* track, bool isDirectGoto);
 
+		void ProcessSimpleModeTrack(Track* track, bool isDirectGoto);
+
+
 		//是否需要等待按键信号
 		bool IsNeedWaitKeySignal(MidiEvent* midEv, Track* track);
 
-		void GetNoteKeys(Track* track, double curtSec);
+		//是否为手指弹奏的音符
+		bool IsPointerPlayNote(MidiEvent* ev, Track* track);
+
+		void GetNeedWaitKeySignalNote(Track* track, int note, double curtSec);
+		void GetNeedWaitKeySignalNoteFromSimpleTrack(int note, double lateSec);
 
 		//设置当前播放时间
 		void SetCurtPlaySec(double sec);
@@ -183,21 +204,33 @@ namespace tau
 
 		Tau* tau = nullptr;
 		Editor* editor = nullptr;
-		MidiEditorSynther* midiSynther = nullptr;
-		MidiMarkerList midiMarkerList;
+		Synther* midiSynther = nullptr;
+		MidiMarkerList* midiMarkerList;
 
-		EditorState state = EditorState::STOP;
+		//简单模式轨道音符
+		LinkedList<MidiEvent*> simpleModeTrackNotes;
+		Track* simpleModeTrack = nullptr;
+		//简单模式轨道音符偏移
+		LinkedListNode<MidiEvent*>* simpleModeTrackNotesOffset = nullptr;
+		//简单模式下, 白色按键的数量
+		int simpleModePlayWhiteKeyCount = 7;
+		//被合并音符的最大时长
+		float mergeSimpleSrcNoteLimitSec = 0.25f;
+		//合并到目标音符的最大时长
+		float mergeSimpleDestNoteLimitSec = 0.4f;
 
-
-		// 轨道
-		vector<Track*> trackList;
-		int trackCount = 0;
-
-		//轨道缓存
-		vector<Track*> tempTracks;
+		//按0~128key分类的noteOnEvents
+		vector<NoteOnEvent*> classifyNoteOnEvents[128];
 
 		//
-		vector<int> tempNoteKeys;
+		EditorState state = EditorState::STOP;
+
+		// 轨道
+		vector<Track*> tracks;
+		int trackCount = 0;
+
+		LateNoteInfo lateNoteInfo;
+		LateNoteInfo noteOffLateNoteInfo;
 
 		//结束时间点
 		double endSec = 0;

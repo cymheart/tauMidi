@@ -568,6 +568,8 @@ namespace tau
 					case SyntherXmlUnitType::UnitType_SoundFont:
 						val /= 100.0f;
 						break;
+				    default:
+						break;
 					}
 					genList.SetAmount(GeneratorType::KeynumToModEnvDecay, val);
 				}
@@ -638,7 +640,8 @@ namespace tau
 					case SyntherXmlUnitType::UnitType_SoundFont:
 						val /= 100.0f;
 						break;
-
+					default:
+						break;
 					}
 
 					genList.SetAmount(GeneratorType::KeynumToVolEnvHold, val);
@@ -651,7 +654,8 @@ namespace tau
 					case SyntherXmlUnitType::UnitType_SoundFont:
 						val /= 100.0f;
 						break;
-
+				    default:
+						break;
 					}
 
 					genList.SetAmount(GeneratorType::KeynumToVolEnvDecay, val);

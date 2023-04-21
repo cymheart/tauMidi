@@ -1,6 +1,8 @@
 package cymheart.tau.editor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,7 +11,6 @@ import cymheart.tau.midi.NoteOnEvent;
 
 public class VisualMidiEvents
 {
-
     protected List<List<NoteOnEvent>> noteOnEvents = new ArrayList<>();
     public List<List<NoteOnEvent>> GetAllKeyEvents()
     {
@@ -38,7 +39,9 @@ public class VisualMidiEvents
         }
     }
 
+    /**按按键顺序排列的按键*/
     protected int[] usedNotes = new int[128];
+    /**按按键顺序排列按键*/
     public int[] GetUsedNotes()
     {
         return usedNotes;
@@ -49,13 +52,18 @@ public class VisualMidiEvents
         return usedNoteCount;
     }
 
+    /**按按键顺序排列按键*/
+    public void SortUsedNotes()
+    {
+        Arrays.sort(usedNotes, 0, usedNoteCount);
+    }
 
     public VisualMidiEvents()
     {
         for(int i=0; i<128; i++) {
             noteUsedMark[i] = false;
             noteOnEvents.add(new ArrayList<>());
-            noteOnTrackGroups.add(new int[50]);
+            noteOnTrackGroups.add(new int[200]);
         }
 
     }

@@ -1,11 +1,41 @@
 ﻿#include"Tau.h"
 #include"Midi/MidiFile.h"
 #include"MidiTrackRecord.h"
-#include"Synther/MidiEditorSynther.h"
+#include"Synther/Synther.h"
 #include"Editor/Editor.h"
 
 namespace tau
 {
+
+	//设置初始化开始播放时间点
+	void Tau::SetInitStartPlaySec(double sec)
+	{
+		editor->SetInitStartPlaySec(sec);
+	}
+
+	// 按下按键
+	void Tau::OnKey(int key, float velocity, int trackIdx, int id)
+	{
+		editor->OnKey(key, velocity, trackIdx, id);
+	}
+
+	// 释放按键 
+	void Tau::OffKey(int key, float velocity, int trackIdx, int id)
+	{
+		editor->OffKey(key, velocity, trackIdx, id);
+	}
+
+	// 释放指定轨道的所有按键 
+	void Tau::OffAllKeys(int trackIdx)
+	{
+		editor->OffAllKeys(trackIdx);
+	}
+
+	// 释放所有按键 
+	void Tau::OffAllKeys()
+	{
+		editor->OffAllKeys();
+	}
 
 	//判断是否载入完成
 	bool Tau::IsLoadCompleted()
@@ -27,10 +57,34 @@ namespace tau
 		editor->Load(midiFilePath, isWaitLoadCompleted);
 	}
 
+	//设置简单模式下, 白色按键的数量
+	void Tau::SetSimpleModePlayWhiteKeyCount(int count)
+	{
+		editor->SetSimpleModePlayWhiteKeyCount(count);
+	}
+
+	//生成简单模式音符轨道
+	void Tau::CreateSimpleModeTrack()
+	{
+		editor->CreateSimpleModeTrack();
+	}
+
 	//新建轨道
 	void Tau::NewTracks(int count)
 	{
 		editor->NewTracks(count);
+	}
+
+	//是否等待中
+	bool Tau::IsWait()
+	{
+		return editor->IsWait();
+	}
+
+	//获取播放模式
+	EditorPlayMode Tau::GetPlayMode()
+	{
+		return editor->GetPlayMode();
 	}
 
 	//播放
@@ -71,6 +125,12 @@ namespace tau
 		editor->EnterWaitPlayMode();
 	}
 
+	//进入到静音模式
+	void Tau::EnterMuteMode()
+	{
+		editor->EnterMuteMode();
+	}
+
 	//离开播放模式
 	void Tau::LeavePlayMode()
 	{
@@ -92,6 +152,24 @@ namespace tau
 	void Tau::Continue()
 	{
 		editor->Continue();
+	}
+
+	//设置编辑器排除需要等待的按键
+	void Tau::EditorSetExcludeNeedWaitKeys(int* excludeKeys, int size)
+	{
+		editor->SetExcludeNeedWaitKeys(excludeKeys, size);
+	}
+
+	//设置编辑器排除需要等待的按键
+	void Tau::EditorSetExcludeNeedWaitKey(int key)
+	{
+		editor->SetExcludeNeedWaitKey(key);
+	}
+
+	//设置编辑器包含需要等待的按键
+	void Tau::EditorSetIncludeNeedWaitKey(int key)
+	{
+		editor->SetIncludeNeedWaitKey(key);
 	}
 
 	//发送编辑器按键信号
@@ -118,10 +196,10 @@ namespace tau
 		editor->Goto(sec);
 	}
 
-	//获取midi状态
-	EditorState Tau::GetEditorState()
+	//获取midi播放状态
+	EditorState Tau::GetPlayState()
 	{
-		return editor->GetState();
+		return editor->GetPlayState();
 	}
 
 	//获取当前播放时间点
@@ -135,6 +213,19 @@ namespace tau
 	{
 		return editor->GetEndSec();
 	}
+
+	//获取当前bpm
+	float Tau::GetCurtBPM()
+	{
+		return editor->GetCurtBPM();
+	}
+
+	//根据指定tick数秒数获取时间点
+	double Tau::GetTickSec(uint32_t tick)
+	{
+		return editor->GetTickSec(tick);
+	}
+
 
 	// 设定播放速度
 	void Tau::SetSpeed(float speed)
@@ -249,8 +340,8 @@ namespace tau
 		if (!isOpened)
 			return;
 
-		for (int i = 0; i < syntherCount; i++)
-			synthers[i]->RecordMidiTask();
+		TauLock(this);
+		mainSynther->RecordMidi();
 	}
 
 	/// <summary>
@@ -264,8 +355,8 @@ namespace tau
 		if (!isOpened)
 			return;
 
-		for (int i = 0; i < syntherCount; i++)
-			synthers[i]->RecordMidiTask(virInst);
+		TauLock(this);
+		mainSynther->RecordMidi(virInst);
 	}
 
 	/// <summary>
@@ -276,9 +367,8 @@ namespace tau
 		if (!isOpened)
 			return;
 
-		for (int i = 0; i < syntherCount; i++)
-			synthers[i]->StopRecordMidiTask();
-
+		TauLock(this);
+		mainSynther->StopRecordMidi();
 	}
 
 	/// <summary>
@@ -290,8 +380,8 @@ namespace tau
 		if (!isOpened)
 			return;
 
-		for (int i = 0; i < syntherCount; i++)
-			synthers[i]->StopRecordMidiTask(virInst);
+		TauLock(this);
+		mainSynther->StopRecordMidi(virInst);
 	}
 
 
@@ -321,20 +411,18 @@ namespace tau
 		midiFile->AddMidiTrack(globalTrack);
 
 		//
-		vector<MidiTrack*>* midiTracks = nullptr;
-		for (int i = 0; i < syntherCount; i++)
+		vector<MidiTrack*>* midiTracks;
+		TauLock(this);
+		midiTracks = mainSynther->TakeRecordMidiTracks(virInsts, size, recordMidiTickForQuarterNote, &recordTempos);
+		if (midiTracks != nullptr)
 		{
-			midiTracks = synthers[i]->TakeRecordMidiTracksTask(virInsts, size, recordMidiTickForQuarterNote, &recordTempos);
-			if (midiTracks != nullptr)
+			for (int j = 0; j < midiTracks->size(); j++)
 			{
-				for (int j = 0; j < midiTracks->size(); j++)
-				{
-					(*midiTracks)[j]->SetMidiEventsChannel(j % 16);
-					midiFile->AddMidiTrack((*midiTracks)[j]);
-				}
-
-				DEL(midiTracks);
+				(*midiTracks)[j]->SetMidiEventsChannel(j % 16);
+				midiFile->AddMidiTrack((*midiTracks)[j]);
 			}
+
+			DEL(midiTracks);
 		}
 
 		return midiFile;

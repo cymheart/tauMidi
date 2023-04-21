@@ -21,6 +21,17 @@ namespace tauFX
 		effects.push_back(effect);
 	}
 
+	void EffectList::Clear()
+	{
+		for (int i = 0; i < effects.size(); i++)
+		{
+			if (!effects[i]->IsEnable())
+				continue;
+
+			effects[i]->Clear();
+		}
+	}
+
 	//效果处理
 	void EffectList::Process()
 	{

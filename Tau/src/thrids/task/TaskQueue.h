@@ -14,6 +14,7 @@ namespace task
 
 		}
 
+
 		void SetReadTaskCallback(ProcessTaskCallBack cb)
 		{
 			ReadTaskCallback = cb;
@@ -29,6 +30,8 @@ namespace task
 			TraversalCallback = cb;
 		}
 
+
+		virtual void Clear() = 0;
 
 		virtual int64_t GetWaitTimeMS(int64_t curTimeMS) = 0;
 

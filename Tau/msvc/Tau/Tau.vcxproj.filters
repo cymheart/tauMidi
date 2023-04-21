@@ -255,16 +255,7 @@
     <ClCompile Include="..\..\src\core\Audio\AudioSDL\Audio_SDL.cpp">
       <Filter>core\Audio\AudioSDL</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Synth\Synther\RealtimeSynther.cpp">
-      <Filter>core\Synth\Synther</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\Synth\Synther\RealtimeSyntherTask.cpp">
-      <Filter>core\Synth\Synther</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\Synth\Synther\Synther.cpp">
-      <Filter>core\Synth\Synther</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\Synth\Synther\SyntherTask.cpp">
       <Filter>core\Synth\Synther</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\Synth\SyntherEvent.cpp">
@@ -597,12 +588,6 @@
     <ClCompile Include="..\..\src\core\Synth\Editor\Track.cpp">
       <Filter>core\Synth\Editor</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Synth\Synther\MidiEditorSynther.cpp">
-      <Filter>core\Synth\Synther</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\Synth\Synther\MidiEditorSyntherTask.cpp">
-      <Filter>core\Synth\Synther</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\Synth\TauEditor.cpp">
       <Filter>core\Synth</Filter>
     </ClCompile>
@@ -655,6 +640,21 @@
       <Filter>thrids\OteyPiano</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\Synth\PhysicsPiano.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Editor\MeasureInfo.cpp">
+      <Filter>core\Synth\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Synther\SyntherRealtime.cpp">
+      <Filter>core\Synth\Synther</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Synther\SyntherMidiEditor.cpp">
+      <Filter>core\Synth\Synther</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Editor\SimpleModeTrack.cpp">
+      <Filter>core\Synth\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\TauTypes.cpp">
       <Filter>core\Synth</Filter>
     </ClCompile>
   </ItemGroup>
@@ -808,9 +808,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\Audio\AudioSDL\Audio_SDL.h">
       <Filter>core\Audio\AudioSDL</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\Synth\Synther\RealtimeSynther.h">
-      <Filter>core\Synth\Synther</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\Synth\SyntherEvent.h">
       <Filter>core\Synth</Filter>
@@ -1193,9 +1190,6 @@
     <ClInclude Include="..\..\src\core\Synth\Editor\EditorTypes.h">
       <Filter>core\Synth\Editor</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\Synth\Synther\MidiEditorSynther.h">
-      <Filter>core\Synth\Synther</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\Synth\Synther\Synther.h">
       <Filter>core\Synth\Synther</Filter>
     </ClInclude>
@@ -1267,6 +1261,15 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\Synth\PhysicsPiano.h">
       <Filter>core\Synth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Editor\MeasureInfo.h">
+      <Filter>core\Synth\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\CodeConvert.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\rlcg.h">
+      <Filter>thrids\scutils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

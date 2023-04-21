@@ -169,7 +169,7 @@ namespace dsignal
 		float kneeWidth = 3;
 
 		//压缩比
-		float radio = 10;
+		float radio = 2;
 
 		float gs = 0;
 

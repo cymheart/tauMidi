@@ -34,7 +34,6 @@ include_directories( "${SRC_DIR}/thrids/DaisySP/" )
 #        jni/jniTau.cpp
 #        jni/jniTauEditor.cpp
 #        jni/jniSoundFont.cpp
-#        jni/native-lib.cpp
 #        jni/jniBode.cpp
 #        jni/jniFilter.cpp
 #        jni/jniMorphLBHFilter.cpp)

@@ -89,6 +89,12 @@ namespace tau
 			return isHoldDownKey;
 		}
 
+		//设置是否保持按键状态
+		inline void SetHoldDownKey(bool isHold)
+		{
+			isHoldDownKey = isHold;
+		}
+
 		// 获取左声道已处理采样数据
 		float* GetLeftChannelSamples()
 		{

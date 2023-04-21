@@ -939,10 +939,14 @@ namespace tau {
 		if (velocity > velRange.max || velocity < velRange.min)
 			this->velocity = 0;
 		else {
+
 			if (sampleGen != nullptr)
 				this->velocity = velocity / 127.0f;
 			else
 				this->velocity = velocity / sample->velocity; //归一化力度到浮点数
+
+			//暂定
+			//this->velocity = powf(this->velocity, 2.0f);
 		}
 
 		velocityFadeInfo.dstValue = this->velocity;
@@ -1287,7 +1291,6 @@ namespace tau {
 
 			curtPitchMul = curtCalBasePitchMul * pitchOffsetMul;
 
-			//
 			if (renderQuality == RenderQuality::Good || renderQuality == RenderQuality::Fast)
 			{
 				//此时计算的volGain会处理blockSamples(预设64个采样点)个数据，粒度比较粗糙，数据有可能不够平缓，而导致卡顿音  
@@ -1320,8 +1323,6 @@ namespace tau {
 				{
 					volGain = LfosAndEnvsModulation(LfoEnvTarget::ModVolume, sec) * atten_mul_vel;
 				}
-
-
 
 				volGainSampleValue = volGain * sampleValue;
 				leftChannelSamples[idx] = channelGain[0] * volGainSampleValue;

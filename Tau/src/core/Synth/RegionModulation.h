@@ -10,7 +10,7 @@ namespace tau
 {
 	/*
 	* 区域调制处理器
-	* by cymheart, 2020--2021.
+	* by cymheart, 2020--2023.
 	*/
 	class RegionModulation
 	{

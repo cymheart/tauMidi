@@ -113,6 +113,8 @@ namespace task
 
 		startTime = GetCurrentTimeMsec();
 
+		readQue->Clear();
+
 		isStop = false;
 
 		if (isEmbed) {
@@ -357,6 +359,7 @@ namespace task
 		return 0;
 	}
 
+	int num = 0;
 
 	void TaskProcesser::Run()
 	{
@@ -406,6 +409,7 @@ namespace task
 
 			readQue->Merge(*writeQue);
 
+
 			if (isLock)
 				UnLock();
 
@@ -446,10 +450,11 @@ namespace task
 		if (cmpRemoveTask == nullptr)
 			return 1;
 
-		if (cmpRemoveTask->cmpCallBack(cmpRemoveTask, task) == true)
+		if (!task->isRemove &&
+			cmpRemoveTask->cmpCallBack(cmpRemoveTask, task))
 			task->isRemove = true;
-		return 1;
 
+		return 0;
 	}
 
 	int TaskProcesser::_ReleaseProcess(Task* task)

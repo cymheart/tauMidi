@@ -23,6 +23,8 @@ namespace tauFX
 			this->channelSampleCount = channelSampleCount;
 		}
 
+		void Clear();
+
 		void Process();
 
 		//添加效果器

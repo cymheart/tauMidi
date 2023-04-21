@@ -11,9 +11,7 @@ namespace TauClr
 		tau->SetChildFrameSampleCount(64);
 		tau->SetLimitRegionSounderCount(500);
 		tau->SetLimitOnKeySpeed(600);
-		tau->SetPerSyntherLimitTrackCount(20);
-		tau->SetLimitSyntherCount(12);
-		tau->SetOnlyUseOneMainSynther(true);
+
 		tau->SetUseRegionInnerChorusEffect(true);
 		tau->SetEnableAllVirInstEffects(true);
 	}
@@ -37,14 +35,14 @@ namespace TauClr
 		return instSharp;
 	}
 
-	void TauSharp::OnKey(int key, float velocity, InstrumentSharp^ inst, int delayMS)
+	void TauSharp::OnKey(int key, float velocity, InstrumentSharp^ inst)
 	{
-		tau->OnKey(key, velocity, inst->GetVirInstrument(), delayMS);
+		tau->OnKey(key, velocity, inst->GetVirInstrument());
 	}
 
-	void TauSharp::OffKey(int key, float velocity, InstrumentSharp^ inst, int delayMS)
+	void TauSharp::OffKey(int key, float velocity, InstrumentSharp^ inst)
 	{
-		tau->OffKey(key, velocity, inst->GetVirInstrument(), delayMS);
+		tau->OffKey(key, velocity, inst->GetVirInstrument());
 	}
 
 	bool TauSharp::IsLoadCompleted()

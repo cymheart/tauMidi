@@ -15,7 +15,7 @@ namespace tau
 
 	void PhysicsPianoSampleGen::Init(int key)
 	{
-		pianoKey.Init(param[key - 21]);
+		pianoKey.Init(param[key - A0]);
 	}
 
 	void PhysicsPianoSampleGen::Trigger(float velocity)
@@ -59,8 +59,8 @@ namespace tau
 
 	RegionSampleGenerator* PhysicsPiano::CreateRegionSampleGen(int key)
 	{
-		if (key < 21) key = 21;
-		else if (key > 108) key = 108;
+		if (key < A0) key = A0;
+		else if (key > C8) key = C8;
 
 		PhysicsPianoSampleGen* gen = new PhysicsPianoSampleGen();
 		gen->Init(key);

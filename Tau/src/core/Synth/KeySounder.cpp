@@ -189,7 +189,7 @@ namespace tau
 	{
 		size_t size = regionSounderList->size();
 		for (int i = 0; i < size; i++) {
-			if ((*regionSounderList)[i]->IsSoundEnd() == true)
+			if ((*regionSounderList)[i]->IsSoundEnd())
 				continue;
 
 			return (*regionSounderList)[i]->IsHoldDownKey();

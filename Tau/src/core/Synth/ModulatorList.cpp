@@ -161,7 +161,7 @@ namespace tau
 			ModInputType::Preset,
 			ModInputPreset::CoarseTune, MidiControllerType::CC_None,
 			0,
-			0, 1);
+			0, 127);
 
 		mod->SetOutTarget(GeneratorType::CoarseTune);
 		mod->SetOutModulationType(ModulationType::Add);
@@ -181,7 +181,7 @@ namespace tau
 			ModInputType::Preset,
 			ModInputPreset::FineTune, MidiControllerType::CC_None,
 			0,
-			0, 32639);
+			0, 16383.0f);
 
 		mod->SetOutTarget(GeneratorType::FineTune);
 		mod->SetOutModulationType(ModulationType::Add);

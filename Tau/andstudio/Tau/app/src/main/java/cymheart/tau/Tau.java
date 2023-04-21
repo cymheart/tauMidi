@@ -20,6 +20,11 @@ public class Tau
 //    }
 
     protected Context context;
+
+    public Context GetContext() {
+        return context;
+    }
+
     protected MidiManager midiManager;
     protected TauMidiReceiver midiReceiver;
     protected MidiOutputPortSelector outputPortSelector;
@@ -27,7 +32,7 @@ public class Tau
     protected BaseMidiDeviceEventProcesser midiDeviceEventProcesser = new BaseMidiDeviceEventProcesser();
 
     //
-    protected Editor editor = new Editor();
+    protected Editor editor = new Editor(this);
     public Editor GetEditor() {
         return editor;
     }
@@ -73,6 +78,7 @@ public class Tau
     public void Close()
     {
         ndkClose(ndkTau);
+        editor.Remove();
     }
 
     public void SetSoundFont(SoundFont sf)
@@ -102,11 +108,6 @@ public class Tau
         ndkSetChannelCount(ndkTau, channelCount);
     }
 
-    //设置单位处理midi轨道数量
-    public void SetUnitProcessMidiTrackCount(int count)
-    {
-        ndkSetUnitProcessMidiTrackCount(ndkTau, count);
-    }
 
     //设置采样流缓存最大时长(单位:秒， 默认值:0s)
     public void SetSampleStreamCacheSec(float sec)
@@ -149,7 +150,7 @@ public class Tau
 
     public VirInstrument GetMidiDeviceConnectedInst()
     {
-        return midiDeviceConnectedInst ;
+        return midiDeviceConnectedInst;
     }
 
     //设置极限发声区域数量(默认值:600)
@@ -173,6 +174,7 @@ public class Tau
         ndkSetEnableMidiEventCountOptimize(ndkTau, enable);
     }
 
+
     //设置是否开启拷贝相同通道控制事件(默认:开启)
     public void SetEnableCopySameChannelControlEvents(boolean enable)
     {
@@ -195,6 +197,41 @@ public class Tau
     public void SetEnableCreateFreqSpectrums(boolean enable, int count)
     {
         ndkSetEnableCreateFreqSpectrums(ndkTau, enable, count);
+    }
+
+    //设置初始化开始播放时间点
+    public void SetInitStartPlaySec(double sec)
+    {
+        editor.SetInitStartPlaySec(sec);
+    }
+
+
+    public int GetCurtNeedOnKeyTrackIdx()
+    {
+        return editor.GetCurtNeedOnKeyTrackIdx();
+    }
+
+    public float GetCurtNeedOnKeyVel()
+    {
+        return editor.GetCurtNeedOnKeyVel();
+    }
+
+    //设置编辑器排除需要等待的按键
+    public void SetExcludeNeedWaitKey(int key)
+    {
+        editor.SetExcludeNeedWaitKey(key);
+    }
+
+
+    //设置编辑器包含需要等待的按键
+    public void SetIncludeNeedWaitKey(int key)
+    {
+        editor.SetIncludeNeedWaitKey(key);
+    }
+
+    public void SetLateNoteSec(float sec)
+    {
+        editor.SetLateNoteSec(sec);
     }
 
     //按键信号
@@ -281,6 +318,8 @@ public class Tau
     }
 
 
+
+
     public double GetBackgroundPlaySec()
     {
         return editor.GetBackgroundPlaySec();
@@ -356,34 +395,45 @@ public class Tau
         ndkOnKey(ndkTau, key, velocity, virInst.GetNdkVirInstrument(), 0);
     }
 
-    public void OnKey(int key, float velocity, VirInstrument virInst, int delayMS)
-    {
-        ndkOnKey(ndkTau, key, velocity, virInst.GetNdkVirInstrument(), delayMS);
-    }
-
     // 释放按键
     public void OffKey(int key, float velocity, VirInstrument virInst)
     {
         ndkOffKey(ndkTau, key, velocity, virInst.GetNdkVirInstrument(), 0);
     }
 
+
+    public void OnKey(int key, float velocity, VirInstrument virInst, int id)
+    {
+        ndkOnKey(ndkTau, key, velocity, virInst.GetNdkVirInstrument(), id);
+    }
+
     // 释放按键
-    public void OffKey(int key, float velocity, VirInstrument virInst, int delayMS)
+    public void OffKey(int key, float velocity, VirInstrument virInst, int id)
     {
-        ndkOffKey(ndkTau, key, velocity, virInst.GetNdkVirInstrument(), delayMS);
+        ndkOffKey(ndkTau, key, velocity, virInst.GetNdkVirInstrument(), id);
     }
 
 
-    // 取消按键
-    public void CancelDownKey(int key, float velocity, VirInstrument virInst, int delayMS)
+    public void OnKey(int key, float velocity, int trackIdx)
     {
-        ndkCancelOnKey(ndkTau, key, velocity, virInst.GetNdkVirInstrument(), delayMS);
+        editor.OnKey(key, velocity, trackIdx, 0);
     }
 
-    // 取消释放按键
-    public void CancelOffKey(int key, float velocity, VirInstrument virInst, int delayMS)
+    // 释放按键
+    public void OffKey(int key, float velocity, int trackIdx)
     {
-        ndkCancelOffKey(ndkTau, key, velocity, virInst.GetNdkVirInstrument(), delayMS);
+        editor.OffKey(key, velocity, trackIdx, 0);
+    }
+
+    public void OnKey(int key, float velocity, int trackIdx, int id)
+    {
+        editor.OnKey(key, velocity, trackIdx, id);
+    }
+
+    // 释放按键
+    public void OffKey(int key, float velocity, int trackIdx, int id)
+    {
+        editor.OffKey(key, velocity, trackIdx, id);
     }
 
     /**
@@ -459,7 +509,6 @@ public class Tau
     private static native void ndkSetFrameSampleCount(long ndkTau, int sampleCount);
     private static native void ndkSetSampleProcessRate(long ndkTau, int sampleRate);
     private static native void ndkSetChannelCount(long ndkTau, int channelCount);
-    private static native void ndkSetUnitProcessMidiTrackCount(long ndkTau, int count);
     private static native void ndkSetSampleStreamCacheSec(long ndkTau, float sec);
     private static native void ndkSetLimitRegionSounderCount(long ndkTau, int count);
     private static native void ndkSetSetLimitOnKeySpeed(long ndkTau, float speed);
@@ -481,16 +530,11 @@ public class Tau
                                                           int orgBankMSB, int orgBankLSB, int orgInstNum);
 
     private static native void ndkOnKey(long ndkTau,
-                                     int key, float velocity, long ndkVirInst, int delayMS);
+                                     int key, float velocity, long ndkVirInst, int id);
 
     private static native void ndkOffKey(long ndkTau,
-                                      int key, float velocity, long ndkVirInst, int delayMS);
+                                      int key, float velocity, long ndkVirInst, int id);
 
-    private static native void ndkCancelOnKey(long ndkTau,
-                                        int key, float velocity, long ndkVirInst, int delayMS);
-
-    private static native void ndkCancelOffKey(long ndkTau,
-                                         int key, float velocity, long ndkVirInst, int delayMS);
 
     private static native VirInstrument ndkEnableVirInstrument(
             long ndkTau,

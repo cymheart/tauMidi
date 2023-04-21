@@ -233,6 +233,9 @@ namespace tau
 			case MidiEventType::PitchBend:
 				cpyMidiEvent = new PitchBendEvent(*(PitchBendEvent*)midiEvent);
 				break;
+
+			default:
+				break;
 			}
 
 			if (cpyMidiEvent != nullptr)
@@ -244,6 +247,17 @@ namespace tau
 	void MidiTrack::AppendMidiEvents(LinkedList<MidiEvent*>& midiEvents)
 	{
 		midiEventList.Merge(midiEvents);
+	}
+
+	//设置轨道中所midi事件的trackidx
+	void MidiTrack::SetAllMidiEventTrackIdx(int trackIdx)
+	{
+		LinkedListNode<MidiEvent*>* node = midiEventList.GetHeadNode();
+		for (; node; node = node->next)
+		{
+			MidiEvent* midiEvent = node->elem;
+			midiEvent->track = trackIdx;
+		}
 	}
 
 

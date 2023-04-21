@@ -9,8 +9,9 @@ namespace scutils {
 
 	void Semaphore::wait() {
 		unique_lock <mutex> lock(m);
-		while (count >= 0)
+		while (count >= 0) {
 			cv.wait(lock);
+		}
 		count = initCount;
 	}
 

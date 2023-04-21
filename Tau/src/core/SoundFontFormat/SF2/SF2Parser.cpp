@@ -120,6 +120,7 @@ namespace tau
 			name.assign((const char*)insts[i]->instrumentName, 20);
 			Instrument* oreInst = sf->AddInstrument(name);
 
+
 			for (size_t j = insts[i]->InstrumentBagIndex; j < insts[i + 1]->InstrumentBagIndex; j++)
 			{
 				region = ParseInstRegionGeneratorList((int)j, oreInst);
@@ -453,7 +454,7 @@ namespace tau
 			case SF2Generator::Velocity:  genList.SetAmount(GeneratorType::Velocity, val); break;
 
 			case SF2Generator::InitialAttenuation:
-				genList.SetAmount(GeneratorType::InitialAttenuation, -val * 0.1f * 0.4f); //设置实际衰减值为原来的0.25倍
+				genList.SetAmount(GeneratorType::InitialAttenuation, -val * 0.1f); //设置实际衰减值为原来的0.25倍
 				break;
 
 			case SF2Generator::EndloopAddrsCoarseOffset:genList.SetAmount(GeneratorType::EndloopAddrsCoarseOffset, val); break;

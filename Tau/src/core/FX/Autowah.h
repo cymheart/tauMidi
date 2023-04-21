@@ -14,6 +14,8 @@ namespace tauFX
 		Autowah(Synther* synther = nullptr);
 		virtual ~Autowah();
 
+		void Clear();
+
 		/** sets wah
 			\param wah : set wah amount, , 0...1.0
 		*/

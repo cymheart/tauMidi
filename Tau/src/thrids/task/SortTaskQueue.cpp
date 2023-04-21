@@ -15,6 +15,13 @@ namespace task
 		Release();
 	}
 
+	void SortTaskQueue::Clear()
+	{
+		Release();
+		waitTimeMS = -1;
+		blockFilterCount = 0;
+	}
+
 	bool SortTaskQueue::Compare(Task* left, Task* right)
 	{
 		return left->executeTimeMS < right->executeTimeMS;
@@ -73,6 +80,17 @@ namespace task
 			}
 
 			next = timerTaskList.Remove(node);
+			if (timeOutList.Size() == 1)
+			{
+				LinkedListNode<Task*>* nd1 = timeOutList.GetHeadNode();
+				LinkedListNode<Task*>* nd2 = timeOutList.GetHeadNode()->next;
+				if (nd1 == nd2)
+				{
+					int b;
+					b = 3;
+				}
+
+			}
 			AddToTimeOutList(node);
 			node = next;
 		}
@@ -149,7 +167,7 @@ namespace task
 			next = node->next;
 			TaskObjectPool::GetInstance().NodePool().Push(node);
 		}
-		timeOutList.Clear();
+		timerTaskList.Clear();
 	}
 
 	void SortTaskQueue::ResetCurtTime(int64_t curtTimeMS)

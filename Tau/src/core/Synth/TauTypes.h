@@ -8,18 +8,20 @@
 
 using namespace scutils;
 
+#define TauLock(tau) lock_guard<mutex> lock(tau->lockMutex)
+
 namespace tau
 {
 
 	enum class GeneratorType :int;
 	enum class ModInputPreset :int;
 	enum class EditorState;
+	enum class CacheState;
 
 	class Tau;
 	class Editor;
+	class MeasureInfo;
 	class Synther;
-	class MidiEditorSynther;
-	class RealtimeSynther;
 	class SoundFont;
 	class NoteOnEvent;
 	class Lfo;
@@ -56,7 +58,6 @@ namespace tau
 	struct SamplesLinkToInstRegionInfo;
 	struct InstLinkToPresetRegionInfo;
 	struct LineEquationInfo;
-	struct RealtimeKeyEvent;
 
 
 	using SampleList = vector<Sample*>;
@@ -76,12 +77,9 @@ namespace tau
 	using GeneratorTypeList = vector <GeneratorType>;
 	using VirInstList = vector <VirInstrument*>;
 	using ModPresetTypeList = vector<ModInputPreset>;
-	using TrackList = vector <Track*>;
 
 
-	using KeySounderList = list<KeySounder*>;
 	using RegionSounderQueue = list<RegionSounder*>;
-	using RealtimeKeyEventList = list<RealtimeKeyEvent>;
 
 
 	using PresetMap = unordered_map<uint32_t, Preset*>;
@@ -96,7 +94,30 @@ namespace tau
 
 #ifdef _WIN32
 	template struct DLL_CLASS atomic<bool>;
+	template struct DLL_CLASS atomic<double>;
+	template struct DLL_CLASS atomic<EditorState>;
+	template struct DLL_CLASS atomic<CacheState>;
 #endif
+
+#define A0 21
+#define C1 24
+#define C8 108
+#define KeyWhite 1
+#define KeyBlack 0
+
+	//88键钢琴键盘定义
+	extern int keyTypes88Std[];
+
+	//获取note类型
+	int GetNoteType(int note);
+
+	//获取下一个黑色类型note
+	int GetNextBlackNote(int note);
+
+	//获取下一个白色类型note
+	int GetNextWhiteNote(int note);
+
+
 
 	// LfoEnv调制目标
 	enum class LfoEnvTarget
@@ -597,36 +618,23 @@ namespace tau
 	struct LineEquationInfo
 	{
 		// x轴范围
-		float xmin, xmax;
+		float xmin = 0, xmax = 0;
 
 		// 直线斜率
-		float a;
+		float a = 0;
 
 		// y轴偏移
-		float b;
+		float b = 0;
 
 	};
-
-
-	struct RealtimeKeyEvent
-	{
-		bool isOnKey;
-		int key;
-		float velocity;
-		VirInstrument* virInst = nullptr;
-		//实际时间点
-		double timeSec;
-		//采样时间点
-		double sampleSec;
-	};
-
 
 	struct KeyEvent
 	{
-		bool isOnKey;
-		int key;
-		float velocity;
-		bool isRealTime;
+		int id = 0;
+		bool isOnKey = true;
+		int key = 60;
+		float velocity = 127;
+		bool isRealTime = false;
 	};
 
 	//过渡效果深度信息

@@ -98,14 +98,6 @@ Java_cymheart_tau_Tau_ndkSetChannelCount(JNIEnv *env, jclass clazz, jlong ndk_ta
     tau->SetChannelOutputMode((ChannelOutputMode)channel_count);
 }
 
-extern "C"
-JNIEXPORT void JNICALL
-Java_cymheart_tau_Tau_ndkSetUnitProcessMidiTrackCount(JNIEnv *env, jclass clazz, jlong ndk_tau,
-                                                      jint count) {
-    Tau* tau = (Tau*)ndk_tau;
-    tau->SetPerSyntherLimitTrackCount(count);
-}
-
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -286,7 +278,7 @@ Java_cymheart_tau_Tau_ndkOnVirInstrument(JNIEnv *env, jclass clazz,
                                                     jlong ndk_vir_instrument,
                                                     jboolean is_fade) {
     Tau* tau = (Tau*)ndk_tau;
-    tau->OnVirInstrument((VirInstrument*)ndk_vir_instrument, is_fade);
+    tau->OpenVirInstrument((VirInstrument*)ndk_vir_instrument, is_fade);
 }
 
 extern "C"
@@ -296,45 +288,28 @@ Java_cymheart_tau_Tau_ndkOffVirInstrument(JNIEnv *env, jclass clazz,
                                                      jlong ndk_vir_instrument,
                                                      jboolean is_fade) {
     Tau* tau = (Tau*)ndk_tau;
-    tau->OffVirInstrument((VirInstrument*)ndk_vir_instrument, is_fade);
+    tau->CloseVirInstrument((VirInstrument*)ndk_vir_instrument, is_fade);
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_cymheart_tau_Tau_ndkOnKey(JNIEnv *env, jclass clazz, jlong ndk_tau, jint key,
-                                       jfloat velocity, jlong ndk_vir_inst, jint delayMS) {
+                                       jfloat velocity, jlong ndk_vir_inst, jint id) {
 
     Tau* tau = (Tau*)ndk_tau;
     VirInstrument* virInst = (VirInstrument*)ndk_vir_inst;
-    tau->OnKey(key, velocity, virInst, delayMS);
+    tau->OnKey(key, velocity, virInst, id);
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_cymheart_tau_Tau_ndkOffKey(JNIEnv *env, jclass clazz, jlong ndk_tau, jint key,
-                                        jfloat velocity, jlong ndk_vir_inst, jint delayMS) {
+                                        jfloat velocity, jlong ndk_vir_inst, jint id) {
     Tau* tau = (Tau*)ndk_tau;
     VirInstrument* virInst = (VirInstrument*)ndk_vir_inst;
-    tau->OffKey(key, velocity, virInst, delayMS);
+    tau->OffKey(key, velocity, virInst, id);
 }
 
-extern "C"
-JNIEXPORT void JNICALL
-Java_cymheart_tau_Tau_ndkCancelOnKey(JNIEnv *env, jclass clazz, jlong ndk_tau, jint key,
-                                     jfloat velocity, jlong ndk_vir_inst, jint delay_ms) {
-    Tau* tau = (Tau*)ndk_tau;
-    VirInstrument* virInst = (VirInstrument*)ndk_vir_inst;
-    tau->CancelDownKey(key, velocity, virInst, delay_ms);
-}
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_cymheart_tau_Tau_ndkCancelOffKey(JNIEnv *env, jclass clazz, jlong ndk_tau, jint key,
-                                      jfloat velocity, jlong ndk_vir_inst, jint delay_ms) {
-    Tau* tau = (Tau*)ndk_tau;
-    VirInstrument* virInst = (VirInstrument*)ndk_vir_inst;
-    tau->CancelOffKey(key, velocity, virInst, delay_ms);
-}
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -344,3 +319,4 @@ Java_cymheart_tau_Tau_ndkAddEffect(JNIEnv *env, jclass clazz, jlong ndk_tau,
     TauEffect* effect = (TauEffect*)ndk_effect;
     tau->AddEffect(effect);
 }
+

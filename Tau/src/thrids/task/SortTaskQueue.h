@@ -13,6 +13,8 @@ namespace task
 		SortTaskQueue(TaskProcesser* processer = nullptr);
 		~SortTaskQueue();
 
+
+		void Clear();
 		int64_t GetWaitTimeMS(int64_t curTimeMS);
 		void SetBlockFilter(int* filterNumbers, int count);
 		bool IsBlockFilter(int num);

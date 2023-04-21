@@ -39,6 +39,11 @@ namespace tauFX
 		rightChannelChorus->Init(sample_rate);
 	}
 
+	void Chorus::Clear()
+	{
+		Init(synther->GetSampleProcessRate());
+	}
+
 	//! Set modulation depth in range 0.0 - 1.0.
 	void Chorus::SetModDepth(float depth)
 	{
