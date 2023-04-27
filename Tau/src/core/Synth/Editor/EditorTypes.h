@@ -67,8 +67,9 @@ namespace tau
 		//离开步进播放模式
 		LeaveStep,
 
+		Removing,
 		Remove,
-		Removing
+
 	};
 
 	//instFragMode

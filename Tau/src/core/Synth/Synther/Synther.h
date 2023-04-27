@@ -434,6 +434,9 @@ namespace tau
 
 		void CacheEnterStepPlayMode();
 
+		void ClearCacheBuffer();
+
+
 		//获取缓存播放时间
 		inline double GetCachePlaySec()
 		{

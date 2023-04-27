@@ -277,14 +277,32 @@ namespace tau
 	{
 		while (audio)
 		{
-			if (maxCacheSize > 0 && isEnableCache) {
+			if (maxCacheSize > 0 && isEnableCache)
+			{
+				if ((isSoundEndRemove || isReqDelete) && !isSoundEnd)
+				{
+					float* out = (float*)synthSampleStream;
+					for (int i = 0; i < frameSampleCount * 2; i += 2)
+					{
+						soundEndGain -= 0.001;
+						if (soundEndGain < 0)
+							soundEndGain = 0;
+						out[i] *= soundEndGain;
+						out[i + 1] *= soundEndGain;
+					}
+
+					TestSoundEnd();
+				}
+
+				if (!tau->isSilence)
+					memcpy(stream, synthSampleStream, len);
 				CacheOutput();
-				memcpy(stream, synthSampleStream, len);
 				break;
 			}
 			else if (isFrameRenderCompleted)
 			{
-				memcpy(stream, synthSampleStream, len);
+				if (!tau->isSilence)
+					memcpy(stream, synthSampleStream, len);
 				ReqRender();
 				break;
 			}
@@ -973,14 +991,19 @@ namespace tau
 		isFrameRenderCompleted = true;
 
 		//
-		if ((isSoundEndRemove || isReqDelete) && isSoundEnd)
+		if (isSoundEndRemove || isReqDelete)
 		{
-			isReqDelete = false;
-			isSoundEndRemove = false;
-			int type = isReqDelete ? -1 : 0;
-			DelAllVirInstrument(type);
-			effects->Clear();
-			waitSem.set();
+			if (!isEnableCache && maxCacheSize == 0)
+				TestSoundEnd();
+
+			if (isSoundEnd) {
+				isReqDelete = false;
+				isSoundEndRemove = false;
+				int type = isReqDelete ? -1 : 0;
+				DelAllVirInstrument(type);
+				effects->Clear();
+				waitSem.set();
+			}
 		}
 	}
 
@@ -988,13 +1011,11 @@ namespace tau
 	void Synther::TestSoundEnd()
 	{
 		float* out = (float*)synthSampleStream;
-
 		//检测由效果器带来的尾音是否结束
-		int offset = (int)(frameSampleCount * 0.01f);
-		for (int i = 0; i < frameSampleCount * 2; i += offset)
+		for (int i = 0; i < frameSampleCount * 2; i++)
 		{
 			// 此处值需要非常小，不然会产生杂音
-			if (fabsf(out[i]) > 0.001f) {
+			if (fabsf(out[i]) > 0.0001f) {
 				isSoundEnd = false;
 				return;
 			}

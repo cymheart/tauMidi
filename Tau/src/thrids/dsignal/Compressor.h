@@ -74,6 +74,29 @@ namespace dsignal
 	*
 	*  其中:   attackCoffe = exp(-logf(9) / (attackSecLen * sampleFreq));
 	*          releaseCoffe = exp(-logf(9) / (releaseSecLen * sampleFreq));
+	*
+	*
+	* Compressor 中常用的参数包括如下几种。
+	* Threshold:定义了开始压缩的音量。任何超过阈值的信号都将被压缩。例如当 Threshold = -10db，当信号音量超过 -10db 时，它将被压缩。
+	* Ratio: 控制超过 Threshold 的信号的压缩比率。例如当 Threshold = -10，input = -5，此时信号超过 Threshold 有 5db，它将被压缩，
+	*        那么压缩多少呢？这就由 Ratio 控制，当 Ratio = 5 时，信号增量从原来的 5db 被抑制为 1db，当 Ratio = 2 时，则抑制为 2.5db，以此类推。
+	* Attack Time: Attack Time 和 Release Time 在一定程度上控制 Compressor ”灵敏度“。 Attack Time 定义了一旦信号超过 Threshold，Compressor 将增益降低到期望水平所需要的时间。
+	* Release Time: 定义了一旦信号低于 Threshold，将增益恢复至正常水平需要的时间。
+	*               Attack Time 和 Release Time 是 Compressor 中最不容易理解的两个参数，我们会在后面的 ”Level Detection“ 章节对这个两个参数有更深的理解，在这里我们简单地将它们理解为灵敏度即可。
+	*               Attack Time 值越小，信号超过 Threshold 就会越快地被压缩，Release Time 越小，信号恢复的也越快。
+	* 你可能会有疑问，信号超过 Threshold，我们直接进行压缩即可，为啥需要 Attack Time 和 Release Time 呢？非也非也，如果如此简单粗暴的压缩方式会引入杂音，
+	* 我们为了避免杂音，首先需要得到平滑的音量曲线，而”平滑“的特性就模糊了时间的精确度，因此引入 Attack Time 和 Release Time 满足人们对时间的某种控制。
+	* Make-up Gain: Compressor 降低信号的增益，因此可以施加一个额外的增益使得输入信号与输出信号的响度水平相当。
+	* Knee Width: 它控制了压缩曲线的特性，曲线是尖锐的拐角，还是想膝盖一样有弧度的曲线。
+	*
+	* 1:1不进行压缩。无论阈值电平如何，输入和输出电平都保持不变。
+  　* 1.5:1适用于微妙的压缩。这个比例是温和的，透明的声音。它将保留自然的波峰和波谷。
+　　* 2:1适用于轻度压缩。这个比例可以平稳地控制动态，而不会对音色和力度造成明显的变化。
+　　* 3:1适用于适度压缩。这个比例设置略显激进。它适用于温和的瞬态控制，同时保留自然的动态。
+　　* 4:1适用于中等压缩。这个比例对瞬态的控制更严格。音色、冲击力和响度会有微妙的变化。
+　　* 10:1适用于重度压缩。这个比例是激进的。它将大幅减少动态范围，如果用力，会导致信号失去冲击力、清晰度和存在感。
+　　* 20:1到Infinity:1是限制性的。在Infinity:1时，压缩器基本上会阻止信号穿过阈值。
+
 	*/
 	class Compressor
 	{
@@ -125,7 +148,7 @@ namespace dsignal
 
 		}
 
-		//设置拐点的软硬
+		//设置拐点的软硬(单位:dB)
 		void SetKneeWidth(float width)
 		{
 			kneeWidth = width;
@@ -163,12 +186,17 @@ namespace dsignal
 		float releaseSecLen = 0.1f;
 
 		//门限
+		//定义了开始压缩的音量。任何超过阈值的信号都将被压缩。
+		//例如当 Threshold = -10db，当信号音量超过 -10db 时，它将被压缩。
 		float threshold = -20;
 
-		//拐点宽度
+		//拐点宽度(单位：dB)
+		//它控制了压缩曲线的特性，曲线是尖锐的拐角，还是想膝盖一样有弧度的曲线。
 		float kneeWidth = 3;
 
 		//压缩比
+		//控制超过 Threshold 的信号的压缩比率。例如当 Threshold = -10，input = -5，此时信号超过 Threshold 有 5db，它将被压缩，
+		//那么压缩多少呢？这就由 Ratio 控制，当 Ratio = 5 时，信号增量从原来的 5db 被抑制为 1db，当 Ratio = 2 时，则抑制为 2.5db，以此类推
 		float radio = 2;
 
 		float gs = 0;

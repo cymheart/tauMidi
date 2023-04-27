@@ -55,6 +55,12 @@ Java_cymheart_tau_Tau_ndkClose(JNIEnv *env, jclass clazz,  jlong ndk_tau) {
     tau->Close();
 }
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkSetSilence(JNIEnv *env, jclass clazz, jlong ndk_tau, jboolean is) {
+    Tau* tau = (Tau*)ndk_tau;
+    tau->SetSilence(is);
+}
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -319,4 +325,5 @@ Java_cymheart_tau_Tau_ndkAddEffect(JNIEnv *env, jclass clazz, jlong ndk_tau,
     TauEffect* effect = (TauEffect*)ndk_effect;
     tau->AddEffect(effect);
 }
+
 

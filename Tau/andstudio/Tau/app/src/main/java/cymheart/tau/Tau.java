@@ -81,6 +81,12 @@ public class Tau
         editor.Remove();
     }
 
+    //设置是否静音
+    public void SetSilence(boolean is)
+    {
+        ndkSetSilence(ndkTau, is);
+    }
+
     public void SetSoundFont(SoundFont sf)
     {
         ndkSetSoundFont(ndkTau, sf.GetNdkSoundFont());
@@ -318,8 +324,6 @@ public class Tau
     }
 
 
-
-
     public double GetBackgroundPlaySec()
     {
         return editor.GetBackgroundPlaySec();
@@ -504,6 +508,7 @@ public class Tau
     private static native void ndkDeleteTau(long ndkTau);
     private static native void ndkOpen(long ndkTau);
     private static native void ndkClose(long ndkTau);
+    private static native void ndkSetSilence(long ndkTau, boolean is);
     private static native void ndkSetSoundFont(long ndkTau, long ndkSoundFont);
     private static native void ndkSetUseMulThread(long ndkTau, boolean isUse);
     private static native void ndkSetFrameSampleCount(long ndkTau, int sampleCount);

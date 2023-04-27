@@ -8,6 +8,24 @@
 
 namespace tau
 {
+	void Synther::ClearCacheBuffer()
+	{
+		if (cacheBuffer != nullptr)
+			cacheBuffer->Clear();
+
+		if (fallSamples.empty())
+			return;
+
+		vector<FadeSamplesInfo>::iterator it = fallSamples.begin();
+		for (; it != fallSamples.end(); it++)
+		{
+			FadeSamplesInfo& info = *it;
+			float* samples = info.samples;
+			fallSamplesPool->Push(samples);
+		}
+
+		fallSamples.clear();
+	}
 
 	bool Synther::CanCache()
 	{
@@ -25,6 +43,14 @@ namespace tau
 		cacheLocker.lock();
 
 		memset(synthSampleStream, 0, sizeof(float) * frameSampleCount * 2);
+
+		if ((isSoundEndRemove || isReqDelete) && isSoundEnd) {
+			cacheState = CacheState::CacheStop;
+			ClearCacheBuffer();
+			ReqRender();
+			cacheLocker.unlock();
+			return;
+		}
 
 		CacheReadByState();
 		CacheReadFallSamples();
@@ -44,19 +70,17 @@ namespace tau
 	{
 		if (isReqDelete)
 		{
-			if (cacheState != CacheState::CacheStoping &&
-				cacheState != CacheState::CachingAndRead &&
-				cacheState != CacheState::CachingNotRead &&
-				cacheState != CacheState::CacheStoping)
-			{
-				cacheState = CacheState::Remove;
-			}
+			ReqRender();
+			cacheState = CacheState::Remove;
+			return;
 		}
+
 
 		switch (cacheState)
 		{
 		case CacheState::CacheStop:
 			if (!CanCache()) {
+				ReqRender();
 				break;
 			}
 

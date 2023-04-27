@@ -1,6 +1,8 @@
 package cymheart.tau.editor;
 
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -10,6 +12,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -130,13 +133,33 @@ public class Editor {
         return -1;
     }
 
-    /**获取下一个白色类型note*/
-    static public int GetNextWhiteNote(int note)
+    /**获取前一个白色类型note*/
+    static public int GetPrevWhiteNote(int note)
     {
-        for(int i = note - A0 + 1; i < keyTypes88Std.length; i++)
+        for(int i = note - A0; i >=0; i--)
             if(keyTypes88Std[i] == KeyWhite)
                 return i + A0;
         return -1;
+    }
+
+    /**获取下一个白色类型note*/
+    static public int GetNextWhiteNote(int note)
+    {
+        for(int i = note - A0; i < keyTypes88Std.length; i++)
+            if(keyTypes88Std[i] == KeyWhite)
+                return i + A0;
+        return -1;
+    }
+
+    /**获取白色类型note数量*/
+    static public int GetWhiteNoteCount(int noteStart, int noteEnd)
+    {
+        int count = 0;
+        for(int i = noteStart - A0; i <= noteEnd - A0; i++) {
+            if (keyTypes88Std[i] == KeyWhite)
+                count++;
+        }
+        return count;
     }
 
     private class MarkerComparator implements Comparator<MidiMarker> {
@@ -151,9 +174,10 @@ public class Editor {
         /**由小到大排列*/
         @Override
         public int compare(NoteOnEvent left, NoteOnEvent right) {
-
-            if(left.startSec == right.startSec)
-                return 0;
+            if(left == null && null == right) return 0;
+            else if(left == null) return 1;
+            else if(right == null) return -1;
+            else if(left.startSec == right.startSec) return 0;
             return left.startSec < right.startSec ? -1: 1;
         }
     }
@@ -227,6 +251,71 @@ public class Editor {
         return tracks;
     }
     public Track GetTrack(int i){return tracks[i];}
+
+    /**需要弹奏的音符，按时间顺序存放*/
+    protected List<NoteOnEvent> needPlayNoteEvs = new ArrayList<>();
+    /**乐谱所对应的键盘按键数量*/
+    protected int keybaordKeyCountForMusicScore = 15;
+    /**获取乐谱所对应的键盘按键数量*/
+    public int GetKeybaordKeyCountForMusicScore()
+    {
+        return keybaordKeyCountForMusicScore;
+    }
+
+    /**乐谱所对应的键盘中心按键号*/
+    protected int keyboarCenterNoteForMusicScore = 0;
+    /**获取乐谱所对应的键盘中心按键号*/
+    public int GetKeyboarCenterNoteForMusicScore()
+    {
+        return keyboarCenterNoteForMusicScore;
+    }
+
+
+    private int minNote, maxNote;
+    /**计算乐谱所对应的键盘的中心
+     * @param musicScoreAreaWidth 乐谱视区的宽度
+     * @param minKeyWidth 最小的按键宽度
+     * */
+    public void CalKeyboardCenterForMusicScore(float musicScoreAreaWidth, float minKeyWidth)
+    {
+        float visualWidth = musicScoreAreaWidth - minKeyWidth*2;
+        minNote = -1;
+        maxNote = -1;
+        if(!isSimpleMode) {
+            for(int i=0; i<needPlayNoteEvs.size(); i++) {
+                if(GetKeyboardCenter(needPlayNoteEvs.get(i), visualWidth, minKeyWidth))
+                    continue;
+            }
+            return;
+        }
+
+        //SimpleMode
+        for (int i = 0; i < simpleModeTrackNotes.length; i++) {
+            if(GetKeyboardCenter(simpleModeTrackNotes[i], visualWidth, minKeyWidth))
+                continue;
+        }
+
+    }
+
+    protected boolean GetKeyboardCenter(NoteOnEvent ev, float visualWidth, float minKeyWidth)
+    {
+        if(minNote == -1 || ev.note <minNote)
+            minNote = ev.note;
+        if(maxNote == -1 || ev.note > maxNote)
+            maxNote = ev.note;
+
+        int noteStart = GetPrevWhiteNote(minNote);
+        int noteEnd = GetNextWhiteNote(maxNote);
+        int count = GetWhiteNoteCount(noteStart, noteEnd);
+
+        float keyWidth = visualWidth/count;
+        if(keyWidth < minKeyWidth)
+            return false;
+
+        keyboarCenterNoteForMusicScore = GetNextWhiteNote((noteStart + noteEnd)/2);
+        keybaordKeyCountForMusicScore = count + 2;
+        return true;
+    }
 
 
     /**是否为简单模式
@@ -640,7 +729,7 @@ public class Editor {
     }
 
     /**等待结束的MidiEvs*/
-    protected MidiEvent[] waitEndEvs = new MidiEvent[10000];
+    protected NoteOnEvent[] waitEndEvs = new NoteOnEvent[10000];
     /**等待结束的MidiEvs数量*/
     protected int waitEndEvCount = 0;
     /**获取等待结束的MidiEvs数量*/
@@ -897,59 +986,11 @@ public class Editor {
         try {
             CreateMidiMarkers();
             ParseMidi();
-
-            //
-            if(isSimpleMode) {
-                simpleModeTrackNotes = null;
-                simpleModeNoteTrackOffset = 0;
-                simpleModeNoteTrackFirst = 0;
-                RemoveSimpleModeNotesFromTracks();
-                ndkCreateSimpleModeTrack(this, ndkEditor);
-
-                //
-                if(simpleModeTrackNotes != null && simpleModeTrackNotes.length > 0) {
-                    Track track = tracks[simpleModeTrackNotes[0].trackIdx];
-                    for (int i = 0; i < simpleModeTrackNotes.length; i++)
-                        simpleModeTrackNotes[i].track = track;
-                }
-            }
-
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
         isLoadCompleted = true;
-    }
-
-
-    /**移除简单模式下相关的轨道事件*/
-    protected void RemoveSimpleModeNotesFromTracks()
-    {
-        int removeCount;
-        Track track;
-        for (int i = 0; i < tracks.length; i++)
-        {
-            removeCount = 0;
-            track = tracks[i];
-            NoteOnEvent ev;
-            NoteOnEvent[] midiEvents = track.noteOnEvents;
-            for (int j = 0; j < midiEvents.length; j++) {
-                ev = midiEvents[j];
-                if (IsPointerPlayNote(ev)) {
-                    midiEvents[j] = null;
-                    removeCount++;
-                }
-            }
-
-            int idx = 0;
-            NoteOnEvent[] newNoteOnEvents = new NoteOnEvent[midiEvents.length - removeCount];
-            for (int j = 0; j < midiEvents.length; j++) {
-                if (midiEvents[j] != null)
-                    newNoteOnEvents[idx++] = midiEvents[j];
-            }
-
-            track.noteOnEvents = newNoteOnEvents;
-        }
     }
 
 
@@ -1102,19 +1143,27 @@ public class Editor {
         //
         Track track;
         JSONObject jsonMidiEvent;
-        JSONArray jsonNoteOnEvents = null;
+        JSONArray jsonNoteOnEvents;
 
-        for(int i=0; i<tracks.length; i++)
+        if (isLoadMidiExInfo)
         {
-            track = tracks[i];
+            for (int i = 0; i < tracks.length; i++) {
+                track = tracks[i];
 
-            if (isLoadMidiExInfo)
-            {
                 if (isExistMidiExInfo) {
                     track.jsonTrack = jsonTracks.getJSONObject(i);
                     track.SetByInnerJson();
                     ndkSetTrackPlayType(ndkEditor, i, track.playType);
                     jsonNoteOnEvents = track.jsonTrack.getJSONArray("noteOnEvents");
+
+                    int midiIndex;
+                    for (int m = 0; m < jsonNoteOnEvents.length(); m++) {
+                        jsonMidiEvent = jsonNoteOnEvents.getJSONObject(m);
+                        midiIndex = jsonMidiEvent.getInt("index");
+                        track.noteOnEvents[midiIndex].jsonMidiEvent = jsonMidiEvent;
+                        track.noteOnEvents[midiIndex].SetByInnerJson();
+                    }
+
                 } else {
                     JSONObject jsonTrack = new JSONObject();
                     jsonTracks.put(jsonTrack);
@@ -1125,47 +1174,76 @@ public class Editor {
                     track.jsonTrack.put("noteOnEvents", jsonNoteOnEvents);
                 }
             }
+        }
 
+        //分配轨道颜色
+        AssignTrackColors();
 
-            if(isLoadMidiExInfo)
+        //生成简单模式下的音符组，并移除被合并的轨道音符
+        if(isSimpleMode) {
+            simpleModeTrackNotes = null;
+            simpleModeNoteTrackOffset = 0;
+            simpleModeNoteTrackFirst = 0;
+            RemoveSimpleModeNotesFromTracks();
+            //此调用将会填充simpleModeTrackNotes数据
+            ndkCreateSimpleModeTrack(this, ndkEditor);
+
+            //
+            if(simpleModeTrackNotes != null && simpleModeTrackNotes.length > 0) {
+                track = tracks[simpleModeTrackNotes[0].trackIdx];
+                for (int i = 0; i < simpleModeTrackNotes.length; i++)
+                    simpleModeTrackNotes[i].track = track;
+            }
+        }
+
+        //计算总得分点数，和需要弹奏的音符数量
+        if(isLoadMidiExInfo)
+        {
+            totalGamePoint = 0;
+            float mul = 1;
+            NoteOnEvent ev;
+
+            if(!isSimpleMode)
             {
-                NoteOnEvent ev;
-                totalGamePoint = 0;
-                float mul = 1;
-                for(int j=0; j<track.noteOnEvents.length; j++)
+                needPlayNoteEvs.clear();
+                for (int i = 0; i < tracks.length; i++)
                 {
-                    ev = track.noteOnEvents[j];
-                    if(!IsPointerPlayNote(ev))
-                        continue;
+                    track = tracks[i];
+                    for (int j = 0; j < track.noteOnEvents.length; j++) {
+                        ev = track.noteOnEvents[j];
+                        if (!IsPointerPlayNote(ev))
+                            continue;
+                        needPlayNoteEvs.add(ev);
+                    }
+                }
 
+                Collections.sort(needPlayNoteEvs, noteCmp);
+                for(int i=0; i<needPlayNoteEvs.size(); i++)
+                {
+                    ev = needPlayNoteEvs.get(i);
+                    //计算总得分点数，和需要弹奏的音符数量
                     needPlayNoteCount++;
-                    totalGamePoint += 30*mul + (ev.endSec - ev.startSec) * mul * 10;
+                    totalGamePoint += 30 * mul + (ev.endSec - ev.startSec) * mul * 10;
                     mul += 0.1;
                 }
 
-                //
-                if (isExistMidiExInfo)
-                {
-                    int midiIndex;
-                    for(int m=0; m<jsonNoteOnEvents.length(); m++)
-                    {
-                        jsonMidiEvent = jsonNoteOnEvents.getJSONObject(m);
-                        midiIndex = jsonMidiEvent.getInt("index");
-                        track.noteOnEvents[midiIndex].jsonMidiEvent = jsonMidiEvent;
-                        track.noteOnEvents[midiIndex].SetByInnerJson();
-                    }
+            }else {
+                for (int i = 0; i < simpleModeTrackNotes.length; i++) {
+                    ev = simpleModeTrackNotes[i];
+                    //计算总得分点数，和需要弹奏的音符数量
+                    needPlayNoteCount++;
+                    totalGamePoint += 30 * mul + (ev.endSec - ev.startSec) * mul * 10;
+                    mul += 0.1;
                 }
             }
         }
 
-        //
-        AssignTrackColors();
 
         //
         if(isLoadMidiExInfo && needPlayNoteCount > 10000) {
             alreadyPlayedNoteEv = new NoteOnEvent[needPlayNoteCount];
             missNoteEv = new NoteOnEvent[needPlayNoteCount];
-            waitEndEvs = new MidiEvent[needPlayNoteCount];
+            waitEndEvs = new NoteOnEvent[needPlayNoteCount];
         }
     }
 
@@ -1228,7 +1306,37 @@ public class Editor {
         }
     }
 
+    /**移除简单模式下相关的轨道事件*/
+    protected void RemoveSimpleModeNotesFromTracks()
+    {
+        int removeCount;
+        Track track;
+        for (int i = 0; i < tracks.length; i++)
+        {
+            removeCount = 0;
+            track = tracks[i];
+            NoteOnEvent ev;
+            NoteOnEvent[] noteOnEvents = track.noteOnEvents;
+            for (int j = 0; j < noteOnEvents.length; j++) {
+                ev = noteOnEvents[j];
+                if (IsPointerPlayNote(ev)) {
+                    noteOnEvents[j] = null;
+                    removeCount++;
+                }
+            }
 
+            int idx = 0;
+            NoteOnEvent[] newNoteOnEvents = new NoteOnEvent[noteOnEvents.length - removeCount];
+            for (int j = 0; j < noteOnEvents.length; j++) {
+                if (noteOnEvents[j] != null)
+                    newNoteOnEvents[idx++] = noteOnEvents[j];
+            }
+
+            track.noteOnEvents = newNoteOnEvents;
+        }
+    }
+
+    /**在指定时间点，添加我的书签*/
     public void AddMyMarker(double sec)
     {
         MidiMarker myMarker;
@@ -1511,6 +1619,8 @@ public class Editor {
             tracks = null;
         }
 
+        needPlayNoteEvs.clear();
+
         simpleModeNoteTrackOffset = 0;
         simpleModeNoteTrackFirst = 0;
         simpleModeTrackNotes = null;
@@ -1519,6 +1629,9 @@ public class Editor {
             measureInfo.Clear();
         measureInfo = null;
 
+
+        isLoadPlayHistory = false;
+        isPlayRecord = false;
         curtPlaySec = initStartPlaySec;
         state = STOP;
         jsonTracks = null;
@@ -1557,6 +1670,7 @@ public class Editor {
 
             curtPlaySec = 0;
             waitEndEvCount = 0;
+            waitEndEvs[0] = null;
         }
 
         ProcessCore(sec - curtPlaySec, true);
@@ -1642,7 +1756,6 @@ public class Editor {
     protected void ProcessCore(double sec, boolean isDirectGoto)
     {
         curtPlaySec += sec;
-
         if(!isDirectGoto)
             SyncPlaySec();
         else {
@@ -1653,7 +1766,7 @@ public class Editor {
         UpdateWaitEndEvs();
 
         for (int i = 0; i < tracks.length; i++)
-            ProcessTrack( tracks[i]);
+            ProcessTrack(tracks[i]);
 
         if(isSimpleMode)
             ProcessSimpleModeNoteTrack();
@@ -1696,24 +1809,19 @@ public class Editor {
             return;
 
         int i = track.noteOnEventsOffset;
-        for(; i<noteOnEvents.length; i++)
+        for(; i < noteOnEvents.length; i++)
         {
             ev = noteOnEvents[i];
             if (ev.startSec > curtPlaySec)
                 break;
 
-            if((waitEndEvCount == 0 || waitEndEvs[waitEndEvCount - 1] != ev) &&
-                    IsPointerPlayNote(ev))
+            if(IsPointerPlayNote(ev))
             {
                 waitEndEvs[waitEndEvCount++] = ev;
             }
-
         }
 
-        if(i != noteOnEvents.length)
-            track.noteOnEventsOffset = i;
-        else
-            track.noteOnEventsOffset = i - 1;
+        track.noteOnEventsOffset = i;
     }
 
     /**处理简单模式下的音符轨道*/
@@ -1730,14 +1838,10 @@ public class Editor {
             if (ev.startSec > curtPlaySec)
                 break;
 
-            if(waitEndEvCount == 0 || waitEndEvs[waitEndEvCount - 1] != ev)
-                waitEndEvs[waitEndEvCount++] = ev;
+            waitEndEvs[waitEndEvCount++] = ev;
         }
 
-        if(i != simpleModeTrackNotes.length)
-            simpleModeNoteTrackOffset = i;
-        else
-            simpleModeNoteTrackOffset = i - 1;
+        simpleModeNoteTrackOffset = i;
     }
 
 
@@ -1814,36 +1918,40 @@ public class Editor {
     /**更新等待结束的MidiEvs*/
     protected void UpdateWaitEndEvs()
     {
+        //按时间排序需要等待弹奏的Notes
+        Arrays.sort(waitEndEvs, 0, waitEndEvCount, noteCmp);
+        waitEndEvCount = 0;
+
         NoteOnEvent ev;
-        boolean isContinue = true;
-
-        for (int i = waitEndEvCount - 1; i >= 0; i--)
+        for (int i = 0; waitEndEvs[i] != null; i++)
         {
+            waitEndEvCount++;
             ev = (NoteOnEvent) waitEndEvs[i];
-            if(ev == null) {
-                if (isContinue)
-                    waitEndEvCount--;
-                continue;
-            }
 
-            //
             if(!ev.isMiss && !ev.isPlay &&
                     curtPlaySec - ev.startSec > 0.2f)
             {
                 ev.isMiss = true;
-                missNoteEv[missNoteCount++] = ev;
+                if (missNoteCount > 0 && ev.startSec < missNoteEv[missNoteCount - 1].startSec)
+                {
+                    for (int j = missNoteCount - 1; j >= 0; j--) {
+                        if(missNoteEv[j].startSec <= ev.startSec) {
+                            missNoteEv[j + 1] = ev;
+                            break;
+                        }
+                        else {
+                            missNoteEv[j + 1] = missNoteEv[j];
+                            if(j == 0) {missNoteEv[0] = ev; break;}
+                        }
+                    }
+                    missNoteCount++;
+                } else {
+                    missNoteEv[missNoteCount++] = ev;
+                }
             }
 
-            //
-            if (ev.endSec >= curtPlaySec) {
-                isContinue = false;
-                continue;
-            }
-
-            //
-            waitEndEvs[i] = null;
-            if (isContinue)
-                waitEndEvCount--;
+            if (ev.endSec <= curtPlaySec)
+                waitEndEvs[i] = null;
         }
     }
 
@@ -1888,6 +1996,9 @@ public class Editor {
                 continue;
 
             //往前寻找一个endSec大于curtPlaySec的事件
+            if(track.noteOnEventsOffset >= track.noteOnEvents.length)
+                track.noteOnEventsOffset--;
+
             for(int j = track.noteOnEventsOffset; j >= 0; j--)
             {
                 ev = track.noteOnEvents[j];
@@ -1945,6 +2056,8 @@ public class Editor {
         //对简单模式的弹奏轨道处理
         if(isSimpleMode && simpleModeTrackNotes != null && simpleModeTrackNotes.length > 0)
         {
+            if(simpleModeNoteTrackOffset >= simpleModeTrackNotes.length)
+                simpleModeNoteTrackOffset--;
             for (int i = simpleModeNoteTrackOffset; i >=0; i--) {
                 ev = simpleModeTrackNotes[i];
                 if (ev.endSec < curtPlaySec)

@@ -36,6 +36,12 @@ namespace tau
 			return isOpened;
 		}
 
+		//设置是否静音
+		void SetSilence(bool is)
+		{
+			isSilence = is;
+		}
+
 		//设置SoundFont
 		inline void SetSoundFont(SoundFont* sf)
 		{
@@ -507,6 +513,9 @@ namespace tau
 
 		//是否开启
 		bool isOpened = false;
+
+		//是否静音
+		bool isSilence = false;
 
 #ifdef _WIN32
 		Audio::EngineType audioEngineType = Audio::EngineType::SDL;

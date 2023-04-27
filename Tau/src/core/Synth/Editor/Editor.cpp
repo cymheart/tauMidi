@@ -257,6 +257,9 @@ namespace tau
 
 		mainSynther->waitSem.wait();
 
+		mainSynther->ClearCacheBuffer();
+
+
 		//等所有发音结束后删除轨道事件
 		for (int i = 0; i < midiEditor->tracks.size(); i++)
 			DEL(midiEditor->tracks[i]);
