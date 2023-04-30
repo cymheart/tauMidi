@@ -114,6 +114,12 @@ namespace tau
 			return renderQuality;
 		}
 
+		//设置是否开启精简合并音符
+		inline void SetEnableMergeNotesOptimize(bool enable)
+		{
+			enableMergeNotesOptimize = enable;
+		}
+
 		//设置是否开启MidiEvent数量优化
 		inline void SetEnableMidiEventCountOptimize(bool enable)
 		{
@@ -525,6 +531,9 @@ namespace tau
 
 		//采样流缓存最大时长(单位:秒， 默认值:0s)
 		float sampleStreamCacheSec = 0;
+
+		//是否开启精简合并音符
+		bool enableMergeNotesOptimize = true;
 
 		//是否开启MidiEvent数量优化
 		bool enableMidiEventCountOptimize = true;

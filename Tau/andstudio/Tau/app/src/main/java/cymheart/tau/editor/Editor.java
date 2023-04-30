@@ -290,10 +290,10 @@ public class Editor {
         }
 
         //SimpleMode
-        for (int i = 0; i < simpleModeTrackNotes.length; i++) {
-            if(GetKeyboardCenter(simpleModeTrackNotes[i], visualWidth, minKeyWidth))
-                continue;
-        }
+//        for (int i = 0; i < simpleModeTrackNotes.length; i++) {
+//            if(GetKeyboardCenter(simpleModeTrackNotes[i], visualWidth, minKeyWidth))
+//                continue;
+//        }
 
     }
 
@@ -1563,6 +1563,9 @@ public class Editor {
         if (state == PLAY)
             return;
 
+        if(tracks == null)
+            return;
+
         if (state == STOP)
         {
             for (int i = 0; i < tracks.length; i++)
@@ -1629,7 +1632,7 @@ public class Editor {
             measureInfo.Clear();
         measureInfo = null;
 
-
+        isLoadCompleted = false;
         isLoadPlayHistory = false;
         isPlayRecord = false;
         curtPlaySec = initStartPlaySec;

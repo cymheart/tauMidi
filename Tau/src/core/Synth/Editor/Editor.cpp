@@ -84,6 +84,7 @@ namespace tau
 
 		//
 		midiFile = new MidiFile();
+		midiFile->SetEnableMidiEventCountOptimize(tau->enableMergeNotesOptimize);
 		midiFile->SetEnableMidiEventCountOptimize(tau->enableMidiEventCountOptimize);
 		midiFile->SetKeepSameStartTickNoteOnEventsCount(tau->midiKeepSameTimeNoteOnCount);
 		midiFile->SetEnableCopySameChannelControlEvents(tau->enableCopySameChannelControlEvents);
@@ -233,11 +234,13 @@ namespace tau
 		loadingMidiFilelocker.lock();
 		while (loadMidiFileState == 1) {
 			midiFile->StopParse();
+			isStopLoad = true;
 			loadingMidiFilelocker.unlock();
 			loadingMidiFileWaitSem.wait();
 			loadingMidiFilelocker.lock();
 		}
 
+		isStopLoad = false;
 		DEL(midiFile);
 		RemoveCore();
 		midiFilePath.clear();
@@ -757,6 +760,9 @@ namespace tau
 		vector<InstFragment*>& instFragments,
 		vector<Track*>& dstTracks, vector<int>& dstBranchIdxs, vector<float>& secs)
 	{
+
+		float oldEndSec = midiEditor->GetEndSec();
+
 		for (int i = 0; i < instFragments.size(); i++)
 			mainSynther->MoveInstFragment(instFragments[i], dstTracks[i], dstBranchIdxs[i], secs[i]);
 
@@ -777,7 +783,6 @@ namespace tau
 
 		//生成小节信息
 		measureInfo->Create(midiMarkerList, endSec);
-
 
 		//如果是等待播放模式，将清空等待播放模式的数据
 		if (playMode == EditorPlayMode::Wait) {

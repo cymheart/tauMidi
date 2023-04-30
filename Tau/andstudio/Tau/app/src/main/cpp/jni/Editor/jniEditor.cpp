@@ -543,7 +543,6 @@ void CreateTracks(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* edi
         const vector<list<InstFragment*>*>& instFragmentArray = tracks[i]->GetInstFragmentBranchs();
         for(int j=0; j<instFragmentArray.size(); j++)
         {
-            int k = 0;
             for (auto it = instFragmentArray[j]->begin(); it != instFragmentArray[j]->end(); it++) {
                 LinkedList<MidiEvent*>& midiEvents = (*it)->GetMidiEvents();
                 for(auto node = midiEvents.GetHeadNode(); node; node = node->next)
@@ -555,12 +554,12 @@ void CreateTracks(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* edi
             }
         }
 
+
         jobjectArray jNoteOnEvents = (jobjectArray)env->NewObjectArray(midiEventCount, jNoteOnEventClass, NULL);
 
         //
         for(int j=0; j<instFragmentArray.size(); j++)
         {
-            int k = 0;
             for(auto it = instFragmentArray[j]->begin(); it != instFragmentArray[j]->end(); it++)
             {
                 int m = 0;
@@ -569,21 +568,22 @@ void CreateTracks(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* edi
                 int midiIndex = -1;
                 for(auto node = midiEvents.GetHeadNode(); node; node = node->next)
                 {
-                    jobject jMidiEvent;
+                    jobject jNoteOnEv;
                     MidiEvent* midiEvent = node->elem;
                     if(midiEvent->type != MidiEventType::NoteOn)
                             continue;
 
-                    jMidiEvent = CreateJNoteOnEvent(env, (NoteOnEvent*)midiEvent);
                     midiIndex++;
+                    jNoteOnEv = CreateJNoteOnEvent(env, (NoteOnEvent*)midiEvent);
+
 
                     //
-                    env->SetIntField(jMidiEvent, jMidiEventClassIndexField, midiIndex);
-                    env->SetIntField(jMidiEvent, jMidiEventClassTrackIdxField, i);
-                    env->SetObjectField(jMidiEvent, jMidiEventClassTrackField, jTrack);
+                    env->SetIntField(jNoteOnEv, jMidiEventClassIndexField, midiIndex);
+                    env->SetIntField(jNoteOnEv, jMidiEventClassTrackIdxField, i);
+                    env->SetObjectField(jNoteOnEv, jMidiEventClassTrackField, jTrack);
 
-                    env->SetObjectArrayElement(jNoteOnEvents, m++, jMidiEvent);
-                    env->DeleteLocalRef(jMidiEvent);
+                    env->SetObjectArrayElement(jNoteOnEvents, m++, jNoteOnEv);
+                    env->DeleteLocalRef(jNoteOnEv);
                 }
             }
         }
@@ -608,6 +608,7 @@ void CreateTracks(JNIEnv *env, jclass jeditorClass, jobject jeditor, Editor* edi
     env->DeleteLocalRef(jTrackClass);
     env->DeleteLocalRef(jChannelClass);
     env->DeleteLocalRef(jVirInstClass);
+    env->DeleteLocalRef(jNoteOnEventClass);
 }
 
 extern "C"

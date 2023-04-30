@@ -129,6 +129,13 @@ Java_cymheart_tau_Tau_ndkSetSetLimitOnKeySpeed(JNIEnv *env, jclass clazz, jlong 
     tau->SetLimitOnKeySpeed(speed);
 }
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkSetEnableMergeNotesOptimize(JNIEnv *env, jclass clazz, jlong ndk_tau,
+                                                     jboolean enable) {
+    Tau* tau = (Tau*)ndk_tau;
+    tau->SetEnableMergeNotesOptimize(enable);
+}
 
 extern "C"
 JNIEXPORT void JNICALL

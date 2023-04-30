@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
 	//tau->SetEnableMidiEventParseLimitTime(true, 1);
 	//tau->SetMidiKeepSameTimeNoteOnCount(20);
 	tau->SetEnableCreateFreqSpectrums(false);
-	tau->SetSampleStreamCacheSec(0);
+	tau->SetSampleStreamCacheSec(2);
 	tau->SetUseRegionInnerChorusEffect(false);
 	tau->SetEnableAllVirInstEffects(false);
 	//tau->SetAudioEngine(Audio::EngineType::PortAudio);

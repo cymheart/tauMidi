@@ -174,6 +174,12 @@ public class Tau
     }
 
 
+    //设置是否开启精简合并音符
+    public void SetEnableMergeNotesOptimize(boolean enable)
+    {
+        ndkSetEnableMergeNotesOptimize(ndkTau, enable);
+    }
+
     //设置是否开启MidiEvent数量优化
     public void SetEnableMidiEventCountOptimize(boolean enable)
     {
@@ -517,6 +523,8 @@ public class Tau
     private static native void ndkSetSampleStreamCacheSec(long ndkTau, float sec);
     private static native void ndkSetLimitRegionSounderCount(long ndkTau, int count);
     private static native void ndkSetSetLimitOnKeySpeed(long ndkTau, float speed);
+
+    private static native void ndkSetEnableMergeNotesOptimize(long ndkTau, boolean enable);
     private static native void ndkSetEnableMidiEventCountOptimize(long ndkTau, boolean enable);
     private static native void ndkSetEnableCopySameChannelControlEvents(long ndkTau, boolean enable);
     private static native void ndkSetMidiKeepSameTimeNoteOnCount(long ndkTau, int count);

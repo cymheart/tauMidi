@@ -17,6 +17,12 @@ namespace tau
 		MidiFile();
 		~MidiFile();
 
+		//设置是否开启精简合并音符
+		inline void SetEnableMergeNotesOptimize(bool enable)
+		{
+			enableMergeNotesOptimize = enable;
+		}
+
 		//设置是否开启MidiEvent数量优化
 		inline void SetEnableMidiEventCountOptimize(bool enable)
 		{
@@ -136,6 +142,9 @@ namespace tau
 		//去除前后值相同,以及后值覆盖前值的全局事件
 		void RemoveSameAndOverrideGlobalEvents(LinkedList<MidiEvent*>* globalMidiEvents);
 
+		//简化合并音符事件
+		void MergeNoteEvents();
+
 		//解析内核
 		bool ParseCore();
 		//解析头块
@@ -172,6 +181,9 @@ namespace tau
 
 		//是否停止解析
 		bool isStopParse = false;
+
+		//是否开启精简合并音符
+		bool enableMergeNotesOptimize = true;
 
 		//是否开启MidiEvent数量优化
 		bool enableMidiEventCountOptimize = false;
@@ -213,6 +225,7 @@ namespace tau
 
 
 		chrono::high_resolution_clock::time_point startParseTime;
+		//每轨道解析时间
 		float perTrackParseSec = 0;
 		float curtTrackParseSec = 0;
 

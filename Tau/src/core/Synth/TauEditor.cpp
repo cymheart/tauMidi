@@ -109,7 +109,6 @@ namespace tau
 	//移除midi
 	void Tau::Remove()
 	{
-
 		editor->Remove();
 	}
 

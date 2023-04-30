@@ -1,6 +1,7 @@
 ﻿#include"MidiTrack.h"
 #include <Synth/MidiTrackRecord.h>
 
+
 namespace tau
 {
 	MidiTrack::MidiTrack()
@@ -362,18 +363,14 @@ namespace tau
 			return true;
 
 		int count = 0;
-		LinkedListNode<MidiEvent*>* startNode = nullptr;
 		LinkedListNode<MidiEvent*>* node = midiEventListAtChannel[channel].GetLastNode();
 		for (; node; node = node->prev)
 		{
 			if (node->elem->type != MidiEventType::NoteOn)
 				continue;
 
-			if (node->elem->startTick == startTick)
-			{
-				startNode = node;
+			if (abs((int)(node->elem->startTick - startTick)) <= 3)
 				count++;
-			}
 			else
 				break;
 		}

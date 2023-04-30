@@ -255,7 +255,7 @@ namespace tau
 			curtParseTickCount = 0;
 
 			int ret = ParseTrackChuck(i);
-			if (ret == -1)
+			if (ret == -1 || isStopParse)
 				return false;
 
 		}
@@ -322,6 +322,9 @@ namespace tau
 		for (int i = 0; i < midiTracks.size(); i++)
 			midiTracks[i]->SetAllMidiEventTrackIdx(i);
 
+		//精简合并音符事件
+		if (enableMergeNotesOptimize)
+			MergeNoteEvents();
 
 		return true;
 	}
@@ -500,6 +503,259 @@ namespace tau
 	}
 
 
+	//简化合并音符事件
+	void MidiFile::MergeNoteEvents()
+	{
+		LinkedList<MidiEvent*> eventsAtNotes[128];
+		int perGroupTick = 200; //每组tick数 (默认:100)
+		int perGroupNoteCount = 50; //每组note数量 (默认:128)
+		int mergeNoteMaxSelfTick = 5; //能被合并的note的最大tick (默认:5)
+		int mergeNoteMaxDistTick = 5; //能被合并的note的最大距离tick  (默认:5)
+
+		//
+		NoteOnEvent* noteOnEv;
+		int noteCount = 0;
+		bool isSetStartTick = true;
+		bool isSetEndTick = true;
+		int startTick = 0, endTick = perGroupTick;
+		for (int i = 0; i < midiTracks.size(); i++)
+		{
+			LinkedList<MidiEvent*>* midiEventList = midiTracks[i]->GetEventList();
+			LinkedListNode<MidiEvent*>* orgNode = midiEventList->GetHeadNode();
+			LinkedListNode<MidiEvent*>* nextNode = nullptr, * orgNodeNext = nullptr;
+			LinkedListNode<MidiEvent*>* startNode = nullptr, * prevNode;
+
+			for (; orgNode; orgNode = orgNodeNext)
+			{
+				MidiEvent* midiEvent = orgNode->elem;
+
+
+				if (orgNode->next || noteCount == 0)
+				{
+					if (midiEvent->type != MidiEventType::NoteOn) {
+						orgNodeNext = orgNode->next;
+						continue;
+					}
+
+
+					noteOnEv = (NoteOnEvent*)midiEvent;
+
+					if (isSetEndTick) {
+						endTick = noteOnEv->startTick + perGroupTick;
+						isSetEndTick = false;
+					}
+
+					//获取note分段，按最小在perGroupTick为一组范围内note被插入到eventsAtNotes分类中，
+					//同时算法需要保证note的on,off,必须在一个tick组分段中,而不能被拆开到下一个tick组分段中
+					//当note的开始时间点小于指定结束时间点时，把note插入到eventsAtNotes分类中
+					if (noteOnEv->startTick < endTick) {
+						noteCount++;
+
+						//如果要插入的note结束时间点大于指定结束时间点时，
+						//将调整指定结束时间点到最新位置，目的是为了包含note的 on, off事件在一组eventsAtNotes分类中
+						if (noteOnEv->endTick > endTick)
+							endTick = noteOnEv->endTick;
+
+						if (isSetStartTick) {
+							startNode = orgNode;
+							startTick = noteOnEv->startTick;
+							isSetStartTick = false;
+						}
+
+						orgNodeNext = orgNode->next;
+						continue;
+					}
+				}
+
+				if (orgNode->next == nullptr)
+					orgNode = nullptr;
+
+
+				//当note的开始时间点大于指定结束时间点时，
+				//将对已插入eventsAtNotes分类进行简化合并算法
+				float tickMul = (endTick - startTick) / (float)perGroupTick;
+				noteCount /= tickMul; //每perGroupTick有多少个note
+				//当每perGroupTick没有有超过perGroupNoteCount个note在其中时，不启用note合并算法
+				if (noteCount <= perGroupNoteCount) {
+					orgNodeNext = orgNode;
+					startNode = nullptr;
+					prevNode = nullptr;
+					noteCount = 0;
+					isSetEndTick = true;
+					isSetStartTick = true;
+					continue;
+				}
+
+				prevNode = startNode->prev;
+				//当每perGroupTick有超过perGroupNoteCount个note在其中时，将启用简化合并note算法
+				//把符合要求的note插入到eventsAtNotes分类中
+				LinkedListNode<MidiEvent*>* nd;
+				for (nd = startNode; nd; nd = nextNode)
+				{
+					MidiEvent* midiEvent = nd->elem;
+					if (midiEvent->type == MidiEventType::NoteOn)
+					{
+						NoteOnEvent* noteOnEv = (NoteOnEvent*)midiEvent;
+						//当note的开始时间点小于指定结束时间点时，把note插入到eventsAtNotes分类中
+						if (noteOnEv->startTick < endTick) {
+							nextNode = midiEventList->Remove(nd);
+							DEL(nd);
+							eventsAtNotes[noteOnEv->note].AddLast(noteOnEv);
+						}
+						else {
+							break;
+						}
+					}
+					else if (midiEvent->type == MidiEventType::NoteOff)
+					{
+						nextNode = midiEventList->Remove(nd);
+						DEL(nd);
+						NoteOffEvent* noteOffEv = (NoteOffEvent*)midiEvent;
+						eventsAtNotes[noteOffEv->note].AddLast(midiEvent);
+					}
+					else {
+						nextNode = nd->next;
+					}
+				}
+
+
+				//启用简化合并note算法
+				int firstIdx = -1;
+				LinkedList<MidiEvent*>* newNotes = nullptr;
+				NoteOnEvent* noteOnEv2;
+				for (int j = 0; j < 128; j++)
+				{
+					LinkedList<MidiEvent*>& notes = eventsAtNotes[j];
+					LinkedListNode<MidiEvent*>* node = notes.GetHeadNode();
+					LinkedListNode<MidiEvent*>* next = nullptr, * prevNext = nullptr;
+
+					if (node != nullptr && firstIdx == -1)
+					{
+						newNotes = &notes;
+						firstIdx = j;
+					}
+
+					//
+					for (; node; node = next)
+					{
+						MidiEvent* ev = node->elem;
+						MidiEvent* ev2 = node->next->elem;
+
+						//1. ev和ev2形成note1, 并且 note2 跟随 note1 
+						if (ev->type == MidiEventType::NoteOn &&
+							ev2->type == MidiEventType::NoteOff)
+						{
+							//如果存在note2，连接note2到note1中
+							if (node->next->next != nullptr)
+							{
+								noteOnEv = (NoteOnEvent*)ev;
+								noteOnEv2 = (NoteOnEvent*)(node->next->next->elem);
+
+								//当note1和note2距离在规定范围mergeNoteMaxDistTick内时 
+								//且note2的tick范围小于mergeNoteMaxSelfTick，连接note2到note1中
+								if (noteOnEv2->startTick - noteOnEv->endTick <= mergeNoteMaxDistTick &&
+									noteOnEv2->endTick - noteOnEv2->startTick <= mergeNoteMaxSelfTick)
+								{
+									prevNext = node->next;
+									next = notes.Remove(prevNext);
+									DEL(prevNext);
+									notes.Remove(next);
+									DEL(next);
+									DEL(noteOnEv->noteOffEvent);
+									noteOnEv->noteOffEvent = noteOnEv2->noteOffEvent;
+									DEL(noteOnEv2);
+									noteOnEv->endTick = noteOnEv->noteOffEvent->startTick;
+
+									next = node;
+								}
+								else {
+									next = node->next->next;
+								}
+							}
+							else {
+								next = node->next->next;
+							}
+						}
+						//2. note2和note1交错 或者note2被note1包含
+						else if (ev->type == MidiEventType::NoteOn &&
+							ev2->type == MidiEventType::NoteOn)
+						{
+							noteOnEv = (NoteOnEvent*)ev;
+							noteOnEv2 = (NoteOnEvent*)(node->next->elem);
+
+							//2.1 note2被note1包含，移除note2
+							if (noteOnEv2->endTick <= noteOnEv->endTick)
+							{
+								next = node->next;
+								notes.Remove(next);
+								DEL(next);
+								next = notes.ContainsAtNode(noteOnEv2->noteOffEvent, node);
+								notes.Remove(next);
+								DEL(next);
+								DEL(noteOnEv2->noteOffEvent);
+								DEL(noteOnEv2);
+							}
+							//2.2 note2和note1交错, 连接note2到note1中
+							else
+							{
+								next = node->next;
+								notes.Remove(next);
+								DEL(next);
+								next = notes.ContainsAtNode(noteOnEv->noteOffEvent, node);
+								notes.Remove(next);
+								DEL(next);
+								DEL(noteOnEv->noteOffEvent);
+
+								noteOnEv->noteOffEvent = noteOnEv2->noteOffEvent;
+								noteOnEv->endTick = noteOnEv->noteOffEvent->startTick;
+								DEL(noteOnEv2);
+							}
+
+							next = node;
+
+						}
+						else {
+							next = node->next->next;
+						}
+					}
+				}
+
+				//把合并好的notes重新排序，并填入原始track中
+				for (int j = firstIdx; j < 128; j++)
+				{
+					if (eventsAtNotes[j].Empty())
+						continue;
+					newNotes->Merge(eventsAtNotes[j]);
+				}
+
+				newNotes->Sort(MidiEventTickCompare);
+
+				if (prevNode == nullptr) {
+					midiEventList->AddBefore(prevNode,
+						newNotes->GetHeadNode(), newNotes->GetLastNode(),
+						newNotes->Size());
+				}
+				else {
+					midiEventList->AddBack(prevNode,
+						newNotes->GetHeadNode(), newNotes->GetLastNode(),
+						newNotes->Size());
+				}
+
+				newNotes->Clear();
+
+
+				//清空临时数据,为下一次计算作准备
+				orgNodeNext = orgNode;
+				startNode = nullptr;
+				prevNode = nullptr;
+				noteCount = 0;
+				isSetEndTick = true;
+				isSetStartTick = true;
+			}
+		}
+	}
+
+	//按从小到大顺序排列
 	bool MidiFile::MidiEventTickCompare(MidiEvent* a, MidiEvent* b)
 	{
 		return a->startTick < b->startTick;
@@ -560,7 +816,7 @@ namespace tau
 
 		float sec = 0;
 		int eventCount = 0;
-		bool isPassEvents = false;
+		bool isPassEvents = false;  //跳过事件解析
 
 		startParseTime = chrono::high_resolution_clock::now();
 

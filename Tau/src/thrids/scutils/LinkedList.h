@@ -71,7 +71,7 @@ namespace scutils
 		/**合并列表，并清空被合并list*/
 		void Merge(LinkedList<T>& mergeList)
 		{
-			if (mergeList.Empty())
+			if (&mergeList == this || mergeList.Empty())
 				return;
 
 			if (head == nullptr)
@@ -236,7 +236,7 @@ namespace scutils
 			if (next == head)
 				head = startNode;
 
-			size++;
+			size += count;
 
 			return startNode;
 		}
@@ -249,6 +249,16 @@ namespace scutils
 		LinkedListNode<T>* ContainsAtNode(T elem)
 		{
 			LinkedListNode<T>* nd = head;
+			for (; nd; nd = nd->next) {
+				if (nd->elem == elem)
+					return nd;
+			}
+			return nullptr;
+		}
+
+		LinkedListNode<T>* ContainsAtNode(T elem, LinkedListNode<T>* start)
+		{
+			LinkedListNode<T>* nd = start;
 			for (; nd; nd = nd->next) {
 				if (nd->elem == elem)
 					return nd;
@@ -298,6 +308,10 @@ namespace scutils
 			return next;
 		}
 
+		//bool Compare(Type* a, Type* b)
+		//{
+		//    return a<b; //从小到大排列
+		//}
 		template <class Fn>
 		void Sort(Fn cmp)
 		{
