@@ -84,6 +84,7 @@ namespace tau
 				break;
 			}
 
+			ClearCacheBuffer();
 			dstCacheGain = cacheGain = 1;
 			cacheState = CacheState::CachingNotRead;
 			ReqRender();
