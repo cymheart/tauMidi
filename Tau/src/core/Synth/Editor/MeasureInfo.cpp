@@ -52,8 +52,9 @@ namespace tau
 				continue;
 			state = 0;
 
-			//
-			beatCostSec = den / 4.0f * microTempo;
+			//根据每4分音符为一拍的时间microTempo， 按比值计算den分音符作为一拍的花费时间
+			//例如2/4拍, 即以2分音符为一拍，每小节有4拍，2分音符是4分音符时值的2倍，即4.0f / den倍
+			beatCostSec = 4.0f / den * microTempo;
 
 			bool flag = true;
 			while (flag)
