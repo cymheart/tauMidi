@@ -1,7 +1,5 @@
 package cymheart.tau.editor;
 
-import android.util.Log;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,6 +13,7 @@ import cymheart.tau.utils.FileUtils;
 
 
 /**
+ * 弹奏记录
  * ----JsonPlayHistory结构----
  *{
  *  linkfiles:
@@ -73,15 +72,24 @@ public class PlayHistory {
     protected String midiExFilePath;
     protected String playRecordFilePath;
 
-    //
+
+    /**已弹奏音符数量*/
     protected int playNoteCount = 0;
+    /**弹奏错误音符数量*/
     protected int errorNoteCount = 0;
+    /**错过弹奏的音符数量*/
     protected int missNoteCount = 0;
+    /**回拉时间次数*/
     protected int pullCount = 0;
+    /**循环次数*/
     protected int loopCount = 0;
+    /**游戏获取点数*/
     protected int gamePoint = 0;
+    /**总游戏点数*/
     protected int totalGamePoint = 0;
+    /**总音符数量*/
     protected int totalNoteCount = 0;
+    /**得分*/
     protected int score = 0;
 
 
@@ -156,7 +164,7 @@ public class PlayHistory {
 
             //accounts(结算信息)
             JSONObject jsonAccounts = new JSONObject();
-            jsonAccounts.put("playNoteCount", editor.GetAlreadyPlayedNoteCount());
+            jsonAccounts.put("playNoteCount", editor.GetPlayedNoteCount());
             jsonAccounts.put("errorNoteCount", editor.GetPlayErrorNoteCount());
             jsonAccounts.put("missNoteCount", editor.GetMissNoteCount());
             jsonAccounts.put("pullCount", editor.GetPullTimeCount());

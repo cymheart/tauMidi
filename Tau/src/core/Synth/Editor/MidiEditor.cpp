@@ -734,7 +734,7 @@ namespace tau
 					(float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1);
 			}
 			else {
-				editor->NeedOnKeySignal(noteOnEv->note, (float)noteOnEv->velocity, track);
+				editor->NeedOnKeySignal(noteOnEv->note, noteOnEv);
 			}
 		}
 		break;
@@ -753,7 +753,7 @@ namespace tau
 				midiSynther->OffKey(channel, noteOffEv->note, (float)noteOffEv->velocity);
 			}
 			else {
-				editor->NeedOffKeySignal(noteOffEv->note, (float)noteOffEv->velocity, track);
+				editor->NeedOffKeySignal(noteOffEv->note);
 			}
 		}
 		break;
@@ -839,7 +839,7 @@ namespace tau
 						(float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1);
 				}
 				else {
-					editor->NeedOnKeySignal(noteOnEv->note, (float)noteOnEv->velocity, track);
+					editor->NeedOnKeySignal(noteOnEv->note, noteOnEv);
 				}
 
 			}
@@ -851,7 +851,7 @@ namespace tau
 					midiSynther->OffKey(channel, noteOffEv->note, (float)noteOffEv->velocity);
 				}
 				else {
-					editor->NeedOffKeySignal(noteOffEv->note, (float)noteOffEv->velocity, track);
+					editor->NeedOffKeySignal(noteOffEv->note);
 				}
 			}
 		}

@@ -130,16 +130,16 @@ namespace tau
 		}
 
 		//是否有等待中的按键
-		bool HavWaitKey()
-		{
-			return needOnKeyCount > 0;
-		}
+		bool HavWaitKey();
 
 		//是否是等待中的按键
-		bool IsWaitKey(int key)
-		{
-			return needOnkey[key] > 0;
-		}
+		bool IsWaitKey(int key);
+
+		//获取等待中按键的数量
+		int GetWaitKeyCount(int key);
+
+		//是否是等待中的按键事件
+		bool IsWaitNoteOnEvent(NoteOnEvent* noteOnEv);
 
 		//获取播放模式
 		EditorPlayMode GetPlayMode()
@@ -177,12 +177,6 @@ namespace tau
 		{
 			noteSoundEndSec = sec;
 		}
-
-		void SetLateNoteSec(float sec)
-		{
-			lateNoteSec = sec;
-		}
-
 
 		//获取播放速率(相对于正常播放速率1.0的倍率)
 		inline float GetSpeed()
@@ -234,13 +228,6 @@ namespace tau
 		//设置包含需要等待的按键
 		void SetIncludeNeedWaitKey(int key);
 
-		int GetCurtNeedOnKeyTrackIdx();
-
-
-		float GetCurtNeedOnKeyVel()
-		{
-			return curtNeedOnKeyVel;
-		}
 
 		//设置轨道事件演奏方式
 		void SetTrackPlayType(int trackIdx, MidiEventPlayType playType);
@@ -366,10 +353,10 @@ namespace tau
 		void MoveInstFragment(InstFragment* instFragment, float sec);
 
 		//需要按键信号
-		void NeedOnKeySignal(int key, float velocity, Track* track);
+		void NeedOnKeySignal(int key, NoteOnEvent* noteOnEv);
 
 		//需要松开按键信号
-		void NeedOffKeySignal(int key, float velocity, Track* track);
+		void NeedOffKeySignal(int key);
 
 
 		//打印工程信息
@@ -378,8 +365,7 @@ namespace tau
 		static void ReadMidiFileThread(void* param);
 		void ReadMidiFile();
 
-		//获取当前时间之后需要等待按键信号的notes
-		void GetNeedWaitKeySignalNote(int note, float lateSec);
+		void ClearPlayModeData();
 
 	private:
 
@@ -428,12 +414,9 @@ namespace tau
 		int onKeyCount = 0;
 
 		//需要按下的按键所在轨道，以键号分类计数
-		deque<Track*> needOnKeyTrack[128];
-		Track* curtNeedOnKeyTrack = nullptr;
-
-		//需要按下的按键的力度，以键号分类计数
-		deque<float> needOnKeyVelocity[128];
-		float curtNeedOnKeyVel = 1;
+		LinkedList<NoteOnEvent*> needOnKeyEventList[128];
+		//需要按下的按键所在轨道，以键号分类计数,(当只有一个NoteOnEvent时，仅使用此数据存储)
+		LinkedListNode<NoteOnEvent*> needOnKeyEventNode[128];
 
 		//需要按下的按键次数，以键号分类计数
 		int needOnkey[128] = { 0 };
@@ -444,13 +427,6 @@ namespace tau
 		int needOffkey[128] = { 0 };
 		//需要松开的按键总个数
 		int needOffKeyCount = 0;
-
-		//当前时间后几秒钟是否有按键存在
-		LateNoteInfo lateNoteInfo;
-		LateNoteInfo noteOffLateNoteInfo;
-		bool needWaitKey[128] = { false };
-
-		float lateNoteSec = 1;
 
 		//小节信息
 		MeasureInfo* measureInfo;

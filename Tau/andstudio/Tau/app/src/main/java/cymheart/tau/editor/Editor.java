@@ -23,8 +23,6 @@ import cymheart.tau.midi.MidiEvent;
 import cymheart.tau.midi.NoteOnEvent;
 import cymheart.tau.utils.FileUtils;
 import cymheart.tau.utils.MD5Utils;
-import cymheart.tau.utils.ScLinkedList;
-import cymheart.tau.utils.ScLinkedListNode;
 import cymheart.tau.utils.Utils;
 
 /**
@@ -283,17 +281,17 @@ public class Editor {
         maxNote = -1;
         if(!isSimpleMode) {
             for(int i=0; i<needPlayNoteEvs.size(); i++) {
-                if(GetKeyboardCenter(needPlayNoteEvs.get(i), visualWidth, minKeyWidth))
-                    continue;
+                if(!GetKeyboardCenter(needPlayNoteEvs.get(i), visualWidth, minKeyWidth))
+                    break;
             }
             return;
         }
 
         //SimpleMode
-//        for (int i = 0; i < simpleModeTrackNotes.length; i++) {
-//            if(GetKeyboardCenter(simpleModeTrackNotes[i], visualWidth, minKeyWidth))
-//                continue;
-//        }
+        for (int i = 0; i < simpleModeTrackNotes.length; i++) {
+            if(!GetKeyboardCenter(simpleModeTrackNotes[i], visualWidth, minKeyWidth))
+                break;
+        }
 
     }
 
@@ -542,6 +540,9 @@ public class Editor {
     protected int state = STOP;
     public int GetState(){return state;}
 
+    /**是否需要同步时间点*/
+    protected boolean isNeedSyncSec = false;
+
     protected float speed = 1;
     public float GetSpeed(){return speed;}
     public void SetSpeed(float speed)
@@ -583,6 +584,27 @@ public class Editor {
         return playMode;
     }
 
+    /**视图是否等待中*/
+    protected boolean isWaitForGraph = false;
+    /**视图是否等待中*/
+    public boolean IsWaitForGraph()
+    {
+        return isWaitForGraph;
+    }
+
+    /**视图等待*/
+    public void WaitForGraph()
+    {
+        isWaitForGraph = true;
+    }
+
+    /**视图继续*/
+    public void ContinueForGraph()
+    {
+        isWaitForGraph = false;
+    }
+
+
     //等待(区别于暂停，等待相当于在原始位置播放)
     public void Wait(){
         ndkWait(ndkEditor);
@@ -603,6 +625,18 @@ public class Editor {
     public boolean IsWaitKey(int key)
     {
         return ndkIsWaitKey(ndkEditor, key);
+    }
+
+    //获取等待中按键的数量
+    public int GetWaitKeyCount(int key)
+    {
+        return ndkGetWaitKeyCount(ndkEditor, key);
+    }
+
+    //是否是等待中的按键事件
+    public boolean IsWaitNoteOnEvent(NoteOnEvent noteOnEv)
+    {
+        return IsWaitNoteOnEvent(ndkEditor, noteOnEv.getNdkMidiEvent());
     }
 
     //是否有等待中的按键
@@ -704,20 +738,20 @@ public class Editor {
     }
 
     /**已演奏的音符事件*/
-    protected NoteOnEvent[] alreadyPlayedNoteEv = new NoteOnEvent[10000];
+    protected NoteOnEvent[] playedNoteEv = new NoteOnEvent[10000];
     /**添加已演奏的音符事件*/
-    public void AddAlreadyPlayedNoteEv(NoteOnEvent ev)
+    public void AddPlayedNoteEv(NoteOnEvent ev)
     {
         ev.isPlay = true;
-        alreadyPlayedNoteEv[alreadyPlayedNoteCount++] = ev;
+        playedNoteEv[playedNoteCount++] = ev;
     }
 
     /**已演奏的音符事件数量*/
-    protected int alreadyPlayedNoteCount = 0;
+    protected int playedNoteCount = 0;
     /**获取已演奏的音符事件数量*/
-    public int GetAlreadyPlayedNoteCount()
+    public int GetPlayedNoteCount()
     {
-        return alreadyPlayedNoteCount;
+        return playedNoteCount;
     }
 
     /**弹奏点数*/
@@ -836,21 +870,6 @@ public class Editor {
     public void SetIncludeNeedWaitKey(int key)
     {
         ndkSetIncludeNeedWaitKey(ndkEditor, key);
-    }
-
-    public int GetCurtNeedOnKeyTrackIdx()
-    {
-       return ndkGetCurtNeedOnKeyTrackIdx(ndkEditor);
-    }
-
-    public float GetCurtNeedOnKeyVel()
-    {
-       return ndkGetCurtNeedOnKeyVel(ndkEditor);
-    }
-
-    public void SetLateNoteSec(float sec)
-    {
-        ndkSetLateNoteSec(ndkEditor, sec);
     }
 
     //按键信号
@@ -1020,7 +1039,7 @@ public class Editor {
         boolean isExistMidiExInfo = false;
         needPlayNoteCount = 0;
         missNoteCount = 0;
-        alreadyPlayedNoteCount = 0;
+        playedNoteCount = 0;
 
         //
         userDatasRootPath = FileUtils.getInstance().GetExtralFilePath(tau.GetContext()) + "/UserDatas/";
@@ -1241,7 +1260,7 @@ public class Editor {
 
         //
         if(isLoadMidiExInfo && needPlayNoteCount > 10000) {
-            alreadyPlayedNoteEv = new NoteOnEvent[needPlayNoteCount];
+            playedNoteEv = new NoteOnEvent[needPlayNoteCount];
             missNoteEv = new NoteOnEvent[needPlayNoteCount];
             waitEndEvs = new NoteOnEvent[needPlayNoteCount];
         }
@@ -1745,7 +1764,10 @@ public class Editor {
         if (state != PLAY)
             return;
 
-        if(IsWait())
+        if(!IsWait())
+            isWaitForGraph = false;
+
+        if(isWaitForGraph)
             sec = 0;
 
         ProcessCore(sec, false);
@@ -1759,50 +1781,45 @@ public class Editor {
     protected void ProcessCore(double sec, boolean isDirectGoto)
     {
         curtPlaySec += sec;
-        if(!isDirectGoto)
-            SyncPlaySec();
-        else {
+        if(isDirectGoto)
+        {
             UpdateNotePlayState();
             UpdateNoteMissState();
+        }else{
+            //同步播放时间
+            double ndkPlaySec = ndkGetPlaySec(ndkEditor);
+            if (ndkPlaySec - curtPlaySec > 0.1)
+                curtPlaySec = ndkPlaySec;
+        }
+
+
+        int n = 2;
+        isNeedSyncSec = true;
+        if(playMode != PlayMode_Wait || isWaitForGraph)
+        {
+            n = 1;
+            isNeedSyncSec = false;
+        }
+
+        while (n > 0) {
+            n--;
+            for (int i = 0; i < tracks.length; i++)
+                ProcessTrack(tracks[i]);
+
+            if (isSimpleMode)
+                ProcessSimpleModeNoteTrack();
+
+            if(!isWaitForGraph)
+                break;
         }
 
         UpdateWaitEndEvs();
-
-        for (int i = 0; i < tracks.length; i++)
-            ProcessTrack(tracks[i]);
-
-        if(isSimpleMode)
-            ProcessSimpleModeNoteTrack();
 
         //
         StepMeasure();
     }
 
 
-    /**同步播放时间*/
-    protected void SyncPlaySec()
-    {
-        double ndkPlaySec = ndkGetPlaySec(ndkEditor);
-        if (ndkPlaySec - curtPlaySec > 0.002f)
-            curtPlaySec = ndkPlaySec;
-        else if(ndkPlaySec < curtPlaySec)
-        {
-            if(playMode == PlayMode_Wait && state == PLAY &&
-                    curtPlaySec - ndkPlaySec >= 0.02) {
-                curtPlaySec = ndkPlaySec;
-            }
-            else {
-                int cacheState = ndkGetCacheState(ndkEditor);
-
-                //cacheState值
-                //3:CachingNotRead 缓存中但不读取
-                //4:CachingPauseRead 缓存中但暂停
-                //6:PauseWaitRead 暂停等待读取
-                if (cacheState == 3 || cacheState == 5 || cacheState == 6)
-                    curtPlaySec = ndkPlaySec;
-            }
-        }
-    }
 
     protected void ProcessTrack(Track track)
     {
@@ -1818,8 +1835,17 @@ public class Editor {
             if (ev.startSec > curtPlaySec)
                 break;
 
-            if(IsPointerPlayNote(ev))
-            {
+            if(IsPointerPlayNote(ev)) {
+
+                if(playMode == PlayMode_Wait && isNeedSyncSec &&
+                        !ev.isPlay && !ev.isMiss)
+                {
+                    if(ev.startSec < curtPlaySec)
+                        curtPlaySec = ev.startSec;
+                    isWaitForGraph = true;
+                    return;
+                }
+
                 waitEndEvs[waitEndEvCount++] = ev;
             }
         }
@@ -1841,80 +1867,19 @@ public class Editor {
             if (ev.startSec > curtPlaySec)
                 break;
 
+            if(playMode == PlayMode_Wait && isNeedSyncSec &&
+                    !ev.isPlay && !ev.isMiss)
+            {
+                if(ev.startSec < curtPlaySec)
+                    curtPlaySec = ev.startSec;
+                isWaitForGraph = true;
+                return;
+            }
+
             waitEndEvs[waitEndEvCount++] = ev;
         }
 
         simpleModeNoteTrackOffset = i;
-    }
-
-
-
-    /**步进小节到当前时间点*/
-    protected void StepMeasure()
-    {
-        if(measureInfo == null)
-            return;
-
-        float measureSec;
-        for(int i = measureInfo.atMeasure; i <= measureInfo.GetMeasureCount(); i++)
-        {
-            measureSec = measureInfo.GetMeasureStartSec(i);
-            if(measureSec >= curtPlaySec)
-                return;
-            measureInfo.atMeasure = i;
-        }
-
-        measureInfo.atMeasure = measureInfo.GetMeasureCount();
-    }
-
-    protected void UpdateNotePlayState()
-    {
-        UpdateNotePlayStateToSec(curtPlaySec);
-    }
-
-    /**更新音符弹奏状态到指定时间点*/
-    public void UpdateNotePlayStateToSec(double sec)
-    {
-        for(int i = alreadyPlayedNoteCount - 1; i >= 0; i--)
-        {
-            if(alreadyPlayedNoteEv[i].startSec > sec) {
-                playGamePoint -= alreadyPlayedNoteEv[i].gamePoint;
-                alreadyPlayedNoteEv[i].gamePoint = 0;
-                alreadyPlayedNoteEv[i].lateSec = 0;
-
-                if(!isPlayRecord)
-                    alreadyPlayedNoteEv[i].lateDownSec = 0;
-
-                alreadyPlayedNoteEv[i].isPlay = false;
-                alreadyPlayedNoteCount--;
-            }
-            else{
-                break;
-            }
-        }
-
-        if(playGamePoint < 0)
-            playGamePoint = 0;
-    }
-
-
-    protected void UpdateNoteMissState()
-    {
-        for(int i = missNoteCount - 1; i >= 0; i--)
-        {
-            if(missNoteEv[i].startSec > curtPlaySec) {
-                missNoteEv[i].isMiss = false;
-                missNoteEv[i].lateSec = 0;
-
-                if(!isPlayRecord)
-                    missNoteEv[i].lateDownSec = 0;
-
-                missNoteCount--;
-            }
-            else{
-                break;
-            }
-        }
     }
 
 
@@ -1957,6 +1922,79 @@ public class Editor {
                 waitEndEvs[i] = null;
         }
     }
+
+
+
+
+    /**步进小节到当前时间点*/
+    protected void StepMeasure()
+    {
+        if(measureInfo == null)
+            return;
+
+        float measureSec;
+        for(int i = measureInfo.atMeasure; i <= measureInfo.GetMeasureCount(); i++)
+        {
+            measureSec = measureInfo.GetMeasureStartSec(i);
+            if(measureSec >= curtPlaySec)
+                return;
+            measureInfo.atMeasure = i;
+        }
+
+        measureInfo.atMeasure = measureInfo.GetMeasureCount();
+    }
+
+    protected void UpdateNotePlayState()
+    {
+        UpdateNotePlayStateToSec(curtPlaySec);
+    }
+
+    /**更新音符弹奏状态到指定时间点*/
+    public void UpdateNotePlayStateToSec(double sec)
+    {
+        for(int i = playedNoteCount - 1; i >= 0; i--)
+        {
+            if(playedNoteEv[i].startSec > sec) {
+                playGamePoint -= playedNoteEv[i].gamePoint;
+                playedNoteEv[i].gamePoint = 0;
+                playedNoteEv[i].lateSec = 0;
+
+                if(!isPlayRecord)
+                    playedNoteEv[i].lateDownSec = 0;
+
+                playedNoteEv[i].isPlay = false;
+                playedNoteCount--;
+            }
+            else{
+                break;
+            }
+        }
+
+        if(playGamePoint < 0)
+            playGamePoint = 0;
+    }
+
+
+    protected void UpdateNoteMissState()
+    {
+        for(int i = missNoteCount - 1; i >= 0; i--)
+        {
+            if(missNoteEv[i].startSec > curtPlaySec) {
+                missNoteEv[i].isMiss = false;
+                missNoteEv[i].lateSec = 0;
+
+                if(!isPlayRecord)
+                    missNoteEv[i].lateDownSec = 0;
+
+                missNoteCount--;
+            }
+            else{
+                break;
+            }
+        }
+    }
+
+
 
 
     /**获取当前可视midi事件*/
@@ -2047,6 +2085,7 @@ public class Editor {
                 if (noteEvlist.size() - noteEvCount[noteOnEvent.note] > 100)
                     break;
             }
+
 
             //
             for (int j = 0; j < visualMidiEvents.usedNoteCount; j++) {
@@ -2281,11 +2320,8 @@ public class Editor {
     private static native void ndkLeavePlayMode(long ndkEditor);
     private static native void ndkSetTrackPlayType(long ndkEditor, int trackIdx, int playType);
 
-    private static native int  ndkGetCurtNeedOnKeyTrackIdx(long ndkEditor);
-    private static native int  ndkGetCurtNeedOnKeyVel(long ndkEditor);
     private static native void ndkSetExcludeNeedWaitKey(long ndkEditor, int key);
     private static native void ndkSetIncludeNeedWaitKey(long ndkEditor, int key);
-    private static native void ndkSetLateNoteSec(long ndkEditor, float sec);
     private static native void ndkOnKeySignal(long ndkEditor, int key);
     private static native void ndkOffKeySignal(long ndkEditor, int key);
 
@@ -2320,6 +2356,8 @@ public class Editor {
     private static native void ndkContinue(long ndkEditor);
     private static native boolean ndkIsWait(long ndkEditor);
     private static native boolean ndkIsWaitKey(long ndkEditor, int key);
+    private static native boolean IsWaitNoteOnEvent(long ndkEditor, long ndkNoteOnEvPtr);
+    private static native int ndkGetWaitKeyCount(long ndkEditor, int key);
     private static native boolean ndkHavWaitKey(long ndkEditor);
     private static native void ndkOnWaitKeysSignal(long ndkEditor);
 

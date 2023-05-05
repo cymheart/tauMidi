@@ -54,6 +54,7 @@ namespace tau
 			startSec = sec;
 		}
 
+		//获取一个四分音符的微秒数
 		inline float GetMicroTempo()
 		{
 			return microTempo;

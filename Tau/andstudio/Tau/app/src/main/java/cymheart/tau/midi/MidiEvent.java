@@ -118,6 +118,9 @@ public class MidiEvent {
     }
 
     private long ndkMidiEvent = 0;
+    public long getNdkMidiEvent() {
+        return ndkMidiEvent;
+    }
 
     protected static native void ndkSetPlayType(long ndkMidiEvent, int playType);
 }

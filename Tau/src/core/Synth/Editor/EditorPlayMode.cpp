@@ -29,13 +29,43 @@ namespace tau
 	}
 
 
-
-	//获取当前时间之后需要等待按键信号的notes
-	void Editor::GetNeedWaitKeySignalNote(int note, float lateSec)
+	//是否有等待中的按键
+	bool Editor::HavWaitKey()
 	{
-		mainSynther->GetCurTimeLateNeedWaitKeySignalNote(note, lateSec);
-		lateNoteInfo = mainSynther->midiEditor->lateNoteInfo;
-		noteOffLateNoteInfo = mainSynther->midiEditor->noteOffLateNoteInfo;
+		TauLock(tau);
+		return needOnKeyCount > 0;
+	}
+
+	//是否是等待中的按键
+	bool Editor::IsWaitKey(int key)
+	{
+		TauLock(tau);
+		return needOnkey[key] > 0;
+	}
+
+	//获取等待中按键的数量
+	int Editor::GetWaitKeyCount(int key)
+	{
+		TauLock(tau);
+		return needOnkey[key];
+	}
+
+	//是否是等待中的按键事件
+	bool Editor::IsWaitNoteOnEvent(NoteOnEvent* noteOnEv)
+	{
+		TauLock(tau);
+
+		if (needOnkey[noteOnEv->note] == 0)
+			return false;
+
+		//
+		auto node = needOnKeyEventList[noteOnEv->note].GetHeadNode();
+		for (; node; node = node->next) {
+			if (noteOnEv == node->elem)
+				return true;
+		}
+
+		return false;
 	}
 
 
@@ -64,22 +94,7 @@ namespace tau
 
 		TauLock(tau);
 		playMode = EditorPlayMode::Wait;
-		isWait = false;
-
-		for (int i = 0; i < 128; i++)
-		{
-			needOnKeyTrack[i].clear();
-			needOnKeyVelocity[i].clear();
-		}
-
-		memset(onkey, 0, sizeof(int) * 128);
-		memset(needOnkey, 0, sizeof(int) * 128);
-		memset(needOffkey, 0, sizeof(int) * 128);
-		memset(needWaitKey, 0, sizeof(bool) * 128);
-
-		needOnKeyCount = 0;
-		needOffKeyCount = 0;
-		onKeyCount = 0;
+		ClearPlayModeData();
 
 		mainSynther->EnterPlayMode(EditorPlayMode::Wait);
 	}
@@ -95,22 +110,7 @@ namespace tau
 
 		TauLock(tau);
 		playMode = EditorPlayMode::Mute;
-		isWait = false;
-
-		for (int i = 0; i < 128; i++)
-		{
-			needOnKeyTrack[i].clear();
-			needOnKeyVelocity[i].clear();
-		}
-
-		memset(onkey, 0, sizeof(int) * 128);
-		memset(needOnkey, 0, sizeof(int) * 128);
-		memset(needOffkey, 0, sizeof(int) * 128);
-		memset(needWaitKey, 0, sizeof(bool) * 128);
-
-		needOnKeyCount = 0;
-		needOffKeyCount = 0;
-		onKeyCount = 0;
+		ClearPlayModeData();
 
 		mainSynther->EnterPlayMode(EditorPlayMode::Mute);
 
@@ -130,26 +130,30 @@ namespace tau
 	{
 		TauLock(tau);
 		//如果是等待播放模式，将清空等待播放模式的数据
-		if (playMode == EditorPlayMode::Wait) {
-
-			for (int i = 0; i < 128; i++)
-			{
-				needOnKeyTrack[i].clear();
-				needOnKeyVelocity[i].clear();
-			}
-
-			memset(onkey, 0, sizeof(int) * 128);
-			memset(needOnkey, 0, sizeof(int) * 128);
-			memset(needOffkey, 0, sizeof(int) * 128);
-			memset(needWaitKey, 0, sizeof(bool) * 128);
-
-			needOnKeyCount = 0;
-			needOffKeyCount = 0;
-			onKeyCount = 0;
-			isWait = false;
-		}
+		if (playMode == EditorPlayMode::Wait)
+			ClearPlayModeData();
 
 		mainSynther->Runto(sec);
+	}
+
+	void Editor::ClearPlayModeData()
+	{
+		for (int i = 0; i < 128; i++) {
+			auto node = needOnKeyEventList[i].GetHeadNode();
+			if (node == &(needOnKeyEventNode[i]))
+				needOnKeyEventList[i].Remove(node);
+			needOnKeyEventList[i].Release();
+		}
+
+		memset(onkey, 0, sizeof(int) * 128);
+		memset(needOnkey, 0, sizeof(int) * 128);
+		memset(needOffkey, 0, sizeof(int) * 128);
+
+		//
+		needOnKeyCount = 0;
+		needOffKeyCount = 0;
+		onKeyCount = 0;
+		isWait = false;
 	}
 
 	//等待(区别于暂停，等待相当于在原始位置播放)
@@ -188,17 +192,14 @@ namespace tau
 		excludeNeedWaitKey[key] = true;
 		if (needOnkey[key] != 0)
 		{
-			Track* track;
-			float vel;
-			for (int j = needOnkey[key] - 1; j >= 0; j--) {
-				track = needOnKeyTrack[key][j];
-				vel = needOnKeyVelocity[key][j];
-				OnKey(key, vel, track);
+			NoteOnEvent* noteOnEv;
+			auto node = needOnKeyEventList[key].GetHeadNode();
+			for (; node; node = node->next) {
+				noteOnEv = node->elem;
+				OnKey(key, noteOnEv->velocity, noteOnEv->track);
 			}
 
-			needOnKeyTrack[key].clear();
-			needOnKeyVelocity[key].clear();
-
+			needOnKeyEventList[key].Release();
 			needOnKeyCount -= needOnkey[key];
 			needOnkey[key] = 0;
 			if (needOnKeyCount == 0)
@@ -208,7 +209,7 @@ namespace tau
 
 
 	//需要按键信号
-	void Editor::NeedOnKeySignal(int key, float velocity, Track* track)
+	void Editor::NeedOnKeySignal(int key, NoteOnEvent* noteOnEv)
 	{
 		if (playMode != EditorPlayMode::Wait)
 			return;
@@ -219,32 +220,35 @@ namespace tau
 			return;
 		}
 
-		needOnKeyTrack[key].push_back(track);
-		needOnKeyVelocity[key].push_back(velocity);
 		needOnkey[key]++;
 		needOnKeyCount++;
 
+		if (noteOnEv != nullptr) {
+
+			if (needOnkey[key] == 1) {
+				needOnKeyEventNode[key].elem = noteOnEv;
+				needOnKeyEventList[key].AddLast(&needOnKeyEventNode[key]);
+			}
+			else {
+				needOnKeyEventList[key].AddLast(noteOnEv);
+			}
+		}
+
 		isWait = true;
-		//printf("等待按键:%d \n", key);
+		printf("等待按键:%d \n", key);
 	}
 
 	//需要松开按键信号
-	void Editor::NeedOffKeySignal(int key, float velocity, Track* track)
+	void Editor::NeedOffKeySignal(int key)
 	{
 		if (playMode != EditorPlayMode::Wait)
 			return;
 
-		if (needWaitKey[key]) {
-			isWait = true;
-			needWaitKey[key] = false;
-		}
 
 		/*
 		if (onkey[key] == 0)
 			return;
 
-		needOffKeyTrack[key].push_back(track);
-		needOffKeyVelocity[key].push_back(velocity);
 		needOffkey[key]++;
 		needOffKeyCount++;*/
 		//isWait = true;
@@ -257,14 +261,13 @@ namespace tau
 		if (playMode != EditorPlayMode::Wait)
 			return;
 
-		GetNeedWaitKeySignalNote(key, lateNoteSec);
+		TauLock(tau);
+		//GetNeedWaitKeySignalNote(key, lateNoteSec);
 
-		//printf("按下按键:%d \n", key);
+		printf("按下按键:%d \n", key);
 		onkey[key]++;
 		onKeyCount++;
 
-		curtNeedOnKeyTrack = nullptr;
-		curtNeedOnKeyVel = 1;
 
 		if (needOnkey[key] > 0) //存在需要对应按下的按键
 		{
@@ -272,39 +275,23 @@ namespace tau
 			onKeyCount--;
 
 			//
-			curtNeedOnKeyTrack = needOnKeyTrack[key].front();
-			needOnKeyTrack[key].pop_front();
-
-			curtNeedOnKeyVel = needOnKeyVelocity[key].front();
-			needOnKeyVelocity[key].pop_front();
+			auto node = needOnKeyEventList[key].GetHeadNode();
+			needOnKeyEventList[key].Remove(node);
+			node->elem = nullptr;
+			if (node != &(needOnKeyEventNode[key]))
+				DEL(node);
 
 			needOnkey[key]--;
 			needOnKeyCount--;
 			if (needOnKeyCount == 0 && needOffKeyCount == 0)
 				isWait = false;
 		}
-		else if (lateNoteInfo.note >= 0)  //当前时间之后有这个按键事件
-		{
-			curtNeedOnKeyTrack = lateNoteInfo.track;
-			curtNeedOnKeyVel = lateNoteInfo.vel;
-		}
-		else if (noteOffLateNoteInfo.note >= 0)
-		{
-			needWaitKey[key] = true;
-			curtNeedOnKeyTrack = noteOffLateNoteInfo.track;
-			curtNeedOnKeyVel = noteOffLateNoteInfo.vel;
-		}
-		else  //当前时间之后没有这个按键事件
-		{
-			isWait = true;
-			//printf("按错键,等待中\n");
-		}
-
 	}
 
 	//所有等待按键信号
 	void Editor::OnWaitKeysSignal()
 	{
+		TauLock(tau);
 		if (needOnKeyCount == 0)
 			return;
 
@@ -324,14 +311,12 @@ namespace tau
 		if (playMode != EditorPlayMode::Wait)
 			return;
 
-
+		TauLock(tau);
 		if (onkey[key] > 0)
 		{
 			//printf("松开按键:%d \n", key);
 			onkey[key]--;
 			onKeyCount--;
-
-			needWaitKey[key] = false;
 
 			if (needOffkey[key] > 0) {
 				needOffkey[key]--;

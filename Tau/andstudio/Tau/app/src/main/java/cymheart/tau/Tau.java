@@ -218,16 +218,6 @@ public class Tau
     }
 
 
-    public int GetCurtNeedOnKeyTrackIdx()
-    {
-        return editor.GetCurtNeedOnKeyTrackIdx();
-    }
-
-    public float GetCurtNeedOnKeyVel()
-    {
-        return editor.GetCurtNeedOnKeyVel();
-    }
-
     //设置编辑器排除需要等待的按键
     public void SetExcludeNeedWaitKey(int key)
     {
@@ -239,11 +229,6 @@ public class Tau
     public void SetIncludeNeedWaitKey(int key)
     {
         editor.SetIncludeNeedWaitKey(key);
-    }
-
-    public void SetLateNoteSec(float sec)
-    {
-        editor.SetLateNoteSec(sec);
     }
 
     //按键信号

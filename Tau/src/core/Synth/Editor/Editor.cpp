@@ -350,22 +350,8 @@ namespace tau
 		TauLock(tau);
 
 		//如果是等待播放模式，将清空等待播放模式的数据
-		if (playMode == EditorPlayMode::Wait) {
-			for (int i = 0; i < 128; i++)
-			{
-				needOnKeyTrack[i].clear();
-				needOnKeyVelocity[i].clear();
-			}
-			memset(onkey, 0, sizeof(int) * 128);
-			memset(needOnkey, 0, sizeof(int) * 128);
-			memset(needOffkey, 0, sizeof(int) * 128);
-			memset(needWaitKey, 0, sizeof(bool) * 128);
-
-			onKeyCount = 0;
-			needOnKeyCount = 0;
-			needOffKeyCount = 0;
-			isWait = false;
-		}
+		if (playMode == EditorPlayMode::Wait)
+			ClearPlayModeData();
 
 		mainSynther->Goto(sec);
 
@@ -400,6 +386,7 @@ namespace tau
 		TauLock(tau);
 		return midiEditor->tracks[idx]->GetChannel()->GetVirInstruments();
 	}
+
 
 	//获取播放状态
 	EditorState Editor::GetPlayState()
@@ -785,19 +772,8 @@ namespace tau
 		measureInfo->Create(midiMarkerList, endSec);
 
 		//如果是等待播放模式，将清空等待播放模式的数据
-		if (playMode == EditorPlayMode::Wait) {
-			for (int i = 0; i < 128; i++)
-			{
-				needOnKeyTrack[i].clear();
-				needOnKeyVelocity[i].clear();
-			}
-			memset(onkey, 0, sizeof(int) * 128);
-			memset(needOnkey, 0, sizeof(int) * 128);
-			memset(needOffkey, 0, sizeof(int) * 128);
-			needOnKeyCount = 0;
-			needOffKeyCount = 0;
-			isWait = false;
-		}
+		if (playMode == EditorPlayMode::Wait)
+			ClearPlayModeData();
 
 
 		//如果启用了缓存播放，将重新缓存
@@ -838,17 +814,4 @@ namespace tau
 		MoveInstFragments(fragVec, trackVec, secVec);
 	}
 
-	int Editor::GetCurtNeedOnKeyTrackIdx()
-	{
-		TauLock(tau);
-		if (curtNeedOnKeyTrack == nullptr)
-			return -1;
-
-		for (int i = 0; i < midiEditor->tracks.size(); i++)
-		{
-			if (midiEditor->tracks[i] == curtNeedOnKeyTrack)
-				return i;
-		}
-		return -1;
-	}
 }

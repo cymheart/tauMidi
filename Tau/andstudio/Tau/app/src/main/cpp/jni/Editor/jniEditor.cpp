@@ -100,22 +100,6 @@ Java_cymheart_tau_editor_Editor_ndkSetTrackPlayType(JNIEnv *env, jclass clazz, j
 
 
 extern "C"
-JNIEXPORT jint JNICALL
-Java_cymheart_tau_editor_Editor_ndkGetCurtNeedOnKeyTrackIdx(JNIEnv *env, jclass clazz,
-                                                            jlong ndk_editor) {
-    Editor* editor = (Editor*)ndk_editor;
-    return editor->GetCurtNeedOnKeyTrackIdx();
-}
-extern "C"
-JNIEXPORT jint JNICALL
-Java_cymheart_tau_editor_Editor_ndkGetCurtNeedOnKeyVel(JNIEnv *env, jclass clazz,
-                                                       jlong ndk_editor) {
-    Editor* editor = (Editor*)ndk_editor;
-    return editor->GetCurtNeedOnKeyVel();
-}
-
-
-extern "C"
 JNIEXPORT void JNICALL
 Java_cymheart_tau_editor_Editor_ndkSetExcludeNeedWaitKey(JNIEnv *env, jclass clazz,
                                                          jlong ndk_editor, jint key) {
@@ -131,13 +115,6 @@ Java_cymheart_tau_editor_Editor_ndkSetIncludeNeedWaitKey(JNIEnv *env, jclass cla
     editor->SetIncludeNeedWaitKey(key);
 }
 
-extern "C"
-JNIEXPORT void JNICALL
-Java_cymheart_tau_editor_Editor_ndkSetLateNoteSec(JNIEnv *env, jclass clazz, jlong ndk_editor,
-                                                  jfloat sec) {
-    Editor* editor = (Editor*)ndk_editor;
-    editor->SetLateNoteSec(sec);
-}
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -218,6 +195,22 @@ Java_cymheart_tau_editor_Editor_ndkIsWaitKey(JNIEnv *env, jclass clazz, jlong nd
     return editor->IsWaitKey(key);
 }
 
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_cymheart_tau_editor_Editor_IsWaitNoteOnEvent(JNIEnv *env, jclass clazz, jlong ndk_editor,
+                                                  jlong ndk_note_on_ev_ptr) {
+    Editor* editor = (Editor*)ndk_editor;
+    return editor->IsWaitNoteOnEvent((NoteOnEvent*)ndk_note_on_ev_ptr);
+}
+
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_cymheart_tau_editor_Editor_ndkGetWaitKeyCount(JNIEnv *env, jclass clazz, jlong ndk_editor,
+                                                   jint key) {
+    Editor* editor = (Editor*)ndk_editor;
+    return editor->GetWaitKeyCount(key);
+}
 
 extern "C"
 JNIEXPORT jboolean JNICALL
@@ -821,6 +814,7 @@ Java_cymheart_tau_midi_MidiEvent_ndkSetPlayType(JNIEnv *env, jclass clazz, jlong
     MidiEvent* midiEvent = (MidiEvent*)ndk_midi_event;
     midiEvent->playType = (MidiEventPlayType)play_type;
 }
+
 
 
 
