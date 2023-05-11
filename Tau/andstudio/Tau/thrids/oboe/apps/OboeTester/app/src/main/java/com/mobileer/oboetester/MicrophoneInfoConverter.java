@@ -4,6 +4,7 @@ import android.media.MicrophoneInfo;
 import android.util.Pair;
 
 import java.util.List;
+import java.util.Locale;
 
 public class MicrophoneInfoConverter {
 
@@ -39,7 +40,7 @@ public class MicrophoneInfoConverter {
 
     static String convertCoordinates(MicrophoneInfo.Coordinate3F coordinates) {
         if (coordinates == MicrophoneInfo.POSITION_UNKNOWN) return "Unknown";
-        return String.format("{ %6.4g, %5.3g, %5.3g }",
+        return String.format(Locale.getDefault(), "{ %6.4g, %5.3g, %5.3g }",
                 coordinates.x, coordinates.y, coordinates.z);
     }
 
@@ -60,6 +61,9 @@ public class MicrophoneInfoConverter {
         sb.append("\nType       : " + micInfo.getType());
 
         List<Pair<Integer, Integer>> mapping = micInfo.getChannelMapping();
+        if (mapping == null) {
+            throw new RuntimeException("MicrophoneInfo. getChannelMapping() returned null!");
+        }
         sb.append("\nChannelMapping: {");
         for (Pair<Integer, Integer> pair : mapping) {
             sb.append("[" + pair.first + "," + pair.second + "], ");

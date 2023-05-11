@@ -368,7 +368,7 @@ namespace tau
 	void MidiEditor::Remove()
 	{
 		for (int i = 0; i < tracks.size(); i++) {
-			//midiSynther->RemoveVirInstrument(tracks[i]->GetChannel());
+			midiSynther->RemoveVirInstrument(tracks[i]->GetChannel());
 			tracks[i]->Clear();
 		}
 
@@ -594,8 +594,8 @@ namespace tau
 
 
 		//检测播放是否结束
-		float measureEndSec = editor->measureInfo->GetMeasureEndSec(
-			editor->measureInfo->GetMeasureCount());
+		float measureEndSec = editor->measureInfo.GetMeasureEndSec(
+			editor->measureInfo.GetMeasureCount());
 
 		if (curtPlaySec > measureEndSec) {
 			printf("当前轨道midi时间处理结束! \n");

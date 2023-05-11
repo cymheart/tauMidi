@@ -117,6 +117,18 @@ public class Editor {
                     KeyWhite, //C8
             };
 
+    /**判断note是否为白色*/
+    static public boolean IsWhiteNote(int note)
+    {
+        return keyTypes88Std[note - A0] == KeyWhite;
+    }
+
+    /**判断note是否为黑色*/
+    static public boolean IsBlackNote(int note)
+    {
+        return keyTypes88Std[note - A0] == KeyBlack;
+    }
+
     /**获取note类型*/
     static public int GetNoteType(int note)
     {
@@ -134,19 +146,25 @@ public class Editor {
     /**获取前一个白色类型note*/
     static public int GetPrevWhiteNote(int note)
     {
+        if(note - A0 >= keyTypes88Std.length)
+            return A0;
+
         for(int i = note - A0; i >=0; i--)
             if(keyTypes88Std[i] == KeyWhite)
                 return i + A0;
-        return -1;
+        return A0;
     }
 
     /**获取下一个白色类型note*/
     static public int GetNextWhiteNote(int note)
     {
+        if(note - A0 < 0)
+            return C8;
+
         for(int i = note - A0; i < keyTypes88Std.length; i++)
             if(keyTypes88Std[i] == KeyWhite)
                 return i + A0;
-        return -1;
+        return C8;
     }
 
     /**获取白色类型note数量*/
@@ -252,6 +270,12 @@ public class Editor {
 
     /**需要弹奏的音符，按时间顺序存放*/
     protected List<NoteOnEvent> needPlayNoteEvs = new ArrayList<>();
+    /**获取需要弹奏的音符，按时间顺序存放*/
+    public List<NoteOnEvent> GetNeedPlayNoteEvs()
+    {
+        return needPlayNoteEvs;
+    }
+
     /**乐谱所对应的键盘按键数量*/
     protected int keybaordKeyCountForMusicScore = 15;
     /**获取乐谱所对应的键盘按键数量*/
@@ -653,6 +677,27 @@ public class Editor {
 
     //
     protected VisualMidiEvents visualMidiEvents = new VisualMidiEvents();
+
+    /**乐谱弹奏的最左白色音符*/
+    protected int musicScoreLeftWhiteNote = 0;
+    /**获取乐谱弹奏的最左白色音符*/
+    public int GetMusicScoreLeftWhiteNote(){
+        return musicScoreLeftWhiteNote;
+    }
+
+    /**乐谱弹奏的最右白色音符*/
+    protected int musicScoreRightWhiteNote = 0;
+    /**获取乐谱弹奏的最右白色音符*/
+    public int GetMusicScoreRightWhiteNote(){
+        return musicScoreRightWhiteNote;
+    }
+
+    /**乐谱横向白键数量*/
+    protected int musicScoreLandscapeWhiteNoteCount = 0;
+    /**获取乐谱弹奏的最右白色音符*/
+    public int GetMusicScoreLandscapeWhiteNoteCount(){
+        return musicScoreLandscapeWhiteNoteCount;
+    }
 
     /**需要演奏的音符数量*/
     protected int needPlayNoteCount = 0;
@@ -1215,12 +1260,13 @@ public class Editor {
             }
         }
 
-        //计算总得分点数，和需要弹奏的音符数量
+        //计算总得分点数，和需要弹奏的音符数量， 音符范围
         if(isLoadMidiExInfo)
         {
             totalGamePoint = 0;
             float mul = 1;
             NoteOnEvent ev;
+            int leftNote = -1, rightNote = -1;
 
             if(!isSimpleMode)
             {
@@ -1240,6 +1286,13 @@ public class Editor {
                 for(int i=0; i<needPlayNoteEvs.size(); i++)
                 {
                     ev = needPlayNoteEvs.get(i);
+
+                    //计算乐谱的音符范围
+                    if(leftNote == -1 || ev.note < leftNote)
+                        leftNote = ev.note;
+                    if(rightNote == -1 || ev.note > rightNote)
+                        rightNote = ev.note;
+
                     //计算总得分点数，和需要弹奏的音符数量
                     needPlayNoteCount++;
                     totalGamePoint += 30 * mul + (ev.endSec - ev.startSec) * mul * 10;
@@ -1249,12 +1302,24 @@ public class Editor {
             }else {
                 for (int i = 0; i < simpleModeTrackNotes.length; i++) {
                     ev = simpleModeTrackNotes[i];
+
+                    //计算乐谱的音符范围
+                    if(leftNote == -1 || ev.note <leftNote)
+                        leftNote = ev.note;
+                    if(rightNote == -1 || ev.note > rightNote)
+                        rightNote = ev.note;
+
                     //计算总得分点数，和需要弹奏的音符数量
                     needPlayNoteCount++;
                     totalGamePoint += 30 * mul + (ev.endSec - ev.startSec) * mul * 10;
                     mul += 0.1;
                 }
             }
+
+            musicScoreLeftWhiteNote = GetPrevWhiteNote(leftNote);
+            musicScoreRightWhiteNote = GetNextWhiteNote(rightNote);
+            musicScoreLandscapeWhiteNoteCount = GetWhiteNoteCount(
+                    musicScoreLeftWhiteNote, musicScoreRightWhiteNote);
         }
 
 
@@ -1585,12 +1650,6 @@ public class Editor {
         if(tracks == null)
             return;
 
-        if (state == STOP)
-        {
-            for (int i = 0; i < tracks.length; i++)
-                tracks[i].Clear();
-        }
-
         state = PLAY;
     }
 
@@ -1664,8 +1723,9 @@ public class Editor {
     //设置播放的起始时间点
     public void Goto(double sec)
     {
-        ndkGoto(ndkEditor, sec);
         _Goto(sec);
+        ndkGoto(ndkEditor, sec);
+
     }
 
 
@@ -1785,17 +1845,18 @@ public class Editor {
         {
             UpdateNotePlayState();
             UpdateNoteMissState();
-        }else{
+        }else if(playMode != PlayMode_Wait){
             //同步播放时间
             double ndkPlaySec = ndkGetPlaySec(ndkEditor);
-            if (ndkPlaySec - curtPlaySec > 0.1)
+            if (ndkPlaySec - curtPlaySec > 0.03) {
                 curtPlaySec = ndkPlaySec;
+            }
         }
 
 
         int n = 2;
         isNeedSyncSec = true;
-        if(playMode != PlayMode_Wait || isWaitForGraph)
+        if(playMode != PlayMode_Wait || isWaitForGraph || isDirectGoto)
         {
             n = 1;
             isNeedSyncSec = false;
@@ -1894,11 +1955,14 @@ public class Editor {
         for (int i = 0; waitEndEvs[i] != null; i++)
         {
             waitEndEvCount++;
-            ev = (NoteOnEvent) waitEndEvs[i];
+            ev = waitEndEvs[i];
 
             if(!ev.isMiss && !ev.isPlay &&
-                    curtPlaySec - ev.startSec > 0.2f)
+                    (curtPlaySec - ev.startSec >= 0.2f || ev.endSec < curtPlaySec))
             {
+                if(ev.endSec < curtPlaySec)
+                    waitEndEvs[i] = null;
+
                 ev.isMiss = true;
                 if (missNoteCount > 0 && ev.startSec < missNoteEv[missNoteCount - 1].startSec)
                 {
@@ -1918,12 +1982,11 @@ public class Editor {
                 }
             }
 
-            if (ev.endSec <= curtPlaySec)
+            if (ev.endSec < curtPlaySec) {
                 waitEndEvs[i] = null;
+            }
         }
     }
-
-
 
 
     /**步进小节到当前时间点*/
@@ -1996,7 +2059,6 @@ public class Editor {
 
 
 
-
     /**获取当前可视midi事件*/
     public VisualMidiEvents GetCurtVisualMidiEvents()
     {
@@ -2036,11 +2098,13 @@ public class Editor {
                     track.GetNoteColor() == MidiEvent.NoteColor_None)
                 continue;
 
-            //往前寻找一个endSec大于curtPlaySec的事件
-            if(track.noteOnEventsOffset >= track.noteOnEvents.length)
-                track.noteOnEventsOffset--;
 
-            for(int j = track.noteOnEventsOffset; j >= 0; j--)
+            //往前寻找一个endSec大于curtPlaySec的事件
+            int startIdx = track.noteOnEventsOffset;
+            if(startIdx >= track.noteOnEvents.length)
+                startIdx--;
+
+            for(int j = startIdx; j >= 0; j--)
             {
                 ev = track.noteOnEvents[j];
                 if (ev.type != MidiEvent.NoteOn || ev.endSec < curtPlaySec)
@@ -2098,9 +2162,11 @@ public class Editor {
         //对简单模式的弹奏轨道处理
         if(isSimpleMode && simpleModeTrackNotes != null && simpleModeTrackNotes.length > 0)
         {
-            if(simpleModeNoteTrackOffset >= simpleModeTrackNotes.length)
-                simpleModeNoteTrackOffset--;
-            for (int i = simpleModeNoteTrackOffset; i >=0; i--) {
+            int startIdx = simpleModeNoteTrackOffset;
+            if(startIdx >= simpleModeTrackNotes.length)
+                startIdx--;
+
+            for (int i = startIdx; i >=0; i--) {
                 ev = simpleModeTrackNotes[i];
                 if (ev.endSec < curtPlaySec)
                     continue;

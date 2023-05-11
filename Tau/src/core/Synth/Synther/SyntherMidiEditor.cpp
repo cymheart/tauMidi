@@ -31,27 +31,14 @@ namespace tau
 	{
 		midiEditor->Play();
 
-		//在缓存打开时，处理缓存命令操作
-		if (maxCacheSize > 0 && isEnableCache)
+		if (IsCacheEnable())
 			CachePlay();
-	}
-
-	//停止
-	void Synther::Stop()
-	{
-		midiEditor->Stop();
-
-		//在缓存打开时，处理缓存命令操作
-		if (maxCacheSize > 0 && isEnableCache)
-			CacheStop();
 	}
 
 	//暂停
 	void Synther::Pause()
 	{
-
-		//在缓存打开时，处理缓存命令操作
-		if (maxCacheSize > 0 && isEnableCache)
+		if (IsCacheEnable())
 			CachePause();
 		else
 			midiEditor->Pause();
@@ -66,32 +53,45 @@ namespace tau
 
 		midiEditor->Goto(sec);
 
-		//在缓存打开时，处理缓存命令操作
-		if (maxCacheSize > 0 && isEnableCache) {
+		if (IsCacheEnable()) {
 			if (CacheGoto(sec)) {
 				midiEditor->Play();
 			}
 		}
-
 	}
 
-	//移除midiEditor
+	//停止
+	void Synther::Stop()
+	{
+		midiEditor->Stop();
+
+		if (IsCacheEnable()) {
+			//当停止或移除播放midi时，当前播放midi所对应的乐器的发声会有一个渐渐减弱的时间
+			//在缓存状态下，需要直接关闭这些发音乐器和清空效果器，而直接使用缓存中的残留声音进行减弱处理
+			StopAllVirInstrument();
+			effects->Clear();
+			CacheStop();
+		}
+	}
+
+	//移除
 	void Synther::Remove()
 	{
-		soundEndGain = 1;
-		isSoundEndRemove = true;
 		midiEditor->Remove();
 
-		//在缓存打开时，处理缓存命令操作
-		if (maxCacheSize > 0 && isEnableCache)
-			CacheStop(true);
+		if (IsCacheEnable()) {
+			//当停止或移除播放midi时，当前播放midi所对应的乐器的发声会有一个渐渐减弱的时间
+			//在缓存状态下，需要直接关闭这些发音乐器和清空效果器，而直接使用缓存中的残留声音进行减弱处理
+			DelAllVirInstrument();
+			effects->Clear();
+			CacheStop();
+		}
 	}
 
 	//重新缓存
 	void Synther::ReCache()
 	{
-		//在缓存打开时，处理缓存命令操作
-		if (maxCacheSize > 0 && isEnableCache)
+		if (IsCacheEnable())
 			CacheReset();
 	}
 

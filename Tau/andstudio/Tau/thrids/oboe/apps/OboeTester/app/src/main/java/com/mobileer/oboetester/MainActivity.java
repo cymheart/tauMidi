@@ -16,7 +16,6 @@
 
 package com.mobileer.oboetester;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -34,23 +33,24 @@ import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * Select various Audio tests.
  */
 
-public class MainActivity extends Activity {
+public class MainActivity extends BaseOboeTesterActivity {
 
     private static final String KEY_TEST_NAME = "test";
     public static final String VALUE_TEST_NAME_LATENCY = "latency";
     public static final String VALUE_TEST_NAME_GLITCH = "glitch";
+    public static final String VALUE_TEST_NAME_DATA_PATHS = "data_paths";
+    public static final String VALUE_TEST_NAME_OUTPUT = "output";
+    public static final String VALUE_TEST_NAME_INPUT = "input";
 
     static {
         // Must match name in CMakeLists.txt
         System.loadLibrary("oboetester");
     }
-
 
     private Spinner mModeSpinner;
     private TextView mCallbackSizeEditor;
@@ -61,6 +61,7 @@ public class MainActivity extends Activity {
     private Bundle mBundleFromIntent;
     private BroadcastReceiver mScoStateReceiver;
     private CheckBox mWorkaroundsCheckBox;
+    private CheckBox mBackgroundCheckBox;
     private static String mVersionText;
 
     @Override
@@ -78,6 +79,7 @@ public class MainActivity extends Activity {
 
         // Set mode, eg. MODE_IN_COMMUNICATION
         mModeSpinner = (Spinner) findViewById(R.id.spinnerAudioMode);
+        // Update AudioManager now in case user is trying to affect a different app.
         mModeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -97,8 +99,9 @@ public class MainActivity extends Activity {
             int oboeMajor = (oboeVersion >> 24) & 0xFF;
             int oboeMinor = (oboeVersion >> 16) & 0xFF;
             int oboePatch = oboeVersion & 0xFF;
-            mVersionText = "OboeTester (" + pinfo.versionCode + ") v " + pinfo.versionName
-                    + ", Oboe v " + oboeMajor + "." + oboeMinor + "." + oboePatch;
+            mVersionText = getString(R.string.app_name_version,
+                    pinfo.versionCode, pinfo.versionName,
+                    oboeMajor, oboeMinor, oboePatch);
             mVersionTextView.setText(mVersionText);
         } catch (PackageManager.NameNotFoundException e) {
             mVersionTextView.setText(e.getMessage());
@@ -106,7 +109,10 @@ public class MainActivity extends Activity {
 
         mWorkaroundsCheckBox = (CheckBox) findViewById(R.id.boxEnableWorkarounds);
         // Turn off workarounds so we can test the underlying API bugs.
+        mWorkaroundsCheckBox.setChecked(false);
         NativeEngine.setWorkaroundsEnabled(false);
+
+        mBackgroundCheckBox = (CheckBox) findViewById(R.id.boxEnableBackground);
 
         mBuildTextView = (TextView) findViewById(R.id.text_build_info);
         mBuildTextView.setText(Build.DISPLAY);
@@ -129,7 +135,7 @@ public class MainActivity extends Activity {
         saveIntentBundleForLaterProcessing(getIntent());
     }
 
-    public static String getVersiontext() {
+    public static String getVersionText() {
         return mVersionText;
     }
 
@@ -165,28 +171,50 @@ public class MainActivity extends Activity {
         if (mBundleFromIntent == null) {
             return;
         }
-
-        if (mBundleFromIntent.containsKey(KEY_TEST_NAME)) {
-            String testName = mBundleFromIntent.getString(KEY_TEST_NAME);
-            if (VALUE_TEST_NAME_LATENCY.equals(testName)) {
-                Intent intent = new Intent(this, RoundTripLatencyActivity.class);
-                intent.putExtras(mBundleFromIntent);
-                startActivity(intent);
-            } else if (VALUE_TEST_NAME_GLITCH.equals(testName)) {
-                Intent intent = new Intent(this, ManualGlitchActivity.class);
-                intent.putExtras(mBundleFromIntent);
-                startActivity(intent);
-            }
+        Intent intent = getTestIntent(mBundleFromIntent);
+        if (intent != null) {
+            setBackgroundFromIntent();
+            startActivity(intent);
         }
         mBundleFromIntent = null;
+    }
+
+    private void setBackgroundFromIntent() {
+        boolean backgroundEnabled = mBundleFromIntent.getBoolean(
+                IntentBasedTestSupport.KEY_BACKGROUND, false);
+        TestAudioActivity.setBackgroundEnabled(backgroundEnabled);
+    }
+
+    private Intent getTestIntent(Bundle bundle) {
+        Intent intent = null;
+        if (bundle.containsKey(KEY_TEST_NAME)) {
+            String testName = bundle.getString(KEY_TEST_NAME);
+            if (VALUE_TEST_NAME_LATENCY.equals(testName)) {
+                intent = new Intent(this, RoundTripLatencyActivity.class);
+                intent.putExtras(bundle);
+            } else if (VALUE_TEST_NAME_GLITCH.equals(testName)) {
+                intent = new Intent(this, ManualGlitchActivity.class);
+                intent.putExtras(bundle);
+            } else if (VALUE_TEST_NAME_DATA_PATHS.equals(testName)) {
+                intent = new Intent(this, TestDataPathsActivity.class);
+                intent.putExtras(bundle);
+            } else if (VALUE_TEST_NAME_INPUT.equals(testName)) {
+                intent = new Intent(this, TestInputActivity.class);
+                intent.putExtras(bundle);
+            } else if (VALUE_TEST_NAME_OUTPUT.equals(testName)) {
+                intent = new Intent(this, TestOutputActivity.class);
+                intent.putExtras(bundle);
+            }
+        }
+        return intent;
     }
 
     @Override
     public void onResume(){
         super.onResume();
         mWorkaroundsCheckBox.setChecked(NativeEngine.areWorkaroundsEnabled());
-        processBundleFromIntent();
         registerScoStateReceiver();
+        processBundleFromIntent();
     }
 
     @Override
@@ -204,71 +232,71 @@ public class MainActivity extends Activity {
     }
 
     public void onLaunchTestOutput(View view) {
-        onLaunchTest(TestOutputActivity.class);
+        launchTestActivity(TestOutputActivity.class);
     }
 
     public void onLaunchTestInput(View view) {
-        onLaunchTest(TestInputActivity.class);
+        launchTestThatDoesRecording(TestInputActivity.class);
     }
 
     public void onLaunchTapToTone(View view) {
-        onLaunchTest(TapToToneActivity.class);
+        launchTestThatDoesRecording(TapToToneActivity.class);
     }
 
     public void onLaunchRecorder(View view) {
-        onLaunchTest(RecorderActivity.class);
+        launchTestThatDoesRecording(RecorderActivity.class);
     }
 
     public void onLaunchEcho(View view) {
-        onLaunchTest(EchoActivity.class);
+        launchTestThatDoesRecording(EchoActivity.class);
     }
 
     public void onLaunchRoundTripLatency(View view) {
-        onLaunchTest(RoundTripLatencyActivity.class);
+        launchTestThatDoesRecording(RoundTripLatencyActivity.class);
     }
 
     public void onLaunchManualGlitchTest(View view) {
-        onLaunchTest(ManualGlitchActivity.class);
+        launchTestThatDoesRecording(ManualGlitchActivity.class);
     }
 
-    public void onLaunchAutoGlitchTest(View view) { onLaunchTest(AutomatedGlitchActivity.class); }
+    public void onLaunchAutoGlitchTest(View view) { launchTestThatDoesRecording(AutomatedGlitchActivity.class); }
 
     public void onLaunchTestDisconnect(View view) {
-        onLaunchTest(TestDisconnectActivity.class);
+        launchTestThatDoesRecording(TestDisconnectActivity.class);
     }
 
     public void onLaunchTestDataPaths(View view) {
-        onLaunchTest(TestDataPathsActivity.class);
+        launchTestThatDoesRecording(TestDataPathsActivity.class);
     }
 
     public void onLaunchTestDeviceReport(View view)  {
-        onLaunchTest(DeviceReportActivity.class);
+        launchTestActivity(DeviceReportActivity.class);
     }
 
-    private void onLaunchTest(Class clazz) {
+    public void onLaunchExtratests(View view) {
+        launchTestActivity(ExtraTestsActivity.class);
+    }
+
+    private void applyUserOptions() {
         updateCallbackSize();
-        Intent intent = new Intent(this, clazz);
-        startActivity(intent);
+
+        long mode = mModeSpinner.getSelectedItemId();
+        AudioManager myAudioMgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        myAudioMgr.setMode((int) mode);
+
+        NativeEngine.setWorkaroundsEnabled(mWorkaroundsCheckBox.isChecked());
+        TestAudioActivity.setBackgroundEnabled(mBackgroundCheckBox.isChecked());
+    }
+
+    @Override
+    protected void launchTestActivity(Class clazz) {
+        applyUserOptions();
+        super.launchTestActivity(clazz);
     }
 
     public void onUseCallbackClicked(View view) {
         CheckBox checkBox = (CheckBox) view;
         OboeAudioStream.setUseCallback(checkBox.isChecked());
-    }
-
-    protected void showErrorToast(String message) {
-        showToast("Error: " + message);
-    }
-
-    protected void showToast(final String message) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(MainActivity.this,
-                        message,
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private void updateCallbackSize() {
@@ -284,13 +312,6 @@ public class MainActivity extends Activity {
         OboeAudioStream.setCallbackSize(callbackSize);
     }
 
-    public void onSetSpeakerphoneOn(View view) {
-        CheckBox checkBox = (CheckBox) view;
-        boolean enabled = checkBox.isChecked();
-        AudioManager myAudioMgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        myAudioMgr.setSpeakerphoneOn(enabled);
-    }
-
     public void onStartStopBluetoothSco(View view) {
         CheckBox checkBox = (CheckBox) view;
         AudioManager myAudioMgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -299,17 +320,5 @@ public class MainActivity extends Activity {
         } else {
             myAudioMgr.stopBluetoothSco();
         }
-    }
-
-    public void onEnableWorkarounds(View view) {
-        CheckBox checkBox = (CheckBox) view;
-        boolean enabled = checkBox.isChecked();
-        NativeEngine.setWorkaroundsEnabled(enabled);
-    }
-
-    public void onEnableBackground(View view) {
-        CheckBox checkBox = (CheckBox) view;
-        boolean enabled = checkBox.isChecked();
-        TestAudioActivity.setBackgroundEnabled(enabled);
     }
 }

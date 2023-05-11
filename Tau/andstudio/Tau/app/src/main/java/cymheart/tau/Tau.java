@@ -81,6 +81,39 @@ public class Tau
         editor.Remove();
     }
 
+
+    public void ClearRecordPCM()
+    {
+        ndkClearRecordPCM(ndkTau);
+    }
+
+    public void StartRecordPCM()
+    {
+        ndkStartRecordPCM(ndkTau);
+    }
+
+    public void StopRecordPCM()
+    {
+        ndkStopRecordPCM(ndkTau);
+    }
+
+    public void SaveRecordPCM(String path)
+    {
+        ndkSaveRecordPCM(ndkTau, path);
+    }
+
+    public void SaveRecordPCMToWav(String path)
+    {
+        ndkSaveRecordPCMToWav(ndkTau, path);
+    }
+
+    public void SaveRecordPCMToMp3(String path)
+    {
+        ndkSaveRecordPCMToMp3(ndkTau, path);
+    }
+
+
+
     //设置是否静音
     public void SetSilence(boolean is)
     {
@@ -549,4 +582,14 @@ public class Tau
     private static native void ndkRemoveVirInstrument(long ndkTau, long ndkVirInstrument, boolean isFade);
     private static native void ndkOnVirInstrument(long ndkTau, long ndkVirInstrument, boolean isFade);
     private static native void ndkOffVirInstrument(long ndkTau, long ndkVirInstrument, boolean isFade);
+
+
+    private static native void ndkClearRecordPCM(long ndkTau);
+    private static native void ndkStartRecordPCM(long ndkTau);
+    private static native void ndkStopRecordPCM(long ndkTau);
+    private static native void ndkSaveRecordPCM(long ndkTau, String path);
+    private static native void ndkSaveRecordPCMToWav(long ndkTau, String path);
+    private static native void ndkSaveRecordPCMToMp3(long ndkTau, String path);
+
 }
+

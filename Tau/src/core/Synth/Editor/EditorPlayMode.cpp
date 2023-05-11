@@ -18,14 +18,14 @@ namespace tau
 	void Editor::SetTrackPlayType(int trackIdx, MidiEventPlayType playType)
 	{
 		TauLock(tau);
-		mainSynther->SetTrackPlayType(midiEditor->tracks[trackIdx], playType);
+		synther->SetTrackPlayType(midiEditor->tracks[trackIdx], playType);
 	}
 
 	//设置演奏类型
 	void Editor::SetPlayType(MidiEventPlayType playType)
 	{
 		TauLock(tau);
-		mainSynther->SetPlayType(playType);
+		synther->SetPlayType(playType);
 	}
 
 
@@ -80,7 +80,7 @@ namespace tau
 		TauLock(tau);
 		playMode = EditorPlayMode::Step;
 		isWait = false;
-		mainSynther->EnterPlayMode(EditorPlayMode::Step);
+		synther->EnterPlayMode(EditorPlayMode::Step);
 	}
 
 
@@ -96,7 +96,7 @@ namespace tau
 		playMode = EditorPlayMode::Wait;
 		ClearPlayModeData();
 
-		mainSynther->EnterPlayMode(EditorPlayMode::Wait);
+		synther->EnterPlayMode(EditorPlayMode::Wait);
 	}
 
 
@@ -112,7 +112,7 @@ namespace tau
 		playMode = EditorPlayMode::Mute;
 		ClearPlayModeData();
 
-		mainSynther->EnterPlayMode(EditorPlayMode::Mute);
+		synther->EnterPlayMode(EditorPlayMode::Mute);
 
 	}
 
@@ -121,7 +121,7 @@ namespace tau
 	{
 		TauLock(tau);
 		playMode = EditorPlayMode::Common;
-		mainSynther->LeavePlayMode();
+		synther->LeavePlayMode();
 	}
 
 
@@ -133,7 +133,7 @@ namespace tau
 		if (playMode == EditorPlayMode::Wait)
 			ClearPlayModeData();
 
-		mainSynther->Runto(sec);
+		synther->Runto(sec);
 	}
 
 	void Editor::ClearPlayModeData()

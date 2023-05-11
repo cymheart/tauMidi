@@ -50,10 +50,10 @@
     <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2Parser.cpp" />
     <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2Structs.cpp" />
     <ClCompile Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.cpp" />
-    <ClCompile Include="..\..\src\core\SoundFormat\Wav\WavReader.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Channel.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\MeasureInfo.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\SimpleModeTrack.cpp" />
+    <ClCompile Include="..\..\src\core\Synth\PcmRecorder.cpp" />
     <ClCompile Include="..\..\src\core\Synth\PhysicsPiano.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\Editor.cpp" />
     <ClCompile Include="..\..\src\core\Synth\Editor\InstFragment.cpp" />
@@ -165,6 +165,26 @@
     <ClCompile Include="..\..\src\thrids\iir\RBJ.cpp" />
     <ClCompile Include="..\..\src\thrids\kissfft\kiss_fft.cpp" />
     <ClCompile Include="..\..\src\thrids\kissfft\kiss_fftr.cpp" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\bitstream.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\encoder.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\fft.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\gain_analysis.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\id3tag.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\lame.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\mpglib_interface.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\newmdct.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\presets.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\psymodel.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\quantize.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\quantize_pvt.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\reservoir.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\set_get.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\tables.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\takehiro.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\util.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\vbrquantize.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\VbrTag.c" />
+    <ClCompile Include="..\..\src\thrids\libmp3lame\version.c" />
     <ClCompile Include="..\..\src\thrids\OteyPiano\DWG.cpp" />
     <ClCompile Include="..\..\src\thrids\OteyPiano\dwgs.cpp" />
     <ClCompile Include="..\..\src\thrids\OteyPiano\filter.cpp" />
@@ -173,6 +193,7 @@
     <ClCompile Include="..\..\src\thrids\OteyPiano\reverb.cpp" />
     <ClCompile Include="..\..\src\thrids\scutils\ByteStream.cpp" />
     <ClCompile Include="..\..\src\thrids\scutils\MathUtils.cpp" />
+    <ClCompile Include="..\..\src\thrids\scutils\Mp3Recorder.cpp" />
     <ClCompile Include="..\..\src\thrids\scutils\RingBuffer.cpp" />
     <ClCompile Include="..\..\src\thrids\scutils\Semaplore.cpp" />
     <ClCompile Include="..\..\src\thrids\scutils\UniqueID.cpp" />
@@ -194,6 +215,8 @@
     <ClCompile Include="..\..\src\thrids\task\TimerWheel.cpp" />
     <ClCompile Include="..\..\src\thrids\task\WheelSlot.cpp" />
     <ClCompile Include="..\..\src\thrids\tinyxml2\tinyxml2.cpp" />
+    <ClCompile Include="..\..\src\thrids\wav\WavReader.cpp" />
+    <ClCompile Include="..\..\src\thrids\wav\WavWriter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\Audio\Audio.h" />
@@ -223,9 +246,9 @@
     <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2Structs.h" />
     <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2Types.h" />
     <ClInclude Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.h" />
-    <ClInclude Include="..\..\src\core\SoundFormat\Wav\WavReader.h" />
     <ClInclude Include="..\..\src\core\Synth\Channel.h" />
     <ClInclude Include="..\..\src\core\Synth\Editor\MeasureInfo.h" />
+    <ClInclude Include="..\..\src\core\Synth\PcmRecorder.h" />
     <ClInclude Include="..\..\src\core\Synth\PhysicsPiano.h" />
     <ClInclude Include="..\..\src\core\Synth\Editor\Editor.h" />
     <ClInclude Include="..\..\src\core\Synth\Editor\EditorTypes.h" />
@@ -357,6 +380,28 @@
     <ClInclude Include="..\..\src\thrids\kissfft\kiss_fft.h" />
     <ClInclude Include="..\..\src\thrids\kissfft\kiss_fftr.h" />
     <ClInclude Include="..\..\src\thrids\kissfft\_kiss_fft_guts.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\bitstream.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\encoder.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\fft.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\gain_analysis.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\id3tag.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\l3side.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\lame-analysis.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\lame.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\lameerror.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\lame_global_flags.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\machine.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\newmdct.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\psymodel.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\quantize.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\quantize_pvt.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\reservoir.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\set_get.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\tables.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\util.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\vbrquantize.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\VbrTag.h" />
+    <ClInclude Include="..\..\src\thrids\libmp3lame\version.h" />
     <ClInclude Include="..\..\src\thrids\OteyPiano\DWG.h" />
     <ClInclude Include="..\..\src\thrids\OteyPiano\dwgs.h" />
     <ClInclude Include="..\..\src\thrids\OteyPiano\filter.h" />
@@ -369,6 +414,7 @@
     <ClInclude Include="..\..\src\thrids\scutils\LinkedList.h" />
     <ClInclude Include="..\..\src\thrids\scutils\LinkedListNode.h" />
     <ClInclude Include="..\..\src\thrids\scutils\MathUtils.h" />
+    <ClInclude Include="..\..\src\thrids\scutils\Mp3Recorder.h" />
     <ClInclude Include="..\..\src\thrids\scutils\ObjectPool.h" />
     <ClInclude Include="..\..\src\thrids\scutils\RingBuffer.h" />
     <ClInclude Include="..\..\src\thrids\scutils\rlcg.h" />
@@ -400,6 +446,9 @@
     <ClInclude Include="..\..\src\thrids\task\TimerWheel.h" />
     <ClInclude Include="..\..\src\thrids\task\WheelSlot.h" />
     <ClInclude Include="..\..\src\thrids\tinyxml2\tinyxml2.h" />
+    <ClInclude Include="..\..\src\thrids\wav\WavHeader.hpp" />
+    <ClInclude Include="..\..\src\thrids\wav\WavReader.hpp" />
+    <ClInclude Include="..\..\src\thrids\wav\WavWriter.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

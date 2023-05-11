@@ -15,6 +15,9 @@
 #include"Synth/Editor/Editor.h"
 #include"Synth/Editor/MidiEditor.h"
 #include"Synth/Editor/Track.h"
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 namespace tau
 {
@@ -23,7 +26,6 @@ namespace tau
 		this->tau = tau;
 		isFrameRenderCompleted = true;
 		isReqDelete = false;
-		isSoundEnd = true;
 
 		cachePlayState = EditorState::STOP;
 		SetCurtCachePlaySec(0);
@@ -38,7 +40,6 @@ namespace tau
 		//
 		effects = new EffectList();
 		innerEffects = new EffectList();
-
 
 	}
 
@@ -85,6 +86,8 @@ namespace tau
 
 		if (tau->sampleStreamCacheSec > 0)
 		{
+			isEnableCache = true;
+
 			maxCacheSize = sizeof(float) * tau->sampleProcessRate * channelCount * tau->sampleStreamCacheSec;
 			if (maxCacheSize < baseSize * 4)
 				maxCacheSize = baseSize * 4;
@@ -114,6 +117,9 @@ namespace tau
 		effects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
 		innerEffects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
 
+
+		pcmRecorder.SetFrameSampleCount(tau->frameSampleCount);
+
 		//
 		tau->editor->ResetParams();
 		curtCachePlaySec = tau->editor->GetInitStartPlaySec();
@@ -133,7 +139,10 @@ namespace tau
 		if (!isOpened)
 			return;
 
+		tau->lockMutex.lock();
 		isReqDelete = true;
+		tau->lockMutex.unlock();
+
 		waitSem.wait();
 
 		//
@@ -273,39 +282,44 @@ namespace tau
 	}
 
 	// 帧渲染
+
 	void Synther::FrameRender(uint8_t* stream, int len)
 	{
+		//printf("----------------\n");
+		//printf("Enter FrameAudio: %ld\n", GetCurrentTimeMsec());
+		//
 		while (audio)
 		{
-			if (maxCacheSize > 0 && isEnableCache)
+			if (!IsCacheEnable())
 			{
-				if ((isSoundEndRemove || isReqDelete) && !isSoundEnd)
+				// autio系统调用此函数时，并没有按固定的帧率调用
+				// render和autio通过isFrameRenderCompleted来通知协调
+				if (isFrameRenderCompleted)
 				{
-					float* out = (float*)synthSampleStream;
-					for (int i = 0; i < frameSampleCount * 2; i += 2)
-					{
-						soundEndGain -= 0.001;
-						if (soundEndGain < 0)
-							soundEndGain = 0;
-						out[i] *= soundEndGain;
-						out[i + 1] *= soundEndGain;
-					}
+					//printf("FrameAudio: %ld, len: %d\n", GetCurrentTimeMsec(), len);
 
-					TestSoundEnd();
+					if (!tau->isSilence)
+						memcpy(stream, synthSampleStream, len);
+
+					//pcm录制
+					RecordPCMing();
+
+					ReqRender();
+					break;
 				}
-
-				if (!tau->isSilence)
-					memcpy(stream, synthSampleStream, len);
-				CacheOutput();
-				break;
 			}
-			else if (isFrameRenderCompleted)
+			else
 			{
 				if (!tau->isSilence)
 					memcpy(stream, synthSampleStream, len);
-				ReqRender();
+
+				//pcm录制
+				RecordPCMing();
+
+				CacheRender();
 				break;
 			}
+
 
 #ifdef _WIN32
 			Sleep(1);
@@ -314,6 +328,57 @@ namespace tau
 #endif
 		}
 	}
+
+
+	//最终合成流的pcm录制
+	void Synther::RecordPCMing()
+	{
+		if (pcmRecordState == 1) {
+			pcmRecorder.Write((float*)synthSampleStream, frameSampleCount * channelCount);
+		}
+		else if (pcmRecordState == 2) {
+			pcmRecordState = 0;
+			pcmRecordWaitSem.set();
+		}
+	}
+
+
+	void Synther::ClearRecordPCM()
+	{
+		StopRecordPCM();
+		pcmRecorder.Clear();
+	}
+
+	void Synther::StartRecordPCM()
+	{
+		pcmRecordState = 1;
+	}
+
+	void Synther::StopRecordPCM()
+	{
+		pcmRecordState = 2;
+		pcmRecordWaitSem.wait();
+	}
+
+	void Synther::SaveRecordPCM(string& path)
+	{
+		StopRecordPCM();
+		pcmRecorder.SaveToFile(path);
+	}
+
+	void Synther::SaveRecordPCMToWav(string& path)
+	{
+		StopRecordPCM();
+		pcmRecorder.SaveToWavFile(path, tau->sampleProcessRate, channelCount, false, 4);
+	}
+
+	void Synther::SaveRecordPCMToMp3(string& path)
+	{
+		StopRecordPCM();
+		pcmRecorder.SaveToMp3File(path, tau->sampleProcessRate, channelCount);
+	}
+
+
 
 	// 请求帧渲染事件
 	void Synther::ReqRender(float delay)
@@ -330,11 +395,13 @@ namespace tau
 		SyntherEvent* se = (SyntherEvent*)ev;
 		Synther& synther = (Synther&)*(se->synther);
 
+		//printf("Render: %ld\n", GetCurrentTimeMsec());
+
 		synther.tau->lockMutex.lock();
 		synther.Render();
 		synther.tau->lockMutex.unlock();
-
 	}
+
 
 
 	//是否包含指定的虚拟乐器
@@ -452,7 +519,7 @@ namespace tau
 		{
 			VirInstrument* virInst = new VirInstrument(this, channel, nullptr);
 			virInst->ChangeProgram(bankSelectMSB, bankSelectLSB, instrumentNum);
-			virInst->Open(false);
+			virInst->Open(true);
 			AppendToVirInstList(virInst);
 			return virInst;
 		}
@@ -490,20 +557,51 @@ namespace tau
 	{
 		for (int i = 0; i < virInstList.size(); i++)
 		{
+			if (virInstList[i]->IsRemove()) {
+				virInstList[i]->state = VirInstrumentState::REMOVED;
+				continue;
+			}
+
 			bool isDeviceChannel = virInstList[i]->GetChannel()->IsDeviceChannel();
 
-			if (type == 0 && !isDeviceChannel)
+			if (type == 0 && !isDeviceChannel) {
 				AddNeedDelVirInstrument(virInstList[i]);
-			else if (type == 1 && isDeviceChannel)
+				virInstList[i]->state = VirInstrumentState::REMOVED;
+			}
+			else if (type == 1 && isDeviceChannel) {
 				AddNeedDelVirInstrument(virInstList[i]);
-			else if (type == -1)
+				virInstList[i]->state = VirInstrumentState::REMOVED;
+			}
+			else if (type == -1) {
 				AddNeedDelVirInstrument(virInstList[i]);
+				virInstList[i]->state = VirInstrumentState::REMOVED;
+			}
 		}
 
 		RemoveNeedDeleteVirInsts(true);
 	}
 
+	//停止所有虚拟乐器
+	void Synther::StopAllVirInstrument(int type)
+	{
+		for (int i = 0; i < virInstList.size(); i++)
+		{
+			bool isDeviceChannel = virInstList[i]->GetChannel()->IsDeviceChannel();
 
+			if (type == 0 && !isDeviceChannel) {
+				virInstList[i]->state = VirInstrumentState::OFFED;
+				virInstList[i]->gain = 0;
+			}
+			else if (type == 1 && isDeviceChannel) {
+				virInstList[i]->state = VirInstrumentState::OFFED;
+				virInstList[i]->gain = 0;
+			}
+			else if (type == -1) {
+				virInstList[i]->state = VirInstrumentState::OFFED;
+				virInstList[i]->gain = 0;
+			}
+		}
+	}
 
 
 	//根据通道移除虚拟乐器
@@ -718,8 +816,7 @@ namespace tau
 			curtSampleCount += tau->childFrameSampleCount;
 			sec = tau->invSampleProcessRate * curtSampleCount;
 
-			if (!isReqDelete)
-				ProcessMidiEvents();
+			ProcessMidiEvents();
 
 			//移除需要删除的乐器
 			RemoveNeedDeleteVirInsts();
@@ -754,6 +851,7 @@ namespace tau
 	// 渲染虚拟乐器区域发声
 	void Synther::RenderVirInstRegionSound()
 	{
+
 		//为渲染准备所有正在发声的区域
 		totalRegionSounderCount = 0;
 		for (int i = 0; i < virInstList.size(); i++)
@@ -987,14 +1085,12 @@ namespace tau
 	{
 		effects->Process();
 		CombineChannelBufferToStream();
-		TestSoundEnd();
-		isFrameRenderCompleted = true;
 
 		//
 		if (isSoundEndRemove || isReqDelete)
 		{
-			if (!isEnableCache && maxCacheSize == 0)
-				TestSoundEnd();
+			if (soundEndGain == 0)
+				isSoundEnd = true;
 
 			if (isSoundEnd) {
 				isReqDelete = false;
@@ -1002,27 +1098,17 @@ namespace tau
 				int type = isReqDelete ? -1 : 0;
 				DelAllVirInstrument(type);
 				effects->Clear();
+				totalRegionSounderCount = 0;
+
+				//
 				waitSem.set();
 			}
 		}
+
+		isFrameRenderCompleted = true;
 	}
 
-	//检测由发音是否完全结束
-	void Synther::TestSoundEnd()
-	{
-		float* out = (float*)synthSampleStream;
-		//检测由效果器带来的尾音是否结束
-		for (int i = 0; i < frameSampleCount * 2; i++)
-		{
-			// 此处值需要非常小，不然会产生杂音
-			if (fabsf(out[i]) > 0.0001f) {
-				isSoundEnd = false;
-				return;
-			}
-		}
 
-		isSoundEnd = true;
-	}
 
 	//合并声道buffer到数据流
 	void Synther::CombineChannelBufferToStream()
@@ -1030,7 +1116,7 @@ namespace tau
 		//生成通道采样值的频谱
 		CreateChannelSamplesFreqSpectrum();
 
-		if (maxCacheSize > 0 && isEnableCache) {
+		if (IsCacheEnable()) {
 			CacheInput();
 			return;
 		}

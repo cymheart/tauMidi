@@ -98,6 +98,16 @@ int32_t ActivityContext::allocateStreamIndex() {
     return mNextStreamHandle++;
 }
 
+oboe::Result ActivityContext::release() {
+    oboe::Result result = oboe::Result::OK;
+    stopBlockingIOThread();
+    for (auto entry : mOboeStreams) {
+        std::shared_ptr<oboe::AudioStream> oboeStream = entry.second;
+        result = oboeStream->release();
+    }
+    return result;
+}
+
 void ActivityContext::close(int32_t streamIndex) {
     stopBlockingIOThread();
     std::shared_ptr<oboe::AudioStream> oboeStream = getStream(streamIndex);
@@ -145,14 +155,15 @@ void ActivityContext::configureBuilder(bool isInput, oboe::AudioStreamBuilder &b
 int ActivityContext::open(jint nativeApi,
                           jint sampleRate,
                           jint channelCount,
+                          jint channelMask,
                           jint format,
                           jint sharingMode,
                           jint performanceMode,
                           jint inputPreset,
                           jint usage,
+                          jint contentType,
                           jint deviceId,
                           jint sessionId,
-                          jint framesPerBurst,
                           jboolean channelConversionAllowed,
                           jboolean formatConversionAllowed,
                           jint rateConversionQuality,
@@ -189,6 +200,7 @@ int ActivityContext::open(jint nativeApi,
             ->setPerformanceMode((oboe::PerformanceMode) performanceMode)
             ->setInputPreset((oboe::InputPreset)inputPreset)
             ->setUsage((oboe::Usage)usage)
+            ->setContentType((oboe::ContentType)contentType)
             ->setDeviceId(deviceId)
             ->setSessionId((oboe::SessionId) sessionId)
             ->setSampleRate(sampleRate)
@@ -197,6 +209,10 @@ int ActivityContext::open(jint nativeApi,
             ->setFormatConversionAllowed(formatConversionAllowed)
             ->setSampleRateConversionQuality((oboe::SampleRateConversionQuality) rateConversionQuality)
             ;
+    if (channelMask != (jint) oboe::ChannelMask::Unspecified) {
+        // Set channel mask when it is specified.
+        builder.setChannelMask((oboe::ChannelMask) channelMask);
+    }
     if (mUseCallback) {
         builder.setFramesPerCallback(callbackSize);
     }
@@ -354,6 +370,9 @@ void ActivityTestOutput::setChannelEnabled(int channelIndex, bool enabled) {
                 mExponentialShape.output.connect(&sineOscillators[channelIndex].frequency);
                 sineOscillators[channelIndex].output.connect(manyToMulti->inputs[channelIndex].get());
                 break;
+            case SignalType::WhiteNoise:
+                mWhiteNoise.output.connect(manyToMulti->inputs[channelIndex].get());
+                break;
             default:
                 break;
         }
@@ -390,11 +409,17 @@ void ActivityTestOutput::configureForStart() {
         for (int i = 0; i < mChannelCount; i++) {
             sineOscillators[i].setSampleRate(outputStream->getSampleRate());
             sineOscillators[i].frequency.setValue(frequency);
-            frequency *= 4.0 / 3.0; // each sine is at a higher frequency
             sineOscillators[i].amplitude.setValue(AMPLITUDE_SINE);
+            sawtoothOscillators[i].setSampleRate(outputStream->getSampleRate());
+            sawtoothOscillators[i].frequency.setValue(frequency);
+            sawtoothOscillators[i].amplitude.setValue(AMPLITUDE_SAWTOOTH);
+
+            frequency *= 4.0 / 3.0; // each wave is at a higher frequency
             setChannelEnabled(i, true);
         }
     }
+
+    mWhiteNoise.amplitude.setValue(0.5);
 
     manyToMulti->output.connect(&(mSinkFloat.get()->input));
     manyToMulti->output.connect(&(mSinkI16.get()->input));
@@ -524,8 +549,7 @@ oboe::Result ActivityRecording::startPlayback() {
     builder.setChannelCount(mChannelCount)
             ->setSampleRate(mSampleRate)
             ->setFormat(oboe::AudioFormat::Float)
-            ->setCallback(&mPlayRecordingCallback)
-            ->setAudioApi(oboe::AudioApi::OpenSLES);
+            ->setCallback(&mPlayRecordingCallback);
     oboe::Result result = builder.openStream(&playbackStream);
     if (result != oboe::Result::OK) {
         delete playbackStream;
@@ -568,15 +592,15 @@ void ActivityTapToTone::configureForStart() {
     configureStreamGateway();
 }
 
-// ======================================================================= ActivityRoundTripLatency
+// ======================================================================= ActivityFullDuplex
 void ActivityFullDuplex::configureBuilder(bool isInput, oboe::AudioStreamBuilder &builder) {
     if (isInput) {
         // Ideally the output streams should be opened first.
         std::shared_ptr<oboe::AudioStream> outputStream = getOutputStream();
         if (outputStream != nullptr) {
-            // Make sure the capacity is bigger than two bursts.
-            int32_t burst = outputStream->getFramesPerBurst();
-            builder.setBufferCapacityInFrames(2 * burst);
+            // The input and output buffers will run in sync with input empty
+            // and output full. So set the input capacity to match the output.
+            builder.setBufferCapacityInFrames(outputStream->getBufferCapacityInFrames());
         }
     }
 }
@@ -608,7 +632,7 @@ void ActivityRoundTripLatency::configureBuilder(bool isInput, oboe::AudioStreamB
     ActivityFullDuplex::configureBuilder(isInput, builder);
 
     if (mFullDuplexLatency.get() == nullptr) {
-        mFullDuplexLatency = std::make_unique<FullDuplexAnalyzer>(&mEchoAnalyzer);
+        mFullDuplexLatency = std::make_unique<FullDuplexAnalyzer>(mLatencyAnalyzer.get());
     }
     if (!isInput) {
         // only output uses a callback, input is polled
@@ -624,6 +648,38 @@ void ActivityRoundTripLatency::finishOpen(bool isInput, AudioStream *oboeStream)
     } else {
         mFullDuplexLatency->setOutputStream(oboeStream);
     }
+}
+
+// The timestamp latency is the difference between the input
+// and output times for a specific frame.
+// Start with the position and time from an input timestamp.
+// Map the input position to the corresponding position in output
+// and calculate its time.
+// Use the difference between framesWritten and framesRead to
+// convert input positions to output positions.
+jdouble ActivityRoundTripLatency::measureTimestampLatency() {
+    if (!mFullDuplexLatency->isWriteReadDeltaValid()) return -1.0;
+
+    int64_t writeReadDelta = mFullDuplexLatency->getWriteReadDelta();
+    auto inputTimestampResult = mFullDuplexLatency->getInputStream()->getTimestamp(CLOCK_MONOTONIC);
+    if (!inputTimestampResult) return -1.0;
+    auto outputTimestampResult = mFullDuplexLatency->getOutputStream()->getTimestamp(CLOCK_MONOTONIC);
+    if (!outputTimestampResult) return -1.0;
+
+    int64_t inputPosition = inputTimestampResult.value().position;
+    int64_t inputTimeNanos = inputTimestampResult.value().timestamp;
+    int64_t ouputPosition = outputTimestampResult.value().position;
+    int64_t outputTimeNanos = outputTimestampResult.value().timestamp;
+
+    // Map input frame position to the corresponding output frame.
+    int64_t mappedPosition = inputPosition + writeReadDelta;
+    // Calculate when that frame will play.
+    int32_t sampleRate = mFullDuplexLatency->getOutputStream()->getSampleRate();
+    int64_t mappedTimeNanos = outputTimeNanos + ((mappedPosition - ouputPosition) * 1e9) / sampleRate;
+
+    // Latency is the difference in time between when a frame was recorded and
+    // when its corresponding echo was played.
+    return (mappedTimeNanos - inputTimeNanos) * 1.0e-6; // convert nanos to millis
 }
 
 // ======================================================================= ActivityGlitches

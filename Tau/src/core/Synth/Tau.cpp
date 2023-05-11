@@ -22,10 +22,10 @@ namespace tau {
 #endif
 		presetBankReplaceMap = new unordered_map<uint32_t, uint32_t>;
 
-		mainSynther = new Synther(this);
+		synther = new Synther(this);
 		editor = new Editor(this);
-		mainSynther->CreateMidiEditor();
-		editor->SetMidiEditor(mainSynther->midiEditor);
+		synther->CreateMidiEditor();
+		editor->SetMidiEditor(synther->midiEditor);
 
 
 		SetFrameSampleCount(frameSampleCount);
@@ -41,7 +41,7 @@ namespace tau {
 #endif
 
 		DEL(editor);
-		DEL(mainSynther);
+		DEL(synther);
 		DEL(presetBankReplaceMap);
 
 	}
@@ -52,7 +52,7 @@ namespace tau {
 		if (isOpened)
 			return;
 
-		mainSynther->Open();
+		synther->Open();
 		isOpened = true;
 	}
 
@@ -64,9 +64,10 @@ namespace tau {
 
 		Remove();
 
-		mainSynther->Close();
+		synther->Close();
 		isOpened = false;
 	}
+
 
 
 	// 设置样本处理采样率
@@ -99,7 +100,7 @@ namespace tau {
 		unitSampleSec = invSampleProcessRate * childFrameSampleCount;
 
 		//
-		mainSynther->SetFrameSampleCount(count);
+		synther->SetFrameSampleCount(count);
 	}
 
 	//设置是否使用多线程
@@ -116,7 +117,7 @@ namespace tau {
 		useMulThreads = use;
 
 		//
-		mainSynther->SetUseMulThread(useMulThreads);
+		synther->SetUseMulThread(useMulThreads);
 	}
 
 
@@ -144,21 +145,22 @@ namespace tau {
 	void Tau::AddEffect(TauEffect* effect)
 	{
 		TauLock(this);
-		mainSynther->AddEffect(effect);
+		synther->AddEffect(effect);
 	}
+
 
 	// 按下按键
 	void Tau::OnKey(int key, float velocity, VirInstrument* virInst, int id)
 	{
 		TauLock(this);
-		mainSynther->OnKey(key, velocity, virInst, id);
+		synther->OnKey(key, velocity, virInst, id);
 	}
 
 	// 释放按键 
 	void Tau::OffKey(int key, float velocity, VirInstrument* virInst, int id)
 	{
 		TauLock(this);
-		mainSynther->OffKey(key, velocity, virInst, id);
+		synther->OffKey(key, velocity, virInst, id);
 	}
 
 
@@ -173,7 +175,7 @@ namespace tau {
 
 		//
 		TauLock(this);
-		mainSynther->AppendReplaceInstrument(
+		synther->AppendReplaceInstrument(
 			orgBankMSB, orgBankLSB, orgInstNum,
 			repBankMSB, repBankLSB, repInstNum);
 	}
@@ -187,7 +189,7 @@ namespace tau {
 
 		//
 		TauLock(this);
-		mainSynther->RemoveReplaceInstrument(orgBankMSB, orgBankLSB, orgInstNum);
+		synther->RemoveReplaceInstrument(orgBankMSB, orgBankLSB, orgInstNum);
 	}
 
 
@@ -195,14 +197,14 @@ namespace tau {
 	void Tau::SetVirInstrumentPitchBend(VirInstrument* virInst, int value)
 	{
 		TauLock(this);
-		mainSynther->SetVirInstrumentPitchBend(virInst, value);
+		synther->SetVirInstrumentPitchBend(virInst, value);
 	}
 
 	// 设置乐器按键压力值
 	void Tau::SetVirInstrumentPolyPressure(VirInstrument* virInst, int key, int pressure)
 	{
 		TauLock(this);
-		mainSynther->SetVirInstrumentPolyPressure(virInst, key, pressure);
+		synther->SetVirInstrumentPolyPressure(virInst, key, pressure);
 	}
 
 
@@ -210,7 +212,7 @@ namespace tau {
 	void Tau::SetVirInstrumentMidiControllerValue(VirInstrument* virInst, MidiControllerType midiController, int value)
 	{
 		TauLock(this);
-		mainSynther->SetVirInstrumentMidiControllerValue(virInst, midiController, value);
+		synther->SetVirInstrumentMidiControllerValue(virInst, midiController, value);
 	}
 
 	//设置是否开启所有乐器效果器
@@ -221,14 +223,14 @@ namespace tau {
 
 		isEnableVirInstEffects = isEnable;
 		TauLock(this);
-		mainSynther->SetEnableAllVirInstEffects(isEnable);
+		synther->SetEnableAllVirInstEffects(isEnable);
 	}
 
 	// 设置虚拟乐器值
 	void Tau::SetVirInstrumentProgram(VirInstrument* virInst, int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
 		TauLock(this);
-		mainSynther->SetVirInstrumentProgram(virInst, bankSelectMSB, bankSelectLSB, instrumentNum);
+		synther->SetVirInstrumentProgram(virInst, bankSelectMSB, bankSelectLSB, instrumentNum);
 	}
 
 	/// <summary>
@@ -244,7 +246,7 @@ namespace tau {
 	VirInstrument* Tau::EnableVirInstrument(int deviceChannelNum, int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
 		TauLock(this);
-		return mainSynther->EnableVirInstrument(deviceChannelNum, bankSelectMSB, bankSelectLSB, instrumentNum);
+		return synther->EnableVirInstrument(deviceChannelNum, bankSelectMSB, bankSelectLSB, instrumentNum);
 	}
 
 	/// <summary>
@@ -253,7 +255,7 @@ namespace tau {
 	void Tau::RemoveVirInstrument(VirInstrument* virInst, bool isFade)
 	{
 		TauLock(this);
-		mainSynther->RemoveVirInstrument(virInst, isFade);
+		synther->RemoveVirInstrument(virInst, isFade);
 	}
 
 	/// <summary>
@@ -262,7 +264,7 @@ namespace tau {
 	void Tau::RemoveAllVirInstrument(bool isFade)
 	{
 		TauLock(this);
-		mainSynther->RemoveAllVirInstrument(isFade);
+		synther->RemoveAllVirInstrument(isFade);
 	}
 
 	/// <summary>
@@ -271,7 +273,7 @@ namespace tau {
 	void Tau::OpenVirInstrument(VirInstrument* virInst, bool isFade)
 	{
 		TauLock(this);
-		mainSynther->OpenVirInstrument(virInst, isFade);
+		synther->OpenVirInstrument(virInst, isFade);
 	}
 
 	/// <summary>
@@ -280,7 +282,7 @@ namespace tau {
 	void Tau::CloseVirInstrument(VirInstrument* virInst, bool isFade)
 	{
 		TauLock(this);
-		mainSynther->CloseVirInstrument(virInst, isFade);
+		synther->CloseVirInstrument(virInst, isFade);
 	}
 
 	/// <summary>
@@ -290,7 +292,7 @@ namespace tau {
 	{
 		TauLock(this);
 		vector<VirInstrument*>* virInsts = new vector<VirInstrument*>();
-		vector<VirInstrument*>* curtVirInsts = mainSynther->TakeVirInstrumentList();
+		vector<VirInstrument*>* curtVirInsts = synther->TakeVirInstrumentList();
 		if (curtVirInsts == nullptr)
 			return nullptr;
 
@@ -301,4 +303,38 @@ namespace tau {
 		return virInsts;
 	}
 
+	void Tau::ClearRecordPCM()
+	{
+		synther->ClearRecordPCM();
+	}
+
+	//开始录制pcm
+	void Tau::StartRecordPCM()
+	{
+		synther->StartRecordPCM();
+	}
+
+	//停止录制pcm
+	void Tau::StopRecordPCM()
+	{
+		synther->StopRecordPCM();
+	}
+
+	//保存录制pcm的到pcm文件
+	void Tau::SaveRecordPCM(string& path)
+	{
+		synther->SaveRecordPCM(path);
+	}
+
+	//保存录制pcm的到wav文件
+	void Tau::SaveRecordPCMToWav(string& path)
+	{
+		synther->SaveRecordPCMToWav(path);
+	}
+
+	//保存录制pcm的到mp3文件
+	void Tau::SaveRecordPCMToMp3(string& path)
+	{
+		synther->SaveRecordPCMToMp3(path);
+	}
 }

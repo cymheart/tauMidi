@@ -16,20 +16,18 @@
 
 package com.mobileer.oboetester;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.media.audiofx.AcousticEchoCanceler;
 import android.media.audiofx.AutomaticGainControl;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.FileProvider;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.RadioButton;
-import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,16 +36,15 @@ import java.io.IOException;
  * Test Oboe Capture
  */
 
-public class TestInputActivity  extends TestAudioActivity
-        implements ActivityCompat.OnRequestPermissionsResultCallback {
+public class TestInputActivity  extends TestAudioActivity {
 
-    private static final int AUDIO_ECHO_REQUEST = 0;
     protected AudioInputTester mAudioInputTester;
     private static final int NUM_VOLUME_BARS = 4;
     private VolumeBarView[] mVolumeBars = new VolumeBarView[NUM_VOLUME_BARS];
     private InputMarginView mInputMarginView;
     private int mInputMarginBursts = 0;
     private WorkloadView mWorkloadView;
+    private CommunicationDeviceView mCommunicationDeviceView;
 
     public native void setMinimumFramesBeforeRead(int frames);
     public native int saveWaveFile(String absolutePath);
@@ -81,6 +78,16 @@ public class TestInputActivity  extends TestAudioActivity
         if (mWorkloadView != null) {
             mWorkloadView.setAudioStreamTester(mAudioInputTester);
         }
+
+        mCommunicationDeviceView = (CommunicationDeviceView) findViewById(R.id.comm_device_view);
+    }
+
+    @Override
+    protected void onStop() {
+        if (mCommunicationDeviceView != null) {
+            mCommunicationDeviceView.cleanup();
+        }
+        super.onStop();
     }
 
     @Override
@@ -103,14 +110,14 @@ public class TestInputActivity  extends TestAudioActivity
         for (int i = 0; i < numChannels; i++) {
             if (mVolumeBars[i] == null) break;
             double level = mAudioInputTester.getPeakLevel(i);
-            mVolumeBars[i].setVolume((float) level);
+            mVolumeBars[i].setAmplitude((float) level);
         }
     }
 
     void resetVolumeBars() {
         for (int i = 0; i < mVolumeBars.length; i++) {
             if (mVolumeBars[i] == null) break;
-            mVolumeBars[i].setVolume((float) 0.0);
+            mVolumeBars[i].setAmplitude((float) 0.0);
         }
     }
 
@@ -122,11 +129,16 @@ public class TestInputActivity  extends TestAudioActivity
     }
 
     @Override
-    public void openAudio() throws IOException {
-        if (!isRecordPermissionGranted()){
-            requestRecordPermission();
-            return;
+    public void openAudio(View view) {
+        try {
+            openAudio();
+        } catch (Exception e) {
+            showErrorToast(e.getMessage());
         }
+    }
+
+    @Override
+    public void openAudio() throws IOException {
         super.openAudio();
         setMinimumBurstsBeforeRead(mInputMarginBursts);
         resetVolumeBars();
@@ -141,57 +153,6 @@ public class TestInputActivity  extends TestAudioActivity
     @Override
     protected void toastPauseError(int result) {
         showToast("Pause not implemented. Returned " + result);
-    }
-
-    private boolean isRecordPermissionGranted() {
-        return (ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED);
-    }
-
-    private void requestRecordPermission(){
-        ActivityCompat.requestPermissions(
-                this,
-                new String[]{Manifest.permission.RECORD_AUDIO},
-                AUDIO_ECHO_REQUEST);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-
-        if (AUDIO_ECHO_REQUEST != requestCode) {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-            return;
-        }
-
-        if (grantResults.length != 1 ||
-                grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-
-            Toast.makeText(getApplicationContext(),
-                    getString(R.string.need_record_audio_permission),
-                    Toast.LENGTH_SHORT)
-                    .show();
-        } else {
-            // Permission was granted
-            try {
-                super.openAudio();
-            } catch (IOException e) {
-                showErrorToast(e.getMessage());
-            }
-        }
-    }
-
-    public void setupAGC(int sessionId) {
-        AutomaticGainControl effect =  AutomaticGainControl.create(sessionId);
-    }
-
-    public void setupAEC(int sessionId) {
-        AcousticEchoCanceler effect =  AcousticEchoCanceler.create(sessionId);
-    }
-
-    @Override
-    public void setupEffects(int sessionId) {
-        setupAEC(sessionId);
     }
 
     protected int saveWaveFile(File file) {
@@ -243,5 +204,39 @@ public class TestInputActivity  extends TestAudioActivity
         String text = (String) radioButton.getText();
         mInputMarginBursts = Integer.parseInt(text);
         setMinimumBurstsBeforeRead(mInputMarginBursts);
+    }
+
+    @Override
+    public void startTestUsingBundle() {
+        try {
+            StreamConfiguration requestedInConfig = mAudioInputTester.requestedConfiguration;
+            IntentBasedTestSupport.configureInputStreamFromBundle(mBundleFromIntent, requestedInConfig);
+
+            openAudio();
+            startAudio();
+
+            int durationSeconds = IntentBasedTestSupport.getDurationSeconds(mBundleFromIntent);
+            if (durationSeconds > 0) {
+                // Schedule the end of the test.
+                Handler handler = new Handler(Looper.getMainLooper()); // UI thread
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        stopAutomaticTest();
+                    }
+                }, durationSeconds * 1000);
+            }
+        } catch (Exception e) {
+            showErrorToast(e.getMessage());
+        } finally {
+            mBundleFromIntent = null;
+        }
+    }
+
+    void stopAutomaticTest() {
+        String report = getCommonTestReport();
+        stopAudio();
+        maybeWriteTestResult(report);
+        mTestRunningByIntent = false;
     }
 }

@@ -517,7 +517,7 @@ namespace tau
 		int noteCount = 0;
 		bool isSetStartTick = true;
 		bool isSetEndTick = true;
-		int startTick = 0, endTick = perGroupTick;
+		uint32_t startTick = 0, endTick = perGroupTick;
 		for (int i = 0; i < midiTracks.size(); i++)
 		{
 			LinkedList<MidiEvent*>* midiEventList = midiTracks[i]->GetEventList();

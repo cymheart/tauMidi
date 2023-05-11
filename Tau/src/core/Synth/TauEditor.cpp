@@ -340,7 +340,7 @@ namespace tau
 			return;
 
 		TauLock(this);
-		mainSynther->RecordMidi();
+		synther->RecordMidi();
 	}
 
 	/// <summary>
@@ -355,7 +355,7 @@ namespace tau
 			return;
 
 		TauLock(this);
-		mainSynther->RecordMidi(virInst);
+		synther->RecordMidi(virInst);
 	}
 
 	/// <summary>
@@ -367,7 +367,7 @@ namespace tau
 			return;
 
 		TauLock(this);
-		mainSynther->StopRecordMidi();
+		synther->StopRecordMidi();
 	}
 
 	/// <summary>
@@ -380,7 +380,7 @@ namespace tau
 			return;
 
 		TauLock(this);
-		mainSynther->StopRecordMidi(virInst);
+		synther->StopRecordMidi(virInst);
 	}
 
 
@@ -412,7 +412,7 @@ namespace tau
 		//
 		vector<MidiTrack*>* midiTracks;
 		TauLock(this);
-		midiTracks = mainSynther->TakeRecordMidiTracks(virInsts, size, recordMidiTickForQuarterNote, &recordTempos);
+		midiTracks = synther->TakeRecordMidiTracks(virInsts, size, recordMidiTickForQuarterNote, &recordTempos);
 		if (midiTracks != nullptr)
 		{
 			for (int j = 0; j < midiTracks->size(); j++)

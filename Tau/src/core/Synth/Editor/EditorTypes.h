@@ -47,18 +47,20 @@ namespace tau
 		//停止中
 		CacheStoping,
 
-		//缓存并读取中
+		//缓存中并读取数据中
 		CachingAndRead,
-		//缓存中但不读取
+		//缓存中，不读取数据
 		CachingNotRead,
-		//仅读取
+		//仅读取数据(期间没有缓存动作)
 		OnlyRead,
 
-		//缓存中但暂停
+		//缓存中，暂停读取数据
 		CachingPauseRead,
-		//暂停等待读取
+		//暂停中，等待读取数据
 		PauseWaitRead,
 
+		//当原始midi停止播放时，
+		//缓存进入到读取剩余缓存数据状态
 		CacheReadTail,
 
 		//进入步进播放模式

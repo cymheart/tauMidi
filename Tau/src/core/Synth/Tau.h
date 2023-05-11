@@ -42,6 +42,15 @@ namespace tau
 			isSilence = is;
 		}
 
+		void ClearRecordPCM();
+		void StartRecordPCM();
+		void StopRecordPCM();
+		void SaveRecordPCM(string& path);
+		void SaveRecordPCMToWav(string& path);
+		//保存录制pcm的到mp3文件
+		void SaveRecordPCMToMp3(string& path);
+
+
 		//设置SoundFont
 		inline void SetSoundFont(SoundFont* sf)
 		{
@@ -523,6 +532,7 @@ namespace tau
 		//是否静音
 		bool isSilence = false;
 
+
 #ifdef _WIN32
 		Audio::EngineType audioEngineType = Audio::EngineType::SDL;
 #else
@@ -622,7 +632,7 @@ namespace tau
 
 		Editor* editor;
 
-		Synther* mainSynther = nullptr;
+		Synther* synther = nullptr;
 
 
 		friend class VirInstrument;

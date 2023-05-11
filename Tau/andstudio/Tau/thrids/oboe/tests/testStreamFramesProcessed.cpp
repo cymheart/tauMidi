@@ -21,7 +21,7 @@
 
 using namespace oboe;
 
-class MyCallback : public AudioStreamDataCallback {
+class FramesProcessedCallback : public AudioStreamDataCallback {
 public:
     DataCallbackResult onAudioReady(AudioStream *oboeStream, void *audioData, int32_t numFrames) override {
         return DataCallbackResult::Continue;
@@ -53,9 +53,9 @@ TEST_P(StreamFramesProcessed, VerifyFramesProcessed) {
     const Direction direction = std::get<0>(GetParam());
     const int32_t sampleRate = std::get<1>(GetParam());
 
-    AudioStreamDataCallback *callback = new MyCallback();
+    AudioStreamDataCallback *callback = new FramesProcessedCallback();
     mBuilder.setDirection(direction)
-            ->setFormat(AudioFormat::Float)
+            ->setFormat(AudioFormat::I16)
             ->setSampleRate(sampleRate)
             ->setSampleRateConversionQuality(SampleRateConversionQuality::Medium)
             ->setPerformanceMode(PerformanceMode::LowLatency)
@@ -70,10 +70,11 @@ TEST_P(StreamFramesProcessed, VerifyFramesProcessed) {
     sleep(PROCESS_TIME_SECONDS);
 
     // The frames written should be close to sampleRate * PROCESS_TIME_SECONDS
+    const int kDeltaFramesWindowInFrames = 30000;
     const int64_t framesWritten = mStream->getFramesWritten();
     const int64_t framesRead = mStream->getFramesRead();
-    EXPECT_NEAR(framesWritten, sampleRate * PROCESS_TIME_SECONDS, sampleRate / 2);
-    EXPECT_NEAR(framesRead, sampleRate * PROCESS_TIME_SECONDS, sampleRate / 2);
+    EXPECT_NEAR(framesWritten, sampleRate * PROCESS_TIME_SECONDS, kDeltaFramesWindowInFrames);
+    EXPECT_NEAR(framesRead, sampleRate * PROCESS_TIME_SECONDS, kDeltaFramesWindowInFrames);
 }
 
 INSTANTIATE_TEST_CASE_P(

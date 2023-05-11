@@ -11,7 +11,9 @@
     <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/thrids/scutils/MathUtils.cpp" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/thrids/task/Task.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/app/src/main/cpp/src/thrids/task/TaskProcesser.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/../../src/core/Synth/PcmRecorder.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/../../src/thrids/scutils/LinkedList.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/../../src/thrids/scutils/Mp3Recorder.cpp" charset="GBK" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

@@ -18,7 +18,10 @@ package com.mobileer.oboetester;
 
 import android.content.res.Resources;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Container for the properties of a Stream.
@@ -42,6 +45,7 @@ public class StreamConfiguration {
     public static final int AUDIO_FORMAT_PCM_FLOAT = 2; // must match AAUDIO
     public static final int AUDIO_FORMAT_PCM_24 = 3; // must match AAUDIO
     public static final int AUDIO_FORMAT_PCM_32 = 4; // must match AAUDIO
+    public static final int AUDIO_FORMAT_IEC61937 = 5; // must match AAUDIO
 
     public static final int DIRECTION_OUTPUT = 0; // must match AAUDIO
     public static final int DIRECTION_INPUT = 1; // must match AAUDIO
@@ -85,8 +89,126 @@ public class StreamConfiguration {
     public static final int USAGE_GAME = 14;
     public static final int USAGE_ASSISTANT = 16;
 
+    public static final int CONTENT_TYPE_SPEECH = 1;
+    public static final int CONTENT_TYPE_MUSIC = 2;
+    public static final int CONTENT_TYPE_MOVIE = 3;
+    public static final int CONTENT_TYPE_SONIFICATION = 4;
+
+    public static final int CHANNEL_FRONT_LEFT = 1 << 0;
+    public static final int CHANNEL_FRONT_RIGHT = 1 << 1;
+    public static final int CHANNEL_FRONT_CENTER = 1 << 2;
+    public static final int CHANNEL_LOW_FREQUENCY = 1 << 3;
+    public static final int CHANNEL_BACK_LEFT = 1 << 4;
+    public static final int CHANNEL_BACK_RIGHT = 1 << 5;
+    public static final int CHANNEL_FRONT_LEFT_OF_CENTER = 1 << 6;
+    public static final int CHANNEL_FRONT_RIGHT_OF_CENTER = 1 << 7;
+    public static final int CHANNEL_BACK_CENTER = 1 << 8;
+    public static final int CHANNEL_SIDE_LEFT = 1 << 9;
+    public static final int CHANNEL_SIDE_RIGHT = 1 << 10;
+    public static final int CHANNEL_TOP_CENTER = 1 << 11;
+    public static final int CHANNEL_TOP_FRONT_LEFT = 1 << 12;
+    public static final int CHANNEL_TOP_FRONT_CENTER = 1 << 13;
+    public static final int CHANNEL_TOP_FRONT_RIGHT = 1 << 14;
+    public static final int CHANNEL_TOP_BACK_LEFT = 1 << 15;
+    public static final int CHANNEL_TOP_BACK_CENTER = 1 << 16;
+    public static final int CHANNEL_TOP_BACK_RIGHT = 1 << 17;
+    public static final int CHANNEL_TOP_SIDE_LEFT = 1 << 18;
+    public static final int CHANNEL_TOP_SIDE_RIGHT = 1 << 19;
+    public static final int CHANNEL_BOTTOM_FRONT_LEFT = 1 << 20;
+    public static final int CHANNEL_BOTTOM_FRONT_CENTER = 1 << 21;
+    public static final int CHANNEL_BOTTOM_FRONT_RIGHT = 1 << 22;
+    public static final int CHANNEL_LOW_FREQUENCY_2 = 1 << 23;
+    public static final int CHANNEL_FRONT_WIDE_LEFT = 1 << 24;
+    public static final int CHANNEL_FRONT_WIDE_RIGHT = 1 << 25;
+
+    public static final int CHANNEL_MONO = CHANNEL_FRONT_LEFT;
+    public static final int CHANNEL_STEREO = CHANNEL_FRONT_LEFT | CHANNEL_FRONT_RIGHT;
+    public static final int CHANNEL_2POINT1 = CHANNEL_FRONT_LEFT |
+                                              CHANNEL_FRONT_RIGHT |
+                                              CHANNEL_LOW_FREQUENCY;
+    public static final int CHANNEL_TRI = CHANNEL_FRONT_LEFT |
+                                          CHANNEL_FRONT_RIGHT |
+                                          CHANNEL_FRONT_CENTER;
+    public static final int CHANNEL_TRI_BACK = CHANNEL_FRONT_LEFT |
+                                               CHANNEL_FRONT_RIGHT |
+                                               CHANNEL_BACK_CENTER;
+    public static final int CHANNEL_3POINT1 = CHANNEL_FRONT_LEFT |
+                                              CHANNEL_FRONT_RIGHT |
+                                              CHANNEL_FRONT_CENTER |
+                                              CHANNEL_LOW_FREQUENCY;
+    public static final int CHANNEL_2POINT0POINT2 = CHANNEL_FRONT_LEFT |
+                                                    CHANNEL_FRONT_RIGHT |
+                                                    CHANNEL_TOP_SIDE_LEFT |
+                                                    CHANNEL_TOP_SIDE_RIGHT;
+    public static final int CHANNEL_2POINT1POINT2 = CHANNEL_2POINT0POINT2 | CHANNEL_LOW_FREQUENCY;
+    public static final int CHANNEL_3POINT0POINT2 = CHANNEL_FRONT_LEFT |
+                                                    CHANNEL_FRONT_RIGHT |
+                                                    CHANNEL_FRONT_CENTER |
+                                                    CHANNEL_TOP_SIDE_LEFT |
+                                                    CHANNEL_TOP_SIDE_RIGHT;
+    public static final int CHANNEL_3POINT1POINT2 = CHANNEL_3POINT0POINT2 | CHANNEL_LOW_FREQUENCY;
+    public static final int CHANNEL_QUAD = CHANNEL_FRONT_LEFT |
+                                           CHANNEL_FRONT_RIGHT |
+                                           CHANNEL_BACK_LEFT |
+                                           CHANNEL_BACK_RIGHT;
+    public static final int CHANNEL_QUAD_SIDE = CHANNEL_FRONT_LEFT |
+                                                CHANNEL_FRONT_RIGHT |
+                                                CHANNEL_SIDE_LEFT |
+                                                CHANNEL_SIDE_RIGHT;
+    public static final int CHANNEL_SURROUND = CHANNEL_FRONT_LEFT |
+                                               CHANNEL_FRONT_RIGHT |
+                                               CHANNEL_FRONT_CENTER |
+                                               CHANNEL_BACK_CENTER;
+    public static final int CHANNEL_PENTA = CHANNEL_QUAD | CHANNEL_FRONT_CENTER;
+    // aka 5POINT1_BACK
+    public static final int CHANNEL_5POINT1 = CHANNEL_FRONT_LEFT |
+                                              CHANNEL_FRONT_RIGHT |
+                                              CHANNEL_FRONT_CENTER |
+                                              CHANNEL_LOW_FREQUENCY |
+                                              CHANNEL_BACK_LEFT |
+                                              CHANNEL_BACK_RIGHT;
+    public static final int CHANNEL_5POINT1_SIDE = CHANNEL_FRONT_LEFT |
+                                                   CHANNEL_FRONT_RIGHT |
+                                                   CHANNEL_FRONT_CENTER |
+                                                   CHANNEL_LOW_FREQUENCY |
+                                                   CHANNEL_SIDE_LEFT |
+                                                   CHANNEL_SIDE_RIGHT;
+    public static final int CHANNEL_6POINT1 = CHANNEL_FRONT_LEFT |
+                                              CHANNEL_FRONT_RIGHT |
+                                              CHANNEL_FRONT_CENTER |
+                                              CHANNEL_LOW_FREQUENCY |
+                                              CHANNEL_BACK_LEFT |
+                                              CHANNEL_BACK_RIGHT |
+                                              CHANNEL_BACK_CENTER;
+    public static final int CHANNEL_7POINT1 = CHANNEL_5POINT1 |
+                                              CHANNEL_SIDE_LEFT |
+                                              CHANNEL_SIDE_RIGHT;
+    public static final int CHANNEL_5POINT1POINT2 = CHANNEL_5POINT1 |
+                                                    CHANNEL_TOP_SIDE_LEFT |
+                                                    CHANNEL_TOP_SIDE_RIGHT;
+    public static final int CHANNEL_5POINT1POINT4 = CHANNEL_5POINT1 |
+                                                    CHANNEL_TOP_FRONT_LEFT |
+                                                    CHANNEL_TOP_FRONT_RIGHT |
+                                                    CHANNEL_TOP_BACK_LEFT |
+                                                    CHANNEL_TOP_BACK_RIGHT;
+    public static final int CHANNEL_7POINT1POINT2 = CHANNEL_7POINT1 |
+                                                    CHANNEL_TOP_SIDE_LEFT |
+                                                    CHANNEL_TOP_SIDE_RIGHT;
+    public static final int CHANNEL_7POINT1POINT4 = CHANNEL_7POINT1 |
+                                                    CHANNEL_TOP_FRONT_LEFT |
+                                                    CHANNEL_TOP_FRONT_RIGHT |
+                                                    CHANNEL_TOP_BACK_LEFT |
+                                                    CHANNEL_TOP_BACK_RIGHT;
+    public static final int CHANNEL_9POINT1POINT4 = CHANNEL_7POINT1POINT4 |
+                                                    CHANNEL_FRONT_WIDE_LEFT |
+                                                    CHANNEL_FRONT_WIDE_RIGHT;
+    public static final int CHANNEL_9POINT1POINT6 = CHANNEL_9POINT1POINT4 |
+                                                    CHANNEL_TOP_SIDE_LEFT |
+                                                    CHANNEL_TOP_SIDE_RIGHT;
+    public static final int CHANNEL_FRONT_BACK = CHANNEL_FRONT_CENTER | CHANNEL_BACK_CENTER;
+
     public static final int[] usages = {
-             USAGE_MEDIA,
+            USAGE_MEDIA,
             USAGE_VOICE_COMMUNICATION,
             USAGE_VOICE_COMMUNICATION_SIGNALLING,
             USAGE_ALARM,
@@ -98,6 +220,45 @@ public class StreamConfiguration {
             USAGE_ASSISTANCE_SONIFICATION,
             USAGE_GAME,
             USAGE_ASSISTANT};
+
+    public static final int[] contentTypes = {
+            CONTENT_TYPE_SPEECH,
+            CONTENT_TYPE_MUSIC,
+            CONTENT_TYPE_MOVIE,
+            CONTENT_TYPE_SONIFICATION};
+
+    public static final int[] channelMasks = {
+            CHANNEL_MONO,
+            CHANNEL_STEREO,
+            CHANNEL_2POINT1,
+            CHANNEL_TRI,
+            CHANNEL_TRI_BACK,
+            CHANNEL_3POINT1,
+            CHANNEL_2POINT0POINT2,
+            CHANNEL_2POINT1POINT2,
+            CHANNEL_3POINT0POINT2,
+            CHANNEL_3POINT1POINT2,
+            CHANNEL_QUAD,
+            CHANNEL_QUAD_SIDE,
+            CHANNEL_SURROUND,
+            CHANNEL_PENTA,
+            CHANNEL_5POINT1,
+            CHANNEL_5POINT1_SIDE,
+            CHANNEL_6POINT1,
+            CHANNEL_7POINT1,
+            CHANNEL_5POINT1POINT2,
+            CHANNEL_5POINT1POINT4,
+            CHANNEL_7POINT1POINT2,
+            CHANNEL_7POINT1POINT4,
+            CHANNEL_9POINT1POINT4,
+            CHANNEL_9POINT1POINT6,
+            CHANNEL_FRONT_BACK
+    };
+
+    private static HashMap<String,Integer> mUsageStringToIntegerMap;
+    private static HashMap<String,Integer> mContentTypeStringToIntegerMap;
+    private static HashMap<String,Integer> mChannelMaskStringToIntegerMap;
+    private static List<String> mChannelMaskStrings = new ArrayList<>();
 
     private int mNativeApi;
     private int mBufferCapacityInFrames;
@@ -114,11 +275,13 @@ public class StreamConfiguration {
     private int mRateConversionQuality;
     private int mInputPreset;
     private int mUsage;
-    private static HashMap<String,Integer> mUsageStringToIntegerMap;
-
-    private int mFramesPerBurst = 0;
-
-    private boolean mMMap = false;
+    private int mContentType;
+    private int mFramesPerBurst;
+    private boolean mMMap;
+    private int mChannelMask;
+    private int mHardwareChannelCount;
+    private int mHardwareSampleRate;
+    private int mHardwareFormat;
 
     public StreamConfiguration() {
         reset();
@@ -127,8 +290,27 @@ public class StreamConfiguration {
     static {
         // Build map for Usage string-to-int conversion.
         mUsageStringToIntegerMap = new HashMap<String,Integer>();
+        mUsageStringToIntegerMap.put(convertUsageToText(UNSPECIFIED), UNSPECIFIED);
         for (int usage : usages) {
             mUsageStringToIntegerMap.put(convertUsageToText(usage), usage);
+        }
+
+        // Build map for Content Type string-to-int conversion.
+        mContentTypeStringToIntegerMap = new HashMap<String,Integer>();
+        mContentTypeStringToIntegerMap.put(convertContentTypeToText(UNSPECIFIED), UNSPECIFIED);
+        for (int contentType : contentTypes) {
+            mContentTypeStringToIntegerMap.put(convertContentTypeToText(contentType), contentType);
+        }
+
+        // Build map for Channel Mask string-to-int conversion.
+        mChannelMaskStringToIntegerMap = new HashMap<String, Integer>();
+        String channelMaskStr = convertChannelMaskToText(UNSPECIFIED);
+        mChannelMaskStringToIntegerMap.put(channelMaskStr, UNSPECIFIED);
+        mChannelMaskStrings.add(channelMaskStr);
+        for (int channelMask : channelMasks) {
+            channelMaskStr = convertChannelMaskToText(channelMask);
+            mChannelMaskStringToIntegerMap.put(channelMaskStr, channelMask);
+            mChannelMaskStrings.add(channelMaskStr);
         }
     }
 
@@ -136,6 +318,7 @@ public class StreamConfiguration {
         mNativeApi = NATIVE_API_UNSPECIFIED;
         mBufferCapacityInFrames = UNSPECIFIED;
         mChannelCount = UNSPECIFIED;
+        mChannelMask = UNSPECIFIED;
         mDeviceId = UNSPECIFIED;
         mSessionId = -1;
         mFormat = AUDIO_FORMAT_PCM_FLOAT;
@@ -143,11 +326,15 @@ public class StreamConfiguration {
         mSharingMode = SHARING_MODE_EXCLUSIVE;
         mPerformanceMode = PERFORMANCE_MODE_LOW_LATENCY;
         mInputPreset = INPUT_PRESET_VOICE_RECOGNITION;
-        mUsage = 0; // FIXME add USAGE_*
+        mUsage = UNSPECIFIED;
+        mContentType = UNSPECIFIED;
         mFormatConversionAllowed = false;
         mChannelConversionAllowed = false;
         mRateConversionQuality = RATE_CONVERSION_QUALITY_NONE;
         mMMap = NativeEngine.isMMapSupported();
+        mHardwareChannelCount = UNSPECIFIED;
+        mHardwareSampleRate = UNSPECIFIED;
+        mHardwareFormat = UNSPECIFIED;
     }
 
     public int getFramesPerBurst() {
@@ -209,12 +396,19 @@ public class StreamConfiguration {
     }
 
     public int getUsage() { return mUsage; }
-    public void setUsage(int Usage) {
-        this.mUsage = Usage;
+    public void setUsage(int usage) {
+        this.mUsage = usage;
+    }
+
+    public int getContentType() { return mContentType; }
+    public void setContentType(int contentType) {
+        this.mContentType = contentType;
     }
 
     static String convertUsageToText(int usage) {
         switch(usage) {
+            case UNSPECIFIED:
+                return "Unspecified";
             case USAGE_MEDIA:
                 return "Media";
             case USAGE_VOICE_COMMUNICATION:
@@ -248,6 +442,27 @@ public class StreamConfiguration {
         return mUsageStringToIntegerMap.get(text);
     }
 
+    static String convertContentTypeToText(int contentType) {
+        switch(contentType) {
+            case UNSPECIFIED:
+                return "Unspecified";
+            case CONTENT_TYPE_SPEECH:
+                return "Speech";
+            case CONTENT_TYPE_MUSIC:
+                return "Music";
+            case CONTENT_TYPE_MOVIE:
+                return "Movie";
+            case CONTENT_TYPE_SONIFICATION:
+                return "Sonification";
+            default:
+                return "?=" + contentType;
+        }
+    }
+
+    public static int convertTextToContentType(String text) {
+        return mContentTypeStringToIntegerMap.get(text);
+    }
+
     public int getSharingMode() {
         return mSharingMode;
     }
@@ -279,6 +494,8 @@ public class StreamConfiguration {
                 return "I32";
             case AUDIO_FORMAT_PCM_FLOAT:
                 return "Float";
+            case AUDIO_FORMAT_IEC61937:
+                return "IEC61937";
             default:
                 return "Invalid";
         }
@@ -297,28 +514,97 @@ public class StreamConfiguration {
         }
     }
 
+    public static String convertChannelMaskToText(int channelMask) {
+        switch (channelMask) {
+            case UNSPECIFIED:
+                return "Unspecified";
+            case CHANNEL_MONO:
+                return "Mono";
+            case CHANNEL_STEREO:
+                return "Stereo";
+            case CHANNEL_2POINT1:
+                return "2.1";
+            case CHANNEL_TRI:
+                return "Tri";
+            case CHANNEL_TRI_BACK:
+                return "TriBack";
+            case CHANNEL_3POINT1:
+                return "3.1";
+            case CHANNEL_2POINT0POINT2:
+                return "2.0.2";
+            case CHANNEL_2POINT1POINT2:
+                return "2.1.2";
+            case CHANNEL_3POINT0POINT2:
+                return "3.0.2";
+            case CHANNEL_3POINT1POINT2:
+                return "3.1.2";
+            case CHANNEL_QUAD:
+                return "Quad";
+            case CHANNEL_QUAD_SIDE:
+                return "QuadSide";
+            case CHANNEL_SURROUND:
+                return "Surround";
+            case CHANNEL_PENTA:
+                return "Penta";
+            case CHANNEL_5POINT1:
+                return "5.1";
+            case CHANNEL_5POINT1_SIDE:
+                return "5.1Side";
+            case CHANNEL_6POINT1:
+                return "6.1";
+            case CHANNEL_7POINT1:
+                return "7.1";
+            case CHANNEL_5POINT1POINT2:
+                return "5.1.2";
+            case CHANNEL_5POINT1POINT4:
+                return "5.1.4";
+            case CHANNEL_7POINT1POINT2:
+                return "7.1.2";
+            case CHANNEL_7POINT1POINT4:
+                return "7.1.4";
+            case CHANNEL_9POINT1POINT4:
+                return "9.1.4";
+            case CHANNEL_9POINT1POINT6:
+                return "9.1.6";
+            case CHANNEL_FRONT_BACK:
+                return "FrontBack";
+            default:
+                return "?=" + Integer.toHexString(channelMask);
+        }
+    }
+
+    public static int convertTextToChannelMask(String text) {
+        return mChannelMaskStringToIntegerMap.get(text);
+    }
+
 
     public String dump() {
         String prefix = (getDirection() == DIRECTION_INPUT) ? "in" : "out";
         StringBuffer message = new StringBuffer();
-        message.append(String.format("%s.channels = %d\n", prefix, mChannelCount));
-        message.append(String.format("%s.perf = %s\n", prefix,
-                convertPerformanceModeToText(mPerformanceMode).toLowerCase()));
+        message.append(String.format(Locale.getDefault(), "%s.channels = %d\n", prefix, mChannelCount));
+        message.append(String.format(Locale.getDefault(), "%s.perf = %s\n", prefix,
+                convertPerformanceModeToText(mPerformanceMode).toLowerCase(Locale.getDefault())));
         if (getDirection() == DIRECTION_INPUT) {
-            message.append(String.format("%s.preset = %s\n", prefix,
-                    convertInputPresetToText(mInputPreset).toLowerCase()));
+            message.append(String.format(Locale.getDefault(), "%s.preset = %s\n", prefix,
+                    convertInputPresetToText(mInputPreset).toLowerCase(Locale.getDefault())));
         } else {
-            message.append(String.format("%s.preset = %s\n", prefix,
-                    convertUsageToText(mUsage).toLowerCase()));
+            message.append(String.format(Locale.getDefault(), "%s.preset = %s\n", prefix,
+                    convertUsageToText(mUsage).toLowerCase(Locale.getDefault())));
+            message.append(String.format(Locale.getDefault(), "%s.contentType = %s\n", prefix,
+                    convertContentTypeToText(mContentType).toLowerCase(Locale.getDefault())));
         }
-        message.append(String.format("%s.sharing = %s\n", prefix,
-                convertSharingModeToText(mSharingMode).toLowerCase()));
-        message.append(String.format("%s.api = %s\n", prefix,
-                convertNativeApiToText(getNativeApi()).toLowerCase()));
-        message.append(String.format("%s.rate = %d\n", prefix, mSampleRate));
-        message.append(String.format("%s.device = %d\n", prefix, mDeviceId));
-        message.append(String.format("%s.mmap = %s\n", prefix, isMMap() ? "yes" : "no"));
-        message.append(String.format("%s.rate.conversion.quality = %d\n", prefix, mRateConversionQuality));
+        message.append(String.format(Locale.getDefault(), "%s.sharing = %s\n", prefix,
+                convertSharingModeToText(mSharingMode).toLowerCase(Locale.getDefault())));
+        message.append(String.format(Locale.getDefault(), "%s.api = %s\n", prefix,
+                convertNativeApiToText(getNativeApi()).toLowerCase(Locale.getDefault())));
+        message.append(String.format(Locale.getDefault(), "%s.rate = %d\n", prefix, mSampleRate));
+        message.append(String.format(Locale.getDefault(), "%s.device = %d\n", prefix, mDeviceId));
+        message.append(String.format(Locale.getDefault(), "%s.mmap = %s\n", prefix, isMMap() ? "yes" : "no"));
+        message.append(String.format(Locale.getDefault(), "%s.rate.conversion.quality = %d\n", prefix, mRateConversionQuality));
+        message.append(String.format(Locale.getDefault(), "%s.hardware.channels = %d\n", prefix, mHardwareChannelCount));
+        message.append(String.format(Locale.getDefault(), "%s.hardware.sampleRate = %d\n", prefix, mHardwareSampleRate));
+        message.append(String.format(Locale.getDefault(), "%s.hardware.format = %s\n", prefix,
+                convertFormatToText(mHardwareFormat).toLowerCase(Locale.getDefault())));
         return message.toString();
     }
 
@@ -350,7 +636,7 @@ public class StreamConfiguration {
     }
 
     private static boolean matchInputPreset(String text, int preset) {
-        return convertInputPresetToText(preset).toLowerCase().equals(text);
+        return convertInputPresetToText(preset).toLowerCase(Locale.getDefault()).equals(text);
     }
 
     /**
@@ -359,7 +645,7 @@ public class StreamConfiguration {
      * @return inputPreset, eg. INPUT_PRESET_CAMCORDER
      */
     public static int convertTextToInputPreset(String text) {
-        text = text.toLowerCase();
+        text = text.toLowerCase(Locale.getDefault());
         if (matchInputPreset(text, INPUT_PRESET_GENERIC)) {
             return INPUT_PRESET_GENERIC;
         } else if (matchInputPreset(text, INPUT_PRESET_CAMCORDER)) {
@@ -442,4 +728,39 @@ public class StreamConfiguration {
         return mRateConversionQuality;
     }
 
+    public int getChannelMask() {
+        return mChannelMask;
+    }
+
+    public void setChannelMask(int channelMask) {
+        this.mChannelMask = channelMask;
+    }
+
+    public static List<String> getAllChannelMasks() {
+        return mChannelMaskStrings;
+    }
+
+    public int getHardwareChannelCount() {
+        return mHardwareChannelCount;
+    }
+
+    public void setHardwareChannelCount(int hardwareChannelCount) {
+        this.mHardwareChannelCount = hardwareChannelCount;
+    }
+
+    public int getHardwareSampleRate() {
+        return mHardwareSampleRate;
+    }
+
+    public void setHardwareSampleRate(int hardwareSampleRate) {
+        this.mHardwareSampleRate = hardwareSampleRate;
+    }
+
+    public int getHardwareFormat() {
+        return mHardwareFormat;
+    }
+
+    public void setHardwareFormat(int hardwareFormat) {
+        this.mHardwareFormat = hardwareFormat;
+    }
 }

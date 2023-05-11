@@ -51,6 +51,7 @@ public:
     // These functions override methods in AudioStream.
     // See AudioStream for documentation.
     Result open() override;
+    Result release() override;
     Result close() override;
 
     Result requestStart() override;
@@ -91,7 +92,7 @@ public:
                                                    void *audioData,
                                                    int32_t numFrames);
 
-    bool                 isMMapUsed();
+    bool isMMapUsed();
 
 protected:
     static void internalErrorCallback(
@@ -112,11 +113,15 @@ private:
     // Must call under mLock. And stream must NOT be nullptr.
     Result requestStop_l(AAudioStream *stream);
 
-    // Time to sleep in order to prevent a race condition with a callback after a close().
-    // Two milliseconds may be enough but 10 msec is even safer.
-    static constexpr int kDelayBeforeCloseMillis = 10;
+    /**
+     * Launch a thread that will stop the stream.
+     */
+    void launchStopThread();
+
+private:
 
     std::atomic<bool>    mCallbackThreadEnabled;
+    std::atomic<bool>    mStopThreadAllowed{false};
 
     // pointer to the underlying 'C' AAudio stream, valid if open, null if closed
     std::atomic<AAudioStream *> mAAudioStream{nullptr};

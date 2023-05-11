@@ -17,6 +17,7 @@
 package com.mobileer.oboetester;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Base class for any audio input or output.
@@ -38,6 +39,7 @@ public abstract class AudioStreamBase {
         status.callbackCount = getCallbackCount();
         status.latency = getLatency();
         mLatencyStatistics.add(status.latency);
+        status.callbackTimeStr = getCallbackTimeStr();
         status.cpuLoad = getCpuLoad();
         status.state = getState();
         return status;
@@ -53,12 +55,12 @@ public abstract class AudioStreamBase {
         private double minimum = Double.MAX_VALUE;
         private double maximum = Double.MIN_VALUE;
 
-        void add(double latency) {
-            if (latency <= 0.0) return;
-            sum += latency;
+        void add(double statistic) {
+            if (statistic <= 0.0) return;
+            sum += statistic;
             count++;
-            minimum = Math.min(latency, minimum);
-            maximum = Math.max(latency, maximum);
+            minimum = Math.min(statistic, minimum);
+            maximum = Math.max(statistic, maximum);
         }
 
         double getAverage() {
@@ -67,7 +69,7 @@ public abstract class AudioStreamBase {
 
         public String dump() {
             if (count == 0) return "?";
-            return String.format("%3.1f/%3.1f/%3.1f ms", minimum, getAverage(), maximum);
+            return String.format(Locale.getDefault(), "%3.1f/%3.1f/%3.1f ms", minimum, getAverage(), maximum);
         }
     }
 
@@ -84,6 +86,7 @@ public abstract class AudioStreamBase {
         public long callbackCount;
         public int framesPerCallback;
         public double cpuLoad;
+        public String callbackTimeStr;
 
         // These are constantly changing.
         String dump(int framesPerBurst) {
@@ -92,26 +95,30 @@ public abstract class AudioStreamBase {
             }
             StringBuffer buffer = new StringBuffer();
 
-            buffer.append("frames written " + framesWritten + " - read " + framesRead
-                    + " = " + (framesWritten - framesRead) + "\n");
+            buffer.append("time between callbacks = " + callbackTimeStr + "\n");
 
-            String cpuLoadText = String.format("%2d%c", (int)(cpuLoad * 100), '%');
+            buffer.append("written "
+                    + String.format(Locale.getDefault(), "0x%08X", framesWritten)
+                    + " - read " + String.format(Locale.getDefault(), "0x%08X", framesRead)
+                    + " = " + (framesWritten - framesRead) + " frames\n");
+
+            String cpuLoadText = String.format(Locale.getDefault(), "%2d%c", (int)(cpuLoad * 100), '%');
             buffer.append(
                     convertStateToString(state)
                     + ", #cb=" + callbackCount
-                    + ", f/cb=" + String.format("%3d", framesPerCallback)
+                    + ", f/cb=" + String.format(Locale.getDefault(), "%3d", framesPerCallback)
                     + ", " + cpuLoadText + " cpu"
                     + "\n");
 
             buffer.append("buffer size = ");
-            if (bufferSize < 0) {
+            if (bufferSize <= 0 || framesPerBurst <= 0) {
                 buffer.append("?");
             } else {
                 int numBuffers = bufferSize / framesPerBurst;
                 int remainder = bufferSize - (numBuffers * framesPerBurst);
                 buffer.append(bufferSize + " = (" + numBuffers + " * " + framesPerBurst + ") + " + remainder);
             }
-            buffer.append(",   xRun# = " + ((xRunCount < 0) ? "?" : xRunCount) + "\n");
+            buffer.append(",   xRun# = " + ((xRunCount < 0) ? "?" : xRunCount));
 
             return buffer.toString();
         }
@@ -190,6 +197,8 @@ public abstract class AudioStreamBase {
     public double getLatency() { return -1.0; }
 
     public double getCpuLoad() { return 0.0; }
+
+    public String getCallbackTimeStr() { return "?"; };
 
     public int getState() { return -1; }
 

@@ -19,14 +19,20 @@ package com.mobileer.oboetester;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioDeviceCallback;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.media.MicrophoneInfo;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import com.mobileer.audio_device.AudioDeviceInfoConverter;
 
@@ -69,10 +75,26 @@ public class DeviceReportActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_report);
-        mAutoTextView = (TextView) findViewById(R.id.text_log);
-        mAutoTextView.setMovementMethod(new ScrollingMovementMethod());
-
+        mAutoTextView = (TextView) findViewById(R.id.text_log_device_report);
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuItem settings = menu.findItem(R.id.action_share);
+        settings.setOnMenuItemClickListener(item -> {
+            if(mAutoTextView !=null) {
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_TEXT, mAutoTextView.getText().toString());
+                sendIntent.setType("text/plain");
+                Intent shareIntent = Intent.createChooser(sendIntent, null);
+                startActivity(shareIntent);
+            }
+            return false;
+        });
+        return true;
     }
 
     @Override
@@ -103,8 +125,11 @@ public class DeviceReportActivity extends Activity {
         logClear();
         StringBuffer report = new StringBuffer();
         report.append("Device Report:\n");
-        report.append(MainActivity.getVersiontext());
-        report.append(Build.MANUFACTURER + ", " + Build.MODEL + ", " + Build.PRODUCT);
+        report.append("App: ").append(MainActivity.getVersionText()).append("\n");
+        report.append("Device: ").append(Build.MANUFACTURER).append(", ").append(Build.MODEL)
+                .append(", ").append(Build.PRODUCT).append("\n");
+
+        report.append(reportExtraDeviceInfo());
 
         for (AudioDeviceInfo deviceInfo : devices) {
             report.append("\n==== Device =================== " + deviceInfo.getId() + "\n");
@@ -112,7 +137,6 @@ public class DeviceReportActivity extends Activity {
             report.append(item);
         }
         report.append(reportAllMicrophones());
-        report.append(reportExtraDeviceInfo());
         log(report.toString());
     }
 
@@ -128,8 +152,12 @@ public class DeviceReportActivity extends Activity {
                     report.append(micItem);
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(TestAudioActivity.TAG, "Caught ", e);
                 return e.getMessage();
+            } catch (Exception e) {
+                Log.e(TestAudioActivity.TAG, "Caught ", e);
+                showErrorToast(e.getMessage());
+                report.append("\nERROR: " + e.getMessage() + "\n");
             }
         } else {
             report.append("\nMicrophoneInfo not available on V" + android.os.Build.VERSION.SDK_INT);
@@ -140,10 +168,12 @@ public class DeviceReportActivity extends Activity {
     private String reportExtraDeviceInfo() {
         StringBuffer report = new StringBuffer();
         report.append("\n\n############################");
-        report.append("\nExtras:");
-
+        report.append("\nAudioManager:");
         report.append(AudioQueryTools.getAudioManagerReport(mAudioManager));
+        report.append("\n\nFeatures:");
         report.append(AudioQueryTools.getAudioFeatureReport(getPackageManager()));
+        report.append(AudioQueryTools.getMediaPerformanceClass());
+        report.append("\n\nProperties:");
         report.append(AudioQueryTools.getAudioPropertyReport());
         return report.toString();
     }
@@ -168,4 +198,20 @@ public class DeviceReportActivity extends Activity {
         });
     }
 
+    protected void showErrorToast(String message) {
+        String text = "Error: " + message;
+        Log.e(TestAudioActivity.TAG, text);
+        showToast(text);
+    }
+
+    protected void showToast(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(DeviceReportActivity.this,
+                        message,
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 }

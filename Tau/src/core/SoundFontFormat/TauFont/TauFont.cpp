@@ -4,9 +4,11 @@
 #include"Synth/Instrument.h"
 #include"Synth/Preset.h"
 #include"Synth/Region.h"
-#include"SoundFormat/Wav/WavReader.h"
+//#include"SoundFormat/Wav/WavReader.h"
 #include <Synth\UnitTransform.h>
 #include"Synth/SoundFont.h"
+#include"wav/WavHeader.hpp"
+#include <wav/WavReader.hpp>
 
 namespace tau
 {
@@ -116,12 +118,19 @@ namespace tau
 			}
 
 
-			wavReader.ReadWavFile(pathRoot + path + file + ".wav");
-			short* pcm = wavReader.GetLeftChannelData();
-			if (pcm == nullptr)
+			string path = pathRoot + path + file + ".wav";
+			wavReader.initialize(path.c_str());
+			wavReader.prepareToRead();
+
+			if (wavReader.getSampleDataSize() == 0)
 				continue;
 
-			Sample* sample = sf->AddSample(name, pcm, wavReader.GetDataSize());
+			int pcmSize = wavReader.getSampleDataSize() / sizeof(short);
+			short* pcm = new short[pcmSize];
+			wavReader.readData((uint8_t*)pcm, wavReader.getSampleDataSize());
+			wavReader.finishReading();
+
+			Sample* sample = sf->AddSample(name, pcm, pcmSize);
 			XMLElement* childElem = xmlSample->FirstChildElement(); //取得子节点集合
 
 			for (; childElem; childElem = childElem->NextSiblingElement())
@@ -568,7 +577,7 @@ namespace tau
 					case SyntherXmlUnitType::UnitType_SoundFont:
 						val /= 100.0f;
 						break;
-				    default:
+					default:
 						break;
 					}
 					genList.SetAmount(GeneratorType::KeynumToModEnvDecay, val);
@@ -654,7 +663,7 @@ namespace tau
 					case SyntherXmlUnitType::UnitType_SoundFont:
 						val /= 100.0f;
 						break;
-				    default:
+					default:
 						break;
 					}
 

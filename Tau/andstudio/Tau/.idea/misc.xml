@@ -62,13 +62,6 @@
             </SvnBranchConfiguration>
           </value>
         </entry>
-        <entry key="$PROJECT_DIR$/../../src/core/SoundFormat/Wav">
-          <value>
-            <SvnBranchConfiguration>
-              <option name="trunkUrl" value="https://cymheart/svn/TauProjects/Tau/src/core/SoundFormat/Wav" />
-            </SvnBranchConfiguration>
-          </value>
-        </entry>
         <entry key="$PROJECT_DIR$/../../src/core/Synth">
           <value>
             <SvnBranchConfiguration>

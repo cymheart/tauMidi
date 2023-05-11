@@ -17,13 +17,13 @@ namespace tau
 		if (sm24 == nullptr)
 		{
 			for (uint32_t i = 0; i < size; i++)
-				pcm[i] = samples[i] / 32767.0f;
+				pcm[i] = samples[i] / 32767.0f * 0.9f;
 		}
 		else
 		{
 			for (uint32_t i = 0; i < size; i++)
 			{
-				pcm[i] = (samples[i] << 8 | sm24[i]) / 8388607.0f;
+				pcm[i] = (samples[i] << 8 | sm24[i]) / 8388607.0f * 0.9f;
 			}
 		}
 	}

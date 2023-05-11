@@ -70,8 +70,6 @@ namespace tau
 			return preset;
 		}
 
-		//清除发音数据
-		void ClearSoundDatas();
 
 		//设置是否开启录制功能
 		void SetEnableRecordFunction(bool isEnable)
@@ -324,9 +322,6 @@ namespace tau
 		//计算按键速度
 		void ComputeOnKeySpeed();
 
-
-	private:
-		VirInstStateChangedCallBack virInstStateChangedCB = nullptr;
 
 	private:
 

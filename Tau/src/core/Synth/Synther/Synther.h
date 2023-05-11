@@ -12,6 +12,7 @@
 #include"scutils/RingBuffer.h"
 #include "Synth/Editor/EditorTypes.h"
 #include <scutils/ArrayPool.h>
+#include "Synth/PcmRecorder.h"
 
 using namespace task;
 using namespace tauFX;
@@ -221,9 +222,6 @@ namespace tau
 		//混合所有乐器中的样本到声道buffer中
 		void MixVirInstsSamplesToChannelBuffer();
 
-		//检测由发音是否完全结束
-		void TestSoundEnd();
-
 		//合成采样buffer
 		void SynthSampleBuffer();
 
@@ -259,6 +257,9 @@ namespace tau
 
 		// 帧渲染
 		void FrameRender(uint8_t* stream, int len);
+
+		//最终合成流的pcm录制
+		void RecordPCMing();
 
 		// 录制所有乐器弹奏为midi
 		void RecordMidi();
@@ -296,6 +297,10 @@ namespace tau
 
 		// 删除虚拟乐器
 		void DelVirInstrument(VirInstrument* virInst);
+
+		//停止所有虚拟乐器
+		void StopAllVirInstrument(int type = 0);
+
 
 		//根据设备通道号获取设备通道
 		//查找不到将返回空值
@@ -400,16 +405,24 @@ namespace tau
 
 		// 处理播放midi文件事件
 		void ProcessMidiEvents();
-		bool CanCache();
+
+		void ClearRecordPCM();
+		void StartRecordPCM();
+		void StopRecordPCM();
+		void SaveRecordPCM(string& path);
+		void SaveRecordPCMToWav(string& path);
+		void SaveRecordPCMToMp3(string& path);
 
 
 		/////////////////////////////////////////////////////
-		//缓存输出
-		void CacheOutput();
+		bool CanCache();
+
+		//缓存帧渲染
+		void CacheRender();
 
 		void CachePlay();
 		void CachePause();
-		void CacheStop(bool isReset = false);
+		void CacheStop();
 		bool CacheGoto(double sec, bool isMustReset = false);
 		inline void CacheReset()
 		{
@@ -432,6 +445,8 @@ namespace tau
 		void CacheRead();
 		void CacheReadFallSamples();
 
+		void CacheFadeSynthSampleStream();
+
 		void CacheEnterStepPlayMode();
 
 		void ClearCacheBuffer();
@@ -449,6 +464,12 @@ namespace tau
 		}
 
 		void TestCacheWriteSoundEnd();
+
+		//缓存是否被启用
+		inline bool IsCacheEnable()
+		{
+			return (maxCacheSize > 0 && isEnableCache ? true : false);
+		}
 
 
 		inline void CacheGainFade()
@@ -591,7 +612,7 @@ namespace tau
 
 		//	
 		//是否开启缓存
-		bool isEnableCache = true;
+		bool isEnableCache = false;
 
 		//是否为步进播放模式
 		bool isStepPlayMode = false;
@@ -607,6 +628,8 @@ namespace tau
 		int minCacheSize = 0;
 		int reReadCacheSize = 0;
 		int maxCacheSize = 0;
+
+		//需要重新开始缓存的尺寸
 		int reCacheSize = 0;
 
 		EditorState cachePlayState;
@@ -627,6 +650,14 @@ namespace tau
 
 		//
 		MidiEditor* midiEditor = nullptr;
+
+		//pcm录制
+		PcmRecorder pcmRecorder;
+		//pcm录制状态0:不录制, 1:录制中， 2：准备停止录制
+		int pcmRecordState = 0;
+		Semaphore pcmRecordWaitSem;
+
+
 
 		//
 

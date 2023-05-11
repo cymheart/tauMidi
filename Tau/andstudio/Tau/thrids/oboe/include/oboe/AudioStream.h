@@ -69,6 +69,29 @@ public:
     }
 
     /**
+     * Free the audio resources associated with a stream created by AAudioStreamBuilder_openStream().
+     *
+     * AAudioStream_close() should be called at some point after calling this function.
+     *
+     * After this call, the stream will be in AAUDIO_STREAM_STATE_CLOSING
+     *
+     * This function is useful if you want to release the audio resources immediately, but still allow
+     * queries to the stream to occur from other threads. This often happens if you are monitoring
+     * stream progress from a UI thread.
+     *
+     * NOTE: This function is only fully implemented for MMAP streams, which are low latency streams
+     * supported by some devices. On other "Legacy" streams some audio resources will still be in use
+     * and some callbacks may still be in process after this call.
+     *
+     * Available in AAudio since API level 30. Returns Result::ErrorUnimplemented otherwise.
+     *
+     * * @return either Result::OK or an error.
+     */
+    virtual Result release() {
+        return Result::ErrorUnimplemented;
+    }
+
+    /**
      * Close the stream and deallocate any resources from the open() call.
      */
     virtual Result close();
@@ -262,6 +285,10 @@ public:
      * The latency of an OUTPUT stream is generally higher than the INPUT latency
      * because an app generally tries to keep the OUTPUT buffer full and the INPUT buffer empty.
      *
+     * Note that due to issues in Android before R, we recommend NOT calling
+     * this method from a data callback. See this tech note for more details.
+     * https://github.com/google/oboe/wiki/TechNote_ReleaseBuffer
+     *
      * @return a ResultWithValue which has a result of Result::OK and a value containing the latency
      * in milliseconds, or a result of Result::Error*.
      */
@@ -279,6 +306,10 @@ public:
      *
      * The time is based on the implementation's best effort, using whatever knowledge is available
      * to the system, but cannot account for any delay unknown to the implementation.
+     *
+     * Note that due to issues in Android before R, we recommend NOT calling
+     * this method from a data callback. See this tech note for more details.
+     * https://github.com/google/oboe/wiki/TechNote_ReleaseBuffer
      *
      * @deprecated since 1.0, use AudioStream::getTimestamp(clockid_t clockId) instead, which
      * returns ResultWithValue
@@ -303,6 +334,11 @@ public:
      * The time is based on the implementation's best effort, using whatever knowledge is available
      * to the system, but cannot account for any delay unknown to the implementation.
      *
+     * Note that due to issues in Android before R, we recommend NOT calling
+     * this method from a data callback. See this tech note for more details.
+     * https://github.com/google/oboe/wiki/TechNote_ReleaseBuffer
+     *
+     * See 
      * @param clockId the type of clock to use e.g. CLOCK_MONOTONIC
      * @return a FrameTimestamp containing the position and time at which a particular audio frame
      * entered or left the audio processing pipeline, or an error if the operation failed.
@@ -375,11 +411,6 @@ public:
     }
 
     /**
-     * Launch a thread that will stop the stream.
-     */
-    void launchStopThread();
-
-    /**
      * Update mFramesWritten.
      * For internal use only.
      */
@@ -427,7 +458,12 @@ public:
      * This can be used with an EXCLUSIVE MMAP input stream to avoid reading data too close to
      * the DSP write position, which may cause glitches.
      *
-     * @param numFrames minimum frames available
+     * Starting with Oboe 1.7.1, the numFrames will be clipped internally against the
+     * BufferCapacity minus BurstSize. This is to prevent trying to wait for more frames
+     * than could possibly be available. In this case, the return value may be less than numFrames.
+     * Note that there may still be glitching if numFrames is too high.
+     *
+     * @param numFrames requested minimum frames available
      * @param timeoutNanoseconds
      * @return number of frames available, ErrorTimeout
      */
@@ -439,6 +475,29 @@ public:
      */
     virtual oboe::Result getLastErrorCallbackResult() const {
         return mErrorCallbackResult;
+    }
+
+
+    int32_t getDelayBeforeCloseMillis() const {
+        return mDelayBeforeCloseMillis;
+    }
+
+    /**
+     * Set the time to sleep before closing the internal stream.
+     *
+     * Sometimes a callback can occur shortly after a stream has been stopped and
+     * even after a close! If the stream has been closed then the callback
+     * might access memory that has been freed, which could cause a crash.
+     * This seems to be more likely in Android P or earlier.
+     * But it can also occur in later versions. By sleeping, we give time for
+     * the callback threads to finish.
+     *
+     * Note that this only has an effect when OboeGlobals::areWorkaroundsEnabled() is true.
+     *
+     * @param delayBeforeCloseMillis time to sleep before close.
+     */
+    void setDelayBeforeCloseMillis(int32_t delayBeforeCloseMillis) {
+        mDelayBeforeCloseMillis = delayBeforeCloseMillis;
     }
 
 protected:
@@ -502,6 +561,21 @@ protected:
         mDataCallbackEnabled = enabled;
     }
 
+    /**
+     * This should only be called as a stream is being opened.
+     * Otherwise we might override setDelayBeforeCloseMillis().
+     */
+    void calculateDefaultDelayBeforeCloseMillis();
+
+    /**
+     * Try to avoid a race condition when closing.
+     */
+    void sleepBeforeClose() {
+        if (mDelayBeforeCloseMillis > 0) {
+            usleep(mDelayBeforeCloseMillis * 1000);
+        }
+    }
+
     /*
      * Set a weak_ptr to this stream from the shared_ptr so that we can
      * later use a shared_ptr in the error callback.
@@ -545,6 +619,11 @@ protected:
      */
     int32_t              mFramesPerBurst = kUnspecified;
 
+    // Time to sleep in order to prevent a race condition with a callback after a close().
+    // Two milliseconds may be enough but 10 msec is even safer.
+    static constexpr int kMinDelayBeforeCloseMillis = 10;
+    int32_t              mDelayBeforeCloseMillis = kMinDelayBeforeCloseMillis;
+
 private:
 
     // Log the scheduler if it changes.
@@ -553,7 +632,6 @@ private:
 
     std::atomic<bool>    mDataCallbackEnabled{false};
     std::atomic<bool>    mErrorCallbackCalled{false};
-
 };
 
 /**

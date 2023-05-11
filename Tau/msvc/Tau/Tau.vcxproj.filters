@@ -13,14 +13,8 @@
     <Filter Include="core\SoundFontFormat">
       <UniqueIdentifier>{28dd9b5a-8292-428e-bbe1-5576b964872a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="core\SoundFormat">
-      <UniqueIdentifier>{49fb9ebe-1111-480c-ab0a-9933f9bce083}</UniqueIdentifier>
-    </Filter>
     <Filter Include="core\Synth">
       <UniqueIdentifier>{9fafc8fc-15c1-4349-af54-a4454a54e75d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="core\SoundFormat\Wav">
-      <UniqueIdentifier>{84eef630-f288-49fa-8ac5-af8fb531d9ec}</UniqueIdentifier>
     </Filter>
     <Filter Include="core\SoundFontFormat\SF2">
       <UniqueIdentifier>{fe66b5f3-4d57-46d8-b42b-61d3d9c0d9b8}</UniqueIdentifier>
@@ -130,6 +124,12 @@
     <Filter Include="thrids\OteyPiano">
       <UniqueIdentifier>{abc00e77-5921-4a1c-b894-3963e5fc045f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="thrids\wav">
+      <UniqueIdentifier>{56b6fd96-0975-41d3-9c8f-72950901b7ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\libmp3lame">
+      <UniqueIdentifier>{5786fe4e-43c9-4970-a4cf-db359d60ae61}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\Synth\Envelope.cpp">
@@ -164,9 +164,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\Synth\UnitTransform.cpp">
       <Filter>core\Synth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\SoundFormat\Wav\WavReader.cpp">
-      <Filter>core\SoundFormat\Wav</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\Midi\MidiEvent.cpp">
       <Filter>core\Midi</Filter>
@@ -657,6 +654,78 @@
     <ClCompile Include="..\..\src\core\Synth\TauTypes.cpp">
       <Filter>core\Synth</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\thrids\wav\WavReader.cpp">
+      <Filter>thrids\wav</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\wav\WavWriter.cpp">
+      <Filter>thrids\wav</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\bitstream.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\encoder.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\fft.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\gain_analysis.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\id3tag.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\lame.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\mpglib_interface.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\newmdct.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\presets.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\psymodel.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\quantize.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\quantize_pvt.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\reservoir.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\set_get.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\tables.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\takehiro.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\util.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\vbrquantize.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\VbrTag.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\libmp3lame\version.c">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\scutils\Mp3Recorder.cpp">
+      <Filter>thrids\scutils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\PcmRecorder.cpp">
+      <Filter>core\Synth</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\Synth\Envelope.h">
@@ -694,9 +763,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\Synth\UnitTransform.h">
       <Filter>core\Synth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\SoundFormat\Wav\WavReader.h">
-      <Filter>core\SoundFormat\Wav</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\Midi\MidiEvent.h">
       <Filter>core\Midi</Filter>
@@ -1270,6 +1336,87 @@
     </ClInclude>
     <ClInclude Include="..\..\src\thrids\scutils\rlcg.h">
       <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\wav\WavHeader.hpp">
+      <Filter>thrids\wav</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\wav\WavReader.hpp">
+      <Filter>thrids\wav</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\wav\WavWriter.hpp">
+      <Filter>thrids\wav</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\bitstream.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\encoder.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\fft.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\gain_analysis.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\id3tag.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\l3side.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\lame.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\lame_global_flags.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\lame-analysis.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\lameerror.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\machine.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\newmdct.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\psymodel.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\quantize.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\quantize_pvt.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\reservoir.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\set_get.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\tables.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\util.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\vbrquantize.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\VbrTag.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\libmp3lame\version.h">
+      <Filter>thrids\libmp3lame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\scutils\Mp3Recorder.h">
+      <Filter>thrids\scutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\PcmRecorder.h">
+      <Filter>core\Synth</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

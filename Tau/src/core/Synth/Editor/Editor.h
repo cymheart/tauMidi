@@ -6,6 +6,8 @@
 #include"EditorTypes.h"
 #include"MidiMarkerList.h"
 #include"scutils/Semaphore.h"
+#include"MeasureInfo.h"
+
 using namespace scutils;
 
 
@@ -262,7 +264,7 @@ namespace tau
 		//获取小节信息
 		MeasureInfo* GetMeasureInfo()
 		{
-			return measureInfo;
+			return &measureInfo;
 		}
 
 		//新建轨道
@@ -370,7 +372,7 @@ namespace tau
 	private:
 
 		Tau* tau = nullptr;
-		Synther* mainSynther = nullptr;
+		Synther* synther = nullptr;
 		MidiEditor* midiEditor;
 		MidiMarkerList midiMarkerList;
 
@@ -429,7 +431,7 @@ namespace tau
 		int needOffKeyCount = 0;
 
 		//小节信息
-		MeasureInfo* measureInfo;
+		MeasureInfo measureInfo;
 
 		//音符发音开始时间点
 		double noteSoundStartSec = -1;

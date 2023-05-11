@@ -44,7 +44,7 @@ namespace tau
 		//移除对应的设备通道
 		Channel* channel = virInst->GetChannel();
 
-		if (channel->IsDeviceChannel() &&
+		if (channel != nullptr && channel->IsDeviceChannel() &&
 			channel->GetVirInstrumentCount() == 1)
 		{
 			int num = channel->GetChannelNum();

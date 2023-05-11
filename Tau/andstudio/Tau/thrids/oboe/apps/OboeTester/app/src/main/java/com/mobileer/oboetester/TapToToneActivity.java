@@ -30,7 +30,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.mobileer.miditools.MidiOutputPortConnectionSelector;
@@ -38,26 +38,26 @@ import com.mobileer.miditools.MidiPortConnector;
 import com.mobileer.miditools.MidiTools;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 
-import static com.mobileer.oboetester.AudioMidiTester.TestListener;
-import static com.mobileer.oboetester.AudioMidiTester.TestResult;
+import static com.mobileer.oboetester.MidiTapTester.NoteListener;
 
 public class TapToToneActivity extends TestOutputActivityBase {
-    private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 1234;
-    private TextView mResultView;
+    // Names from obsolete version of Oboetester.
+    public static final String OLD_PRODUCT_NAME = "AudioLatencyTester";
+    public static final String OLD_MANUFACTURER_NAME = "AndroidTest";
+
     private MidiManager mMidiManager;
     private MidiInputPort mInputPort;
 
-    protected AudioMidiTester mAudioMidiTester;
+    protected MidiTapTester mMidiTapTester;
+    protected TapToToneTester mTapToToneTester;
+
+    private Button mStopButton;
+    private Button mStartButton;
 
     private MidiOutputPortConnectionSelector mPortSelector;
-    private MyTestListener mTestListener = new MyTestListener();
-    private WaveformView mWaveformView;
-    // Stats for latency
-    private int mMeasurementCount;
-    private int mLatencySumSamples;
-    private int mLatencyMin;
-    private int mLatencyMax;
+    private final MyNoteListener mTestListener = new MyNoteListener();
 
     @Override
     protected void inflateActivity() {
@@ -70,7 +70,8 @@ public class TapToToneActivity extends TestOutputActivityBase {
 
         mAudioOutTester = addAudioOutputTester();
 
-        mResultView = (TextView) findViewById(R.id.resultView);
+        mTapToToneTester = new TapToToneTester(this,
+                getResources().getString(R.string.tap_to_tone_instructions));
 
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_MIDI)) {
             setupMidi();
@@ -80,31 +81,49 @@ public class TapToToneActivity extends TestOutputActivityBase {
                     .show();
         }
 
-        mWaveformView = (WaveformView) findViewById(R.id.waveview_audio);
 
         // Start a blip test when the waveform view is tapped.
-        mWaveformView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent event) {
-                int action = event.getActionMasked();
-                switch (action) {
-                    case MotionEvent.ACTION_DOWN:
-                    case MotionEvent.ACTION_POINTER_DOWN:
-                        mAudioMidiTester.trigger();
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        break;
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_POINTER_UP:
-                        break;
-                }
-                // Must return true or we do not get the ACTION_MOVE and
-                // ACTION_UP events.
-                return true;
+        WaveformView mWaveformView = (WaveformView) findViewById(R.id.waveview_audio);
+        mWaveformView.setOnTouchListener((view, event) -> {
+            // Do not call view.performClick() because it may trigger a touch sound!
+            int action = event.getActionMasked();
+            switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    trigger();
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_POINTER_UP:
+                    break;
             }
+            // Must return true or we do not get the ACTION_MOVE and
+            // ACTION_UP events.
+            return true;
         });
 
+        mStartButton = (Button) findViewById(R.id.button_start);
+        mStopButton = (Button) findViewById(R.id.button_stop);
+        updateButtons(false);
+
         updateEnabledWidgets();
+    }
+
+    private void updateButtons(boolean running) {
+        mStartButton.setEnabled(!running);
+        mStopButton.setEnabled(running);
+    }
+
+    void trigger() {
+        if (mTapToToneTester.isArmed()) {
+            mAudioOutTester.trigger();
+            mTapToToneTester.analyzeLater(getString(R.string.please_wait));
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            Log.d(TAG, "Tap to Tone Triggered. Timestamp: " + timestamp);
+        } else {
+            showToast(getString(R.string.no_double_tap));
+        }
     }
 
     @Override
@@ -114,7 +133,7 @@ public class TapToToneActivity extends TestOutputActivityBase {
 
     @Override
     protected void onDestroy() {
-        mAudioMidiTester.removeTestListener(mTestListener);
+        mMidiTapTester.removeTestListener(mTestListener);
         closeMidiResources();
         super.onDestroy();
     }
@@ -124,25 +143,40 @@ public class TapToToneActivity extends TestOutputActivityBase {
         mMidiManager = (MidiManager) getSystemService(MIDI_SERVICE);
         MidiDeviceInfo[] infos = mMidiManager.getDevices();
 
-        // Open the port now so that the AudioMidiTester gets created.
+        // Warn if old version of OboeTester found.
         for (MidiDeviceInfo info : infos) {
+            Log.i(TAG, "MIDI info = " + info);
             Bundle properties = info.getProperties();
             String product = properties
                     .getString(MidiDeviceInfo.PROPERTY_PRODUCT);
-
-            Log.i(TAG, "product = " + product);
-            if ("AudioLatencyTester".equals(product)) {
-                openPort(info);
+            String manufacturer = properties
+                    .getString(MidiDeviceInfo.PROPERTY_MANUFACTURER);
+            if (OLD_PRODUCT_NAME.equals(product) && OLD_MANUFACTURER_NAME.equals(manufacturer)) {
+                showErrorToast("Please uninstall old version of OboeTester.");
                 break;
             }
         }
 
+        // Open the port now so that the MidiTapTester gets created.
+        for (MidiDeviceInfo info : infos) {
+            Bundle properties = info.getProperties();
+            String product = properties
+                    .getString(MidiDeviceInfo.PROPERTY_PRODUCT);
+            if (MidiTapTester.PRODUCT_NAME.equals(product)) {
+                String manufacturer = properties
+                        .getString(MidiDeviceInfo.PROPERTY_MANUFACTURER);
+                if (MidiTapTester.MANUFACTURER_NAME.equals(manufacturer)) {
+                    openPortTemporarily(info);
+                    break;
+                }
+            }
+        }
     }
 
     // These should only be set after mAudioMidiTester is set.
     private void setSpinnerListeners() {
-        MidiDeviceInfo synthInfo = MidiTools.findDevice(mMidiManager, "AndroidTest",
-                "AudioLatencyTester");
+        MidiDeviceInfo synthInfo = MidiTools.findDevice(mMidiManager, MidiTapTester.MANUFACTURER_NAME,
+                MidiTapTester.PRODUCT_NAME);
         Log.i(TAG, "found tester virtual device info: " + synthInfo);
         int portIndex = 0;
         mPortSelector = new MidiOutputPortConnectionSelector(mMidiManager, this,
@@ -151,103 +185,42 @@ public class TapToToneActivity extends TestOutputActivityBase {
 
     }
 
-    private class MyTestListener implements TestListener {
-        @Override
-        public void onTestFinished(final TestResult result) {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    showTestResults(result);
-                }
-            });
-        }
-
+    private class MyNoteListener implements NoteListener {
         @Override
         public void onNoteOn(final int pitch) {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    mStreamContexts.get(0).configurationView.setStatusText("MIDI pitch = " + pitch);
-                }
+            runOnUiThread(() -> {
+                trigger();
+                mStreamContexts.get(0).configurationView.setStatusText("MIDI pitch = " + pitch);
             });
         }
     }
 
-    // Runs on UI thread.
-    private void showTestResults(TestResult result) {
-        String text;
-        int previous = 0;
-        if (result == null) {
-            text = "";
-            mWaveformView.clearSampleData();
-        } else {
-            if (result.events.length < 2) {
-                text = "Not enough edges. Use fingernail.\n";
-                mWaveformView.setCursorData(null);
-            } else if (result.events.length > 2) {
-                text = "Too many edges.\n";
-                mWaveformView.setCursorData(null);
+    private void openPortTemporarily(final MidiDeviceInfo info) {
+        Log.i(TAG, "MIDI openPort() info = " + info);
+        mMidiManager.openDevice(info, device -> {
+            if (device == null) {
+                Log.e(TAG, "could not open device " + info);
             } else {
-                int[] cursors = new int[2];
-                cursors[0] = result.events[0].sampleIndex;
-                cursors[1] = result.events[1].sampleIndex;
-                int latencySamples = cursors[1] - cursors[0];
-                mLatencySumSamples += latencySamples;
-                mMeasurementCount++;
-
-                int latencyMillis = 1000 * latencySamples / result.frameRate;
-                if (mLatencyMin > latencyMillis) {
-                    mLatencyMin = latencyMillis;
-                }
-                if (mLatencyMax < latencyMillis) {
-                    mLatencyMax = latencyMillis;
-                }
-
-                text = String.format("latency = %3d msec\n", latencyMillis);
-                mWaveformView.setCursorData(cursors);
-            }
-            mWaveformView.setSampleData(result.filtered);
-        }
-
-        if (mMeasurementCount > 0) {
-            int averageLatencySamples = mLatencySumSamples / mMeasurementCount;
-            int averageLatencyMillis = 1000 * averageLatencySamples / result.frameRate;
-            final String plural = (mMeasurementCount == 1) ? "test" : "tests";
-            text = text + String.format("min = %3d, avg = %3d, max = %3d, %d %s",
-                    mLatencyMin, averageLatencyMillis, mLatencyMax, mMeasurementCount, plural);
-        }
-        final String postText = text;
-        mWaveformView.post(new Runnable() {
-            public void run() {
-                mResultView.setText(postText);
-                mWaveformView.postInvalidate();
-            }
-        });
-    }
-
-    private void openPort(final MidiDeviceInfo info) {
-        mMidiManager.openDevice(info, new MidiManager.OnDeviceOpenedListener() {
-                    @Override
-                    public void onDeviceOpened(MidiDevice device) {
-                        if (device == null) {
-                            Log.e(TAG, "could not open device " + info);
-                        } else {
-                            mInputPort = device.openInputPort(0);
-                            Log.i(TAG, "opened MIDI port = " + mInputPort + " on " + info);
-                            mAudioMidiTester = AudioMidiTester.getInstance();
-
-                            Log.i(TAG, "openPort() mAudioMidiTester = " + mAudioMidiTester);
-                            // Now that we have created the AudioMidiTester, close the port so we can
-                            // open it later.
-                            try {
-                                mInputPort.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            mAudioMidiTester.addTestListener(mTestListener);
-
-                            setSpinnerListeners();
-                        }
+                mInputPort = device.openInputPort(0);
+                Log.i(TAG, "opened MIDI port = " + mInputPort + " on " + info);
+                mMidiTapTester = MidiTapTester.getInstanceOrNull();
+                if (mMidiTapTester == null) {
+                    Log.e(TAG, "MidiTapTester Service was not created! info = " + info);
+                    showErrorToast("MidiTapTester Service was not created!");
+                } else {
+                    Log.i(TAG, "openPort() mMidiTapTester = " + mMidiTapTester);
+                    // Now that we have created the MidiTapTester, close the port so we can
+                    // open it later.
+                    try {
+                        mInputPort.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                }, new Handler(Looper.getMainLooper())
+                    mMidiTapTester.addTestListener(mTestListener);
+                    setSpinnerListeners();
+                }
+            }
+        }, new Handler(Looper.getMainLooper())
         );
     }
 
@@ -258,19 +231,16 @@ public class TapToToneActivity extends TestOutputActivityBase {
         @Override
         public void onPortsConnected(final MidiDevice.MidiConnection connection) {
             Log.i(TAG, "onPortsConnected, connection = " + connection);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (connection == null) {
-                        Toast.makeText(TapToToneActivity.this,
-                                R.string.error_port_busy, Toast.LENGTH_LONG)
-                                .show();
-                        mPortSelector.clearSelection();
-                    } else {
-                        Toast.makeText(TapToToneActivity.this,
-                                R.string.port_open_ok, Toast.LENGTH_LONG)
-                                .show();
-                    }
+            runOnUiThread(() -> {
+                if (connection == null) {
+                    Toast.makeText(TapToToneActivity.this,
+                            R.string.error_port_busy, Toast.LENGTH_LONG)
+                            .show();
+                    mPortSelector.clearSelection();
+                } else {
+                    Toast.makeText(TapToToneActivity.this,
+                            R.string.port_open_ok, Toast.LENGTH_LONG)
+                            .show();
                 }
             });
         }
@@ -282,94 +252,30 @@ public class TapToToneActivity extends TestOutputActivityBase {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+    public void startTest(View view) {
+        try {
+            openAudio();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showErrorToast("Open audio failed!");
+            return;
         }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    private boolean hasRecordAudioPermission(){
-        boolean hasPermission = (checkSelfPermission(
-                Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED);
-        Log.i(TAG, "Has RECORD_AUDIO permission? " + hasPermission);
-        return hasPermission;
-    }
-
-    private void requestRecordAudioPermission(){
-
-        String requiredPermission = Manifest.permission.RECORD_AUDIO;
-
-        // If the user previously denied this permission then show a message explaining why
-        // this permission is needed
-        if (shouldShowRequestPermissionRationale(requiredPermission)) {
-            showErrorToast("This app needs to record audio through the microphone....");
-        }
-
-        // request the permission.
-        requestPermissions(new String[]{requiredPermission},
-                MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
-    }
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        // TODO
-    }
-
-    @Override
-    public void startAudio() throws IOException {
-        if (hasRecordAudioPermission()) {
-            startAudioPermitted();
-        } else {
-            requestRecordAudioPermission();
+        try {
+            super.startAudio();
+            mTapToToneTester.resetLatency();
+            mTapToToneTester.start();
+            updateButtons(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+            showErrorToast("Start audio failed! " + e.getMessage());
+            return;
         }
     }
 
-    private void startAudioPermitted() throws IOException {
-        super.startAudio();
-        resetLatency();
-        mAudioMidiTester.start();
+    public void stopTest(View view) {
+        mTapToToneTester.stop();
+        stopAudio();
+        closeAudio();
+        updateButtons(false);
     }
-
-    @Override
-    public void stopAudio() {
-        mAudioMidiTester.stop();
-        super.stopAudio();
-    }
-
-    @Override
-    public void pauseAudio() {
-        mAudioMidiTester.stop();
-        super.pauseAudio();
-    }
-
-    @Override
-    public void closeAudio() {
-        mAudioMidiTester.stop();
-        super.closeAudio();
-    }
-
-    private void resetLatency() {
-        mMeasurementCount = 0;
-        mLatencySumSamples = 0;
-        mLatencyMin = Integer.MAX_VALUE;
-        mLatencyMax = 0;
-        showTestResults(null);
-    }
-
 }

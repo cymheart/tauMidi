@@ -334,3 +334,42 @@ Java_cymheart_tau_Tau_ndkAddEffect(JNIEnv *env, jclass clazz, jlong ndk_tau,
 }
 
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkClearRecordPCM(JNIEnv *env, jclass clazz, jlong ndk_tau) {
+    Tau* tau = (Tau*)ndk_tau;
+    tau->ClearRecordPCM();
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkStartRecordPCM(JNIEnv *env, jclass clazz, jlong ndk_tau) {
+    Tau* tau = (Tau*)ndk_tau;
+    tau->StartRecordPCM();
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkStopRecordPCM(JNIEnv *env, jclass clazz, jlong ndk_tau) {
+    Tau* tau = (Tau*)ndk_tau;
+    tau->StopRecordPCM();
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkSaveRecordPCM(JNIEnv *env, jclass clazz, jlong ndk_tau, jstring path) {
+    Tau* tau = (Tau*)ndk_tau;
+    string p =jstring2str(env, path);
+    tau->SaveRecordPCM(p);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkSaveRecordPCMToWav(JNIEnv *env, jclass clazz, jlong ndk_tau, jstring path) {
+    Tau* tau = (Tau*)ndk_tau;
+    string p =jstring2str(env, path);
+    tau->SaveRecordPCMToWav(p);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_Tau_ndkSaveRecordPCMToMp3(JNIEnv *env, jclass clazz, jlong ndk_tau, jstring path) {
+    Tau* tau = (Tau*)ndk_tau;
+    string p =jstring2str(env, path);
+    tau->SaveRecordPCMToMp3(p);
+}

@@ -26,6 +26,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -Wall -s")
 
 include_directories( "${SRC_DIR}/core/" )
 include_directories( "${SRC_DIR}/thrids/" )
+include_directories( "${SRC_DIR}/thrids/libmp3lame/" )
 
 include_directories( "${SRC_DIR}/thrids/DaisySP/" )
 
@@ -39,7 +40,7 @@ include_directories( "${SRC_DIR}/thrids/DaisySP/" )
 #        jni/jniMorphLBHFilter.cpp)
 
 
-file(GLOB_RECURSE cpp_src "${SRC_DIR}/*.cpp" "jni/*.cpp"  "${JNI_UTILS_SRC_DIR}/*.cpp")  #指定当前目录下的所有.cpp文件（包括子目录）
+file(GLOB_RECURSE cpp_src "${SRC_DIR}/*.cpp" "jni/*.cpp"  "${JNI_UTILS_SRC_DIR}/*.cpp"  "${SRC_DIR}/*.c")  #指定当前目录下的所有.cpp .c文件（包括子目录）
 add_library( ${PROJECT_NAME} SHARED ${tau_sources}  ${cpp_src} )
 
 

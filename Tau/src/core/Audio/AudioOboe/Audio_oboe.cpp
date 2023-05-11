@@ -7,7 +7,6 @@ namespace tau
 	Audio_oboe::Audio_oboe()
 	{
 		myCallback.audio_oboe = this;
-		managedStream = oboe::ManagedStream();
 	}
 
 	oboe::DataCallbackResult Audio_oboe::MyCallback::
@@ -34,7 +33,7 @@ namespace tau
 			return;
 
 		isOpened = false;
-		managedStream->close();
+		mStream->close();
 	}
 
 	void Audio_oboe::Open()
@@ -43,35 +42,37 @@ namespace tau
 			return;
 
 		// 1. 音频流构建器
-		oboe::AudioStreamBuilder  builder;
 		// 设置音频流方向
-		builder.setDirection(oboe::Direction::Output);
+		mBuilder.setDirection(oboe::Direction::Output);
 		// 设置性能优先级
-		builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
+		mBuilder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
 		// 设置共享模式 , 独占
-		builder.setSharingMode(oboe::SharingMode::Exclusive);
+		mBuilder.setSharingMode(oboe::SharingMode::Exclusive);
 		// 设置音频采样格式
-		builder.setFormat(oboe::AudioFormat::Float);
+		mBuilder.setFormat(oboe::AudioFormat::Float);
 		// 设置声道数 , 单声道/立体声
-		builder.setChannelCount(channelCount);
+		mBuilder.setChannelCount(channelCount);
 		// 设置采样率
-		builder.setSampleRate(freq);
+		mBuilder.setSampleRate(freq);
+
+		//builder.setSampleRateConversionQuality(oboe::SampleRateConversionQuality::High);
 
 
 		//设置固定帧数,注意此处必须设为固定帧数，synther合成器引擎只支持固定帧数的处理
 		//否者会合成不正确样本
-		builder.setFramesPerDataCallback(sampleCount);
+		mBuilder.setFramesPerDataCallback(sampleCount);
 
 		// 设置回调对象 , 注意要设置 AudioStreamCallback * 指针类型
-		builder.setCallback(&myCallback);
+		mBuilder.setCallback(&myCallback);
 
 		// 2. 通过 AudioStreamBuilder 打开 Oboe 音频流
-		oboe::Result result = builder.openManagedStream(managedStream);
-		LOGI("openManagedStream result : %s", oboe::convertToText(result));
+		mStream = nullptr;
+		oboe::Result r = mBuilder.openStream(&mStream);
+		LOGI("openManagedStream result : %s", oboe::convertToText(r));
 
 		// 3. 开始播放
-		result = managedStream->requestStart();
-		LOGI("requestStart result : %s", oboe::convertToText(result));
+		r = mStream->requestStart();
+		LOGI("requestStart result : %s", oboe::convertToText(r));
 		isOpened = true;
 
 	}

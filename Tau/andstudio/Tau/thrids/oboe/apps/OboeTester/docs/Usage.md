@@ -34,6 +34,9 @@ You can see the affect of the changing workload in the "% cpu" report in the sta
 The extra workload will always cause glitching when you get close to 100% CPU load.
 If the workload is causing glitching at a low % CPU load then there may be a problem with the callback timing.
 
+Instructions for using TEST OUTPUT for 4 or more chanels is in
+[Wiki/OboeTester_MultiChannelOutput](https://github.com/google/oboe/wiki/OboeTester_MultiChannelOutput).
+
 ### Test Input
 
 Test input streams. Displays current volume as VU bars.
@@ -50,12 +53,7 @@ If you use USB-MIDI input then you can eliminate the latency due to the touch sc
 MIDI latency is generally under 1 msec.
 This test works well for measuring the latency of Bluetooth headsets.
 
-### Record and Play
-
-* Tap RECORD to record several seconds of audio. You should see the red VU meters move.
-* Tap STOP then PLAY to play it back.
-* Tap SHARE button to the recorded WAV file to GDrive, GMail or another app.
-You can then examine the WAV file using a program like Audacity.
+More instructions in the [Wiki/OboeTester_TapToTone](https://github.com/google/oboe/wiki/OboeTester_TapToTone).
 
 ### Echo Input to Output
 
@@ -83,7 +81,14 @@ We record the Input and Output stream together for about a second.
 Then we correlate the two streams by sliding the portion of the output stream that contains the random bits over the input stream at different time offsets.
 The Manchaster Encoded signal provide a very sharp peak when the offset matches the combined input and output latency.
 
-Source code for the analyzer in [LatencyAnalyzer.h](https://github.com/google/oboe/blob/master/apps/OboeTester/app/src/main/cpp/analyzer/LatencyAnalyzer.h).
+Source code for the analyzer in [LatencyAnalyzer.h](https://github.com/google/oboe/blob/main/apps/OboeTester/app/src/main/cpp/analyzer/LatencyAnalyzer.h).
+
+### Record and Play
+
+* Tap RECORD to record several seconds of audio. You should see the red VU meters move.
+* Tap STOP then PLAY to play it back.
+* Tap SHARE button to the recorded WAV file to GDrive, GMail or another app.
+You can then examine the WAV file using a program like Audacity.
 
 ### Glitch Test
 
@@ -91,6 +96,15 @@ This test works best with a loopback adapter. But it can also work in a quiet ro
 It plays a sine wave and then tries to record and lock onto that sine wave.
 If the actual input does not match the expected sine wave value then it is counted as a glitch.
 The test will display the maximum time that it ran without seeing a glitch.
+
+1. Plug in loopback adapter. (Optional)
+2. Press green bars to show input and output settings. Make changes. (optional)
+3. Press START button.
+4. Watch for state=LOCKED, which means it has detected and locked onto the sine wave output.
+5. Note the glitch count, which should be zero.
+6. Also the "max.time.no.glitches" should be as long as you run the test.
+7. Press STOP button.
+8. Press SHARE button to send a WAV file recording of the last glitch by email to yourself.
 
 Look for the #XRuns display.
 If #XRuns increments when a glitch occurs then the glitch is probably due to preemption of the audio task.
@@ -108,6 +122,13 @@ The Share button will let you email the report to yourself.
 You can test whether the disconnect logic is working in Android by plugging or unplugging a headset.
 Just follow the instructions in red. You will get a report at the end that you can SHARE by GMail or Drive.
 
+### Device Report
+
+Provides a device report. This report includes info about the features enabled, the properties set, audio
+paths, and microphones.
+You can share this report by first pressing the icon with the three vertical dots at the top right of OboeTester.
+After that, simply press the share button and you should be able to email this to yourself.
+
 ### Data Paths
 
 This checks for dead speaker and mic channels, dead Input Presets and other audio data path problems.
@@ -118,3 +139,26 @@ This checks for dead speaker and mic channels, dead Input Presets and other audi
 1. Place the phone on a table in a quiet room and hit START.
 1. Wait a few minutes, quietly, for the test to complete. You will hear some sine tones.
 1. You will get a report at the end that you can SHARE by GMail or Drive.
+
+### External Tap-to-Tone
+
+This lets you measure the latency between touching a screen to the sound coming out on a second device.
+You could use this to measure, for example, the latency on an iPhone.
+
+1. Launch OboeTester on Android device (A) in a quiet room.
+2. Tap "EXTRAS..." button.
+3. Tap "EXTERNAL TAP" button.
+4. Launch a program on a second device (B) that will make a sound when you touch the screen. A good example would be an interactive drum pad.
+5. Tap "START" button to start listening on device (A).
+6. Tap on the app on the device (B) with your fingertip. You need to make a noise with your fingernail.
+7. Quickly tap the "ANALYSE" button on device (A).
+8. OboeTester will now look for two sounds in the recording and measure the time between them.
+
+### Plug Latency
+Measures the time it takes to close, open, and start streams as audio devices are plugged in and removed.
+
+### Error Callback Test
+Lets you delete an error callback while it is used by Oboe. Targeted test for issue #1603.
+
+### Route Callback Test
+Changes the VoiceCommunication route while playing audio. Targeted test for issue #1763.

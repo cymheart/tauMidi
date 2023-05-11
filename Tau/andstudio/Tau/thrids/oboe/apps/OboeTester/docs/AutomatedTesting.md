@@ -9,12 +9,21 @@ Before running the app from an Intent, it should be launched manually and a Roun
 
 ## Requirements
 
+All tests require:
+
 * host computer
+* ADB installed
 * ADB USB cable
+  
+The latency, glitch and data_paths tests also need:
+
 * [loopback adapter](https://source.android.com/devices/audio/latency/loopback)
 * a 3.5 mm jack on the phone*
 
-\* If you don't have a 3.5 mm jack then you can use a USB-C to 3.5mm adapter. Then you will also need a USB switching device such as [TigerTail](https://go/tigertail).
+\* If you don't have a 3.5 mm jack then you can use a USB-C to 3.5mm adapter.
+In order to use ADB at the same time you will also need a USB switching device
+or  use ADB/Wifi.
+Internally at Google, the [TigerTail](https://go/tigertail) device can be used for USB.
 
 ## Start App from Intent
 
@@ -39,42 +48,82 @@ For example:
 
     --ei buffer_bursts 8
 
+Boolean parameters are sent using:
+
+    --ez {parameterName} {parameterValue}
+
+For example:
+
+    --ez use_input_devices false
+
 ## Parameters
 
-There are two required parameters:
+There are two required parameters for all tests:
 
-    --es test {latency, glitch}
+    --es test {latency, glitch, data_paths, input, output}
             The "latency" test will perform a Round Trip Latency test.
             It will request EXCLUSIVE mode for minimal latency.
             The "glitch" test will perform a single Glitch test.
-    --es file {full path for resulting file}
+            The "data_paths" test will verify input and output streams in many possible configurations.
+            The "input" test will open and start an input stream.
+            The "output" test will open and start an output stream.
 
-There are several optional parameter in common for all tests:
+    --es file {full path for resulting file} // We recommend using the "/sdcard/Download" folder
+
+There are some optional parameter in common for all tests:
+
+    --ef volume             {volume} // normalized volume in the range of 0.0 to 1.0
+    --es volume_type        {"accessibility", "alarm", "dtmf", "music", "notification", "ring", "system", "voice_call"}
+                            Stream type for the setStreamVolume() call. Default is "music".
+    --ez background         {"true", 1, "false", 0} // if true then Oboetester will continue to run in the background
+
+There are several optional parameters in common for glitch, latency, input, and output tests:
 
     --ei buffer_bursts      {bursts}     // number of bursts in the buffer, 2 for "double buffered"
     --es in_api             {"unspecified", "opensles", "aaudio"}  // native input API, default is "unspecified"
     --es out_api            {"unspecified", "opensles", "aaudio"}  // native output API, default is "unspecified"
-    --ei in_channels        {samples}    // number of input channels, default is 2
-    --ei out_channels       {samples}    // number of output channels, default is 2
+    --es in_channel_mask    {"mono", "stereo", "2.1", "tri", "triBack", "3.1", "2.0.2", "2.1.2", "3.0.2", "3.1.2", "quad", "quadSide", "surround", "penta", "5.1", "5.1Side", "6.1", "7.1", "5.1.2", "5.1.4", "7.1.2", "7.1.4", "9.1.4", "9.1.6", "frontBack"}
+    --es out_channel_mask    {"mono", "stereo", "2.1", "tri", "triBack", "3.1", "2.0.2", "2.1.2", "3.0.2", "3.1.2", "quad", "quadSide", "surround", "penta", "5.1", "5.1Side", "6.1", "7.1", "5.1.2", "5.1.4", "7.1.2", "7.1.4", "9.1.4", "9.1.6", "frontBack"}
+    --ei in_channels        {samples}    // number of input channels, default is 2. This is ignored if in_channel_mask is set.
+    --ei out_channels       {samples}    // number of output channels, default is 2. This is ignored if out_channel_mask is set.
     --ei sample_rate        {hertz}
     --es in_perf            {"none", "lowlat", "powersave"}  // input performance mode, default is "lowlat"
     --es out_perf           {"none", "lowlat", "powersave"}  // output performance mode, default is "lowlat"
     --es in_sharing         {"shared", "exclusive"} // input sharing mode, default is "exclusive"
     --es out_sharing        {"shared", "exclusive"} // output sharing mode, default is "exclusive"
+    --ez in_use_mmap        {"true", 1, "false", 0} // if true then MMAP is allowed, if false then MMAP will be disabled
+    --ez out_use_mmap       {"true", 1, "false", 0} // if true then MMAP is allowed, if false then MMAP will be disabled
+
+There are some optional parameters in common for glitch, input, and output tests:
+
+    --ei duration           {seconds}    // glitch test duration, default is 10 seconds
 
 There are several optional parameters for just the "glitch" test:
 
     --ef tolerance          {tolerance}  // amount of deviation from expected that is considered a glitch
                                          // Range of tolerance is 0.0 to 1.0. Default is 0.1. Note use of "-ef".
-    --ei duration           {seconds}    // glitch test duration, default is 10 seconds
                             // input preset, default is "voicerec"
     --es in_preset          ("generic", "camcorder", "voicerec", "voicecomm", "unprocessed", "performance"}
+
+There are several optional parameters for just the "data_paths" test:
+
+    --ez use_input_presets  {"true", 1, "false", 0}  // Whether to test various input presets. Note use of "-ez"
+    --ez use_input_devices  {"true", 1, "false", 0}  // Whether to test various input devices. Note use of "-ez"
+    --ez use_output_devices {"true", 1, "false", 0}  // Whether to test various output devices. Note use of "-ez"
+    --ei single_test_index  {testId}  // Index for testing one specific test
+
+There are some optional parameters for just the "output" test:
+
+    --es signal_type        {sine, sawtooth, freq_sweep, pitch_sweep, white_noise} // type of sound to play, default is sine
 
 For example, a complete command for a "latency" test might be:
 
     adb shell am start -n com.mobileer.oboetester/.MainActivity \
         --es test latency \
-        --es file /sdcard/latency20190903.txt \
+        --es file /sdcard/Download/latency20190903.txt \
+        --ei buffer_bursts 2 \
+        --ef volume 0.8 \
+        --es volume_type music \
         --ei buffer_bursts 2 \
         --ei out_channels 1
 
@@ -82,7 +131,7 @@ or for a "glitch" test:
 
     adb shell am start -n com.mobileer.oboetester/.MainActivity \
         --es test glitch \
-        --es file /sdcard/glitch20190903.txt \
+        --es file /sdcard/Download/glitch20190903.txt \
         --es in_perf lowlat \
         --es out_perf lowlat \
         --es in_sharing exclusive \
@@ -92,6 +141,15 @@ or for a "glitch" test:
         --ef tolerance 0.123 \
         --ei in_channels 2 \
 
+or for a "data_paths" test:
+
+    adb shell am start -n com.mobileer.oboetester/.MainActivity \
+        --es test data_paths \
+        --es file /sdcard/data_paths20190903.txt
+        --ez use_input_presets true
+        --ez use_input_devices false
+        --ez use_output_devices true
+
 ## Interpreting Test Results
 
 Test results are simple files with "name = value" pairs.
@@ -99,7 +157,7 @@ The test results can be obtained using adb pull.
 
     adb pull /sdcard/test20190611.txt .
 
-The beginning of the report is common to all tests:
+The beginning of the report is common to latency and glitch tests:
 
     build.fingerprint = google/bonito/bonito:10/QP1A.190711.017/5771233:userdebug/dev-keys
     test.version = 1.5.10
@@ -177,3 +235,11 @@ Here is a report from a test that failed because the output was muted. Note the 
     glitch.frames = 0
     reset.count = 1
     time.total =     9.95 seconds
+
+### Data Paths Report
+
+The report first goes through the info about the specific device before going through input preset tests,
+input devices tests, and output tests.
+Each will show the specific configuration of a test before showing whether it passed or failed.
+At the end of the report, an analysis of the failed tests will be given
+followed by the number of passed, failed, and skipped tests.

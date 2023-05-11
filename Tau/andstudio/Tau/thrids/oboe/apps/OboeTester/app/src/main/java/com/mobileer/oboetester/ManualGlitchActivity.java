@@ -16,7 +16,6 @@
 
 package com.mobileer.oboetester;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -24,13 +23,9 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.util.Locale;
 
 public class ManualGlitchActivity extends GlitchActivity {
-
-    public static final String KEY_IN_PRESET = "in_preset";
-
-    public static final String KEY_DURATION = "duration";
-    public static final int VALUE_DEFAULT_DURATION = 10;
 
     public static final String KEY_BUFFER_BURSTS = "buffer_bursts";
     public static final int VALUE_DEFAULT_BUFFER_BURSTS = 2;
@@ -38,13 +33,14 @@ public class ManualGlitchActivity extends GlitchActivity {
     public static final String KEY_TOLERANCE = "tolerance";
     private static final float DEFAULT_TOLERANCE = 0.1f;
 
+    private static final long MIN_DISPLAY_PERIOD_MILLIS = 500;
+
     private TextView mTextTolerance;
     private SeekBar mFaderTolerance;
     protected ExponentialTaper mTaperTolerance;
     private WaveformView mWaveformView;
     private float[] mWaveform = new float[256];
-    private boolean mTestRunningByIntent;
-    private Bundle mBundleFromIntent;
+    private long mLastDisplayTime;
 
     private float   mTolerance = DEFAULT_TOLERANCE;
 
@@ -67,13 +63,12 @@ public class ManualGlitchActivity extends GlitchActivity {
         float tolerance = (float) mTaperTolerance.linearToExponential(
                 ((double)progress) / FADER_PROGRESS_MAX);
         setTolerance(tolerance);
-        mTextTolerance.setText("Tolerance = " + String.format("%5.3f", tolerance));
+        mTextTolerance.setText("Tolerance = " + String.format(Locale.getDefault(), "%5.3f", tolerance));
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mBundleFromIntent = getIntent().getExtras();
 
         mTextTolerance = (TextView) findViewById(R.id.textTolerance);
         mFaderTolerance = (SeekBar) findViewById(R.id.faderTolerance);
@@ -95,60 +90,25 @@ public class ManualGlitchActivity extends GlitchActivity {
         setContentView(R.layout.activity_manual_glitches);
     }
 
-    @Override
-    public void onResume(){
-        super.onResume();
-        processBundleFromIntent();
-    }
-
-    @Override
-    public void onNewIntent(Intent intent) {
-        mBundleFromIntent = intent.getExtras();
-    }
-
-    private void processBundleFromIntent() {
-        if (mBundleFromIntent == null) {
-            return;
-        }
-        if (mTestRunningByIntent) {
-            return;
-        }
-
-        mResultFileName = null;
-        if (mBundleFromIntent.containsKey(KEY_FILE_NAME)) {
-            mTestRunningByIntent = true;
-            mResultFileName = mBundleFromIntent.getString(KEY_FILE_NAME);
-
-            // Delay the test start to avoid race conditions.
-            Handler handler = new Handler(Looper.getMainLooper()); // UI thread
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    startAutomaticTest();
-                }
-            }, 500); // TODO where is the race, close->open?
-
-        }
-    }
-
     void configureStreamsFromBundle(Bundle bundle) {
-        // Extract common parameters
-        super.configureStreamsFromBundle(bundle);
-
+        // Configure settings
         StreamConfiguration requestedInConfig = mAudioInputTester.requestedConfiguration;
         StreamConfiguration requestedOutConfig = mAudioOutTester.requestedConfiguration;
+        IntentBasedTestSupport.configureStreamsFromBundle(bundle, requestedInConfig, requestedOutConfig);
 
         // Extract custom parameters from the bundle.
         float tolerance = bundle.getFloat(KEY_TOLERANCE, DEFAULT_TOLERANCE);
         setToleranceFader(tolerance);
         setTolerance(tolerance);
         mTolerance = tolerance;
+    }
 
-        String defaultText = StreamConfiguration.convertInputPresetToText(
-                StreamConfiguration.INPUT_PRESET_VOICE_RECOGNITION);
-        String text = bundle.getString(KEY_IN_PRESET, defaultText);
-        int inputPreset = StreamConfiguration.convertTextToInputPreset(text);
-        requestedInConfig.setInputPreset(inputPreset);
+    @Override
+    public void giveAdvice(String s) {
+        mWaveformView.post(() -> {
+            mWaveformView.setMessage(s);
+            mWaveformView.invalidate();
+        });
     }
 
     public void startAudioTest() throws IOException {
@@ -156,15 +116,15 @@ public class ManualGlitchActivity extends GlitchActivity {
         setToleranceProgress(mFaderTolerance.getProgress());
     }
 
-    void startAutomaticTest() {
+    @Override
+    public void startTestUsingBundle() {
         configureStreamsFromBundle(mBundleFromIntent);
 
-        int durationSeconds = mBundleFromIntent.getInt(KEY_DURATION, VALUE_DEFAULT_DURATION);
+        int durationSeconds = IntentBasedTestSupport.getDurationSeconds(mBundleFromIntent);
         int numBursts = mBundleFromIntent.getInt(KEY_BUFFER_BURSTS, VALUE_DEFAULT_BUFFER_BURSTS);
-        mBundleFromIntent = null;
 
         try {
-            onStartAudioTest(null);
+            openStartAudioTestUI();
             int sizeFrames = mAudioOutTester.getCurrentAudioStream().getFramesPerBurst() * numBursts;
             mAudioOutTester.getCurrentAudioStream().setBufferSizeInFrames(sizeFrames);
 
@@ -180,24 +140,21 @@ public class ManualGlitchActivity extends GlitchActivity {
             String report = "Open failed: " + e.getMessage();
             maybeWriteTestResult(report);
             mTestRunningByIntent = false;
+        } finally {
+            mBundleFromIntent = null;
         }
 
     }
 
     void stopAutomaticTest() {
         String report = getCommonTestReport()
-                + String.format("tolerance = %5.3f\n", mTolerance)
+                + String.format(Locale.getDefault(), "tolerance = %5.3f\n", mTolerance)
                 + mLastGlitchReport;
         onStopAudioTest(null);
         maybeWriteTestResult(report);
         mTestRunningByIntent = false;
     }
 
-    // Only call from UI thread.
-    @Override
-    public void onTestFinished() {
-        super.onTestFinished();
-    }
     // Only call from UI thread.
     @Override
     public void onTestBegan() {
@@ -209,9 +166,13 @@ public class ManualGlitchActivity extends GlitchActivity {
     // Called on UI thread
     @Override
     protected void onGlitchDetected() {
-        int numSamples = getGlitch(mWaveform);
-        mWaveformView.setSampleData(mWaveform, 0, numSamples);
-        mWaveformView.postInvalidate();
+        long now = System.currentTimeMillis();
+        if ((now - mLastDisplayTime) > MIN_DISPLAY_PERIOD_MILLIS) {
+            mLastDisplayTime = now;
+            int numSamples = getGlitch(mWaveform);
+            mWaveformView.setSampleData(mWaveform, 0, numSamples);
+            mWaveformView.postInvalidate();
+        }
     }
 
     private float[] getGlitchWaveform() {

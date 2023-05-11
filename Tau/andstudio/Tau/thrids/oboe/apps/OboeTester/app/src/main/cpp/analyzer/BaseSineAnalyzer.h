@@ -105,8 +105,8 @@ public:
             float sinOut = sinf(mOutputPhase);
             incrementOutputPhase();
             output = (sinOut * mOutputAmplitude)
-                     + (mWhiteNoise.nextRandomDouble() * mNoiseAmplitude);
-            // ALOGD("sin(%f) = %f, %f\n", mOutputPhase, sinOut,  mPhaseIncrement);
+                     + (mWhiteNoise.nextRandomDouble() * getNoiseAmplitude());
+            // ALOGD("sin(%f) = %f, %f\n", mOutputPhase, sinOut,  kPhaseIncrement);
         }
         for (int i = 0; i < channelCount; i++) {
             frameData[i] = (i == mOutputChannel) ? output : 0.0f;
@@ -129,17 +129,26 @@ public:
         double cosMean = mCosAccumulator / mFramesAccumulated;
         double magnitude = 2.0 * sqrt((sinMean * sinMean) + (cosMean * cosMean));
         if (phasePtr != nullptr) {
-            double phase = M_PI_2 - atan2(sinMean, cosMean);
+            double phase = atan2(cosMean, sinMean);
+
             *phasePtr = phase;
         }
         return magnitude;
     }
 
+    /**
+     * Perform sin/cos analysis on each sample.
+     * Measure magnitude and phase on every period.
+     * Updates mPhaseOffset
+     * @param sample
+     * @param referencePhase
+     * @return true if magnitude and phase updated
+     */
     bool transformSample(float sample, float referencePhase) {
         // Track incoming signal and slowly adjust magnitude to account
         // for drift in the DRC or AGC.
-        mSinAccumulator += sample * sinf(referencePhase);
-        mCosAccumulator += sample * cosf(referencePhase);
+        mSinAccumulator += static_cast<double>(sample) * sinf(referencePhase);
+        mCosAccumulator += static_cast<double>(sample) * cosf(referencePhase);
         mFramesAccumulated++;
         // Must be a multiple of the period or the calculation will not be accurate.
         if (mFramesAccumulated == mSinePeriod) {
@@ -147,6 +156,7 @@ public:
             double magnitude = calculateMagnitudePhase(&mPhaseOffset);
             // One pole averaging filter.
             setMagnitude((mMagnitude * (1.0 - coefficient)) + (magnitude * coefficient));
+            resetAccumulator();
             return true;
         } else {
             return false;
@@ -163,6 +173,7 @@ public:
     void reset() override {
         LoopbackProcessor::reset();
         resetAccumulator();
+        mMagnitude = 0.0;
     }
 
     void prepareToTest() override {

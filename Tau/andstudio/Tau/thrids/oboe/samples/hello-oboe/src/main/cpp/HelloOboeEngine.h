@@ -37,8 +37,12 @@ public:
 
     /**
      * Open and start a stream.
+     * @param deviceId the audio device id, can be obtained through an {@link AudioDeviceInfo} object
+     * using Java/JNI.
      * @return error or OK
      */
+    oboe::Result start(oboe::AudioApi audioApi, int deviceId, int channelCount);
+    /* Start using current settings. */
     oboe::Result start();
 
     /**
@@ -48,22 +52,6 @@ public:
 
     // From IRestartable
     void restart() override;
-
-    // These methods reset the underlying stream with new properties
-
-    /**
-     * Set the audio device which should be used for playback. Can be set to oboe::kUnspecified if
-     * you want to use the default playback device (which is usually the built-in speaker if
-     * no other audio devices, such as headphones, are attached).
-     *
-     * @param deviceId the audio device id, can be obtained through an {@link AudioDeviceInfo} object
-     * using Java/JNI.
-    */
-    void setDeviceId(int32_t deviceId);
-
-    void setChannelCount(int channelCount);
-
-    void setAudioApi(oboe::AudioApi audioApi);
 
     void setBufferSizeInBursts(int32_t numBursts);
 
@@ -86,13 +74,15 @@ public:
 
     bool isLatencyDetectionSupported();
 
+    bool isAAudioRecommended();
+
 private:
     oboe::Result reopenStream();
     oboe::Result openPlaybackStream();
 
     std::shared_ptr<oboe::AudioStream> mStream;
-    std::unique_ptr<LatencyTuningCallback> mLatencyCallback;
-    std::unique_ptr<DefaultErrorCallback> mErrorCallback;
+    std::shared_ptr<LatencyTuningCallback> mLatencyCallback;
+    std::shared_ptr<DefaultErrorCallback> mErrorCallback;
     std::shared_ptr<SoundGenerator> mAudioSource;
     bool mIsLatencyDetectionSupported = false;
 

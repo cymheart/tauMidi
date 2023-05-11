@@ -19,11 +19,8 @@ namespace tau
 	Editor::Editor(Tau* tau)
 	{
 		this->tau = tau;
-		mainSynther = tau->mainSynther;
-		midiEditor = mainSynther->midiEditor;
-
-		//
-		measureInfo = new MeasureInfo();
+		synther = tau->synther;
+		midiEditor = synther->midiEditor;
 
 		for (int i = 0; i < 128; i++)
 			excludeNeedWaitKey[i] = false;
@@ -34,8 +31,6 @@ namespace tau
 	Editor::~Editor()
 	{
 		Remove();
-
-		DEL(measureInfo);
 
 		if (releaseCallBack)
 			releaseCallBack(this);
@@ -56,6 +51,7 @@ namespace tau
 	//在调用play(), pasue(),stop() goto()等操作时，需要调用IsLoadCompleted()进行确认判断
 	void Editor::Load(string& midiFilePath, bool isWaitLoadCompleted)
 	{
+
 		loadingMidiFilelocker.lock();
 
 		while (loadMidiFileState == 1) {
@@ -149,14 +145,13 @@ namespace tau
 		midiMarkerList.SetTickForQuarterNote(midiFile->GetTickForQuarterNote());
 		midiMarkerList.AppendFromMidiEvents(*golbalEvents);
 
-
 		AddMidiTracks(*midiFile->GetTrackList());
 
 		midiFile->ClearMidiTrackList();
 		DEL(midiFile);
 
 		//打印工程信息
-		PrintProjectInfo();
+		//PrintProjectInfo();
 	}
 
 	//被合并音符的最大时长
@@ -221,7 +216,7 @@ namespace tau
 
 	void Editor::PrintProjectInfo()
 	{
-		TauLock(tau);
+		//TauLock(tau);
 		printf("\n=================================== \n");
 		printf("midi文件:%s \n", midiName.c_str());
 		printf("总时长:%.2f秒 \n", endSec);
@@ -254,14 +249,9 @@ namespace tau
 		if (!tau->IsOpened())
 			return;
 
-		tau->lockMutex.lock();
-		mainSynther->Remove();
-		tau->lockMutex.unlock();
+		TauLock(tau);
 
-		mainSynther->waitSem.wait();
-
-		mainSynther->ClearCacheBuffer();
-
+		synther->Remove();
 
 		//等所有发音结束后删除轨道事件
 		for (int i = 0; i < midiEditor->tracks.size(); i++)
@@ -269,7 +259,8 @@ namespace tau
 
 		midiEditor->tracks.clear();
 		midiMarkerList.Clear();
-		measureInfo->Clear();
+		measureInfo.Clear();
+		ClearPlayModeData();
 	}
 
 
@@ -296,26 +287,26 @@ namespace tau
 	void Editor::OffAllKeys(int trackIdx)
 	{
 		TauLock(tau);
-		mainSynther->OffAllKeys(midiEditor->tracks[trackIdx]->GetChannel());
+		synther->OffAllKeys(midiEditor->tracks[trackIdx]->GetChannel());
 	}
 
 	// 释放所有按键 
 	void Editor::OffAllKeys()
 	{
 		TauLock(tau);
-		mainSynther->OffAllKeys();
+		synther->OffAllKeys();
 	}
 
 	// 按下按键
 	void Editor::OnKey(int key, float velocity, Track* track, int id)
 	{
-		mainSynther->OnKey(key, velocity, track, id);
+		synther->OnKey(key, velocity, track, id);
 	}
 
 	// 释放按键 
 	void Editor::OffKey(int key, float velocity, Track* track, int id)
 	{
-		mainSynther->OffKey(key, velocity, track, id);
+		synther->OffKey(key, velocity, track, id);
 	}
 
 
@@ -323,7 +314,7 @@ namespace tau
 	void Editor::Play()
 	{
 		TauLock(tau);
-		mainSynther->Play();
+		synther->Play();
 	}
 
 	//停止
@@ -333,14 +324,14 @@ namespace tau
 			return;
 
 		TauLock(tau);
-		mainSynther->Stop();
+		synther->Stop();
 	}
 
 	//暂停
 	void Editor::Pause()
 	{
 		TauLock(tau);
-		mainSynther->Pause();
+		synther->Pause();
 	}
 
 
@@ -353,7 +344,7 @@ namespace tau
 		if (playMode == EditorPlayMode::Wait)
 			ClearPlayModeData();
 
-		mainSynther->Goto(sec);
+		synther->Goto(sec);
 
 	}
 
@@ -411,14 +402,14 @@ namespace tau
 	{
 		TauLock(tau);
 		speed = speed_;
-		mainSynther->SetSpeed(speed);
+		synther->SetSpeed(speed);
 	}
 
 	// 禁止播放指定编号的轨道
 	void Editor::DisableTrack(int trackIdx)
 	{
 		TauLock(tau);
-		mainSynther->DisableTrack(midiEditor->tracks[trackIdx]);
+		synther->DisableTrack(midiEditor->tracks[trackIdx]);
 	}
 
 	// 禁止播放指定编号的轨道
@@ -426,21 +417,21 @@ namespace tau
 	{
 		TauLock(tau);
 		for (int i = 0; i < trackIdxs.size(); i++)
-			mainSynther->DisableTrack(trackIdxs[i]);
+			synther->DisableTrack(trackIdxs[i]);
 	}
 
 	// 禁止播放所有轨道
 	void Editor::DisableAllTrack()
 	{
 		TauLock(tau);
-		mainSynther->DisableTrack(nullptr);
+		synther->DisableTrack(nullptr);
 	}
 
 	// 启用播放指定编号的轨道
 	void Editor::EnableTrack(int trackIdx)
 	{
 		TauLock(tau);
-		mainSynther->EnableTrack(trackIdx);
+		synther->EnableTrack(trackIdx);
 	}
 
 	// 启用播放指定编号的轨道
@@ -448,14 +439,14 @@ namespace tau
 	{
 		TauLock(tau);
 		for (int i = 0; i < trackIdxs.size(); i++)
-			mainSynther->EnableTrack(trackIdxs[i]);
+			synther->EnableTrack(trackIdxs[i]);
 	}
 
 	// 启用播放所有轨道
 	void Editor::EnableAllTrack()
 	{
 		TauLock(tau);
-		mainSynther->EnableTrack(nullptr);
+		synther->EnableTrack(nullptr);
 	}
 
 
@@ -463,7 +454,7 @@ namespace tau
 	void Editor::DisableChannel(int channelIdx)
 	{
 		TauLock(tau);
-		mainSynther->DisableChannel(channelIdx);
+		synther->DisableChannel(channelIdx);
 	}
 
 
@@ -471,7 +462,7 @@ namespace tau
 	void Editor::EnableChannel(int channelIdx)
 	{
 		TauLock(tau);
-		mainSynther->EnableChannel(channelIdx);
+		synther->EnableChannel(channelIdx);
 	}
 
 
@@ -479,7 +470,7 @@ namespace tau
 	int Editor::GetSampleStreamFreqSpectrums(int channel, double* outLeft, double* outRight)
 	{
 		TauLock(tau);
-		return mainSynther->GetSampleStreamFreqSpectrums(channel, outLeft, outRight);
+		return synther->GetSampleStreamFreqSpectrums(channel, outLeft, outRight);
 	}
 
 	// 设置对应轨道的乐器
@@ -487,14 +478,14 @@ namespace tau
 		int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
 		TauLock(tau);
-		mainSynther->SetVirInstrument(trackIdx, bankSelectMSB, bankSelectLSB, instrumentNum);
+		synther->SetVirInstrument(trackIdx, bankSelectMSB, bankSelectLSB, instrumentNum);
 	}
 
 	//设置打击乐号
 	void Editor::SetMidiBeatVirInstrument(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
 		TauLock(tau);
-		mainSynther->SetBeatVirInstrument(bankSelectMSB, bankSelectLSB, instrumentNum);
+		synther->SetBeatVirInstrument(bankSelectMSB, bankSelectLSB, instrumentNum);
 	}
 
 	void Editor::ResetVirInstruments()
@@ -508,7 +499,7 @@ namespace tau
 			vector<VirInstrument*>& insts = midiEditor->tracks[i]->GetChannel()->GetVirInstruments();
 
 			for (int i = 0; i < insts.size(); i++)
-				mainSynther->SetVirInstrument(midiEditor->tracks[i], msb, lsb, num);
+				synther->SetVirInstrument(midiEditor->tracks[i], msb, lsb, num);
 		}
 	}
 
@@ -548,7 +539,7 @@ namespace tau
 			int trackIdx = tracks.size();
 
 			for (int i = 0; i < instFragments.size(); i++)
-				mainSynther->NewTrack();
+				synther->NewTrack();
 
 
 			//给轨道设置默认乐器
@@ -559,13 +550,13 @@ namespace tau
 
 				auto program = midiTracks[i]->GetDefaultProgramChangeEvent();
 				if (midiTracks[i]->GetChannelNum() == 9) {
-					mainSynther->SetVirInstrument(trackIdx, 128, 0, 0);
+					synther->SetVirInstrument(trackIdx, 128, 0, 0);
 				}
 				else if (program == nullptr) {
-					mainSynther->SetVirInstrument(trackIdx, 0, 0, 0);
+					synther->SetVirInstrument(trackIdx, 0, 0, 0);
 				}
 				else {
-					mainSynther->SetVirInstrument(trackIdx, 0, 0, program->value);
+					synther->SetVirInstrument(trackIdx, 0, 0, program->value);
 				}
 
 				trackIdx++;
@@ -616,7 +607,7 @@ namespace tau
 	{
 		TauLock(tau);
 		midiMarkerList.AppendFromMidiEvents(midiEvents);
-		mainSynther->SetMarkerList(&midiMarkerList);
+		synther->SetMarkerList(&midiMarkerList);
 	}
 
 
@@ -625,7 +616,7 @@ namespace tau
 	{
 		TauLock(tau);
 		for (int i = 0; i < count; i++)
-			mainSynther->NewTrack();
+			synther->NewTrack();
 	}
 
 	//删除轨道
@@ -633,7 +624,7 @@ namespace tau
 	{
 		TauLock(tau);
 		for (int i = 0; i < delTracks.size(); i++)
-			mainSynther->DeleteTrack(delTracks[i]);
+			synther->DeleteTrack(delTracks[i]);
 
 		//重新给每个MidiEditor设置相同的最大结束时间
 		endSec = midiEditor->GetEndSec();
@@ -751,25 +742,25 @@ namespace tau
 		float oldEndSec = midiEditor->GetEndSec();
 
 		for (int i = 0; i < instFragments.size(); i++)
-			mainSynther->MoveInstFragment(instFragments[i], dstTracks[i], dstBranchIdxs[i], secs[i]);
+			synther->MoveInstFragment(instFragments[i], dstTracks[i], dstBranchIdxs[i], secs[i]);
 
 
 		for (int i = 0; i < dstTracks.size(); i++)
-			mainSynther->ComputeTrackEventsTime(dstTracks[i]);
+			synther->ComputeTrackEventsTime(dstTracks[i]);
 
 
 		for (int i = 0; i < instFragments.size(); i++) {
 			if (instFragments[i]->GetTrack())
-				mainSynther->ComputeTrackEventsTime(instFragments[i]->GetTrack());
+				synther->ComputeTrackEventsTime(instFragments[i]->GetTrack());
 		}
 
-		mainSynther->ComputeEndSec();
+		synther->ComputeEndSec();
 
 		//重新获取最大结束时间
 		endSec = midiEditor->GetEndSec();
 
 		//生成小节信息
-		measureInfo->Create(midiMarkerList, endSec);
+		measureInfo.Create(midiMarkerList, endSec);
 
 		//如果是等待播放模式，将清空等待播放模式的数据
 		if (playMode == EditorPlayMode::Wait)
@@ -777,7 +768,7 @@ namespace tau
 
 
 		//如果启用了缓存播放，将重新缓存
-		mainSynther->ReCache();
+		synther->ReCache();
 
 	}
 

@@ -46,6 +46,10 @@ public:
         return mPeakFollower.getLevel();
     }
 
+    double getSineAmplitude() const {
+        return mMagnitude;
+    }
+
     int32_t getGlitchCount() const {
         return mGlitchCount;
     }
@@ -56,14 +60,14 @@ public:
 
     double getSignalToNoiseDB() {
         static const double threshold = 1.0e-14;
-        if (mMeanSquareSignal < threshold || mMeanSquareNoise < threshold) {
+        if (mState != STATE_LOCKED
+                || mMeanSquareSignal < threshold
+                || mMeanSquareNoise < threshold) {
             return 0.0;
         } else {
             double signalToNoise = mMeanSquareSignal / mMeanSquareNoise; // power ratio
             double signalToNoiseDB = 10.0 * log(signalToNoise);
             if (signalToNoiseDB < MIN_SNR_DB) {
-                ALOGD("ERROR - signal to noise ratio is too low! < %d dB. Adjust volume.",
-                     MIN_SNR_DB);
                 setResult(ERROR_VOLUME_TOO_LOW);
             }
             return signalToNoiseDB;
@@ -76,7 +80,7 @@ public:
         report << LOOPBACK_RESULT_TAG "peak.amplitude     = " << std::setw(8)
                << getPeakAmplitude() << "\n";
         report << LOOPBACK_RESULT_TAG "sine.magnitude     = " << std::setw(8)
-               << mMagnitude << "\n";
+               << getSineAmplitude() << "\n";
         report << LOOPBACK_RESULT_TAG "rms.noise          = " << std::setw(8)
                << mMeanSquareNoise << "\n";
         report << LOOPBACK_RESULT_TAG "signal.to.noise.db = " << std::setw(8)
@@ -119,7 +123,7 @@ public:
     result_code processInputFrame(const float *frameData, int /* channelCount */) override {
         result_code result = RESULT_OK;
 
-        float sample = frameData[0];
+        float sample = frameData[getInputChannel()];
         float peak = mPeakFollower.process(sample);
         mInfiniteRecording.write(sample);
 
@@ -145,6 +149,7 @@ public:
                     mDownCounter = IMMUNE_FRAME_COUNT;
                     mInputPhase = 0.0; // prevent spike at start
                     mOutputPhase = 0.0;
+                    resetAccumulator();
                 }
                 break;
 
@@ -164,8 +169,8 @@ public:
                 break;
 
             case STATE_WAITING_FOR_LOCK:
-                mSinAccumulator += sample * sinf(mInputPhase);
-                mCosAccumulator += sample * cosf(mInputPhase);
+                mSinAccumulator += static_cast<double>(sample) * sinf(mInputPhase);
+                mCosAccumulator += static_cast<double>(sample) * cosf(mInputPhase);
                 mFramesAccumulated++;
                 // Must be a multiple of the period or the calculation will not be accurate.
                 if (mFramesAccumulated == mSinePeriod * PERIODS_NEEDED_FOR_LOCK) {
@@ -315,11 +320,11 @@ private:
     // These must match the values in GlitchActivity.java
     enum sine_state_t {
         STATE_IDLE,               // beginning
-        STATE_IMMUNE,             // ignoring input, waiting fo HW to settle
+        STATE_IMMUNE,             // ignoring input, waiting for HW to settle
         STATE_WAITING_FOR_SIGNAL, // looking for a loud signal
         STATE_WAITING_FOR_LOCK,   // trying to lock onto the phase of the sine
         STATE_LOCKED,             // locked on the sine wave, looking for glitches
-        STATE_GLITCHING,           // locked on the sine wave but glitching
+        STATE_GLITCHING,          // locked on the sine wave but glitching
         NUM_STATES
     };
 

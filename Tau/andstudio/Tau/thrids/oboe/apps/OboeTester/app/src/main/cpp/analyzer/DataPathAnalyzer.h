@@ -38,7 +38,19 @@ public:
 
     DataPathAnalyzer() : BaseSineAnalyzer() {
         // Add a little bit of noise to reduce blockage by speaker protection and DRC.
-        setNoiseAmplitude(0.05);
+        setNoiseAmplitude(0.02);
+    }
+
+    double calculatePhaseError(double p1, double p2) {
+        double diff = p1 - p2;
+        // Wrap around the circle.
+        while (diff > M_PI) {
+            diff -= (2 * M_PI);
+        }
+        while (diff < -M_PI) {
+            diff += (2 * M_PI);
+        }
+        return diff;
     }
 
     /**
@@ -52,15 +64,13 @@ public:
         mInfiniteRecording.write(sample);
 
         if (transformSample(sample, mOutputPhase)) {
-            resetAccumulator();
+            // Analyze magnitude and phase on every period.
+            double diff = abs(calculatePhaseError(mPhaseOffset, mPreviousPhaseOffset));
+            if (diff < mPhaseTolerance) {
+                mMaxMagnitude = std::max(mMagnitude, mMaxMagnitude);
+            }
+            mPreviousPhaseOffset = mPhaseOffset;
         }
-
-        // Update MaxMagnitude if we are locked.
-        double diff = abs(mPhaseOffset - mPreviousPhaseOffset);
-        if (diff < mPhaseTolerance) {
-            mMaxMagnitude = std::max(mMagnitude, mMaxMagnitude);
-        }
-        mPreviousPhaseOffset = mPhaseOffset;
         return result;
     }
 

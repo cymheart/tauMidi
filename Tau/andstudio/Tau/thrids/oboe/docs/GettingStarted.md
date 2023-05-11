@@ -9,12 +9,12 @@ or
 
 ## Option 1) Using pre-built binaries and headers
 
-Oboe is distributed as a [prefab](https://github.com/google/prefab) package via [Google Maven](https://maven.google.com/web/index.html) (search for "oboe"). [Prefab support was added](https://android-developers.googleblog.com/2020/02/native-dependencies-in-android-studio-40.html) to [Android Studio Preview 4.0 Canary 9](https://developer.android.com/studio/preview) so you'll need to be using this version of Android Studio or above. 
+Oboe is distributed as a [prefab](https://github.com/google/prefab) package via [Google Maven](https://maven.google.com/web/index.html) (search for "oboe"). [Prefab support was added](https://android-developers.googleblog.com/2020/02/native-dependencies-in-android-studio-40.html) to [Android Studio 4.0](https://developer.android.com/studio) so you'll need to be using this version of Android Studio or above. 
 
-Add the oboe dependency to your app's `build.gradle` file. Replace "1.6.0" with the [latest stable version](https://github.com/google/oboe/releases/) of Oboe:
+Add the oboe dependency to your app's `build.gradle` file. Replace "X.X.X" with the [latest stable version](https://github.com/google/oboe/releases/) of Oboe:
 
     dependencies {
-        implementation 'com.google.oboe:oboe:1.6.0'
+        implementation 'com.google.oboe:oboe:X.X.X'
     }
 
 Also enable prefab by adding:
@@ -248,6 +248,7 @@ renders a sine wave.
 ```
 #include <oboe/Oboe.h>
 #include <math.h>
+using namespace oboe;
 
 class OboeSinePlayer: public oboe::AudioStreamDataCallback {
 public:
@@ -263,7 +264,7 @@ public:
                 ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
                 ->setChannelCount(kChannelCount)
                 ->setSampleRate(kSampleRate)
-		->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::Medium);
+		->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::Medium)
                 ->setFormat(oboe::AudioFormat::Float)
                 ->setDataCallback(this)
                 ->openStream(mStream);
@@ -320,7 +321,7 @@ rather than pre-computing them.
 Additionally, best practice is to implement a separate data callback class, rather
 than managing the stream and defining its data callback in the same class.
 
-For more examples on how to use Oboe look in the [samples](https://github.com/google/oboe/tree/master/samples) folder.
+For more examples on how to use Oboe look in the [samples](https://github.com/google/oboe/tree/main/samples) folder.
 
 ## Obtaining optimal latency
 One of the goals of the Oboe library is to provide low latency audio streams on the widest range of hardware configurations.
@@ -356,5 +357,5 @@ Here's a code sample showing how to set these default values.
 Note that the values from Java are for built-in audio devices. Peripheral devices, such as Bluetooth may need larger framesPerBurst.
 
 # Further information
-- [Code samples](https://github.com/google/oboe/tree/master/samples)
+- [Code samples](https://github.com/google/oboe/tree/main/samples)
 - [Full guide to Oboe](FullGuide.md)

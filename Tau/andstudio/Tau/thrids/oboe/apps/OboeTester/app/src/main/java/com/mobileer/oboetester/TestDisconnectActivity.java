@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -102,10 +103,6 @@ public class TestDisconnectActivity extends TestAudioActivity {
     @Override
     boolean isOutput() {
         return true;
-    }
-
-    @Override
-    public void setupEffects(int sessionId) {
     }
 
     private void updateFailSkipButton(final boolean running) {
@@ -194,6 +191,11 @@ public class TestDisconnectActivity extends TestAudioActivity {
                 + ", " + config.getSampleRate();
     }
 
+    private void log(Exception e) {
+        Log.e(TestAudioActivity.TAG, "Caught ", e);
+        mAutomatedTestRunner.log("Caught " + e);
+    }
+
     private void log(String text) {
         mAutomatedTestRunner.log(text);
     }
@@ -207,6 +209,11 @@ public class TestDisconnectActivity extends TestAudioActivity {
                                    int sharingMode,
                                    int sampleRate,
                                    boolean requestPlugin) throws InterruptedException {
+        if ((getSingleTestIndex() >= 0) && (mAutomatedTestRunner.getTestCount() != getSingleTestIndex())) {
+            mAutomatedTestRunner.incrementTestCount();
+            return;
+        }
+
         String actualConfigText = "none";
         mSkipTest = false;
 
@@ -258,7 +265,7 @@ public class TestDisconnectActivity extends TestAudioActivity {
                     : mAudioOutTester.getCurrentAudioStream();
         } catch (IOException e) {
             openFailed = true;
-            log(e.getMessage());
+            log(e);
         }
 
         // The test is only worth running if we got the configuration we requested.
@@ -284,7 +291,7 @@ public class TestDisconnectActivity extends TestAudioActivity {
             } catch (IOException e) {
                 e.printStackTrace();
                 valid = false;
-                log(e.getMessage());
+                log(e);
             }
         }
 
@@ -403,10 +410,12 @@ public class TestDisconnectActivity extends TestAudioActivity {
             testConfiguration(StreamConfiguration.PERFORMANCE_MODE_NONE,
                     StreamConfiguration.SHARING_MODE_SHARED);
         } catch (InterruptedException e) {
-            log(e.getMessage());
-            showErrorToast(e.getMessage());
+            log("Test CANCELLED - INVALID!");
+        } catch (Exception e) {
+            log(e);
+            showErrorToast("Caught " + e);
         } finally {
-            setInstructionsText("Test completed.");
+            setInstructionsText("Test finished.");
             updateFailSkipButton(false);
         }
     }

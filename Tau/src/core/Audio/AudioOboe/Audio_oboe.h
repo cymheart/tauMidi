@@ -24,7 +24,10 @@ namespace tau
 
 	private:
 		MyCallback myCallback;
-		oboe::ManagedStream managedStream = oboe::ManagedStream();
+		//oboe::ManagedStream managedStream = oboe::ManagedStream();
+
+		oboe::AudioStreamBuilder mBuilder;
+		oboe::AudioStream *mStream = nullptr;
 	};
 
 }

@@ -22,7 +22,6 @@ import android.util.Log;
 
 import java.io.IOException;
 
-
 abstract class TestOutputActivityBase extends TestAudioActivity {
     AudioOutputTester mAudioOutTester;
 
@@ -56,31 +55,5 @@ abstract class TestOutputActivityBase extends TestAudioActivity {
         if (mBufferSizeView != null) {
             mBufferSizeView.onStreamOpened((OboeAudioStream) mAudioOutTester.getCurrentAudioStream());
         }
-    }
-
-    // TODO Add editor
-    public void setupEqualizer(int sessionId) {
-        Equalizer equalizer = new Equalizer(0, sessionId);
-        int numBands = equalizer.getNumberOfBands();
-        Log.d(TAG, "numBands " + numBands);
-        for (short band = 0; band < numBands; band++) {
-            String msg = "band " + band
-                    + ", center = " + equalizer.getCenterFreq(band)
-                    + ", level = " + equalizer.getBandLevel(band);
-            Log.d(TAG, msg);
-            equalizer.setBandLevel(band, (short)40);
-        }
-
-        equalizer.setBandLevel((short) 1, (short) 300);
-    }
-
-    public void setupReverb(int sessionId) {
-        PresetReverb effect = new PresetReverb(0, sessionId);
-    }
-
-    @Override
-    public void setupEffects(int sessionId) {
-        // setupEqualizer(sessionId);
-        // setupReverb(sessionId);
     }
 }

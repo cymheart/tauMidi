@@ -92,9 +92,13 @@ To be safe, check the state of the audio stream after you create it, as explaine
 
 ### Open the Stream
 
+Declare a **shared pointer** for the stream. Make sure it is declared with the appropriate scope. The best place is as a member variable in a managing class or as a global. Avoid declaring it as a local variable because the stream may get deleted when the function returns.
+
+    std::shared_ptr<oboe::AudioStream> mStream;
+
 After you've configured the `AudioStreamBuilder`, call `openStream()` to open the stream:
 
-    Result result = streamBuilder.openStream(&stream_);
+    Result result = streamBuilder.openStream(mStream);
     if (result != OK){
         __android_log_print(ANDROID_LOG_ERROR,
                             "AudioEngine",
@@ -296,19 +300,19 @@ frames was read. If not, the buffer might contain unknown data that could cause 
 audio glitch. You can pad the buffer with zeros to create a
 silent dropout:
 
-    Result result = stream.read(audioData, numFrames, timeout);
+    Result result = mStream->read(audioData, numFrames, timeout);
     if (result < 0) {
         // Error!
     }
     if (result != numFrames) {
         // pad the buffer with zeros
         memset(static_cast<sample_type*>(audioData) + result * samplesPerFrame, 0,
-               (numFrames - result) * stream.getBytesPerFrame());
+               (numFrames - result) * mStream->getBytesPerFrame());
     }
 
 You can prime the stream's buffer before starting the stream by writing data or silence into it. This must be done in a non-blocking call with timeoutNanos set to zero.
 
-The data in the buffer must match the data format returned by `stream.getDataFormat()`.
+The data in the buffer must match the data format returned by `mStream->getDataFormat()`.
 
 ### Closing an audio stream
 
@@ -329,7 +333,7 @@ An audio stream can become disconnected at any time if one of these events happe
 When a stream is disconnected, it has the state "Disconnected" and calls to `write()` or other functions will return `Result::ErrorDisconnected`.  When a stream is disconnected, all you can do is close it.
 
 If you need to be informed when an audio device is disconnected, write a class
-which extends `AudioStreamErrorCallback` and then register your class using `builder.setErrorCallback(yourCallbackClass)`.
+which extends `AudioStreamErrorCallback` and then register your class using `builder.setErrorCallback(yourCallbackClass)`. It is recommended to pass a shared_ptr.
 If you register a callback, then it will automatically close the stream in a separate thread if the stream is disconnected.
 
 Your callback can implement the following methods (called in a separate thread): 
@@ -345,6 +349,7 @@ Methods that reference the underlying stream should not be called (e.g. `getTime
 Opening a separate stream is also a valid use of this callback, especially if the error received is `Error::Disconnected`. 
 However, it is important to note that the new audio device may have vastly different properties than the stream that was disconnected.
 
+See the SoundBoard sample for an example of setErrorCallback.
 
 ## Optimizing performance
 
@@ -484,10 +489,6 @@ MyOboeStreamCallback myCallback;
 AudioStreamBuilder builder;
 builder.setDataCallback(myCallback);
 builder.setPerformanceMode(PerformanceMode::LowLatency);
-
-// Use it to create the stream
-AudioStream *stream;
-builder.openStream(&stream);
 ```
 
 ## Thread safety

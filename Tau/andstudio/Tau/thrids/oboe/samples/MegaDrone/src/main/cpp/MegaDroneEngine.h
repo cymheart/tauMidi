@@ -47,9 +47,10 @@ public:
 private:
     std::shared_ptr<AudioStream> mStream;
     std::shared_ptr<TappableAudioSource> mAudioSource;
-    std::unique_ptr<DefaultDataCallback> mDataCallback;
-    std::unique_ptr<DefaultErrorCallback> mErrorCallback;
+    std::shared_ptr<DefaultDataCallback> mDataCallback;
+    std::shared_ptr<DefaultErrorCallback> mErrorCallback;
 
+    bool attemptStart();
     oboe::Result createPlaybackStream();
     void createCallback(std::vector<int> cpuIds);
 };
