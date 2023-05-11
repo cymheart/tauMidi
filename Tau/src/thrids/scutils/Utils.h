@@ -58,6 +58,11 @@ using namespace std;
 #define MAX_DELAY_TIME  0x7FFFFFFF
 #define Delegate(func) typedef function<func>
 
+#define MALLOC(size)                   malloc(size);
+#define CALLOC(num, size)              calloc(num, size);
+#define FREE(ptr)                      {if(ptr != nullptr){ free(ptr); ptr = nullptr;}}
+
+
 // 释放指针宏
 #define DEL(obj)                      {if(obj != nullptr ){delete obj;obj=nullptr;}}
 
@@ -103,6 +108,7 @@ namespace scutils
 	DLL_FUNC int JudgeLittleOrBigEndianSystem();
 
 	DLL_FUNC vector<string> split(const string& s, const string& seperator);
+	DLL_FUNC bool contains(const string& str, const string& substr);
 	DLL_FUNC int64_t GetCurrentTimeMsec();
 
 	int ScUtils_GetCPUCount();
@@ -150,6 +156,8 @@ namespace scutils
 		return res;
 	}
 
+	
+	char* FormatStr(const char* format, ...);
 
 
 }

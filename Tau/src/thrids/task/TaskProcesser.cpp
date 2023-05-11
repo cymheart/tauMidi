@@ -35,7 +35,10 @@ namespace task
 		readQue->SetReadTaskCallback(ReadTaskList);
 		readQue->SetTraversalCallback(RemoveTaskProcess);
 		readQue->SetReleaseCallback(ReleaseProcess);
+
+		//
 		writeQue->SetReleaseCallback(ReleaseProcess);
+		writeQue->SetTraversalCallback(RemoveTaskProcess);
 	}
 
 	void TaskProcesser::Lock()
@@ -76,6 +79,11 @@ namespace task
 		return task;
 	}
 
+	Task* TaskProcesser::CreateTask()
+	{
+		return PopTask(TaskMsg::TMSG_DATA);
+	}
+
 	//打开嵌入模式
 	void TaskProcesser::OpenEmbedMode()
 	{
@@ -105,6 +113,11 @@ namespace task
 	//{
 	//	return chrono::duration_cast<res>(curTime - startTime).count() * 0.001f;
 	//}
+
+	//启用协程
+	void TaskProcesser::EnableCoroutine() {
+		enableCoroutine = true;
+	}
 
 	int TaskProcesser::Start(bool isRunNewThread)
 	{
@@ -147,17 +160,35 @@ namespace task
 	//生成固定帧率定时器
 	TaskTimer* TaskProcesser::CreateTimer(TimerCallBack timerCB, void* data, bool isRepeat)
 	{
-		return new TaskTimer(this, timerCB, data, isRepeat);
+		TaskTimer* timer = TaskObjectPool::GetInstance().TimerPool().Pop();
+		timer->Init(this, timerCB, data, isRepeat);
+		return timer;
 	}
 
 	//生成定时器
 	TaskTimer* TaskProcesser::CreateTimer(TimerCallBack timerCB, void* data, int durationMS, bool isRepeat)
 	{
-		return new TaskTimer(this, timerCB, data, durationMS, isRepeat);
+		TaskTimer* timer = TaskObjectPool::GetInstance().TimerPool().Pop();
+		timer->Init(this, timerCB, data, durationMS, isRepeat);
+		return timer;
 	}
+
+	//回收定时器 
+	void TaskProcesser::RecycleTimer(TaskTimer* timer)
+	{
+		if (timer == nullptr)
+			return;
+		if (isStop)
+			TaskObjectPool::GetInstance().TimerPool().Push(timer);
+		timer->Remove();
+	}
+
 
 	void TaskProcesser::PostBlockFilterSingle(int filterNumber)
 	{
+		if (isStop)
+			return;
+
 		Task* task = PopTask(TaskMsg::TMSG_TASK_BLOCK_FILTER_SINGLE);
 		task->processCallBack = nullptr;
 		task->data = (void*)filterNumber;
@@ -167,65 +198,31 @@ namespace task
 
 	void TaskProcesser::PostUnBlockFilter()
 	{
+		if (isStop)
+			return;
+
 		Task* task = PopTask(TaskMsg::TMSG_TASK_NOT_BLOCK_FILTER);
 		task->filterNum = -1;
 		PostTask(task);
 	}
 
-	Task* TaskProcesser::PostTask(TaskCallBack taskCallBack)
+	void TaskProcesser::PostRemoveTask(TaskCompareCallBack cmpCB, void* data, int delay)
 	{
-		return PostTask(taskCallBack, nullptr, 0, 0);
-	}
+		if (isStop)
+			return;
 
-	Task* TaskProcesser::PostTask(TaskCallBack taskCallBack, int delay)
-	{
-		return PostTask(taskCallBack, nullptr, delay, 0);
-	}
-
-	Task* TaskProcesser::PostTask(TaskCallBack taskCallBack, void* data)
-	{
-		return PostTask(taskCallBack, data, 0, 0);
-	}
-
-	Task* TaskProcesser::PostTask(TaskCallBack taskCallBack, void* data, int delay)
-	{
-		return PostTask(taskCallBack, data, delay, 0);
-	}
-
-	Task* TaskProcesser::PostTaskByFilter(TaskCallBack taskCallBack, int filterNumber)
-	{
-		return PostTask(taskCallBack, nullptr, 0, filterNumber);
-	}
-
-	Task* TaskProcesser::PostTaskByFilter(TaskCallBack taskCallBack, int delay, int filterNumber)
-	{
-		return PostTask(taskCallBack, nullptr, delay, filterNumber);
-	}
-
-	Task* TaskProcesser::PostTaskByFilter(TaskCallBack taskCallBack, void* data, int filterNumber)
-	{
-		return PostTask(taskCallBack, data, 0, filterNumber);
-	}
-
-
-	Task* TaskProcesser::PostTask(TaskCallBack taskCallBack, void* data, int delay, int filterNumber)
-	{
-		Task* task = new Task(TaskMsg::TMSG_DATA);
-		task->processCallBack = taskCallBack;
+		Task* task = PopTask(TaskMsg::TMSG_TASK_REMOVE);
+		task->cmpCallBack = cmpCB;
 		task->data = data;
-		task->filterNum = filterNumber;
 		PostTask(task, delay);
 
-		return task;
 	}
 
-
-	Task* TaskProcesser::PostTask(Task* task) {
-		return PostTask(task, 0);
-	}
-
-	Task* TaskProcesser::PostTask(Task* task, int delay)
+	void TaskProcesser::PostTask(Task* task, int delay)
 	{
+		if (isStop)
+			return;
+
 		if (isLock)
 			Lock();
 
@@ -236,6 +233,9 @@ namespace task
 		task->delay = (int64_t)delay;
 		task->createTimeMS = curtTime;
 		task->executeTimeMS = curtTime - startTime + task->delay;
+		if (task->priority < 0)
+			task->executeTimeMS = task->priority;
+
 		writeQue->Add(task);
 
 
@@ -245,7 +245,7 @@ namespace task
 			Notify();
 		}
 
-		return task;
+
 	}
 
 	int TaskProcesser::Stop()
@@ -253,20 +253,18 @@ namespace task
 		if (isStop)
 			return 0;
 
-		isStop = true;
 		Continue();
-
-		Task* task = PopTask(TMSG_QUIT);
+		Task* task = PopTask(TaskMsg::TMSG_QUIT);
 		PostTask(task, 0);
+		isStop = true;
 
+		quitSem.wait();
 
 		if (!isLock) {
 			readQue->Release();
 			writeQue->Release();
 			return 0;
 		}
-
-		quitSem.wait();
 
 		readQue->Release();
 		writeQue->Release();
@@ -275,7 +273,10 @@ namespace task
 
 	int TaskProcesser::Pause()
 	{
-		Task* task = PopTask(TMSG_PAUSE);
+		if (isStop)
+			return 0;
+
+		Task* task = PopTask(TaskMsg::TMSG_PAUSE);
 		PostTask(task, 0);
 		return 0;
 	}
@@ -296,29 +297,54 @@ namespace task
 
 		switch (task->msg)
 		{
-		case  TMSG_TIMER_STOP:
+		case  TaskMsg::TMSG_TIMER_STOP:
+		case  TaskMsg::TMSG_TIMER_REMOVE:
 		{
 			TaskTimer* timer = ((TimerTask*)task)->timer;
 			if (timer->runTask != nullptr) {
 				Task* tsk = timer->runTask;
-				if (!writeQue->Remove(tsk))
+				timer->runTask = nullptr;
+				//
+				bool isRemove;
+				if (isLock) {
+					Lock();
+					isRemove = writeQue->Remove(tsk);
+					UnLock();
+				}
+				else {
+					isRemove = writeQue->Remove(tsk);
+				}
+				if (!isRemove)
 					readQue->Remove(tsk);
+
+				Task::Kill(task);
+				Task::Release(tsk);
 			}
 
+			if (task->msg == TaskMsg::TMSG_TIMER_REMOVE) {
+				timer->Clear();
+				TaskObjectPool::GetInstance().TimerPool().Push(timer);
+			}
 		}
 		break;
 
-		case TMSG_TASK_REMOVE:
+
+		case TaskMsg::TMSG_TASK_REMOVE:
 		{
 			if (task->cmpCallBack == nullptr)
 				break;
 
 			cmpRemoveTask = task;
+			//
+			if (isLock)Lock();
+			writeQue->Traversal();
+			if (isLock)UnLock();
+			//
 			readQue->Traversal();
 		}
 		break;
 
-		case TMSG_TASK_BLOCK_FILTER_SINGLE:
+		case TaskMsg::TMSG_TASK_BLOCK_FILTER_SINGLE:
 		{
 			taskBlockFilterCount = 1;
 			taskBlockFilterNumbers[0] = (uintptr_t)task->data;
@@ -326,7 +352,7 @@ namespace task
 		}
 		break;
 
-		case TMSG_TASK_BLOCK_FILTER:
+		case TaskMsg::TMSG_TASK_BLOCK_FILTER:
 		{
 			int* filter = (int*)task->data;
 			taskBlockFilterCount = 0;
@@ -339,7 +365,7 @@ namespace task
 		}
 		break;
 
-		case TMSG_TASK_NOT_BLOCK_FILTER:
+		case TaskMsg::TMSG_TASK_NOT_BLOCK_FILTER:
 		{
 			taskBlockFilterCount = 0;
 			readQue->SetBlockFilter(nullptr, taskBlockFilterCount);
@@ -347,10 +373,10 @@ namespace task
 		}
 		break;
 
-		case TMSG_QUIT:
+		case TaskMsg::TMSG_QUIT:
 			return 1;
 
-		case TMSG_PAUSE:
+		case TaskMsg::TMSG_PAUSE:
 			if (isLock)
 				pauseSem.wait();
 			break;
@@ -359,16 +385,19 @@ namespace task
 		return 0;
 	}
 
-	int num = 0;
 
 	void TaskProcesser::Run()
 	{
 		if (isStop)
 			return;
 
-		int64_t waitTime;
-		int64_t tm;
-		int64_t curTime;
+#ifdef _WIN32
+		if (enableCoroutine) {
+			mainFiberHandle = ConvertThreadToFiberEx(NULL, FIBER_FLAG_FLOAT_SWITCH);
+		}
+#endif // _WIN32
+
+		int64_t waitTime, tm, curTime;
 
 		for (;;)
 		{
@@ -397,7 +426,7 @@ namespace task
 							Wait();
 						}
 						else {
-							Wait(waitTime);
+							Wait((uint32_t)waitTime);
 							Lock();
 							break;
 						}
@@ -420,7 +449,7 @@ namespace task
 				//当前结束时间
 				int64_t endTime = GetCurrentTimeMsec();
 				int64_t tm = endTime - curTime;
-				int64_t diffMs = perFrameDuration - tm;
+				int64_t diffMs = (int64_t)perFrameDuration - tm;
 				if (diffMs >= 1)
 				{
 					this_thread::sleep_for(std::chrono::milliseconds(diffMs));
@@ -434,14 +463,15 @@ namespace task
 	}
 
 
-
 	int TaskProcesser::_ReadTaskList(Task* task)
 	{
 		int ret = 0;
 		if (!task->isRemove)
 			ret = ProcessTask(task);
-		Task::Release(task);
+		else
+			Task::Kill(task);
 
+		Task::Release(task);
 		return ret;
 	}
 
@@ -459,6 +489,7 @@ namespace task
 
 	int TaskProcesser::_ReleaseProcess(Task* task)
 	{
+		Task::Kill(task);
 		Task::Release(task);
 		return 0;
 	}

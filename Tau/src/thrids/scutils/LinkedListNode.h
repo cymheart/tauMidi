@@ -1,12 +1,16 @@
 #ifndef _LinkedListNode_h_
 #define _LinkedListNode_h_
 
+#include"ObjectMemory.h"
+
 namespace scutils
 {
 	template<typename T>
-	class LinkedListNode
+	class LinkedListNode : public ObjectMemory
 	{
 	public:
+
+
 		LinkedListNode() {
 
 		}

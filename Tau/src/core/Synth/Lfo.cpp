@@ -14,6 +14,11 @@ namespace tau
 		if (sec < 0)
 			return 0;
 
-		return  amp * (float)FastSin((double)freq * sec * 2 * M_PI);
+		if (sec == oldSec)
+			return oldOutput;
+
+		oldOutput = amp * (float)FastSin((double)freq * sec * 2 * M_PI);
+		oldSec = sec;
+		return oldOutput;
 	}
 }

@@ -203,48 +203,6 @@ namespace oteypiano
 	}
 
 
-	//long PianoKey::Go(float* out, int samples)
-	//{
-	//	/*long n = 0;
-	//	float Zx2 = 2 * Z;
-	//	float facZ = Zx2 / (Z * nstrings + Zb);*/
-
-	//	//for (int i = 0; i < samples; i++) {
-
-	//	//	n++;
-	//	//	float vstring = 0.0;
-	//	//	for (int k = 0; k < nstrings; k++) {
-	//	//		vstring += string[k]->input_velocity();
-	//	//	}
-
-	//	//	/*float hload = hammer->load(vstring / nstrings);
-	//	//	float load = 0;
-
-	//	//	for (int k = 0; k < nstrings; k++) {
-	//	//		load += string[k]->go_hammer(hload / (Zx2));
-	//	//	}
-	//	//	load *= facZ;
-	//	//	float output = 0.0;
-	//	//	for (int k = 0; k < nstrings; k++) {
-	//	//		output += string[k]->go_soundboard(load);
-	//	//	}*/
-
-
-	//	//	//output = soundboard->reverb(output);
-	//	//	/*
-	//	//	output += filter(output,&shaping1);
-	//	//	output = filter(output,&shaping2);
-	//	//	output += filter(output,&shaping3);
-	//	//*/
-	//	////t += dt;
-	//	////sample++;
-	//	//	//out[i] = 1 * 100;
-	//	//}
-	//	return 0;
-	//}
-
-
-
 	long PianoKey::Go(float* out, int samples)
 	{
 		long n = 0;
@@ -272,14 +230,6 @@ namespace oteypiano
 			}
 
 
-			//output = soundboard->reverb(output);
-			/*
-			output += filter(output,&shaping1);
-			output = filter(output,&shaping2);
-			output += filter(output,&shaping3);
-		*/
-		//t += dt;
-		//sample++;
 			out[i] = output * 100;
 		}
 		return n;

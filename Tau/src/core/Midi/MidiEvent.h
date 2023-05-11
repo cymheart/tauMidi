@@ -15,10 +15,11 @@ namespace tau
 		MidiEventType type = MidiEventType::Unknown;
 		MidiEventPlayType playType = MidiEventPlayType::Background;
 
-		/// <summary>
-		/// 起始tick
-		/// </summary>
+		// 起始tick
 		uint32_t startTick = 0;
+
+		// 结束tick
+		uint32_t endTick = 0;
 
 		//起始时间点(单位:秒)
 		float startSec = 0;
@@ -42,24 +43,14 @@ namespace tau
 	class NoteOnEvent : public MidiEvent
 	{
 	public:
-		/// <summary>
-		/// 结束tick
-		/// </summary>
-		uint32_t endTick = 0;
 
-		/// <summary>
-		/// 音符
-		/// </summary>
+		// 音符
 		int note = 0;
 
-		/// <summary>
-		/// 力度
-		/// </summary>
+		// 力度
 		int velocity = 0;
 
-		/// <summary>
-		/// 对应的NoteOffEvent
-		/// </summary>
+		// 对应的NoteOffEvent
 		NoteOffEvent* noteOffEvent = nullptr;
 
 		NoteOnEvent** childNoteOnEvents = nullptr;
@@ -82,19 +73,14 @@ namespace tau
 	class NoteOffEvent : public MidiEvent
 	{
 	public:
-		/// <summary>
-		/// 音符
-		/// </summary>
+
+		// 音符
 		int note = 0;
 
-		/// <summary>
-		/// 力度
-		/// </summary>
+		// 力度
 		int velocity = 0;
 
-		/// <summary>
-		/// 对应的NoteOnEvent
-		/// </summary>
+		// 对应的NoteOnEvent
 		NoteOnEvent* noteOnEvent = nullptr;
 
 		NoteOffEvent()
@@ -109,14 +95,10 @@ namespace tau
 	class ControllerEvent : public MidiEvent
 	{
 	public:
-		/// <summary>
-		/// 控制器类型
-		/// </summary>
+		// 控制器类型
 		MidiControllerType ctrlType = MidiControllerType::BalanceMSB;
 
-		/// <summary>
-		/// 控制值
-		/// </summary>
+		// 控制值
 		int value = 0;
 
 		ControllerEvent()
@@ -131,9 +113,7 @@ namespace tau
 	class ProgramChangeEvent : public MidiEvent
 	{
 	public:
-		/// <summary>
-		/// 乐器值
-		/// </summary>
+		// 乐器值
 		int value = 0;
 
 		ProgramChangeEvent()
@@ -148,14 +128,10 @@ namespace tau
 	class KeyPressureEvent : public MidiEvent
 	{
 	public:
-		/// <summary>
-		/// 音符
-		/// </summary>
+		// 音符
 		int note = 0;
 
-		/// <summary>
-		/// 力度值
-		/// </summary>
+		//力度值
 		int value = 0;
 
 		KeyPressureEvent()
@@ -171,9 +147,7 @@ namespace tau
 	class ChannelPressureEvent : public MidiEvent
 	{
 	public:
-		/// <summary>
-		/// 力度值
-		/// </summary>
+		// 力度值
 		int value = 0;
 
 		ChannelPressureEvent()
@@ -188,9 +162,7 @@ namespace tau
 	class PitchBendEvent : public MidiEvent
 	{
 	public:
-		/// <summary>
-		/// 滑音值
-		/// </summary>
+		// 滑音值
 		int value = 0;
 
 		PitchBendEvent()
@@ -230,9 +202,7 @@ namespace tau
 	class TempoEvent : public MidiEvent
 	{
 	public:
-		/// <summary>
-		/// 一个四分音符的微秒数
-		/// </summary>
+		// 一个四分音符的微秒数
 		float microTempo = 0;
 
 		TempoEvent()
@@ -279,26 +249,18 @@ namespace tau
 	class TimeSignatureEvent :public MidiEvent
 	{
 	public:
-		/// <summary>
-		/// 分子
-		/// </summary>
+		// 分子
 		int numerator = 4;
 
-		/// <summary>
-		/// 分母
-		/// denominatorResult = pow(2, denominator);
-		/// </summary>
+		// 分母
+		// denominatorResult = pow(2, denominator);
 		int denominator = 2;
 
-		/// <summary>
-		/// 节拍器一次click的时钟数量
-		/// 1个四分音符为24个时钟数量
-		/// </summary>
+		// 节拍器一次click的时钟数量
+		// 1个四分音符为24个时钟数量
 		int metronomeCount = 24;
 
-		/// <summary>
-		/// 每个四分音符有几个32分音符
-		/// </summary>
+		// 每个四分音符有几个32分音符
 		int nCount32ndNotesPerQuarterNote = 8;
 
 		TimeSignatureEvent()
@@ -309,7 +271,7 @@ namespace tau
 
 	/// <summary>
 	/// 调号设置事件
-	/// 大调小调的解释:相关连接：
+	/// 大调小调的解释,相关连接：
 	/// https://zhuanlan.zhihu.com/p/23125945?refer=pianofanie
 	/// https://www.zhihu.com/question/28481469/answer/79850430
 	/// https://www.zhihu.com/question/20230795/answer/20900710
@@ -371,35 +333,38 @@ namespace tau
 		/// C大调：从C音开始构成大调关系，则为：C[全]D[全]E[半]F[全]G[全]A[全]B[半]C， 产生 0个升号,sf = 0
 		/// G大调：从G音开始构成大调关系，则为：G[全]A[全]B[半]C[全]D[全]E[全]F#[半]G，产生 1个升号,sf = 1
 		/// D大调: 从D音开始构成大调关系，则为：D[全]E[全]F#[半]G[全]A[全]B[全]C#[半]D， 产生 2个升号: sf = 2
-		/// A大调: 在五线谱上标注了3个升号，那么sf=03
-		/// E大调: sf=4
-		/// B大调: sf=5
-		/// #F大调: sf=6
-		/// #C大调: sf=7
-		/// F大调: 五线谱上写有1个降号，那么sf=-1
-		/// bB大调: sf=-2
-		/// bE大调: sf=-3
-		/// bA大调: sf=-4
-		/// bD大调: sf=-5
-		/// bG大调: sf=-6
-		/// bC大调: sf=-7
+		/// A大调: 从A音开始构成大调关系，则为：A[全]B[全]C#[半]D[全]E[全]F#[全]G#[半]A， 在五线谱上标注了3个升号，那么sf=03
+		/// E大调: 从E音开始构成大调关系，则为：E[全]F#[全]G#[半]A[全]B[全]C#[全]D#[半]E， 在五线谱上标注了4个升号 sf=4
+		/// B大调: 从B音开始构成大调关系，则为：B[全]C#[全]D#[半]E[全]F#[全]G#[全]A#[半]B， 在五线谱上标注了5个升号 sf=5
+		/// #F大调: 从F#音开始构成大调关系，则为：F#[全]G#[全]A#[半]B[全]C#[全]D#[全]E#[半]F#， 在五线谱上标注了6个升号 sf=6
+		/// #C大调: 从C#音开始构成大调关系，则为：C#[全]D#[全]E#[半]F#[全]G#[全]A#[全]B#[半]C#， 在五线谱上标注了7个升号 sf=7
+		/// F大调: 从F音开始构成大调关系，则为：F[全]G[全]A[半]bB[全]C[全]D[全]E[半]F,  五线谱上写有1个降号，那么sf=-1
+		/// bB大调: 从bB音开始构成大调关系，则为：bB[全]C[全]D[半]bE[全]F[全]G[全]A[半]bB  在五线谱上标注了2个降号， sf=-2
+		/// bE大调: 从bE音开始构成大调关系，则为：bE[全]F[全]G[半]bA[全]bB[全]C[全]D[半]bE   在五线谱上标注了3个降号， sf=-3
+		/// bA大调: 从bA音开始构成大调关系，则为：bA[全]bB[全]C[半]bD[全]bE[全]F[全]G[半]bA sf=-4
+		/// bD大调: 从bD音开始构成大调关系，则为：bD[全]bE[全]F[半]bG[全]bA[全]bB[全]C[半]bD sf=-5
+		/// bG大调(同F#大调): 从bG音开始构成大调关系，则为：bG[全]bA[全]bB[半]bC[全]bD[全]bE[全]F[半]bG  sf=-6
+		///                                      对应F#大调 F#[全]G#[全]A#[半] B[全]C#[全]D#[全]E#[半]F#
+		/// 
+		/// bC大调(同B大调): 从bC音开始构成大调关系，则为：bC[全]bD[全]bE[半]bF[全]bG[全]bA[全]bB[半]bC sf=-7
+		///                                     对应B大调： B[全]C#[全]D#[半] E[全]F#[全]G#[全]A#[半]B
 		/// 
 		/// 小调：每两个音之间需要构成全半全全半全全的音程关系，形成跨八度音域
 		/// a小调: 从a音开始构成小调关系，则为：a[全]b[半]c[全]d[全]e[半]f[全]g[全]a， 产生 0个升号,sf = 0
 		/// e小调: 从e音开始构成小调关系，则为：e[全]f#[半]g[全]a[全]b[半]c[全]d[全]e， 产生 1个升号,sf = 1
 		/// b小调: 从b音开始构成小调关系，则为：b[全]c#[半]d[全]e[全]f#[半]g[全]a[全]b， 产生 2个升号,sf = 2
-		/// #f小调:在五线谱上标注了3个升号，那么sf=3
-		/// #c小调: sf=4   #C[全]#D[半]E[全]#F[全]#G[半]A[全]B[全]#C
-		/// #g小调: sf=5
-		/// #d小调: sf=6
-		/// #a小调: sf=7
-		/// d小调: sf=-1   D，E，F，G，A，Bb，C，D
-		/// g小调: sf=-2
-		/// c小调: sf=-3   C[全]D[半]Eb[全]F[全]G[半]Ab[全]Bb[全]C
-		/// f小调: sf=-4
-		/// bb小调: sf=-5
-		/// be小调: sf=-6
-		/// ba小调: sf=-7
+		/// #f小调: 从#f音开始构成小调关系，则为：f#[全]g#[半]a[全]b[全]c#[半]d[全]e[全]f#，在五线谱上标注了3个升号，那么sf=3
+		/// #c小调: 从#c音开始构成小调关系  #C[全]#D[半]E[全]#F[全]#G[半]A[全]B[全]#C ，在五线谱上标注了4个升号，那么sf=4
+		/// #g小调: 从#g音开始构成小调关系  #G[全]#A[半]B[全]#C[全]#D[半]E[全]#F[全]#G ，在五线谱上标注了5个升号，那么sf=5
+		/// #d小调: 从#d音开始构成小调关系  #D[全]#E[半]#F[全]#G[全]#A[半]B[全]#C[全]#D ，在五线谱上标注了6个升号，那么sf=6
+		/// #a小调: 从#a音开始构成小调关系  #A[全]#B[半]#C[全]#D[全]#E[半]#F[全]#G[全]#A ，在五线谱上标注了7个升号，那么sf=7
+		/// d小调: 从d音开始构成小调关系, 则为:   D[全]E[半]F[全]G[全]A[半]Bb[全]C[全]D  产生 1个降号,sf=-1
+		/// g小调: 从g音开始构成小调关系, 则为:  G[全]A[半]Bb[全]C[全]D[半]bE[全]F[全]G  产生 2个降号,sf=-2
+		/// c小调: 从c音开始构成小调关系, 则为:  C[全]D[半]bE[全]F[全]G[半]bA[全]bB[全]C  产生 3个降号,sf = -3
+		/// f小调: 从f音开始构成小调关系，则为：F[全]G[半]bA[全]bB[全]C[半]bD[全]bE[全]F， 产生 4个降号,sf = -4
+		/// bb小调: 从bB音开始构成小调关系，则为：bB[全]c[半]bD[全]bE[全]F[半]bG[全]bA[全]bB， 产生 5个降号,sf = -5
+		/// be小调: 从bE音开始构成小调关系，则为：bE[全]F[半]bG[全]bA[全]bB[半]bC[全]bD[全]bE， 产生 6个降号,sf = -6
+		/// ba小调: 从bA音开始构成大调关系，则为：bA[全]bB[半]bC[全]bD[全]bE[半]bF[全]bG[全]bA sf=-7
 		/// 
 		/// 
 		/// sf = -7: 7 flats 7个降号
@@ -410,12 +375,10 @@ namespace tau
 		/// </summary>
 		int sf = 0;
 
-		/// <summary>
-		/// mi指出曲调是大调还是小调。大调mi = 00，小调mi = 01。
-		/// 大调小调
-		/// 0:major (大调)
-		/// 1:minor(小调)
-		/// </summary>
+		// mi指出曲调是大调还是小调。大调mi = 00，小调mi = 01。
+		// 大调小调
+		// 0:major (大调)
+		// 1:minor(小调)
 		int mi = 0;
 
 		KeySignatureEvent()
@@ -428,10 +391,7 @@ namespace tau
 			return (sf < 0 ? 7 - sf : sf);
 		}
 
-		/// <summary>
-		/// 获取调号名称
-		/// </summary>
-		/// <returns></returns>
+		// 获取调号名称
 		string GetName()
 		{
 			int n = GetIdx();
@@ -456,29 +416,19 @@ namespace tau
 	class SmpteEvent :public MidiEvent
 	{
 	public:
-		/// <summary>
-		/// 时
-		/// </summary>
+		// 时
 		int hr = 0;
 
-		/// <summary>
-		/// 分
-		/// </summary>
+		// 分
 		int mn = 0;
 
-		/// <summary>
-		/// 秒
-		/// </summary>
+		// 秒
 		int sec = 0;
 
-		/// <summary>
-		/// 帧
-		/// </summary>
+		// 帧
 		int fr = 0;
 
-		/// <summary>
-		/// 复帧
-		/// </summary>
+		// 复帧
 		int ff = 8;
 
 		SmpteEvent()

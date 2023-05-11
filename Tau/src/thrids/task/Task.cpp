@@ -38,6 +38,7 @@ namespace task
 		delay = 0;
 		processCallBack = nullptr;
 		releaseCallBack = nullptr;
+		releaseDataCallBack = nullptr;
 		cmpCallBack = nullptr;
 		msg = TaskMsg::TMSG_DATA;
 		data = nullptr;
@@ -46,6 +47,12 @@ namespace task
 			exData[i] = nullptr;
 
 		isRemove = false;
+	}
+
+	void Task::Kill(Task* task)
+	{
+		if (task->releaseDataCallBack)
+			task->releaseDataCallBack(task);	
 	}
 
 	void Task::Release(Task* task)

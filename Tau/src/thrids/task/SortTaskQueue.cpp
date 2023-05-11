@@ -80,23 +80,13 @@ namespace task
 			}
 
 			next = timerTaskList.Remove(node);
-			if (timeOutList.Size() == 1)
-			{
-				LinkedListNode<Task*>* nd1 = timeOutList.GetHeadNode();
-				LinkedListNode<Task*>* nd2 = timeOutList.GetHeadNode()->next;
-				if (nd1 == nd2)
-				{
-					int b;
-					b = 3;
-				}
-
-			}
 			AddToTimeOutList(node);
 			node = next;
 		}
 
 		//
 		int ret;
+		Task* task;
 		while (!timeOutList.Empty()) {
 
 			node = timeOutList.GetHeadNode();
@@ -107,11 +97,13 @@ namespace task
 					continue;
 				}
 
-				ret = ReadTaskCallback(taskProcesser, node->elem);
+				task = node->elem;
 				next = timeOutList.Remove(node);
+				node->Clear();
 				TaskObjectPool::GetInstance().NodePool().Push(node);
 				node = next;
-
+				//
+				ret = ReadTaskCallback(taskProcesser, task);
 				if (ret == 1)
 					return false;
 			}
@@ -132,6 +124,7 @@ namespace task
 		timerTaskList.Merge(tq.timerTaskList);
 		timerTaskList.Sort(Compare);
 		timeOutList.Merge(tq.timeOutList);
+		timeOutList.Sort(Compare);
 	}
 
 	void SortTaskQueue::Traversal()
@@ -156,6 +149,7 @@ namespace task
 		for (; node != nullptr; node = next) {
 			ReleaseCallback(taskProcesser, node->elem);
 			next = node->next;
+			node->Clear();
 			TaskObjectPool::GetInstance().NodePool().Push(node);
 		}
 		timeOutList.Clear();
@@ -165,6 +159,7 @@ namespace task
 		for (; node != nullptr; node = next) {
 			ReleaseCallback(taskProcesser, node->elem);
 			next = node->next;
+			node->Clear();
 			TaskObjectPool::GetInstance().NodePool().Push(node);
 		}
 		timerTaskList.Clear();
@@ -198,6 +193,7 @@ namespace task
 			if (node->elem == task)
 			{
 				timerTaskList.Remove(node);
+				node->Clear();
 				TaskObjectPool::GetInstance().NodePool().Push(node);
 				return true;
 			}
@@ -208,6 +204,7 @@ namespace task
 			if (node->elem == task)
 			{
 				timeOutList.Remove(node);
+				node->Clear();
 				TaskObjectPool::GetInstance().NodePool().Push(node);
 				return true;
 			}

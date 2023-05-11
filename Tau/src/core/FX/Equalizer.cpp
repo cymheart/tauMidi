@@ -3,8 +3,7 @@
 
 namespace tauFX
 {
-	Equalizer::Equalizer(Synther* synther)
-		:TauEffect(synther)
+	Equalizer::Equalizer()
 	{
 		eq = new dsignal::GraphEqualizer();
 	}
@@ -14,11 +13,6 @@ namespace tauFX
 		DEL(eq);
 	}
 
-	void Equalizer::SetSynther(Synther* synther)
-	{
-		this->synther = synther;
-		eq->SetSampleRate(synther->GetSampleProcessRate());
-	}
 
 	vector<dsignal::Filter*> Equalizer::GetFilters()
 	{
@@ -36,6 +30,23 @@ namespace tauFX
 		{
 			leftChannelSamples[i] = (float)eq->Filtering(leftChannelSamples[i]);
 			rightChannelSamples[i] = (float)eq->Filtering(rightChannelSamples[i]);
+		}
+	}
+
+	void Equalizer::EffectProcess(float* synthStream, int numChannels, int channelSampleCount)
+	{
+		if (numChannels == 2) {
+			for (int i = 0; i < channelSampleCount * numChannels; i += 2)
+			{
+				synthStream[i] = (float)eq->Filtering(synthStream[i]);
+				synthStream[i + 1] = (float)eq->Filtering(synthStream[i + 1]);
+			}
+		}
+		else {
+			for (int i = 0; i < channelSampleCount; i++)
+			{
+				synthStream[i] = (float)eq->Filtering(synthStream[i]);
+			}
 		}
 	}
 }

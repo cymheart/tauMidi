@@ -112,7 +112,12 @@ namespace tau
 	private:
 
 		void ComputeControllerHighResValue(int type);
-		float MapValueToSys(MidiControllerType type, float value, bool isHighResValue);
+
+		float MapValueToSys(MidiControllerType type, float value, bool isHighResValue)
+		{
+			return isHighResValue ? value / 16384.0f : value / 127.0f;
+		}
+
 
 		//增加使用的控制器类型
 		void AddUsedControllerType(MidiControllerType type);
@@ -137,6 +142,7 @@ namespace tau
 		int programNum = 0;
 
 		//
+		bool ccUsed[128] = { false };
 		int ccValue[128] = { 0 };
 		float ccCombValue[128] = { 0 };
 		float ccComputedValue[128] = { 0 };

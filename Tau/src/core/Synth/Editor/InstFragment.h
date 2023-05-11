@@ -21,9 +21,19 @@ namespace tau
 			startTick = tick;
 		}
 
+		void SetEndTick(uint32_t tick)
+		{
+			endTick = tick;
+		}
+
 		int GetStartTick()
 		{
 			return (int)startTick;
+		}
+
+		int GetEndTick()
+		{
+			return (int)endTick;
 		}
 
 		double GetStartSec()
@@ -65,6 +75,7 @@ namespace tau
 	private:
 		string name;
 		uint32_t startTick = 0;
+		uint32_t endTick = 0;
 		double startSec = 0;
 		double endSec = 0;
 
@@ -79,6 +90,7 @@ namespace tau
 
 		friend class Track;
 		friend class MidiEditor;
+		friend class MeiExporter;
 	};
 }
 

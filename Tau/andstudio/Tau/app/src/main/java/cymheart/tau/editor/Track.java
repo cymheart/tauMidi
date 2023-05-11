@@ -1,22 +1,17 @@
 package cymheart.tau.editor;
 
 
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
 
 import cymheart.tau.Channel;
 import cymheart.tau.midi.MidiEvent;
 import cymheart.tau.midi.NoteOnEvent;
-import cymheart.tau.utils.ScLinkedList;
-import cymheart.tau.utils.ScLinkedListNode;
+
 
 public class Track {
 
+    public Editor editor;
     public int idx = 0;
-
 
 
     //是否禁止播放
@@ -28,31 +23,7 @@ public class Track {
         return channel;
     }
 
-    protected JSONObject jsonTrack;
-    public void SetByInnerJson()
-    {
-        try {
-            playType = jsonTrack.getInt("PlayType");
-            noteColor = jsonTrack.getInt("NoteColor");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void SetInnerJson()
-    {
-        if(jsonTrack == null)
-            return;
-
-        try {
-            jsonTrack.put("PlayType", playType);
-            jsonTrack.put("NoteColor", noteColor);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    protected NoteOnEvent[] noteOnEvents;
+    public NoteOnEvent[] noteOnEvents;
     protected int noteOnEventsOffset = 0;
     protected int noteOnEventsFirst = 0;
 
@@ -65,18 +36,8 @@ public class Track {
 
     public void SetPlayType(int type)
     {
-        playType = type;
-
-        if(jsonTrack == null)
-            return;
-
-        try {
-            jsonTrack.put("PlayType", type);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        editor.SetTrackPlayType(idx, type);
     }
-
 
     protected int noteColor = MidiEvent.NoteColor_None;
     public int GetNoteColor() {
@@ -86,15 +47,6 @@ public class Track {
     public void SetNoteColor(int color)
     {
         noteColor = color;
-
-        if(jsonTrack == null)
-            return;
-
-        try {
-            jsonTrack.put("NoteColor", color);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 
     public void Clear()

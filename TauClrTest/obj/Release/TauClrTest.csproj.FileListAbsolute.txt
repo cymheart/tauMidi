@@ -1,5 +1,5 @@
+G:\TauProjects\TauClrTest\obj\Release\TauClrTest.csproj.AssemblyReference.cache
 G:\TauProjects\TauClrTest\obj\Release\TauClrTest.Form1.resources
 G:\TauProjects\TauClrTest\obj\Release\TauClrTest.Properties.Resources.resources
 G:\TauProjects\TauClrTest\obj\Release\TauClrTest.csproj.GenerateResource.cache
 G:\TauProjects\TauClrTest\obj\Release\TauClrTest.csproj.CoreCompileInputs.cache
-G:\TauProjects\TauClrTest\obj\Release\TauClrTest.csprojAssemblyReference.cache

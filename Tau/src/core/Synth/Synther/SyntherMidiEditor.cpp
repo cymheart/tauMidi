@@ -1,7 +1,7 @@
 ﻿#include"Synther.h"
 #include"Synth/VirInstrument.h"
 #include"Synth/Editor/MidiEditor.h"
-#include"Synth/RegionSounderThread.h"
+#include"Synth/ZoneSounderThread.h"
 #include"Synth/Channel.h"
 #include"Synth/Preset.h"
 #include"Synth/SyntherEvent.h"
@@ -69,7 +69,6 @@ namespace tau
 			//当停止或移除播放midi时，当前播放midi所对应的乐器的发声会有一个渐渐减弱的时间
 			//在缓存状态下，需要直接关闭这些发音乐器和清空效果器，而直接使用缓存中的残留声音进行减弱处理
 			StopAllVirInstrument();
-			effects->Clear();
 			CacheStop();
 		}
 	}
@@ -83,7 +82,6 @@ namespace tau
 			//当停止或移除播放midi时，当前播放midi所对应的乐器的发声会有一个渐渐减弱的时间
 			//在缓存状态下，需要直接关闭这些发音乐器和清空效果器，而直接使用缓存中的残留声音进行减弱处理
 			DelAllVirInstrument();
-			effects->Clear();
 			CacheStop();
 		}
 	}
@@ -99,12 +97,6 @@ namespace tau
 	{
 		midiEditor->SetPlayType(playType);
 	}
-
-	void Synther::GetCurTimeLateNeedWaitKeySignalNote(int note, float lateSec)
-	{
-		midiEditor->GetCurTimeLateNeedWaitKeySignalNote(note, lateSec);
-	}
-
 
 	void Synther::EnterPlayMode(EditorPlayMode playMode)
 	{
@@ -320,6 +312,9 @@ namespace tau
 	void Synther::ComputeEndSec()
 	{
 		midiEditor->ComputeEndSec();
+		midiEditor->ComputeEndTick();
 	}
+
+
 
 }

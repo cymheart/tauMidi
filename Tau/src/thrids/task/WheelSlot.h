@@ -28,7 +28,7 @@ namespace task
 		/**获取槽数量*/
 		inline int GetSlotCount()
 		{
-			return slots.size();
+			return (int)slots.size();
 		}
 
 		/**清空数据*/

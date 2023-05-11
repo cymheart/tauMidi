@@ -1,33 +1,27 @@
 ﻿#include"Preset.h"
-#include"Region.h"
+#include"Zone.h"
 
 namespace tau
 {
 	Preset::Preset()
 	{
-		globalRegion = new Region(RegionType::Preset);
-		presetRegionLinkInfoList = new vector<InstLinkToPresetRegionInfo>;
+		globalZone = new Zone(ZoneType::Preset);
 	}
 
 	Preset::~Preset()
 	{
-		DEL(globalRegion);
-		DEL(presetRegionLinkInfoList);
+		DEL(globalZone);
+		presetZoneLinkInfos.clear();
 	}
 
-	vector<InstLinkToPresetRegionInfo>* Preset::GetPresetRegionLinkInfoList()
+	// 连接一个乐器到一个presetZone
+	Zone* Preset::LinkInstrument(Instrument* inst)
 	{
-		return presetRegionLinkInfoList;
-	}
-
-	// 连接一个乐器到一个presetRegion
-	Region* Preset::LinkInstrument(Instrument* inst)
-	{
-		Region* presetRegion = new Region(RegionType::Preset);
-		InstLinkToPresetRegionInfo linkInfo;
-		linkInfo.region = presetRegion;
+		Zone* presetZone = new Zone(ZoneType::Preset);
+		InstLinkToPresetZoneInfo linkInfo;
+		linkInfo.Zone = presetZone;
 		linkInfo.linkInst = inst;
-		presetRegionLinkInfoList->push_back(linkInfo);
-		return presetRegion;
+		presetZoneLinkInfos.push_back(linkInfo);
+		return presetZone;
 	}
 }

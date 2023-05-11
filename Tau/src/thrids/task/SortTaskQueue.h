@@ -36,7 +36,7 @@ namespace task
 		LinkedList<Task*> timeOutList;
 		LinkedList<Task*> timerTaskList;
 		int64_t waitTimeMS = -1;
-		int* blockFilterNumbers;
+		int* blockFilterNumbers = nullptr;
 		int blockFilterCount = 0;
 	};
 

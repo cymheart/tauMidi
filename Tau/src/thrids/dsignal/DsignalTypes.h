@@ -1,41 +1,41 @@
-#ifndef _DsignalTypes_h_
+ï»¿#ifndef _DsignalTypes_h_
 #define _DsignalTypes_h_
 
 namespace dsignal
 {
 
 
-	//Freqz²ÉÑùÇøÓòĞÅÏ¢
+	//Freqzé‡‡æ ·åŒºåŸŸä¿¡æ¯
 	struct FreqzSampleRegionInfo
 	{
-		//µÍÆµÀàĞÍ²ÉÑù×ÜÊı
+		//ä½é¢‘ç±»å‹é‡‡æ ·æ€»æ•°
 		int lowFreqTypeSampleCount = 0;
-		//µÍÆµ²ÉÑùÆğÊ¼±êºÅ
+		//ä½é¢‘é‡‡æ ·èµ·å§‹æ ‡å·
 		int lowFreqStartSampleIdx = 0;
-		//µÍÆµÊµ¼Ê²ÉÑùÊıÁ¿
+		//ä½é¢‘å®é™…é‡‡æ ·æ•°é‡
 		int lowFreqSampleCount = 0;
-		//µÍÆµÆğÊ¼Î»ÖÃÆµÂÊ
+		//ä½é¢‘èµ·å§‹ä½ç½®é¢‘ç‡
 		float lowFreqStartHz = 0;
-		//µÍÆµ½áÊøÎ»ÖÃÆµÂÊ
+		//ä½é¢‘ç»“æŸä½ç½®é¢‘ç‡
 		float lowFreqEndHz = 0;
-		//µÍÆµ²½½øÖµ
+		//ä½é¢‘æ­¥è¿›å€¼
 		float perLowFreqHz = 0;
 
 		//
-		//¸ßÆµÀàĞÍ²ÉÑù×ÜÊı
+		//é«˜é¢‘ç±»å‹é‡‡æ ·æ€»æ•°
 		int highFreqTypeSampleCount = 0;
-		//¸ßÆµ²ÉÑùÆğÊ¼±êºÅ
+		//é«˜é¢‘é‡‡æ ·èµ·å§‹æ ‡å·
 		int highFreqStartSampleIdx = 0;
-		//¸ßÆµÊµ¼Ê²ÉÑùÊıÁ¿
+		//é«˜é¢‘å®é™…é‡‡æ ·æ•°é‡
 		int highFreqSampleCount = 0;
-		//¸ßÆµÆğÊ¼Î»ÖÃÆµÂÊ
+		//é«˜é¢‘èµ·å§‹ä½ç½®é¢‘ç‡
 		float highFreqStartHz = 0;
-		//¸ßÆµ½áÊøÎ»ÖÃÆµÂÊ
+		//é«˜é¢‘ç»“æŸä½ç½®é¢‘ç‡
 		float highFreqEndHz = 0;
-		//¸ßÆµ²½½øÖµ
+		//é«˜é¢‘æ­¥è¿›å€¼
 		float perHighFreqHz = 0;
 
-		//×ª»»±êºÅµ½ÆµÂÊµãÎ»
+		//è½¬æ¢æ ‡å·åˆ°é¢‘ç‡ç‚¹ä½
 		float TransIdxToFreq(int idx)
 		{
 			float freq;

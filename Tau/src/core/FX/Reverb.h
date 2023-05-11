@@ -9,11 +9,8 @@ namespace tauFX
 	class DLL_CLASS Reverb : public TauEffect
 	{
 	public:
-		Reverb(Synther* synther = nullptr);
+		Reverb();
 		virtual ~Reverb();
-
-		void Tick(float inputL, float inputR);
-		const stk::StkFrames& LastFrame();
 		void Clear();
 		float GetEffectMix();
 
@@ -29,20 +26,11 @@ namespace tauFX
 		//! Set the effect mix [0 = mostly dry, 1 = mostly wet].
 		void SetEffectMix(float mix);
 
-		void EffectProcess(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount);
-
-	public:
-		void SetRoomSizeTask(float value);
-		void SetWidthTask(float value);
-		void SetDampingTask(float value);
-		void SetEffectMixTask(float value);
-
 	private:
-		static void _SetRoomSizeTask(Task* task);
-		static void _SetWidthTask(Task* task);
-		static void _SetDampingTask(Task* task);
-		static void _SetEffectMixTask(Task* task);
-
+		void EffectProcess(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount);
+		void EffectProcess(float* synthStream, int numChannels, int channelSampleCount);
+		void Tick(float inputL, float inputR);
+		const stk::StkFrames& LastFrame();
 
 	private:
 		stk::FreeVerb* freeVerb;

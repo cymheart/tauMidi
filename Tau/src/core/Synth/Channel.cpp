@@ -65,7 +65,7 @@ namespace tau
 	{
 		noteOnKeyNum = keyNum;
 		noteOnKeyVelocity = velocity;
-		AddUsedPresetType(ModInputPreset::NoteOnKey);
+		AddUsedPresetType(ModInputPreset::NoteOnKeyNumber);
 		AddUsedPresetType(ModInputPreset::NoteOnVelocity);
 	}
 
@@ -76,6 +76,7 @@ namespace tau
 		int itype = (int)type;
 		int imsbType = itype;
 
+		ccUsed[itype] = true;
 		ccValue[itype] = value;
 
 		//如果接收道一个0~31的MSB值,那对应的32~63的LSB值被重置为0
@@ -85,15 +86,20 @@ namespace tau
 		if (itype >= 0 && itype <= 63)
 		{
 			imsbType = itype <= 31 ? itype : itype - 32;
-			ComputeControllerHighResValue(imsbType);
-			AddUsedControllerType((MidiControllerType)imsbType);
+			if (ccUsed[imsbType] && ccUsed[imsbType + 32]) {
+				ComputeControllerHighResValue(imsbType);
+				AddUsedControllerType((MidiControllerType)imsbType);
+			}
+			else if (itype <= 31) {
+				ccComputedValue[itype] = MapValueToSys(type, (float)value, false);
+				AddUsedControllerType(type);
+			}
 		}
 		else if (itype <= 127)
 		{
 			ccComputedValue[itype] = MapValueToSys(type, (float)value, false);
 			AddUsedControllerType(type);
 		}
-
 
 		//
 		switch (type)
@@ -104,7 +110,7 @@ namespace tau
 				ccValue[(int)MidiControllerType::RPNLSB] == 0)
 			{
 				//半音+音分(转化为半音)
-				pitchBendRange = ccValue[imsbType] + ccValue[itype] * 0.01f;
+				pitchBendRange = round(ccValue[imsbType] + ccValue[itype] * 0.01f);
 			}
 			else if (ccValue[(int)MidiControllerType::RPNMSB] == 0 &&
 				ccValue[(int)MidiControllerType::RPNLSB] == 1)
@@ -129,8 +135,7 @@ namespace tau
 	//增加使用的控制器类型
 	void Channel::AddUsedControllerType(MidiControllerType type)
 	{
-		for (int i = 0; i < usedControllerTypeList.size(); i++)
-		{
+		for (int i = 0; i < usedControllerTypeList.size(); i++){
 			if (usedControllerTypeList[i] == type)
 				return;
 		}
@@ -141,8 +146,7 @@ namespace tau
 	//增加使用的预设类型
 	void Channel::AddUsedPresetType(ModInputPreset type)
 	{
-		for (int i = 0; i < usedPresetTypeList.size(); i++)
-		{
+		for (int i = 0; i < usedPresetTypeList.size(); i++){
 			if (usedPresetTypeList[i] == type)
 				return;
 		}
@@ -169,11 +173,11 @@ namespace tau
 	{
 		switch (presetType)
 		{
-		case tau::ModInputPreset::None:
+		case tau::ModInputPreset::NoController:
 			break;
 		case tau::ModInputPreset::NoteOnVelocity:
 			return noteOnKeyVelocity;
-		case tau::ModInputPreset::NoteOnKey:
+		case tau::ModInputPreset::NoteOnKeyNumber:
 			return (float)noteOnKeyNum;
 		case tau::ModInputPreset::PolyPressure:
 			return pressure;
@@ -183,10 +187,8 @@ namespace tau
 			return pitchBend;
 		case tau::ModInputPreset::PitchWheelSensivity:
 			break;
-
 		case tau::ModInputPreset::CoarseTune:
 			return coarseTune;
-
 		case tau::ModInputPreset::FineTune:
 			return fineTune;
 
@@ -194,7 +196,7 @@ namespace tau
 			break;
 		}
 
-		return 0;
+		return 1;
 	}
 
 	float Channel::GetControllerComputedValue(MidiControllerType type)
@@ -209,7 +211,7 @@ namespace tau
 		{
 			float val = ccComputedValue[(int)MidiControllerType::ChannelVolumeMSB] *
 				ccComputedValue[(int)MidiControllerType::ExpressionControllerMSB];
-			val = powf(val, 2.0f);
+			//val = powf(val, 2.0f);  
 			return val;
 		}
 
@@ -232,20 +234,14 @@ namespace tau
 
 	void Channel::ComputeControllerHighResValue(int msbType)
 	{
-		int lsbType = msbType + 32;
 		ccCombValue[msbType] = (float)(ccValue[msbType] << 7 | ccValue[msbType + 32]);
 		ccComputedValue[msbType] = MapValueToSys((MidiControllerType)msbType, ccCombValue[msbType], true);
 	}
 
-	float Channel::MapValueToSys(MidiControllerType type, float value, bool isHighResValue)
-	{
-		if (isHighResValue) { return value / 16384.0f; }
-		return value / 127.0f;
-	}
-
-
 	void Channel::Clear()
 	{
+
+		memset(ccUsed, 0, sizeof(bool) * 128);
 		memset(ccValue, 0, sizeof(float) * 128);
 		memset(ccCombValue, 0, sizeof(float) * 128);
 		memset(ccComputedValue, 0, sizeof(float) * 128);

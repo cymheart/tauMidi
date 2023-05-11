@@ -9,7 +9,7 @@
 #include"Midi/MidiFile.h"
 #include"Synth/VirInstrument.h"
 #include"Synth/Preset.h"
-#include"Synth/Editor/Editor.h"
+#include"Editor.h"
 #include"MeasureInfo.h"
 
 
@@ -151,7 +151,8 @@ namespace tau
 			for (; node; node = node->next)
 			{
 				ev = node->elem;
-				int evStartTick = ev->startTick + instFrag->startTick;
+				int evStartTick = instFrag->startTick + ev->startTick;
+				int evEndTick = instFrag->startTick + ev->endTick;
 				tempo = midiMarkerList->GetTempo(evStartTick);
 				ev->endSec = ev->startSec = (float)tempo->GetTickSec(evStartTick);
 
@@ -163,6 +164,14 @@ namespace tau
 
 				if (ev->endSec > track->endSec)
 					track->endSec = ev->endSec;
+
+				//
+				if (evEndTick > instFrag->endTick)
+					instFrag->endTick = evEndTick;
+
+				if (evEndTick > track->endTick)
+					track->endTick = evEndTick;
+
 			}
 
 			if (instFrag->startSec < curtPlaySec)
@@ -197,127 +206,16 @@ namespace tau
 		}
 	}
 
-
-	/// <summary>
-	/// 获取当前时间之后需要等待按键信号的notes
-	/// </summary>
-	/// <param name="lateSec">当前时间之后的秒数</param>
-	void MidiEditor::GetCurTimeLateNeedWaitKeySignalNote(int note, double lateSec)
+	//计算结束tick点
+	void MidiEditor::ComputeEndTick()
 	{
-		noteOffLateNoteInfo.note = -1;
-		lateNoteInfo.note = -1;
-
-		if (simpleModeTrackNotes.Empty()) {
-			for (int i = 0; i < tracks.size(); i++)
-				GetNeedWaitKeySignalNote(tracks[i], note, lateSec);
-		}
-		else {
-			GetNeedWaitKeySignalNoteFromSimpleTrack(note, lateSec);
-		}
-
-	}
-
-	void MidiEditor::GetNeedWaitKeySignalNote(Track* track, int note, double lateSec)
-	{
-		LinkedList<MidiEvent*>* eventList;
-		InstFragment* instFrag;
-		MidiEvent* ev;
-		double sec;
-		double minSec = lateSec;
-		auto& instFragmentBranchs = track->instFragmentBranchs;
-		for (int j = 0; j < instFragmentBranchs.size(); j++)
+		endTick = 0;
+		for (int i = 0; i < tracks.size(); i++)
 		{
-			list<InstFragment*>::iterator frag_it = instFragmentBranchs[j]->begin();
-			list<InstFragment*>::iterator frag_end = instFragmentBranchs[j]->end();
-			for (; frag_it != frag_end; frag_it++)
-			{
-				instFrag = *frag_it;
-				eventList = &(instFrag->midiEvents);
-
-				LinkedListNode<MidiEvent*>* node = instFrag->eventOffsetNode;
-				for (; node; node = node->next)
-				{
-					ev = node->elem;
-
-					if (ev->type == MidiEventType::NoteOff && ((NoteOffEvent*)ev)->note == note)
-					{
-						NoteOffEvent* noteOffEv = (NoteOffEvent*)ev;
-						if (noteOffEv->startSec > curtPlaySec &&
-							noteOffEv->noteOnEvent->startSec < curtPlaySec &&
-							IsNeedWaitKeySignal(ev, track))
-						{
-							noteOffLateNoteInfo.sec = ev->startSec;
-							noteOffLateNoteInfo.note = note;
-							noteOffLateNoteInfo.track = track;
-							noteOffLateNoteInfo.vel = ((NoteOffEvent*)ev)->velocity;
-							continue;
-						}
-					}
-
-
-					sec = ev->startSec - curtPlaySec;
-					if (sec > lateSec)
-						break;
-
-					if (ev->type == MidiEventType::NoteOn && ((NoteOnEvent*)ev)->note == note)
-					{
-						if (sec <= minSec && IsNeedWaitKeySignal(ev, track))
-						{
-							minSec = sec;
-							lateNoteInfo.sec = ev->startSec;
-							lateNoteInfo.note = note;
-							lateNoteInfo.track = track;
-							lateNoteInfo.vel = ((NoteOnEvent*)ev)->velocity;
-						}
-					}
-				}
-			}
+			if (tracks[i]->endTick > endTick)
+				endTick = tracks[i]->endTick;
 		}
 	}
-
-	void MidiEditor::GetNeedWaitKeySignalNoteFromSimpleTrack(int note, double lateSec)
-	{
-		MidiEvent* ev;
-		double sec;
-		double minSec = lateSec;
-
-		auto node = simpleModeTrackNotes.GetHeadNode();
-		for (; node; node = node->next)
-		{
-			ev = node->elem;
-
-			if (ev->type == MidiEventType::NoteOff && ((NoteOffEvent*)ev)->note == note)
-			{
-				NoteOffEvent* noteOffEv = (NoteOffEvent*)ev;
-				if (noteOffEv->startSec > curtPlaySec &&
-					noteOffEv->noteOnEvent->startSec < curtPlaySec)
-				{
-					noteOffLateNoteInfo.sec = ev->startSec;
-					noteOffLateNoteInfo.note = note;
-					noteOffLateNoteInfo.track = simpleModeTrack;
-					noteOffLateNoteInfo.vel = ((NoteOffEvent*)ev)->velocity;
-					continue;
-				}
-			}
-
-			sec = ev->startSec - curtPlaySec;
-			if (sec > lateSec)
-				break;
-
-			if (ev->type == MidiEventType::NoteOn && ((NoteOnEvent*)ev)->note == note)
-			{
-				if (sec <= minSec)
-				{
-					minSec = sec;
-					lateNoteInfo.sec = ev->startSec;
-					lateNoteInfo.note = note;
-					lateNoteInfo.track = simpleModeTrack;
-					lateNoteInfo.vel = ((NoteOnEvent*)ev)->velocity;
-				}
-			}
-		}
-	}
-
 
 	//开始播放
 	void MidiEditor::Play()
@@ -542,8 +440,7 @@ namespace tau
 			return;
 
 		Channel* channel = track->GetChannel();
-		VirInstrument* virInst = ((Synther*)midiSynther)->EnableVirInstrument(
-			channel, bankSelectMSB, bankSelectLSB, instrumentNum);
+		midiSynther->EnableVirInstrument(channel, bankSelectMSB, bankSelectLSB, instrumentNum);
 	}
 
 	//设置轨道乐器
@@ -591,16 +488,13 @@ namespace tau
 
 		ProcessCore(sec);
 
-
-
 		//检测播放是否结束
 		float measureEndSec = editor->measureInfo.GetMeasureEndSec(
 			editor->measureInfo.GetMeasureCount());
 
-		if (curtPlaySec > measureEndSec) {
+		if (curtPlaySec >= measureEndSec) {
 			printf("当前轨道midi时间处理结束! \n");
 			Pause();
-			SetState(EditorState::ENDPAUSE);
 		}
 	}
 
@@ -612,15 +506,6 @@ namespace tau
 
 		for (int i = 0; i < tracks.size(); i++)
 		{
-			//重新处理当前时间点在事件处理时间中间时，可以重新启用此时间
-			vector<MidiEvent*>& evs = tracks[i]->reProcessMidiEvents;
-			if (!evs.empty()) {
-				for (int j = 0; j < evs.size(); j++)
-					ProcessEvent(evs[j], tracks[i], isDirectGoto);
-				evs.clear();
-			}
-
-			//
 			ProcessTrack(tracks[i], isDirectGoto);
 		}
 
@@ -637,15 +522,23 @@ namespace tau
 	/// <param name="isDirectGoto">是否直接指定播放位置</param>
 	void MidiEditor::ProcessTrack(Track* track, bool isDirectGoto)
 	{
+		//重新处理当前时间点在事件处理时间中间时，可以重新启用此时间
+		vector<MidiEvent*>& evs = track->reProcessMidiEvents;
+		if (!evs.empty()) {
+			for (int i = 0; i < evs.size(); i++)
+				ProcessEvent(evs[i], track, isDirectGoto);
+			evs.clear();
+		}
+
+		//
 		LinkedList<MidiEvent*>* eventList;
 		InstFragment* instFrag;
 		MidiEvent* ev;
-
 		auto& instFragmentBranchs = track->instFragmentBranchs;
-		for (int j = 0; j < instFragmentBranchs.size(); j++)
+		for (int i = 0; i < instFragmentBranchs.size(); i++)
 		{
-			list<InstFragment*>::iterator frag_it = instFragmentBranchs[j]->begin();
-			list<InstFragment*>::iterator frag_end = instFragmentBranchs[j]->end();
+			list<InstFragment*>::iterator frag_it = instFragmentBranchs[i]->begin();
+			list<InstFragment*>::iterator frag_end = instFragmentBranchs[i]->end();
 			for (; frag_it != frag_end; frag_it++)
 			{
 				instFrag = *frag_it;
@@ -678,7 +571,7 @@ namespace tau
 						break;
 
 
-
+					//当note不在发音范围内时(noteSoundStartSec, noteSoundEndSec)，将不处理这个note ev
 					if (editor->noteSoundStartSec >= 0 &&
 						editor->noteSoundEndSec >= 0 &&
 						(ev->startSec < editor->noteSoundStartSec ||
@@ -699,7 +592,7 @@ namespace tau
 
 		if (curtPlaySec >= endSec)
 		{
-			//轨道播发结束后，清除相关设置
+			//轨道播放结束后，清除相关设置
 			Channel* channel = track->GetChannel();
 			if (channel != nullptr) {
 				channel->SetControllerValue(MidiControllerType::SustainPedalOnOff, 0);
@@ -730,6 +623,9 @@ namespace tau
 
 			if (!IsNeedWaitKeySignal(midEv, track))
 			{
+				if (!editor->isOpenAccompany)
+					break;
+
 				midiSynther->OnKey(channel, noteOnEv->note,
 					(float)noteOnEv->velocity, noteOnEv->endTick - noteOnEv->startTick + 1);
 			}
@@ -750,6 +646,9 @@ namespace tau
 
 			if (!IsNeedWaitKeySignal(midEv, track))
 			{
+				if (!editor->isOpenAccompany)
+					break;
+
 				midiSynther->OffKey(channel, noteOffEv->note, (float)noteOffEv->velocity);
 			}
 			else {
@@ -778,7 +677,6 @@ namespace tau
 		case MidiEventType::PitchBend:
 		{
 			PitchBendEvent* ev = (PitchBendEvent*)midEv;
-
 			for (int i = 0; i < vinsts.size(); i++)
 				vinsts[i]->SetPitchBend(ev->value);
 		}
@@ -787,13 +685,8 @@ namespace tau
 		case MidiEventType::Controller:
 		{
 			ControllerEvent* ev = (ControllerEvent*)midEv;
-
-			if (isDirectGoto || track->isDisablePlay)
-				channel->SetControllerValue(ev->ctrlType, ev->value);
-			else {
-				for (int i = 0; i < vinsts.size(); i++)
-					vinsts[i]->SetController(ev->ctrlType, ev->value);
-			}
+			for (int i = 0; i < vinsts.size(); i++)
+				vinsts[i]->SetController(ev->ctrlType, ev->value);
 		}
 		break;
 
@@ -909,5 +802,8 @@ namespace tau
 
 		return false;
 	}
+
+
+
 
 }

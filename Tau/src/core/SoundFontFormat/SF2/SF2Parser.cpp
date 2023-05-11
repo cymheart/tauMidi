@@ -3,26 +3,55 @@
 #include"Synth/Sample.h"
 #include"Synth/Instrument.h"
 #include"Synth/Preset.h"
-#include"Synth/Region.h"
+#include"Synth/Zone.h"
 #include"Synth/Generator.h"
 #include"Synth/UnitTransform.h"
 #include"Synth/Modulator.h"
 
 namespace tau
 {
+	SF2Parser::~SF2Parser() {
+		if (sf2 != nullptr){
+			delete sf2;
+			sf2 = nullptr;
+		}
+
+		if (modulators != nullptr) {
+			free(modulators);
+			modulators = nullptr;
+		}
+		modulatorBufSize = 0;
+		modulatorCount = 0;
+	}
+
 	void SF2Parser::Parse(string filePath)
 	{
 		DEL(sf2);
 		sf2 = new SF2(filePath);
 
-		if (sf2->size == 0) {
+		if (sf2 == nullptr || sf2->size == 0) {
 			DEL(sf2);
+			cout << filePath << "文件解析失败!" << endl;
 			return;
 		}
 
+		ParseCore();
+		DEL(sf2);
+	}
+
+	void SF2Parser::ParseCore()
+	{
 		ParseSampleList();
 		ParseInstrumentList();
 		ParsePresetList();
+
+		//
+		if (modulators != nullptr) {
+			free(modulators);
+			modulators = nullptr;
+		}
+		modulatorBufSize = 0;
+		modulatorCount = 0;
 	}
 
 	//解析样本列表    
@@ -54,12 +83,11 @@ namespace tau
 
 			uint32_t start = samples[i]->Start;
 			uint32_t end = samples[i]->End;
+			size_t len = end - start + 1;
 			pcm = smpls + start;
-			if (sm24) { pcmSM24 = sm24 + i; }
+			if (sm24) { pcmSM24 = sm24 + start/2; }
 
-
-
-			Sample* oreSample = sf->AddSample(name, pcm, end - start + 1, pcmSM24);
+			Sample* oreSample = sf->AddSample(name, pcm, len, pcmSM24);
 			oreSample->startIdx = 0;
 			oreSample->endIdx = end - start;
 			oreSample->startloopIdx = samples[i]->LoopStart - start;
@@ -102,46 +130,34 @@ namespace tau
 	{
 		vector<SF2Instrument*>& insts = sf2->hydraChunk->instSubChunk->instruments;
 		string name;
-		Region* region;
+		Zone* zone;
 
 		vector<SF2ModulatorList*>& mods = sf2->hydraChunk->imodSubChunk->modulators;
-
-		if (modulators != nullptr)
-			delete[] modulators;
-
-		if (mods.size() > 0) {
-			modulators = new Modulator * [mods.size()];
-			modulatorCount = mods.size();
-		}
 
 		//
 		for (size_t i = 0; i < insts.size() - 1; i++)
 		{
 			name.assign((const char*)insts[i]->instrumentName, 20);
-			Instrument* oreInst = sf->AddInstrument(name);
-
-
+			Instrument* tauInst = sf->AddInstrument(name);
+			
+			//解析乐器的所有区域
 			for (size_t j = insts[i]->InstrumentBagIndex; j < insts[i + 1]->InstrumentBagIndex; j++)
 			{
-				region = ParseInstRegionGeneratorList((int)j, oreInst);
-				ParseInstRegionModulatorList(region, (int)j, oreInst);
+				zone = ParseInstZoneGeneratorList((int)j, tauInst);
+				ParseInstZoneModulatorList(zone, (int)j, tauInst);
 			}
-		}
 
-		if (modulators != nullptr) {
-			delete[] modulators;
-			modulators = nullptr;
 		}
 	}
 
 	//解析乐器区域的生成器列表
-	Region* SF2Parser::ParseInstRegionGeneratorList(int bagIdx, Instrument* oreInst)
+	Zone* SF2Parser::ParseInstZoneGeneratorList(int bagIdx, Instrument* tauInst)
 	{
 		//sf区域列表
 		vector<SF2Bag*>& bags = sf2->hydraChunk->ibagSubChunk->bags;
-		vector<SF2GeneratorList*>& gens = sf2->hydraChunk->igenSubChunk->generators;
+		vector<SF2GeneratorList*>& sf2Gens = sf2->hydraChunk->igenSubChunk->generators;
 		SampleList& sampleList = *sf->GetSampleList();
-		Region* region;
+		Zone* zone;
 
 		int genStart = bags[bagIdx]->GeneratorIndex;
 		int genEnd = bags[bagIdx + 1]->GeneratorIndex - 1;
@@ -149,27 +165,39 @@ namespace tau
 		if (genEnd < genStart)
 			return nullptr;
 
-		if (gens[genEnd]->Generator != SF2Generator::SampleID)
+		if (sf2Gens[genEnd]->Generator != SF2Generator::SampleID)
 		{
-			region = oreInst->GetGlobalRegion();
+			zone = tauInst->GetGlobalZone();
 		}
 		else
 		{
-			int sampleIdx = gens[genEnd]->GeneratorAmount.UAmount;
-			region = sf->SampleBindToInstrument(sampleList[sampleIdx], oreInst);
+			int sampleIdx = sf2Gens[genEnd]->GeneratorAmount.UAmount;
+			zone = sf->SampleBindToInstrument(sampleList[sampleIdx], tauInst);
 		}
 
-		if (region == nullptr)
+		if (zone == nullptr)
 			return nullptr;
 
-		SetGenList(*region->GetGenList(), gens, genStart, genEnd, RegionType::Instrument);
-		return region;
+
+		//设置生成器列表数据
+		GeneratorList& genList = zone->GetGens();
+		GeneratorAmount genAmount;
+		SF2GeneratorAmount sf2GenAmount;
+		for (int i = genStart; i <= genEnd; i++)
+		{
+			GeneratorType genType = (GeneratorType)sf2Gens[i]->Generator;
+			sf2GenAmount = sf2Gens[i]->GeneratorAmount;
+			genAmount.amount = sf2GenAmount.Amount;
+			genList.SetAmount(genType, genAmount);
+		}
+
+		return zone;
 	}
 
 	//解析乐器区域的调制器列表
-	void SF2Parser::ParseInstRegionModulatorList(Region* region, int bagIdx, Instrument* oreInst)
+	void SF2Parser::ParseInstZoneModulatorList(Zone* zone, int bagIdx, Instrument* tauInst)
 	{
-		if (region == nullptr || !isParseModulator)
+		if (zone == nullptr || !isParseModulator)
 			return;
 
 		vector<SF2Bag*>& bags = sf2->hydraChunk->ibagSubChunk->bags;
@@ -180,10 +208,29 @@ namespace tau
 		if (modEnd < modStart)
 			return;
 
+		//
+		int32_t curtModCount = modEnd - modStart + 1;
+		if (curtModCount == 0)
+			return;
+
+		if (modulatorBufSize < curtModCount) {
+			modulatorBufSize = curtModCount * 2;
+			modulators = (Modulator**)realloc(modulators, modulatorBufSize * sizeof(Modulator*));
+			if (modulators == nullptr){
+				modulatorBufSize = 0;
+				modulatorCount = 0;
+				throw "未分配modulators内存!";
+			}
+		}	
+		modulatorCount = 0;
+		
+
+		//
 		for (int i = modStart; i <= modEnd; i++)
-		{
-			CreateModulator(mods, i, region);
-		}
+			CreateModulator(mods, modStart, i, zone);
+
+		for (int i = modStart; i <= modEnd; i++)
+			ResetOutTargetModulator(mods, modStart, i);
 	}
 
 	// 解析预设列表
@@ -191,50 +238,34 @@ namespace tau
 	{
 		vector<SF2PresetHeader*>& presets = sf2->hydraChunk->phdrSubChunk->presets;
 		string name;
-		Region* region;
+		Zone* zone;
 
 		vector<SF2ModulatorList*>& mods = sf2->hydraChunk->pmodSubChunk->modulators;
-
-		if (modulators != nullptr)
-			delete[] modulators;
-
-		if (mods.size() > 0) {
-			modulators = new Modulator * [mods.size()];
-			modulatorCount = mods.size();
-		}
 
 		//
 		for (size_t i = 0; i < presets.size() - 1; i++)
 		{
 			name.assign((const char*)presets[i]->presetName, 20);
-			Preset* orePreset = sf->AddPreset(name, presets[i]->Bank, 0, presets[i]->Preset);
-
-			if (i + 1 >= presets.size())
-				break;
+			Preset* tauPreset = sf->AddPreset(name, presets[i]->Bank, 0, presets[i]->Preset);
 
 			for (size_t j = presets[i]->PresetBagIndex; j < presets[i + 1]->PresetBagIndex; j++)
 			{
-				region = ParsePresetRegionGeneratorList((int)j, orePreset);
-				ParsePresetRegionModulatorList(region, (int)j, orePreset);
+				zone = ParsePresetZoneGeneratorList((int)j, tauPreset);
+				ParsePresetZoneModulatorList(zone, (int)j, tauPreset);
 			}
-
 		}
 
-		if (modulators != nullptr) {
-			delete[] modulators;
-			modulators = nullptr;
-		}
 	}
 
 	//解析预设区域的生成器列表
-	Region* SF2Parser::ParsePresetRegionGeneratorList(int bagIdx, Preset* orePreset)
+	Zone* SF2Parser::ParsePresetZoneGeneratorList(int bagIdx, Preset* tauPreset)
 	{
 		//sf区域列表
 		vector<SF2Bag*>& bags = sf2->hydraChunk->pbagSubChunk->bags;
-		vector<SF2GeneratorList*>& gens = sf2->hydraChunk->pgenSubChunk->generators;
+		vector<SF2GeneratorList*>& sf2Gens = sf2->hydraChunk->pgenSubChunk->generators;
 		InstrumentList& instList = *sf->GetInstrumentList();
 
-		Region* region;
+		Zone* zone;
 
 		int genStart = bags[bagIdx]->GeneratorIndex;
 		int genEnd = bags[bagIdx + 1]->GeneratorIndex - 1;
@@ -242,27 +273,38 @@ namespace tau
 		if (genEnd < genStart)
 			return nullptr;
 
-		if (gens[genEnd]->Generator != SF2Generator::Instrument)
+		if (sf2Gens[genEnd]->Generator != SF2Generator::Instrument)
 		{
-			region = orePreset->GetGlobalRegion();
+			zone = tauPreset->GetGlobalZone();
 		}
 		else
 		{
-			int instIdx = gens[genEnd]->GeneratorAmount.UAmount;
-			region = sf->InstrumentBindToPreset(instList[instIdx], orePreset);
+			int instIdx = sf2Gens[genEnd]->GeneratorAmount.UAmount;
+			zone = sf->InstrumentBindToPreset(instList[instIdx], tauPreset);
 		}
 
-		if (region == nullptr)
+		if (zone == nullptr)
 			return nullptr;
 
-		SetGenList(*region->GetGenList(), gens, genStart, genEnd, RegionType::Preset);
-		return region;
+		//设置生成器列表数据
+		GeneratorList& genList = zone->GetGens();
+		GeneratorAmount genAmount;
+		SF2GeneratorAmount sf2GenAmount;
+		for (int i = genStart; i <= genEnd; i++)
+		{
+			GeneratorType genType = (GeneratorType)sf2Gens[i]->Generator;
+			sf2GenAmount = sf2Gens[i]->GeneratorAmount;
+			genAmount.amount = sf2GenAmount.Amount;
+			genList.SetAmount(genType, genAmount);
+		}
+
+		return zone;
 	}
 
 	//解析预设区域的调制器列表
-	void SF2Parser::ParsePresetRegionModulatorList(Region* region, int bagIdx, Preset* orePreset)
+	void SF2Parser::ParsePresetZoneModulatorList(Zone* zone, int bagIdx, Preset* orePreset)
 	{
-		if (region == nullptr || !isParseModulator)
+		if (zone == nullptr || !isParseModulator)
 			return;
 
 		vector<SF2Bag*>& bags = sf2->hydraChunk->pbagSubChunk->bags;
@@ -275,300 +317,140 @@ namespace tau
 		if (modEnd < modStart)
 			return;
 
-		for (int i = modStart; i <= modEnd; i++)
-		{
-			CreateModulator(mods, i, region);
-		}
-	}
+		//
+		int32_t curtModCount = modEnd - modStart + 1;
+		if (curtModCount == 0)
+			return;
 
-	//
-	void SF2Parser::SetGenList(GeneratorList& genList, vector<SF2GeneratorList*>& sf2Gens, int start, int end, RegionType regionType)
-	{
-
-		SF2GeneratorAmount genAmount;
-
-		for (int i = start; i <= end; i++)
-		{
-			genAmount = sf2Gens[i]->GeneratorAmount;
-			float val = (float)genAmount.Amount;
-
-			switch (sf2Gens[i]->Generator)
-			{
-			case SF2Generator::KeyRange:
-				genList.SetAmountRange(GeneratorType::KeyRange, genAmount.ranges.byLo, genAmount.ranges.byHi);
-				break;
-			case SF2Generator::VelRange:
-				genList.SetAmountRange(GeneratorType::VelRange, genAmount.ranges.byLo, genAmount.ranges.byHi);
-				break;
-
-			case SF2Generator::StartAddrsOffset: genList.SetAmount(GeneratorType::StartAddrsOffset, val); break;
-			case SF2Generator::EndAddrsOffset: genList.SetAmount(GeneratorType::EndAddrsOffset, val); break;
-			case SF2Generator::StartloopAddrsOffset: genList.SetAmount(GeneratorType::StartloopAddrsOffset, val); break;
-			case SF2Generator::EndloopAddrsOffset: genList.SetAmount(GeneratorType::EndloopAddrsOffset, val); break;
-			case SF2Generator::StartAddrsCoarseOffset: genList.SetAmount(GeneratorType::StartAddrsCoarseOffset, val); break;
-			case SF2Generator::ModLfoToPitch: genList.SetAmount(GeneratorType::ModLfoToPitch, val); break;
-			case SF2Generator::VibLfoToPitch: genList.SetAmount(GeneratorType::VibLfoToPitch, val); break;
-			case SF2Generator::ModEnvToPitch: genList.SetAmount(GeneratorType::ModEnvToPitch, val); break;
-
-			case SF2Generator::InitialFilterFc:
-
-				if (regionType == RegionType::Preset)
-					val = UnitTransform::TimecentsToSecsf(val);
-				else
-					val = UnitTransform::CentsToHertz(val);
-
-				genList.SetAmount(GeneratorType::InitialFilterFc, val);
-				break;
-
-			case SF2Generator::InitialFilterQ:
-				val = UnitTransform::CentibelsToDecibels(val);
-				genList.SetAmount(GeneratorType::InitialFilterQ, val);
-				break;
-
-
-			case SF2Generator::ModLfoToFilterFc: genList.SetAmount(GeneratorType::ModLfoToFilterFc, val);  break;
-			case SF2Generator::ModEnvToFilterFc: genList.SetAmount(GeneratorType::ModEnvToFilterFc, val);  break;
-			case SF2Generator::EndAddrsCoarseOffset: genList.SetAmount(GeneratorType::EndAddrsCoarseOffset, val);  break;
-
-			case SF2Generator::ModLfoToVolume:
-				val = UnitTransform::CentibelsToDecibels(val);
-				genList.SetAmount(GeneratorType::ModLfoToVolume, val);
-				break;
-
-			case SF2Generator::ChorusEffectsSend:
-				genList.SetAmount(GeneratorType::ChorusEffectsSend, val / 10.0f);
-				break;
-
-			case SF2Generator::ReverbEffectsSend:
-				genList.SetAmount(GeneratorType::ReverbEffectsSend, val / 10.0f);
-				break;
-
-			case SF2Generator::Pan: genList.SetAmount(GeneratorType::Pan, val / 10.0f);
-				break;
-
-			case SF2Generator::DelayModLFO:
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::DelayModLFO, val);
-				break;
-
-			case SF2Generator::FreqModLFO:
-				if (regionType == RegionType::Preset)
-					val = UnitTransform::TimecentsToSecsf(val);
-				else
-					val = UnitTransform::CentsToHertz(val);
-				genList.SetAmount(GeneratorType::FreqModLFO, val);
-				break;
-
-			case SF2Generator::DelayVibLFO:
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::DelayVibLFO, val);
-				break;
-
-			case SF2Generator::FreqVibLFO:
-				if (regionType == RegionType::Preset)
-					val = UnitTransform::TimecentsToSecsf(val);
-				else
-					val = UnitTransform::CentsToHertz(val);
-				genList.SetAmount(GeneratorType::FreqVibLFO, val);
-				break;
-
-			case SF2Generator::DelayModEnv:
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::DelayModEnv, val);
-				break;
-
-			case SF2Generator::AttackModEnv:
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::AttackModEnv, val);
-				break;
-
-			case SF2Generator::HoldModEnv:
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::HoldModEnv, val);
-				break;
-
-			case SF2Generator::DecayModEnv:
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::DecayModEnv, val);
-				break;
-
-			case SF2Generator::SustainModEnv:
-				genList.SetAmount(GeneratorType::SustainModEnv, 1 - val / 1000.0f);
-				break;
-
-			case SF2Generator::ReleaseModEnv:
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::ReleaseModEnv, val);
-				break;
-
-			case SF2Generator::KeynumToModEnvHold:
-				genList.SetAmount(GeneratorType::KeynumToModEnvHold, val / 100.0f);
-				break;
-
-			case SF2Generator::KeynumToModEnvDecay:
-				genList.SetAmount(GeneratorType::KeynumToModEnvDecay, val / 100.0f);
-				break;
-
-			case SF2Generator::DelayVolEnv:
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::DelayVolEnv, val);
-				break;
-
-			case SF2Generator::AttackVolEnv:
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::AttackVolEnv, val);
-				break;
-
-			case SF2Generator::HoldVolEnv:
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::HoldVolEnv, val);
-				break;
-
-			case SF2Generator::DecayVolEnv:
-
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::DecayVolEnv, val);
-				break;
-
-			case SF2Generator::SustainVolEnv:
-
-				val = UnitTransform::DecibelsToGain(-val / 10);
-				genList.SetAmount(GeneratorType::SustainVolEnv, val);
-				break;
-
-			case SF2Generator::ReleaseVolEnv:
-				val = UnitTransform::TimecentsToSecsf(val);
-				genList.SetAmount(GeneratorType::ReleaseVolEnv, val);
-				break;
-
-			case SF2Generator::KeynumToVolEnvHold:
-				genList.SetAmount(GeneratorType::KeynumToVolEnvHold, val / 100.0f);
-				break;
-
-			case SF2Generator::KeynumToVolEnvDecay:
-				genList.SetAmount(GeneratorType::KeynumToVolEnvDecay, val / 100.0f);
-				break;
-
-			case SF2Generator::StartloopAddrsCoarseOffset:  genList.SetAmount(GeneratorType::StartloopAddrsCoarseOffset, val); break;
-			case SF2Generator::Keynum: genList.SetAmount(GeneratorType::Keynum, val); break;
-			case SF2Generator::Velocity:  genList.SetAmount(GeneratorType::Velocity, val); break;
-
-			case SF2Generator::InitialAttenuation:
-				genList.SetAmount(GeneratorType::InitialAttenuation, -val * 0.1f); //设置实际衰减值为原来的0.25倍
-				break;
-
-			case SF2Generator::EndloopAddrsCoarseOffset:genList.SetAmount(GeneratorType::EndloopAddrsCoarseOffset, val); break;
-			case SF2Generator::CoarseTune: genList.SetAmount(GeneratorType::CoarseTune, val); break;
-			case SF2Generator::FineTune:  genList.SetAmount(GeneratorType::FineTune, val); break;
-			case SF2Generator::SampleModes:  genList.SetAmount(GeneratorType::SampleModes, val); break;
-			case SF2Generator::ScaleTuning:genList.SetAmount(GeneratorType::ScaleTuning, val); break;
-			case SF2Generator::ExclusiveClass: genList.SetAmount(GeneratorType::ExclusiveClass, val);  break;
-			case SF2Generator::OverridingRootKey: genList.SetAmount(GeneratorType::OverridingRootKey, val);  break;
-
+		if (modulatorBufSize < curtModCount) {
+			modulatorBufSize = curtModCount * 2;
+			modulators = (Modulator**)realloc(modulators, modulatorBufSize * sizeof(Modulator*));
+			if (modulators == nullptr) {
+				modulatorBufSize = 0;
+				modulatorCount = 0;
+				throw "未分配modulators内存!";
 			}
 		}
+		modulatorCount = 0;
+		//
+		for (int i = modStart; i <= modEnd; i++)
+			CreateModulator(mods, modStart, i, zone);
+
+		for (int i = modStart; i <= modEnd; i++)
+			ResetOutTargetModulator(mods, modStart, i);
 	}
 
+
 	//生成调制器
-	void SF2Parser::CreateModulator(vector<SF2ModulatorList*>& mods, int idx, Region* region)
+	void SF2Parser::CreateModulator(vector<SF2ModulatorList*>& mods, int start, int idx, Zone* zone)
 	{
 		Modulator* modulator = new Modulator();
 		uint16_t source;
-		SF2ModulatorSource stSource;
+		SF2ModulatorSource sfMod;
 
 		source = mods[idx]->ModulatorSource;
-		stSource.index = source & 0x7f;
-		stSource.midiControllerFlag = (source >> 7) & 0x1f;
-		stSource.direction = (source >> 8) & 0x1f;
-		stSource.polarities = (source >> 9) & 0x1f;
-		stSource.type = (source >> 10) & 0x3f;
+		sfMod.index = source & 0x7f;
+		sfMod.midiControllerFlag = (source >> 7) & 0x1f;
+		sfMod.direction = (source >> 8) & 0x1f;
+		sfMod.polarities = (source >> 9) & 0x1f;
+		sfMod.type = (source >> 10) & 0x3f;
 
 		ModInputType inputType = ModInputType::Preset;
-		if (stSource.midiControllerFlag == 1) {
+		if (sfMod.midiControllerFlag == 1)
 			inputType = ModInputType::MidiController;
-		}
-		else {
-			if (stSource.index == 127)
-				inputType = ModInputType::Modulator;
-			else
-				inputType = ModInputType::Preset;
-		}
-
-		ModSourceTransformType modSourceTransType = (ModSourceTransformType)stSource.type;
-		modulator->SetSourceTransform(0, modSourceTransType, stSource.direction, stSource.polarities);
-
-		if (inputType != ModInputType::Modulator)
-		{
-			modulator->AddInputInfo(inputType, (ModInputPreset)stSource.index, (MidiControllerType)stSource.index, 0, 0, 127);
-		}
 		else
-		{
-			uint16_t destIdx = (uint16_t)(mods[idx]->ModulatorDestination);
-			if (modulators[destIdx] == nullptr)
-				CreateModulator(mods, destIdx, region);
+			inputType = ModInputType::Preset;
 
-			modulators[destIdx]->SetOutTarget(modulator, 0);
+		int minValue = 0;
+		int maxValue = 127;
+		if (inputType == ModInputType::Preset && 
+			(ModInputPreset)sfMod.index == ModInputPreset::NoController) {
+			maxValue = 1;
 		}
+
+		ModSourceTransformType modSourceTransType = (ModSourceTransformType)sfMod.type;
+		modulator->SetSourceTransform(0, modSourceTransType, sfMod.direction, sfMod.polarities);
+		modulator->AddInputInfo(inputType, (ModInputPreset)sfMod.index, (MidiControllerType)sfMod.index, 0, minValue, maxValue);
+
 
 		//
 		source = mods[idx]->ModulatorAmountSource;
-		stSource.index = source & 0x7f;
-		stSource.midiControllerFlag = (source >> 7) & 0x1f;
-		stSource.direction = (source >> 8) & 0x1f;
-		stSource.polarities = (source >> 9) & 0x1f;
-		stSource.type = (source >> 10) & 0x3f;
+		sfMod.index = source & 0x7f;
+		sfMod.midiControllerFlag = (source >> 7) & 0x1f;
+		sfMod.direction = (source >> 8) & 0x1f;
+		sfMod.polarities = (source >> 9) & 0x1f;
+		sfMod.type = (source >> 10) & 0x3f;
 
-		inputType = ModInputType::Preset;
-		if (stSource.midiControllerFlag == 1) {
-			inputType = ModInputType::MidiController;
-		}
-		else {
-			if (stSource.index == 127)
-				inputType = ModInputType::Modulator;
+		if ((source >> 15) == 0) {
+			inputType = ModInputType::Preset;
+			if (sfMod.midiControllerFlag == 1)
+				inputType = ModInputType::MidiController;
 			else
 				inputType = ModInputType::Preset;
+
+			maxValue = 127;
+			if (inputType == ModInputType::Preset &&
+				(ModInputPreset)sfMod.index == ModInputPreset::NoController) {
+				maxValue = 1;
+			}
+
+			modSourceTransType = (ModSourceTransformType)sfMod.type;
+			modulator->SetSourceTransform(1, modSourceTransType, sfMod.direction, sfMod.polarities);
+			modulator->AddInputInfo(inputType, (ModInputPreset)sfMod.index, (MidiControllerType)sfMod.index, 1, minValue, maxValue);
 		}
 
-		if (!((inputType == ModInputType::Preset && stSource.index == 0) || inputType == ModInputType::Modulator))
-		{
-			modSourceTransType = (ModSourceTransformType)stSource.type;
-			modulator->SetSourceTransform(1, modSourceTransType, stSource.direction, stSource.polarities);
-			modulator->AddInputInfo(inputType, (ModInputPreset)stSource.index, (MidiControllerType)stSource.index, 1, 0, 127);
-		}
-
+		//
 		modulator->SetAmount(mods[idx]->ModulatorAmount);
 		modulator->SetAbsType((ModTransformType)mods[idx]->ModulatorTransform);
-		modulator->SetOutTarget((GeneratorType)mods[idx]->ModulatorDestination);
 
-		ReplaceRegionPrevSameModulator(modulator, region);
-		modulators[idx] = modulator;
+		//
+		uint16_t dest = (uint16_t)mods[idx]->ModulatorDestination;
+		if ((dest >> 15) == 1) {
+			uint16_t destIdx = dest & 0x7fff;
+			if (destIdx < modulatorCount)
+				modulator->SetOutTarget(modulators[destIdx - start], 0);
+		}
+		else {
+			modulator->SetOutTarget((GeneratorType)mods[idx]->ModulatorDestination);
+		}
+
+		Modulator* oldSameMod = GetZoneSameModulator(modulator, zone);
+		if (oldSameMod == nullptr) {
+			zone->AddModulator(modulator);
+			modulators[idx - start] = modulator;
+		}
+		else {
+			modulators[idx - start] = oldSameMod;
+			delete modulator;
+		}
+
+		modulatorCount++;
 	}
 
-	//替换区域中前一个相似调制器
-	void SF2Parser::ReplaceRegionPrevSameModulator(Modulator* modulator, Region* region)
+	//重设输出目标调制器
+	void SF2Parser::ResetOutTargetModulator(vector<SF2ModulatorList*>& mods, int start, int idx)
 	{
-		if (region->GetModulators() == nullptr)
-		{
-			region->AddModulator(modulator);
-			return;
+		uint16_t dest = (uint16_t)mods[idx]->ModulatorDestination;
+		if ((dest >> 15) == 1) {
+			int destIdx = dest & 0x7fff;
+			modulators[idx - start]->SetOutTarget(modulators[destIdx - start], 0);
 		}
-
-		bool isSame = false;
-		Modulator* tmp;
-		ModulatorVec& modulatorVec = *(region->GetModulators());
-
-		for (int i = 0; i < modulatorVec.size(); i++)
-		{
-			isSame = modulatorVec[i]->IsSame(modulator);
-			if (isSame)
-			{
-				tmp = modulatorVec[i];
-				modulatorVec[i] = modulator;
-				delete tmp;
-				return;
-			}
-		}
-
-		region->AddModulator(modulator);
 	}
+
+
+	//获取区域中前一个相同的调制器
+	Modulator* SF2Parser::GetZoneSameModulator(Modulator* modulator, Zone* zone)
+	{
+		bool isSame = false;
+		vector<Modulator*>& modulators = zone->GetModulators();
+		for (int i = 0; i < modulators.size(); i++)
+		{
+			isSame = modulators[i]->IsSame(modulator);
+			if (isSame)
+				return modulators[i];
+		}
+
+		return nullptr;
+	}
+
 }

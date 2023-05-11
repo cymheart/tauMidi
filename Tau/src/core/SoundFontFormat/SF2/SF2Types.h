@@ -8,6 +8,7 @@ using namespace scutils;
 
 namespace tau
 {
+
 	//生成器枚举值
 	enum class SF2Generator
 	{
@@ -58,11 +59,18 @@ namespace tau
 		EndloopAddrsCoarseOffset = 50,
 		CoarseTune = 51,
 		FineTune = 52,
+
+		// SampleID是Instrument Generator列表的终止生成器，
+		// 只能在Instrument Generator列表子块中出现，并且必须在除全局区域外的所有区域中作为最后一个生成器出现
+		// 通过该参数，乐器区域能够明确指定使用哪一个采样作为音源
 		SampleID = 53,
+
 		SampleModes = 54,
+		Reserved3 = 55,
 		ScaleTuning = 56,
 		ExclusiveClass = 57,
 		OverridingRootKey = 58,
+		Dummy = 59,
 		EndOper = 60
 	};
 
@@ -123,13 +131,14 @@ namespace tau
 		uint16_t Minor;
 	};
 
+	//SFModulatorSource 的 16 位值按功能划分为以下字段（从高位到低位）
 	struct SF2ModulatorSource
 	{
-		uint16_t type : 6;
-		uint16_t polarities : 1;
-		uint16_t direction : 1;
-		uint16_t midiControllerFlag : 1;
-		uint16_t index : 7;
+		uint16_t type : 6;                   //枚举字段的 高位 10-15（共 6 位） 被定义为控制器类型（Type），但 当前仅支持一种源类型（线性或凹型）
+		uint16_t polarities : 1;             //P（极性） 信号极性： 0（单极）：值范围 0 到 1（如 MIDI 颤音轮）。1（双极）：值范围 - 1 到 1（如 MIDI 弯音轮）。
+		uint16_t direction : 1;              //D（方向） 信号方向：0 表示增加，1表示减少
+		uint16_t midiControllerFlag : 1;     //CC标志  1表示信号源为 MIDI 连续控制器（CC），否则为其他类型（如 LFO、触后等）。
+		uint16_t index : 7;                  //Index（索引） 定义具体信号源（如 CC 编号、触后类型等）。
 	};
 }
 

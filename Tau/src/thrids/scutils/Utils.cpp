@@ -97,4 +97,26 @@ namespace scutils
 		return result;
 	}
 
+
+	DLL_FUNC bool contains(const string& str, const string& substr) {
+		return str.find(substr) != string::npos;
+	}
+
+	char* FormatStr(const char* format, ...)
+	{
+		static char buffer[1024];
+		if (format) {
+			va_list va;
+			va_start(va, format);
+			vsprintf(buffer, format, va);
+			va_end(va);
+			return buffer;
+		}
+		else {
+			buffer[0] = '\0';
+		}
+
+		return buffer;
+	}
+
 }

@@ -1,33 +1,37 @@
 ﻿#include"Modulator.h"
+#include"UnitTransform.h"
 
 namespace tau
 {
 	Modulator::Modulator()
 	{
-		inputInfos = new ModInputInfoList;
+		
 	}
 
 	Modulator::~Modulator()
 	{
-		DEL_OBJS_VECTOR(inputInfos);
+		for (int i = 0; i < inputInfos.size(); i++)
+			delete inputInfos[i];
+		inputInfos.clear();
 	}
 
-	//判断是否和modulator相似
+	//判断是否和modulator一样
+	//不比较amount
 	bool Modulator::IsSame(Modulator* modulator)
 	{
-		if (inputInfos == nullptr || modulator->inputInfos == nullptr)
+		if (inputInfos.empty() || modulator->inputInfos.empty() || 
+			inputInfos.size() != modulator->inputInfos.size())
 			return false;
-
-		if (inputInfos->size() != modulator->inputInfos->size())
+	
+		//
+		if (GetOutTargetModulator() != modulator->GetOutTargetModulator())
 			return false;
-
-		if (GetOutTargetGeneratorType() == GeneratorType::None ||
-			modulator->GetOutTargetGeneratorType() == GeneratorType::None ||
-			GetOutTargetGeneratorType() != modulator->GetOutTargetGeneratorType())
-		{
+		else if (GetOutTargetModulator() == nullptr && 
+			GetOutTargetGeneratorType() != modulator->GetOutTargetGeneratorType()) {
 			return false;
 		}
 
+		//
 		if (sourceTransTypes[0] != modulator->sourceTransTypes[0] ||
 			sourceTransTypes[1] != modulator->sourceTransTypes[1] ||
 			modTransformFunc[0] != modulator->modTransformFunc[0] ||
@@ -44,10 +48,10 @@ namespace tau
 			return false;
 		}
 
-		for (int i = 0; i < inputInfos->size(); i++)
+		for (int i = 0; i < inputInfos.size(); i++)
 		{
-			ModInputInfo& a = *((*inputInfos)[i]);
-			ModInputInfo& b = *((*modulator->inputInfos)[i]);
+			ModInputInfo& a = *(inputInfos[i]);
+			ModInputInfo& b = *(modulator->inputInfos[i]);
 
 			if (a.ctrlType == b.ctrlType &&
 				a.inputModulator == b.inputModulator &&
@@ -85,9 +89,8 @@ namespace tau
 		info->inputPort = inputPort;
 		info->inputNativeValueMin = inputNativeValueMin;
 		info->inputNativeValueMax = inputNativeValueMax;
-		info->outputModulator = this;
-		inputInfos->push_back(info);
-		usePortCount[(int)inputPort]++;
+		inputInfos.push_back(info);
+		usePortCount[inputPort]++;
 	}
 
 
@@ -108,9 +111,8 @@ namespace tau
 		info->inputPort = inputPort;
 		info->inputNativeValueMin = inputNativeValueMin;
 		info->inputNativeValueMax = inputNativeValueMax;
-		info->outputModulator = this;
-		inputInfos->push_back(info);
-		usePortCount[(int)inputPort]++;
+		inputInfos.push_back(info);
+		usePortCount[inputPort]++;
 	}
 
 	//<summary>
@@ -126,14 +128,13 @@ namespace tau
 	{
 		ModInputInfo* info = new ModInputInfo();
 		info->inputType = ModInputType::MidiController;
-		info->inputPreset = ModInputPreset::None;
+		info->inputPreset = ModInputPreset::NoController;
 		info->ctrlType = ctrlType;
 		info->inputPort = inputPort;
 		info->inputNativeValueMin = inputNativeValueMin;
 		info->inputNativeValueMax = inputNativeValueMax;
-		info->outputModulator = this;
-		inputInfos->push_back(info);
-		usePortCount[(int)inputPort]++;
+		inputInfos.push_back(info);
+		usePortCount[inputPort]++;
 	}
 
 
@@ -142,8 +143,8 @@ namespace tau
 	void Modulator::RemoveAllInputInfoFromPort(int port)
 	{
 		ModInputInfo* inputInfo = nullptr;
-		ModInputInfoList::iterator it = inputInfos->begin();
-		ModInputInfoList::iterator end = inputInfos->end();
+		auto it = inputInfos.begin();
+		auto end = inputInfos.end();
 		for (; it != end;)
 		{
 			inputInfo = *it;
@@ -157,11 +158,11 @@ namespace tau
 				}
 				else
 				{
-					usePortCount[(int)inputInfo->inputPort]--;
+					usePortCount[inputInfo->inputPort]--;
 				}
 
 				DEL(inputInfo);
-				it = inputInfos->erase(it);
+				it = inputInfos.erase(it);
 			}
 			else
 			{
@@ -169,7 +170,7 @@ namespace tau
 			}
 		}
 
-		usePortCount[(int)port] = 0;
+		usePortCount[port] = 0;
 	}
 
 
@@ -200,7 +201,7 @@ namespace tau
 		if (targetMod == nullptr)
 			return;
 
-		targetMod->RemoveAllCommonInputInfoFromPort(outTargetModulatorPort);
+		targetMod->RemoveAllCommonInputInfoFromPort(port);
 		targetMod->AddInputModulator(this, port);
 
 	}
@@ -214,7 +215,7 @@ namespace tau
 
 		AddInputInfo(
 			ModInputType::MidiController,
-			ModInputPreset::None, ctrlType,
+			ModInputPreset::NoController, ctrlType,
 			inputPort,
 			inputNativeValueMin,
 			inputNativeValueMax);
@@ -232,7 +233,7 @@ namespace tau
 	//往调制器端口输入值
 	void Modulator::Input(int port, float value)
 	{
-		(*inputInfos)[(int)port]->inputNativeValue = value;
+		inputInfos[port]->inputNativeValue = value;
 		Modulator* lastModualtor = GetLastOutTargetModulator();
 		lastModualtor->ioState = ModIOState::Inputed;
 	}
@@ -241,39 +242,48 @@ namespace tau
 	float Modulator::Output()
 	{
 		float mapValue[2] = { 0, 0 };
-		float inputValue[2] = { 0, 0 };
-		float inputMinValue[2] = { 0, 0 };
-		float inputMaxValue[2] = { 0, 0 };
 		int port;
-		size_t size = inputInfos->size();
+		size_t size = inputInfos.size();
 		for (int i = 0; i < size; i++)
 		{
-			port = (int)(*inputInfos)[i]->inputPort;
-			if ((*inputInfos)[i]->inputType == ModInputType::Modulator)
-			{
-				inputValue[port] = (*inputInfos)[i]->inputModulator->Output();
-				RangeFloat range = (*inputInfos)[i]->inputModulator->CalOutputRange();
-				inputMinValue[port] = range.min;
-				inputMaxValue[port] = range.max;
+			port = inputInfos[i]->inputPort;
+
+			if (inputInfos[i]->inputType == ModInputType::Preset &&
+				inputInfos[i]->inputPreset == ModInputPreset::NoController) {
+				mapValue[port] = 1;
 			}
-			else
-			{
-				inputValue[port] = (*inputInfos)[i]->inputNativeValue;
-				if (sourceTransTypes[port] != ModSourceTransformType::Func) {
-					inputMinValue[port] = (*inputInfos)[i]->inputNativeValueMin;
-					inputMaxValue[port] = (*inputInfos)[i]->inputNativeValueMax;
+			else {
+				if (inputInfos[i]->inputType == ModInputType::Modulator)
+				{
+					inputValue[port] = inputInfos[i]->inputModulator->Output();
+					RangeFloat range = inputInfos[i]->inputModulator->CalOutputRange();
+					inputMinValue[port] = range.min;
+					inputMaxValue[port] = range.max;
 				}
 				else
 				{
-					inputMinValue[port] = inValueRange[port].min;
-					inputMaxValue[port] = inValueRange[port].max;
+					inputValue[port] = inputInfos[i]->inputNativeValue;
+					if (sourceTransTypes[port] != ModSourceTransformType::Func) {
+						inputMinValue[port] = inputInfos[i]->inputNativeValueMin;
+						inputMaxValue[port] = inputInfos[i]->inputNativeValueMax;
+					}
+					else
+					{
+						inputMinValue[port] = inValueRange[port].min;
+						inputMaxValue[port] = inValueRange[port].max;
+					}
+				}
+
+				if (sourceTransTypes[port] != ModSourceTransformType::Func) {
+					mapValue[port] += MapValueFromInputPort(port);
+				}
+				else {
+					RangeFloat xRange = GetMapValueRange(polar[port]);
+					float a = (inputValue[port] - inputMinValue[port]) / (inputMaxValue[port] - inputMinValue[port]);
+					float x = xRange.min + a * (xRange.max - xRange.min);
+					mapValue[port] += modTransformFunc[port](x);
 				}
 			}
-
-			if (sourceTransTypes[port] != ModSourceTransformType::Func)
-				mapValue[port] += MapValue(inputValue[port], inputMinValue[port], inputMaxValue[port], sourceTransTypes[port], dir[port], polar[port]);
-			else
-				mapValue[port] += MapValue(inputValue[port], inputMinValue[port], inputMaxValue[port], modTransformFunc[port], outValueRange[port]);
 		}
 
 		if (usePortCount[0] == 0) { mapValue[0] = 1; }
@@ -281,8 +291,13 @@ namespace tau
 
 		outputValue = amount * mapValue[0] * mapValue[1];
 
+		if (outUnitTransform != nullptr)
+			outputValue = outUnitTransform(outputValue);
+
 		if (absType == ModTransformType::Absolute)
 			outputValue = abs(outputValue);
+		else if(absType == ModTransformType::Negative)
+			outputValue = -outputValue;
 
 		ioState = ModIOState::Ouputed;
 		return outputValue;
@@ -342,18 +357,17 @@ namespace tau
 		info->inputType = ModInputType::Modulator;
 		info->inputPort = inputPort;
 		info->inputModulator = inputMod;
-		info->outputModulator = this;
-		usePortCount[(int)inputPort]++;
-		inputInfos->push_back(info);
+		usePortCount[inputPort]++;
+		inputInfos.push_back(info);
 	}
 
-	//移除调制器上的某个端口上的输入调制器inputMod，并返回移除的输入信息
+	//移除调制器上的某个端口上的输入调制器inputMod
 	//<param name = "inputMod">输入到端口的调制器< / param>
 	void Modulator::RemoveInputModInfo(Modulator* inputMod)
 	{
 		ModInputInfo* modInputInfo = nullptr;
-		ModInputInfoList::iterator it = inputInfos->begin();
-		for (; it != inputInfos->end(); )
+		auto it = inputInfos.begin();
+		for (; it != inputInfos.end(); )
 		{
 			modInputInfo = *it;
 
@@ -361,8 +375,8 @@ namespace tau
 				modInputInfo->inputType == ModInputType::Modulator &&
 				modInputInfo->inputModulator == inputMod)
 			{
-				usePortCount[(int)modInputInfo->inputPort]--;
-				it = inputInfos->erase(it);
+				usePortCount[modInputInfo->inputPort]--;
+				it = inputInfos.erase(it);
 				DEL(modInputInfo);
 			}
 			else
@@ -373,15 +387,15 @@ namespace tau
 	//移除端口上的所有非输入调制器的输入信息，并返回移除的输入信息组
 	void Modulator::RemoveAllCommonInputInfoFromPort(int port)
 	{
-		ModInputInfoList::iterator it = inputInfos->begin();
-		for (; it != inputInfos->end(); )
+		auto it = inputInfos.begin();
+		for (; it != inputInfos.end(); )
 		{
 			if ((*it)->inputType != ModInputType::Modulator &&
 				(*it)->inputPort == port)
 			{
+				usePortCount[(*it)->inputPort]--;
 				DEL(*it);
-				usePortCount[(int)(*it)->inputPort]--;
-				it = inputInfos->erase(it);
+				it = inputInfos.erase(it);
 			}
 			else
 			{
@@ -390,224 +404,45 @@ namespace tau
 		}
 	}
 
-
-	/// <summary>
-	/// 映射输入值到控制类型值域范围
-	/// </summary>
-	/// <param name="inValue">输入值</param>
-	/// <param name="inValueMin">输入值的最小值限制</param>
-	/// <param name="inValueMax">输入值的最大值限制</param>
-	/// <param name="tranformFunc">变换自定义方法</param>
-	/// <param name="funcInRange">输入数值范围</param>
-	/// <returns></returns>
-	float Modulator::MapValue(float inValue, float inValueMin, float inValueMax, ModTransformCallBack tranformFunc, RangeFloat funcInRange)
+	// 映射输入值到控制类型值域范围
+	float Modulator::MapValueFromInputPort(int port)
 	{
-		if (inValueMin - inValueMax == 0)
-			return 1;
+		RangeFloat xRange = GetMapValueRange(polar[port]);
+		float a = (inputValue[port] - inputMinValue[port]) / (inputMaxValue[port] - inputMinValue[port]);
+		float x = xRange.min + a * (xRange.max - xRange.min);
+		float y = 0;
 
-		float mapNormalInputValue = MappingToNormalValue(inValue, inValueMin, inValueMax, funcInRange.min, funcInRange.max);
-		float mapValue = tranformFunc(mapNormalInputValue);
-		return mapValue;
-	}
+		switch (sourceTransTypes[port]) {
+			case ModSourceTransformType::Linear:
+				if (polar[port] == 0 && dir[port] == 0)	y = x;
+				else if (polar[port] == 0 && dir[port] == 1) y = -x + 1;
+				else if (polar[port] == 1 && dir[port] == 0) y = x;
+				else if (polar[port] == 1 && dir[port] == 1) y = -x;
+				break;
 
-	/// <summary>
-	/// 映射输入值到控制类型值域范围
-	/// </summary>
-	/// <param name="inValue">输入值</param>
-	/// <param name="inValueMin">输入值的最小值限制</param>
-	/// <param name="inValueMax">输入值的最大值限制</param>
-	/// <param name="sourceType">变换类型</param>
-	/// <param name="dir">变换线方向 0: Positive minY->maxY, 1: Negative maxY->minY</param>
-	/// <param name="polar">变换线极性  0: Unipolar y值范围: 0->1, 1: Bipolar  y值范围: -1->1</param>
-	/// <returns>映射值</returns>
-	float Modulator::MapValue(float inValue, float inValueMin, float inValueMax, ModSourceTransformType sourceTransType, int dir, int polar)
-	{
-		if (inValueMin - inValueMax == 0)
-			return 1;
+			case ModSourceTransformType::Concave:
+				if (polar[port] == 0 && dir[port] == 0)	y = 1 - sqrt(1 - pow(x, 2));
+				else if (polar[port] == 0 && dir[port] == 1) y = 1 - sqrt(1 - pow(x-1, 2));
+				else if (polar[port] == 1 && dir[port] == 0) { if (x < 0) y = -sqrt(1 - pow(x+1, 2)); else y = sqrt(1 - pow(x-1, 2)); }
+				else if (polar[port] == 1 && dir[port] == 1) { if (x < 0) y = 1- sqrt(1 - pow(x, 2)); else y = sqrt(1 - pow(x, 2)) - 1; }
+				break;
 
-		float mapNormalInputValue;
-		float mapValue = 0;
-		RangeFloat mapValueRange = GetMapValueRange(polar);
-		mapNormalInputValue = MappingToNormalValue(inValue, inValueMin, inValueMax, mapValueRange.min, mapValueRange.max);
+			case ModSourceTransformType::Convex:
+				if (polar[port] == 0 && dir[port] == 0)	y = sqrt(1 - pow(x-1, 2));
+				else if (polar[port] == 0 && dir[port] == 1) y = sqrt(1 - pow(x, 2));
+				else if (polar[port] == 1 && dir[port] == 0) { if (x < 0) y = sqrt(1 - pow(x, 2)) - 1; else y = -sqrt(1 - pow(x, 2)) + 1; }
+				else if (polar[port] == 1 && dir[port] == 1) { if (x < 0) y = sqrt(1 - pow(x+1, 2)); else y = -sqrt(1 - pow(x-1, 2)); }
+				break;
 
+			case ModSourceTransformType::Switch:
+				if (polar[port] == 0 && dir[port] == 0) { if (x < 0.5f) y = 0; else y = x; }
+				else if (polar[port] == 0 && dir[port] == 1) { if (x < 0.5f) y = x; else y = 0; }
+				else if (polar[port] == 1 && dir[port] == 0) { if (x < 0) y = -x; else y = x; }
+				else if (polar[port] == 1 && dir[port] == 1) { if (x < 0) y = x; else y = -x; }
+				break;
 
-		switch (sourceTransType)
-		{
-		case ModSourceTransformType::Linear:
-			if (dir == 0)
-			{
-				if (polar == 0) { mapValue = LinearPositiveBipolar(mapNormalInputValue); }
-				else { mapValue = LinearPositiveUnipolar(mapNormalInputValue); }
-			}
-			else if (dir == 1)
-			{
-				if (polar == 0) { mapValue = LinearNegativeBipolar(mapNormalInputValue); }
-				else { mapValue = LinearNegativeUnipolar(mapNormalInputValue); }
-			}
-			break;
-
-		case ModSourceTransformType::Convex:
-			if (dir == 0)
-			{
-				if (polar == 0) { mapValue = ConvexPositiveBipolar(mapNormalInputValue); }
-				else { mapValue = ConvexPositiveUnipolar(mapNormalInputValue); }
-			}
-			else if (dir == 1)
-			{
-				if (polar == 0) { mapValue = ConvexNegativeBipolar(mapNormalInputValue); }
-				else { mapValue = ConvexNegativeUnipolar(mapNormalInputValue); }
-			}
-			break;
-
-		case ModSourceTransformType::Concave:
-			if (dir == 0)
-			{
-				if (polar == 0) { mapValue = ConcavePositiveBipolar(mapNormalInputValue); }
-				else { mapValue = ConcavePositiveUnipolar(mapNormalInputValue); }
-			}
-			else if (dir == 1)
-			{
-				if (polar == 0) { mapValue = ConcaveNegativeBipolar(mapNormalInputValue); }
-				else { mapValue = ConcaveNegativeUnipolar(mapNormalInputValue); }
-			}
-			break;
-
-
-		case ModSourceTransformType::Switch:
-			if (dir == 0)
-			{
-				if (polar == 0) { mapValue = SwitchPositiveBipolar(mapNormalInputValue); }
-				else { mapValue = SwitchPositiveUnipolar(mapNormalInputValue); }
-			}
-			else if (dir == 1)
-			{
-				if (polar == 0) { mapValue = SwitchNegativeBipolar(mapNormalInputValue); }
-				else { mapValue = SwitchNegativeUnipolar(mapNormalInputValue); }
-			}
-			break;
 		}
 
-		return mapValue;
-	}
-
-
-	//Concave Controller Curves
-	//Concave
-	//x : [0, 1]
-	//y : [0, 1]
-	float Modulator::ConcavePositiveUnipolar(float x)
-	{
-		Vec2 v = SquareBezier(x, Vec2(0, 0), Vec2(1, 0), Vec2(1, 1));
-		return (float)v.y;
-	}
-
-
-	//Concave
-	//x : [0, 1]
-	//y : [1, 0]
-	float Modulator::ConcaveNegativeUnipolar(float x)
-	{
-		Vec2 v = SquareBezier(x, Vec2(0, 1), Vec2(0, 0), Vec2(1, 0));
-		return (float)v.y;
-	}
-
-
-	//Concave
-	//x : [-1, 1]
-	//y : [-1, 1]
-	float Modulator::ConcavePositiveBipolar(float x)
-	{
-		Vec2 v;
-		if (x < 0)
-		{
-			x = x + 1;
-			v = SquareBezier(x, Vec2(-1, -1), Vec2(-1, 0), Vec2(0, 0));
-		}
-		else
-		{
-			v = SquareBezier(x, Vec2(0, 0), Vec2(1, 0), Vec2(1, 1));
-		}
-
-		return (float)v.y;
-	}
-
-
-	//Concave
-	//x : [-1, 1]
-	//y : [1, -1]
-	float Modulator::ConcaveNegativeBipolar(float x)
-	{
-		Vec2 v;
-		if (x < 0)
-		{
-			x = x + 1;
-			v = SquareBezier(x, Vec2(-1, 1), Vec2(-1, 0), Vec2(0, 0));
-		}
-		else
-		{
-			v = SquareBezier(x, Vec2(0, 0), Vec2(1, 0), Vec2(1, -1));
-		}
-
-		return (float)v.y;
-	}
-
-	//Convex Controller Curves
-	//Convex
-	//x : [0, 1]
-	//y : [0, 1]
-	float Modulator::ConvexPositiveUnipolar(float x)
-	{
-		Vec2 v = SquareBezier(x, Vec2(0, 0), Vec2(0, 1), Vec2(1, 1));
-		return (float)v.y;
-	}
-
-	//Convex
-	//x : [0, 1]
-	//y : [1, 0]
-	float Modulator::ConvexNegativeUnipolar(float x)
-	{
-		Vec2 v = SquareBezier(x, Vec2(0, 1), Vec2(1, 1), Vec2(1, 0));
-		return (float)v.y;
-	}
-
-
-
-	//Convex
-	//x : [-1, 1]
-	//y : [-1, 1]
-	float Modulator::ConvexPositiveBipolar(float x)
-	{
-		Vec2 v;
-		if (x < 0)
-		{
-			x = x + 1;
-			v = SquareBezier(x, Vec2(-1, -1), Vec2(0, -1), Vec2(0, 0));
-		}
-		else
-		{
-			v = SquareBezier(x, Vec2(0, 0), Vec2(0, 1), Vec2(1, 1));
-		}
-
-		return (float)v.y;
-	}
-
-
-	//Convex
-	//x : [-1, 1]
-	//y : [1, -1]
-	float Modulator::ConvexNegativeBipolar(float x)
-	{
-		Vec2 v;
-		if (x < 0)
-		{
-			x = x + 1;
-			v = SquareBezier(x, Vec2(-1, 1), Vec2(0, 1), Vec2(0, 0));
-		}
-		else
-		{
-			v = SquareBezier(x, Vec2(0, 0), Vec2(0, -1), Vec2(1, -1));
-		}
-
-		return (float)v.y;
+		return y;
 	}
 }

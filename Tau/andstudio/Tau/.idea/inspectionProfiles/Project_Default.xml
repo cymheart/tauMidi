@@ -1,14 +1,22 @@
 <component name="InspectionProjectProfileManager">
   <profile version="1.0">
     <option name="myName" value="Project Default" />
-    <inspection_tool class="ConstantConditions" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="SUGGEST_NULLABLE_ANNOTATIONS" value="false" />
-      <option name="DONT_REPORT_TRUE_ASSERT_STATEMENTS" value="false" />
-    </inspection_tool>
+    <inspection_tool class="ArgumentSelectionDefects" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="ClangdErrorsAndWarnings" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="DeprecatedApi" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="DuplicateSwitchCase" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="EmptyDeclOrStmt" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="EqualityInConditionalOperator" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="FormatSpecifiers" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="MissingSwitchCase" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="PreprocessorComment" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="ResourceNotFound" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="Simplify" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="SpellCheckingInspection" enabled="false" level="TYPO" enabled_by_default="false">
       <option name="processCode" value="true" />
       <option name="processLiterals" value="true" />
       <option name="processComments" value="true" />
     </inspection_tool>
+    <inspection_tool class="VirtualCallInCtorOrDtor" enabled="false" level="WARNING" enabled_by_default="false" />
   </profile>
 </component>

@@ -23,7 +23,7 @@ public class MidiMarker {
     };
 
     protected int track = 0;
-    protected boolean isEnableMarkerText = false;
+    public boolean isEnableMarkerText = false;
     public boolean IsEnableMarkerText()
     {
         return isEnableMarkerText;
@@ -36,7 +36,7 @@ public class MidiMarker {
     }
 
     //是否开启速度设置
-    protected boolean isEnableTempo = false;
+    public boolean isEnableTempo = false;
     public boolean IsEnableTempo()
     {
         return isEnableTempo;
@@ -50,7 +50,7 @@ public class MidiMarker {
     }
 
     //标记起始的时间点
-    protected double startSec = 0;
+    public double startSec = 0;
     public double GetStartSec()
     {
         return startSec;

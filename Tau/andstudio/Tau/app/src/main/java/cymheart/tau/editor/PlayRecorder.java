@@ -12,6 +12,7 @@ import java.util.List;
 
 import cymheart.tau.utils.FileUtils;
 import cymheart.tau.utils.ScPool;
+import cymheart.tau.utils.Utils;
 
 /**弹奏录制器*/
 
@@ -22,6 +23,9 @@ import cymheart.tau.utils.ScPool;
  *   {
  *        type:int
  *        note:int
+ *        velocity:int
+ *        track:int
+ *        sec:float
  *   }
  *      ...
  *   recodenoten:
@@ -33,7 +37,16 @@ import cymheart.tau.utils.ScPool;
  * */
 public class PlayRecorder {
 
-    private ScPool<RecordNote> notePool = new ScPool<>(null);
+    /**录制中*/
+    static public final int STATE_RECORDING = 1;
+    /**播放中*/
+    static public final int STATE_PLAYING = 2;
+
+    protected Editor editor;
+    private final ScPool<RecordNote> notePool = new ScPool<>(null);
+
+    public Utils.Action<RecordNote> PlayRecordOnKey = null;
+    public Utils.Action<RecordNote> PlayRecordOffKey = null;
 
     private RecordNote NewRecordNote(Object obj)
     {
@@ -68,45 +81,53 @@ public class PlayRecorder {
 
     private boolean havWaitEvent = false;
 
+    /**录制状态<P>
+     * recordState = STATE_RECORDING : 录制中<P>
+     * recordState = STATE_PLAYING : 播放中<P>
+     * */
+    protected int recordState = STATE_RECORDING;
+    /**设置录制状态*/
+    public void SetRecordState(int state){
+        recordState = state;
+    }
 
-    public PlayRecorder()
+    public PlayRecorder(Editor editor)
     {
+        this.editor = editor;
         notePool.NewMethod = this::NewRecordNote;
         notePool.createCount = 10;
         notePool.SetUseOpLock(true);
         notePool.CreatePool(50);
     }
 
+
     public void Clear()
     {
         havWaitEvent = false;
         noteOffsetIdx = 0;
+        recordState = 1;
     }
 
-
-    /**录制继续事件*/
-    public void Continue(float sec)
+    /**录制按压按键动作*/
+    public void OnKey(int note)
     {
-        RecordNote recordNote = PopNote();
-        recordNote.type = RecordNote.Continue;
-        recordNote.sec = sec;
-        notes.add(recordNote);
+        double sec = editor.isWaitForGraph ? curtWaitLateSec : editor.curtPlaySec;
+        OnKey(note, 127, 0, (float)sec);
     }
 
-    /**录制等待事件*/
-    public void Wait(float sec)
+    /**录制松开按键动作*/
+    public void OffKey(int note)
     {
-        havWaitEvent = true;
-        RecordNote recordNote = PopNote();
-        recordNote.type = RecordNote.Wait;
-        recordNote.sec = sec;
-        notes.add(recordNote);
+        double sec = editor.isWaitForGraph ? curtWaitLateSec : editor.curtPlaySec;
+        OffKey(note,0, (float)sec);
     }
-
 
     /**录制按下按键*/
     public void OnKey(int note, int vel, int track, float sec)
     {
+        if(recordState != STATE_RECORDING)
+            return;
+
         RecordNote recordNote = PopNote();
         recordNote.type = RecordNote.On;
         recordNote.note = note;
@@ -120,6 +141,9 @@ public class PlayRecorder {
     /**录制松开按键*/
     public void OffKey(int note, int track, float sec)
     {
+        if(recordState != STATE_RECORDING)
+            return;
+
         RecordNote recordOffNote = PopNote();
         recordOffNote.type = RecordNote.Off;
         recordOffNote.note = note;
@@ -128,6 +152,25 @@ public class PlayRecorder {
         recordOffNote.sec = sec;
 
         notes.add(recordOffNote);
+    }
+
+    /**录制继续事件*/
+    protected void Continue(float sec)
+    {
+        RecordNote recordNote = PopNote();
+        recordNote.type = RecordNote.Continue;
+        recordNote.sec = sec;
+        notes.add(recordNote);
+    }
+
+    /**录制等待事件*/
+    protected void Wait(float sec)
+    {
+        havWaitEvent = true;
+        RecordNote recordNote = PopNote();
+        recordNote.type = RecordNote.Wait;
+        recordNote.sec = sec;
+        notes.add(recordNote);
     }
 
     /**移除所有note*/
@@ -139,28 +182,171 @@ public class PlayRecorder {
         noteOffsetIdx = 0;
     }
 
+
+    private final boolean[] havRecordNotes = new boolean[127];
+    private final List<RecordNote> saveRecordNotes = new ArrayList<>();
+
     /**移除指定时间点之后的所有note*/
     public void RemoveAfterSec(float sec)
     {
+        if(recordState == STATE_PLAYING)
+            return;
+
+        saveRecordNotes.clear();
+        for(int i=0; i<127; i++)
+            havRecordNotes[i] = false;
+
+        //
         RecordNote recordNote;
-        int i=0;
-        for(; i<notes.size(); i++) {
+        int end = 0;
+        for(int i = 0; i<notes.size(); i++)
+        {
             recordNote = notes.get(i);
             if(havWaitEvent && recordNote.type != RecordNote.Wait)
                 continue;
 
-            if(recordNote.sec >= sec)
-                break;
+            end = i;
+            if(havWaitEvent)
+            {
+                if (recordNote.sec >= sec)
+                    break;
+            } else {
+
+                if (recordNote.sec >= sec)
+                {
+                    for (i++; i < notes.size(); i++) {
+                        recordNote = notes.get(i);
+                        if (recordNote.type == RecordNote.Off && havRecordNotes[recordNote.note]) {
+                            saveRecordNotes.add(recordNote);
+                            notes.set(i, null);
+                        }
+                    }
+
+                    break;
+                }
+
+                if (recordNote.type == RecordNote.On)
+                    havRecordNotes[recordNote.note] = true;
+            }
         }
 
         //
-        for(int j= notes.size() - 1; j>=i; j--)
+        for(int j = notes.size() - 1; j >= end; j--)
         {
             recordNote = notes.get(j);
-            PushNote(recordNote);
+            if(recordNote != null)
+                PushNote(recordNote);
             notes.remove(j);
         }
+
+        //
+        notes.addAll(saveRecordNotes);
+        saveRecordNotes.clear();
     }
+
+
+    /**播放录制goto动作*/
+    public void Goto()
+    {
+        if(recordState != STATE_PLAYING)
+            return;
+
+        boolean isRecordWait = false;
+        RecordNote recordNote;
+
+        for(int i = noteOffsetIdx; i < notes.size(); i++)
+        {
+            recordNote = notes.get(i);
+
+            if(recordNote.type == RecordNote.Wait) {
+                isRecordWait = true;
+                if(recordNote.sec >= editor.curtPlaySec) {
+                    noteOffsetIdx = i;
+                    return;
+                }
+            }
+            else if(recordNote.type == RecordNote.Continue)
+            {
+                isRecordWait = false;
+            }
+            else if(!isRecordWait && recordNote.sec >= editor.curtPlaySec) {
+                noteOffsetIdx = i;
+                return;
+            }
+        }
+
+        noteOffsetIdx = notes.size();
+    }
+
+
+    /**更新播放*/
+    private void UpdatePlay()
+    {
+        if(recordState != STATE_PLAYING)
+            return;
+
+        RecordNote recordNote;
+        int i = noteOffsetIdx;
+        for(; i < notes.size(); i++)
+        {
+            recordNote = notes.get(i);
+
+            if(!((editor.isWaitForGraph && recordNote.sec <= curtWaitLateSec ) ||
+                    (!editor.isWaitForGraph && recordNote.sec <= editor.curtPlaySec))) {
+                break;
+            }
+
+            if (recordNote.type == RecordNote.Wait) {
+                editor.Wait();
+                editor.isWaitForGraph = true;
+                i++;
+                break;
+            } else if (recordNote.type == RecordNote.Continue) {
+                editor.Continue();
+                editor.isWaitForGraph = false;
+                i++;
+                break;
+            } else if (recordNote.type == RecordNote.On) {
+                if(PlayRecordOnKey != null)
+                    PlayRecordOnKey.Execute(recordNote);
+            } else {
+                if(PlayRecordOffKey != null)
+                    PlayRecordOffKey.Execute(recordNote);
+            }
+        }
+
+        noteOffsetIdx = i;
+    }
+
+
+    protected boolean oldIsWait = false;
+
+    /**当前等待延迟时长*/
+    protected double curtWaitLateSec = 0;
+
+    /**更新*/
+    public void Update()
+    {
+        UpdatePlay();
+
+        //
+        if (editor.isWaitForGraph)
+        {
+            if(!oldIsWait) {
+                curtWaitLateSec = 0;
+                if(recordState == 1)
+                    Wait((float) (editor.curtPlaySec - editor.perFrameCostSec));
+            }
+            curtWaitLateSec += editor.perFrameCostSec;
+        } else {
+            if(oldIsWait && recordState == STATE_RECORDING)
+               Continue((float)(curtWaitLateSec - editor.perFrameCostSec));
+            curtWaitLateSec = 0;
+        }
+
+        oldIsWait = editor.isWaitForGraph;
+    }
+
 
     /**保存录制到文件*/
     public void SaveToFile(String filePath)
@@ -223,6 +409,5 @@ public class PlayRecorder {
             e.printStackTrace();
         }
     }
-
 
 }

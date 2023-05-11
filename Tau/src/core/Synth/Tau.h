@@ -42,14 +42,8 @@ namespace tau
 			isSilence = is;
 		}
 
-		void ClearRecordPCM();
-		void StartRecordPCM();
-		void StopRecordPCM();
-		void SaveRecordPCM(string& path);
-		void SaveRecordPCMToWav(string& path);
-		//保存录制pcm的到mp3文件
-		void SaveRecordPCMToMp3(string& path);
-
+		void Lock();
+		void UnLock();
 
 		//设置SoundFont
 		inline void SetSoundFont(SoundFont* sf)
@@ -66,6 +60,12 @@ namespace tau
 		Editor* GetEditor()
 		{
 			return editor;
+		}
+
+		//内部控制器调制器列表
+		//这个控制器列表仅设置了供内部使用的控制器
+		InsideModulators* GetInsideModulators() {
+			return insideModulators;
 		}
 
 		//设置是否使用多线程
@@ -89,6 +89,16 @@ namespace tau
 		inline void SetChannelOutputMode(ChannelOutputMode outputMode)
 		{
 			channelOutputMode = outputMode;
+			if (channelOutputMode == ChannelOutputMode::Stereo)
+				channelCount = 2;
+			else
+				channelCount = 1;
+		}
+
+		//获取音频通道个数
+		inline int GetAudioChannelCount()
+		{
+			return channelCount;
 		}
 
 
@@ -155,16 +165,6 @@ namespace tau
 			midiEventLimitParseSec = limitSec;
 		}
 
-
-		//设置是否开启生成采样频谱,频谱点采样数量(默认值: 2048)
-		inline void SetEnableCreateFreqSpectrums(bool enable, int count = 2048)
-		{
-			isEnableCreateFreqSpectrums = enable;
-			freqSpectrumsCount = count;
-		}
-
-
-
 		//设置样本处理采样率
 		void SetSampleProcessRate(int rate);
 
@@ -217,12 +217,12 @@ namespace tau
 
 		//设置极限发声区域数量(默认值:600)
 		//当播放有卡顿现象时，把这个值调小，会提高声音的流畅度
-		inline void SetLimitRegionSounderCount(int count)
+		inline void SetLimitZoneSounderCount(int count)
 		{
 			if (isOpened)
 				return;
 
-			limitRegionSounderCount = count;
+			limitZoneSounderCount = count;
 		}
 
 		//设置极限按键速率(默认值:800)
@@ -242,18 +242,18 @@ namespace tau
 		}
 
 		//设置是否使用区域内部和声效果
-		inline void SetUseRegionInnerChorusEffect(bool use)
+		inline void SetUseZoneInnerChorusEffect(bool use)
 		{
 			if (isOpened)
 				return;
 
-			useRegionInnerChorusEffect = use;
+			useZoneInnerChorusEffect = use;
 		}
 
 		//判断是否使用区域内部和声效果
-		inline bool UseRegionInnerChorusEffect()
+		inline bool UseZoneInnerChorusEffect()
 		{
-			return useRegionInnerChorusEffect;
+			return useZoneInnerChorusEffect;
 		}
 
 
@@ -272,6 +272,10 @@ namespace tau
 
 		//移除替换乐器
 		void RemoveReplaceInstrument(int orgBankMSB, int orgBankLSB, int orgInstNum);
+
+
+		//设置是否开启伴奏
+		void SetOpenAccompany(bool isOpen);
 
 
 		//获取当前Midi文件结束时间
@@ -314,10 +318,13 @@ namespace tau
 		void OffKey(int key, float velocity, int trackIdx, int id = 0);
 
 		// 释放指定轨道的所有按键 
-		void OffAllKeys(int trackIdx);
+		void OffAllKeysForTrack(int trackIdx);
 
 		// 释放所有按键 
 		void OffAllKeys();
+
+		// 释放与指定id匹配的所有按键 
+		void OffAllKeys(int id);
 
 		//播放
 		void Play();
@@ -562,6 +569,8 @@ namespace tau
 
 		//立体声，单声道选择
 		ChannelOutputMode channelOutputMode = ChannelOutputMode::Stereo;
+		//音频通道个数
+		int channelCount = 2;
 
 		//渲染品质
 		RenderQuality renderQuality = RenderQuality::Fast;
@@ -574,13 +583,13 @@ namespace tau
 		bool useMulThreads = false;
 
 		//是否使用外部普通调制器
-		bool useCommonModulator = false;
+		bool useCommonModulator = true;
 
 		//使用区域内部和声效果
-		bool useRegionInnerChorusEffect = false;
+		bool useZoneInnerChorusEffect = false;
 
 		//发声区域最大限制数量
-		int limitRegionSounderCount = 500;
+		int limitZoneSounderCount = 500;
 
 		//按键速率最大限制
 		float limitOnKeySpeed = 600;
@@ -588,10 +597,6 @@ namespace tau
 		//是否开启乐器效果器
 		bool isEnableVirInstEffects = true;
 
-		//是否开启生成采样频谱
-		bool isEnableCreateFreqSpectrums = false;
-		//频谱点采样数量(默认值: 2048)
-		int freqSpectrumsCount = 2048;
 
 		//声音处理时的采样周期，不同于样本采样率
 		//样本采样率和声音处理采样率的频率矫正倍率计算为: rateAdjustMul = sampleRate / sampleProcessRate
@@ -622,10 +627,14 @@ namespace tau
 		//录制midi时一个四分音符所要弹奏的tick数,默认值120
 		float recordMidiTickForQuarterNote = 120;
 
-		SoundFont* soundFont;
+		SoundFont* soundFont = nullptr;
 
 		//预设乐器替换
 		unordered_map<uint32_t, uint32_t>* presetBankReplaceMap = nullptr;
+
+		//内部控制器调制器列表
+		//这个控制器列表仅设置了供内部使用的控制器
+		InsideModulators* insideModulators = nullptr;
 
 
 		mutex lockMutex;
@@ -637,7 +646,7 @@ namespace tau
 
 		friend class VirInstrument;
 		friend class MidiEditor;
-		friend class RegionSounderThread;
+		friend class ZoneSounderThread;
 		friend class KeySounder;
 		friend class Synther;
 		friend class RealtimeSynther;

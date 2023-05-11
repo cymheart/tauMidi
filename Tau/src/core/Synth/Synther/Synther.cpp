@@ -1,7 +1,7 @@
 ﻿#include"Synther.h"
 #include"Synth/Tau.h"
 #include"Synth/VirInstrument.h"
-#include"Synth/RegionSounderThread.h"
+#include"Synth/ZoneSounderThread.h"
 #include"Synth/Channel.h"
 #include"Synth/Preset.h"
 #include"Synth/SyntherEvent.h"
@@ -17,6 +17,9 @@
 #include"Synth/Editor/Track.h"
 #include <iostream>
 #include <fstream>
+#include"task\TaskTimer.h"
+
+
 using namespace std;
 
 namespace tau
@@ -31,11 +34,9 @@ namespace tau
 		SetCurtCachePlaySec(0);
 
 		//
-		presetBankReplaceMap = new unordered_map<uint32_t, uint32_t>;
-
-		//
+		cacheTaskProcesser = new TaskProcesser;
 		taskProcesser = new TaskProcesser;
-		regionSounderThreadPool = new RegionSounderThread(this);
+		ZoneSounderThreadPool = new ZoneSounderThread(this);
 
 		//
 		effects = new EffectList();
@@ -49,13 +50,32 @@ namespace tau
 		Close();
 
 		//
+		DEL(cacheTaskProcesser);
 		DEL(taskProcesser);
-		DEL(regionSounderThreadPool);
+		DEL(ZoneSounderThreadPool);
 		DEL(effects);
 		DEL(innerEffects);
-		DEL(presetBankReplaceMap);
+		
+		presetBankReplaceMap.clear();
+
 
 		DEL(midiEditor);
+	}
+
+	void Synther::Lock()
+	{
+		if (!IsCacheEnable())
+			tau->lockMutex.lock();
+		else
+			cacheLocker.lock();
+	}
+
+	void Synther::UnLock()
+	{
+		if (!IsCacheEnable())
+			tau->lockMutex.unlock();
+		else
+			cacheLocker.unlock();
 	}
 
 
@@ -106,33 +126,28 @@ namespace tau
 			fallSamplesPool = new ArrayPool<float>(4, sz);
 		}
 
-		//fft
-		cacheLeftChannelSampleStream = new double[1024 * 100];
-		cacheRightChannelSampleStream = new double[1024 * 100];
-		channelFFTState = new double[1024 * 100];
-		leftChannelFreqSpectrums = new double[1024 * 100];
-		rightChannelFreqSpectrums = new double[1024 * 100];
 
 		//
-		effects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
+		effects->Set((float*)synthSampleStream, channelCount, frameSampleCount);
 		innerEffects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
-
-
-		pcmRecorder.SetFrameSampleCount(tau->frameSampleCount);
 
 		//
 		tau->editor->ResetParams();
 		curtCachePlaySec = tau->editor->GetInitStartPlaySec();
-		regionSounderThreadPool->Start();
+		ZoneSounderThreadPool->Start();
 		taskProcesser->Start();
+
+		if (IsCacheEnable()) {
+			cacheTaskProcesser->Start();
+		}
 
 		OpenAudio();
 		audio->Open();
 
 		isOpened = true;
-
 		//ShowCacheInfo();
 	}
+
 
 	void Synther::Close()
 	{
@@ -150,8 +165,9 @@ namespace tau
 		audio = nullptr;
 		DEL(a);
 
-		regionSounderThreadPool->Stop();
+		ZoneSounderThreadPool->Stop();
 		taskProcesser->Stop();
+		cacheTaskProcesser->Stop();
 		isOpened = false;
 
 		for (int i = 0; i < virInstList.size(); i++)
@@ -176,12 +192,6 @@ namespace tau
 		DEL_ARRAY(rightChannelSamples);
 		DEL_ARRAY(cacheReadLeftChannelSamples);
 		DEL_ARRAY(cacheReadRightChannelSamples);
-
-		DEL_ARRAY(cacheLeftChannelSampleStream);
-		DEL_ARRAY(cacheRightChannelSampleStream);
-		DEL_ARRAY(channelFFTState);
-		DEL_ARRAY(leftChannelFreqSpectrums);
-		DEL_ARRAY(rightChannelFreqSpectrums);
 
 		DEL(synthSampleStream);
 		DEL(cacheBuffer);
@@ -211,14 +221,14 @@ namespace tau
 		else if (tau->audioEngineType == Audio::EngineType::RtAudio) {
 			audio = new Audio_Rt();
 			//添加压缩器效果
-			Compressor* compressor = new Compressor();
+			tauFX::Compressor* compressor = new tauFX::Compressor();
 			AddEffect(compressor);
 		}
 		else
 		{
 			audio = new Audio_pa();
 			//添加压缩器效果
-			Compressor* compressor = new Compressor();
+			tauFX::Compressor* compressor = new tauFX::Compressor();
 			AddEffect(compressor);
 		}
 #else
@@ -246,7 +256,7 @@ namespace tau
 		frameSampleCount = count;
 		if (frameSampleCount < 256) frameSampleCount = 256;
 
-		effects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
+		effects->Set((float*)synthSampleStream, channelCount, frameSampleCount);
 		innerEffects->Set(leftChannelSamples, rightChannelSamples, frameSampleCount);
 	}
 
@@ -261,18 +271,21 @@ namespace tau
 		useMulThreads = use;
 		if (use)
 		{
-			regionSounderThreadPool->Start();
+			ZoneSounderThreadPool->Start();
 		}
 		else
 		{
-			regionSounderThreadPool->Stop();
+			ZoneSounderThreadPool->Stop();
 		}
 	}
 
 	//投递任务
 	void Synther::PostTask(TaskCallBack taskCallBack, void* data, int delay)
 	{
-		taskProcesser->PostTask(taskCallBack, data, delay);
+		Task* task = taskProcesser->CreateTask();
+		task->processCallBack = taskCallBack;
+		task->data = data;
+		taskProcesser->PostTask(task, delay);
 	}
 
 	//投递任务
@@ -282,7 +295,6 @@ namespace tau
 	}
 
 	// 帧渲染
-
 	void Synther::FrameRender(uint8_t* stream, int len)
 	{
 		//printf("----------------\n");
@@ -290,33 +302,19 @@ namespace tau
 		//
 		while (audio)
 		{
-			if (!IsCacheEnable())
+			// autio系统调用此函数时，并没有按固定的帧率调用
+			// render和autio通过isFrameRenderCompleted来通知协调
+			if (isFrameRenderCompleted)
 			{
-				// autio系统调用此函数时，并没有按固定的帧率调用
-				// render和autio通过isFrameRenderCompleted来通知协调
-				if (isFrameRenderCompleted)
-				{
-					//printf("FrameAudio: %ld, len: %d\n", GetCurrentTimeMsec(), len);
+				//printf("FrameAudio: %ld, len: %d\n", GetCurrentTimeMsec(), len);
 
-					if (!tau->isSilence)
-						memcpy(stream, synthSampleStream, len);
-
-					//pcm录制
-					RecordPCMing();
-
-					ReqRender();
-					break;
-				}
-			}
-			else
-			{
 				if (!tau->isSilence)
 					memcpy(stream, synthSampleStream, len);
 
-				//pcm录制
-				RecordPCMing();
-
-				CacheRender();
+				if (!IsCacheEnable())
+					ReqRender();
+				else
+					ReqCacheRender();
 				break;
 			}
 
@@ -330,64 +328,39 @@ namespace tau
 	}
 
 
-	//最终合成流的pcm录制
-	void Synther::RecordPCMing()
+
+	// 请求缓存渲染事件
+	void Synther::ReqCacheRender()
 	{
-		if (pcmRecordState == 1) {
-			pcmRecorder.Write((float*)synthSampleStream, frameSampleCount * channelCount);
-		}
-		else if (pcmRecordState == 2) {
-			pcmRecordState = 0;
-			pcmRecordWaitSem.set();
-		}
+		SyntherEvent* ev = SyntherEvent::New();
+		ev->synther = this;
+		ev->processCallBack = CacheRenderTask;
+
+		if (IsCacheEnable())
+			isFrameRenderCompleted = false;
+
+		cacheTaskProcesser->PostTask(ev);
 	}
 
-
-	void Synther::ClearRecordPCM()
+	void Synther::CacheRenderTask(Task* ev)
 	{
-		StopRecordPCM();
-		pcmRecorder.Clear();
+		SyntherEvent* se = (SyntherEvent*)ev;
+		Synther& synther = (Synther&)*(se->synther);
+		synther.CacheRender();
 	}
-
-	void Synther::StartRecordPCM()
-	{
-		pcmRecordState = 1;
-	}
-
-	void Synther::StopRecordPCM()
-	{
-		pcmRecordState = 2;
-		pcmRecordWaitSem.wait();
-	}
-
-	void Synther::SaveRecordPCM(string& path)
-	{
-		StopRecordPCM();
-		pcmRecorder.SaveToFile(path);
-	}
-
-	void Synther::SaveRecordPCMToWav(string& path)
-	{
-		StopRecordPCM();
-		pcmRecorder.SaveToWavFile(path, tau->sampleProcessRate, channelCount, false, 4);
-	}
-
-	void Synther::SaveRecordPCMToMp3(string& path)
-	{
-		StopRecordPCM();
-		pcmRecorder.SaveToMp3File(path, tau->sampleProcessRate, channelCount);
-	}
-
 
 
 	// 请求帧渲染事件
-	void Synther::ReqRender(float delay)
+	void Synther::ReqRender()
 	{
 		SyntherEvent* ev = SyntherEvent::New();
 		ev->synther = this;
 		ev->processCallBack = RenderTask;
-		isFrameRenderCompleted = false;
-		taskProcesser->PostTask(ev, delay);
+
+		if (!IsCacheEnable())
+			isFrameRenderCompleted = false;
+
+		taskProcesser->PostTask(ev);
 	}
 
 	void Synther::RenderTask(Task* ev)
@@ -399,9 +372,10 @@ namespace tau
 
 		synther.tau->lockMutex.lock();
 		synther.Render();
+		if (!synther.IsCacheEnable())
+			synther.isFrameRenderCompleted = true;
 		synther.tau->lockMutex.unlock();
 	}
-
 
 
 	//是否包含指定的虚拟乐器
@@ -423,22 +397,22 @@ namespace tau
 	{
 		int orgKey = orgBankMSB << 16 | orgBankLSB << 8 | orgInstNum;
 		int repKey = repBankMSB << 16 | repBankLSB << 8 | repInstNum;
-		(*presetBankReplaceMap)[orgKey] = repKey;
+		presetBankReplaceMap[orgKey] = repKey;
 	}
 
 	//移除替换乐器
 	void Synther::RemoveReplaceInstrument(int orgBankMSB, int orgBankLSB, int orgInstNum)
 	{
 		int orgKey = orgBankMSB << 16 | orgBankLSB << 8 | orgInstNum;
-		presetBankReplaceMap->erase(orgKey);
+		presetBankReplaceMap.erase(orgKey);
 	}
 
 	//获取替换乐器key
 	int Synther::GetReplaceInstrumentKey(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
 	{
 		int key = bankSelectMSB << 16 | bankSelectLSB << 8 | instrumentNum;
-		auto itReplace = presetBankReplaceMap->find(key);
-		if (itReplace != presetBankReplaceMap->end()) {
+		auto itReplace = presetBankReplaceMap.find(key);
+		if (itReplace != presetBankReplaceMap.end()) {
 			key = itReplace->second;
 		}
 
@@ -448,7 +422,7 @@ namespace tau
 	//增加效果器
 	void Synther::AddEffect(TauEffect* effect)
 	{
-		effect->SetSynther(this);
+		effect->SetTau(tau);
 		effects->AppendEffect(effect);
 	}
 
@@ -457,13 +431,13 @@ namespace tau
 	{
 		vector<VirInstrument*>& vinsts = channel->GetVirInstruments();
 		for (int i = 0; i < vinsts.size(); i++)
-			vinsts[i]->ModulationParams();
+			vinsts[i]->Modulation();
 	}
 
 	//调制虚拟乐器参数
 	void Synther::ModulationVirInstParams(VirInstrument* virInst)
 	{
-		virInst->ModulationParams();
+		virInst->Modulation();
 	}
 
 
@@ -514,7 +488,6 @@ namespace tau
 	{
 		vector<VirInstrument*>* virInsts = GetVirInstruments(channel);
 
-
 		if (virInsts == nullptr)
 		{
 			VirInstrument* virInst = new VirInstrument(this, channel, nullptr);
@@ -523,7 +496,6 @@ namespace tau
 			AppendToVirInstList(virInst);
 			return virInst;
 		}
-
 
 		(*virInsts)[0]->ChangeProgram(bankSelectMSB, bankSelectLSB, instrumentNum);
 		for (int i = 1; i < virInsts->size(); i++)
@@ -562,7 +534,10 @@ namespace tau
 				continue;
 			}
 
-			bool isDeviceChannel = virInstList[i]->GetChannel()->IsDeviceChannel();
+			Channel* channel = virInstList[i]->GetChannel();
+			bool isDeviceChannel = false;
+			if (channel != nullptr)
+				channel->IsDeviceChannel();
 
 			if (type == 0 && !isDeviceChannel) {
 				AddNeedDelVirInstrument(virInstList[i]);
@@ -743,6 +718,18 @@ namespace tau
 		}
 	}
 
+	//关闭与指定id匹配的所有虚拟乐器所有按键
+	void Synther::OffAllKeys(int id)
+	{
+		VirInstrument* virInst;
+		vector<VirInstrument*>::iterator it = virInstList.begin();
+		for (; it != virInstList.end(); it++)
+		{
+			virInst = *it;
+			virInst->OffAllKeys(id);
+		}
+	}
+
 
 	//根据指定通道获取关连虚拟乐器
 	vector<VirInstrument*>* Synther::GetVirInstruments(Channel* channel)
@@ -822,7 +809,7 @@ namespace tau
 			RemoveNeedDeleteVirInsts();
 
 			//渲染虚拟乐器区域发声
-			RenderVirInstRegionSound();
+			RenderVirInstZoneSound();
 
 			//移除已完成采样的KeySounder
 			RemoveProcessEndedKeySounder();
@@ -849,30 +836,29 @@ namespace tau
 	}
 
 	// 渲染虚拟乐器区域发声
-	void Synther::RenderVirInstRegionSound()
+	void Synther::RenderVirInstZoneSound()
 	{
-
 		//为渲染准备所有正在发声的区域
-		totalRegionSounderCount = 0;
+		totalZoneSounderCount = 0;
 		for (int i = 0; i < virInstList.size(); i++)
 		{
 			virInstList[i]->CreateKeySounders();
 
-			totalRegionSounderCount +=
-				virInstList[i]->CreateRegionSounderForRender(
-					totalRegionSounders, totalRegionSounderCount);
+			totalZoneSounderCount +=
+				virInstList[i]->CreateZoneSounderForRender(
+					totalZoneSounders, totalZoneSounderCount);
 		}
 
 		//快速释音超过限制的区域发声
-		if (tau->limitRegionSounderCount > 64)
-			FastReleaseRegionSounders();
+		if (tau->limitZoneSounderCount > 64)
+			FastReleaseZoneSounders();
 		else
-			FastReleaseRegionSounders2();
+			FastReleaseZoneSounders2();
 
 
-		//printf("声音总数:%d\n", totalRegionSounderCount);
+		//printf("声音总数:%d\n", totalZoneSounderCount);
 		//开始渲染区域声音
-		if (totalRegionSounderCount <= 0)
+		if (totalZoneSounderCount <= 0)
 			return;
 
 		//是否使用线程池并行处理按键发音数据
@@ -882,17 +868,17 @@ namespace tau
 		//但在测试同时发音数量很高的midi音乐时，多线程的效率非常高，播放也稳定
 		if (!tau->useMulThreads)
 		{
-			for (int i = 0; i < totalRegionSounderCount; i++)
+			for (int i = 0; i < totalZoneSounderCount; i++)
 			{
-				totalRegionSounders[i]->SetFrameBuffer(leftChannelFrameBuf, rightChannelFrameBuf);
-				totalRegionSounders[i]->Render();
-				totalRegionSounders[i]->GetVirInstrument()->CombineRegionSounderSamples(totalRegionSounders[i]);
+				totalZoneSounders[i]->SetFrameBuffer(leftChannelFrameBuf, rightChannelFrameBuf);
+				totalZoneSounders[i]->Render();
+				totalZoneSounders[i]->GetVirInstrument()->CombineZoneSounderSamples(totalZoneSounders[i]);
 			}
 		}
 		else
 		{
-			regionSounderThreadPool->Render(totalRegionSounders, totalRegionSounderCount);
-			regionSounderThreadPool->Wait();
+			ZoneSounderThreadPool->Render(totalZoneSounders, totalZoneSounderCount);
+			ZoneSounderThreadPool->Wait();
 		}
 
 	}
@@ -918,7 +904,7 @@ namespace tau
 	}
 
 	//快速释音超过限制的区域发声
-	void Synther::FastReleaseRegionSounders()
+	void Synther::FastReleaseZoneSounders()
 	{
 		int instSize = (int)virInsts.size();
 		if (instSize <= 0)
@@ -932,7 +918,7 @@ namespace tau
 		int soundInstSize = 0;
 		for (int i = 0; i < instSize; i++)
 		{
-			if (virInsts[i]->GetRegionSounderCount() > 0)
+			if (virInsts[i]->GetZoneSounderCount() > 0)
 				soundInstSize++;
 		}
 		if (soundInstSize == 0)
@@ -940,14 +926,14 @@ namespace tau
 
 		VirInstrument* inst;
 		int count;
-		int limitTotalCount = tau->limitRegionSounderCount;
+		int limitTotalCount = tau->limitZoneSounderCount;
 		int limitPerElemCount = limitTotalCount / soundInstSize;
 		int curtSoundInstSize = 0;
-		RegionSounder** regionSounders;
+		ZoneSounder** ZoneSounders;
 		for (int i = 0; i < instSize; i++)
 		{
 			inst = virInsts[i];
-			count = inst->GetRegionSounderCount();
+			count = inst->GetZoneSounderCount();
 			if (count == 0)
 				continue;
 
@@ -961,10 +947,10 @@ namespace tau
 				continue;
 			}
 
-			regionSounders = inst->GetRegionSounders();
+			ZoneSounders = inst->GetZoneSounders();
 			for (int j = limitPerElemCount; j < count; j++) {
-				regionSounders[j]->SetHoldDownKey(false);
-				regionSounders[j]->OffKey(127, 0.003f);
+				ZoneSounders[j]->SetHoldDownKey(false);
+				ZoneSounders[j]->OffKey(127, 0.003f);
 			}
 
 			//
@@ -979,7 +965,7 @@ namespace tau
 
 	//快速释音超过限制的区域发声2
 	//比例算法
-	void Synther::FastReleaseRegionSounders2()
+	void Synther::FastReleaseZoneSounders2()
 	{
 		int instSize = (int)virInsts.size();
 		if (instSize <= 0)
@@ -990,16 +976,16 @@ namespace tau
 			sort(virInsts.begin(), virInsts.end(), SounderCountCompare);
 		}
 
-		int limitTotalCount = tau->limitRegionSounderCount;
+		int limitTotalCount = tau->limitZoneSounderCount;
 		VirInstrument* inst;
 		float totalCount = 0;
 		int count = 0;
-		RegionSounder** regionSounders;
+		ZoneSounder** ZoneSounders;
 
 		for (int i = 0; i < instSize; i++)
 		{
 			inst = virInsts[i];
-			count = inst->GetRegionSounderCount();
+			count = inst->GetZoneSounderCount();
 			if (count > limitTotalCount)
 				count = limitTotalCount;
 			instSoundCount[i] = count;
@@ -1029,19 +1015,19 @@ namespace tau
 		for (int i = 0; i < instSize; i++)
 		{
 			inst = virInsts[i];
-			inst->realRegionSounderCount = instSoundCount[i];
-			regionSounders = inst->GetRegionSounders();
-			for (int j = instSoundCount[i]; j < inst->GetRegionSounderCount(); j++)
+			inst->realZoneSounderCount = instSoundCount[i];
+			ZoneSounders = inst->GetZoneSounders();
+			for (int j = instSoundCount[i]; j < inst->GetZoneSounderCount(); j++)
 			{
-				regionSounders[j]->SetHoldDownKey(false);
-				regionSounders[j]->OffKey(127, 0.003f);
+				ZoneSounders[j]->SetHoldDownKey(false);
+				ZoneSounders[j]->OffKey(127, 0.003f);
 			}
 		}
 	}
 
 	bool Synther::SounderCountCompare(VirInstrument* a, VirInstrument* b)
 	{
-		return a->GetRegionSounderCount() < b->GetRegionSounderCount();//升序
+		return a->GetZoneSounderCount() < b->GetZoneSounderCount();//升序
 	}
 
 
@@ -1083,45 +1069,35 @@ namespace tau
 	//合成采样buffer
 	void Synther::SynthSampleBuffer()
 	{
-		effects->Process();
-		CombineChannelBufferToStream();
+		if (IsCacheEnable()) {
+			CacheInput();
+		}
+		else {
+			CombineChannelBufferToStream();
+			effects->Process();
+			FadeSynthStream();
+		}
 
 		//
-		if (isSoundEndRemove || isReqDelete)
+		if (isReqDelete)
 		{
-			if (soundEndGain == 0)
-				isSoundEnd = true;
-
 			if (isSoundEnd) {
 				isReqDelete = false;
-				isSoundEndRemove = false;
 				int type = isReqDelete ? -1 : 0;
 				DelAllVirInstrument(type);
 				effects->Clear();
-				totalRegionSounderCount = 0;
+				totalZoneSounderCount = 0;
 
 				//
 				waitSem.set();
 			}
 		}
-
-		isFrameRenderCompleted = true;
 	}
-
 
 
 	//合并声道buffer到数据流
 	void Synther::CombineChannelBufferToStream()
 	{
-		//生成通道采样值的频谱
-		CreateChannelSamplesFreqSpectrum();
-
-		if (IsCacheEnable()) {
-			CacheInput();
-			return;
-		}
-
-
 		//合并左右声道采样值到流
 		float* out = (float*)synthSampleStream;
 
@@ -1129,149 +1105,58 @@ namespace tau
 		{
 		case ChannelOutputMode::Stereo:
 		{
-			if (isSoundEndRemove || isReqDelete)
+			for (int i = 0; i < frameSampleCount; i++)
 			{
-				for (int i = 0; i < frameSampleCount; i++)
-				{
-					soundEndGain -= 0.001;
-					if (soundEndGain < 0)
-						soundEndGain = 0;
-					*out++ = leftChannelSamples[i] * soundEndGain;
-					*out++ = rightChannelSamples[i] * soundEndGain;
-				}
-			}
-			else {
-				for (int i = 0; i < frameSampleCount; i++)
-				{
-					*out++ = leftChannelSamples[i];
-					*out++ = rightChannelSamples[i];
-				}
+				*out++ = leftChannelSamples[i];
+				*out++ = rightChannelSamples[i];
 			}
 		}
 		break;
 
 		case ChannelOutputMode::Mono:
 
-			if (isSoundEndRemove || isReqDelete)
-			{
-				for (int i = 0; i < frameSampleCount; i++)
+			for (int i = 0; i < frameSampleCount; i++)
+				*out++ = leftChannelSamples[i];
+
+			break;
+		}
+	}
+
+
+	//渐隐合成流的声音
+	//对effects效果器产生的余音进行检测，以确保没有任何余音，才结束
+	void Synther::FadeSynthStream()
+	{
+		if (isReqDelete && !isSoundEnd)
+		{
+			float* out = (float*)synthSampleStream;
+			if (channelCount == 2) {
+				for (int i = 0; i < channelCount * frameSampleCount; i += 2)
 				{
-					soundEndGain -= 0.001f;
-					if (soundEndGain < 0)soundEndGain = 0;
-					*out++ = leftChannelSamples[i] * soundEndGain;
+					soundEndGain -= 0.0001;
+					if (soundEndGain < 0)
+						soundEndGain = 0;
+					out[i] *= soundEndGain;
+					out[i + 1] *= soundEndGain;
 				}
 			}
 			else {
 				for (int i = 0; i < frameSampleCount; i++)
-					*out++ = leftChannelSamples[i];
+				{
+					soundEndGain -= 0.0001;
+					if (soundEndGain < 0)
+						soundEndGain = 0;
+					out[i] *= soundEndGain;
+				}
 			}
-
-			break;
 		}
+
+		if (soundEndGain == 0)
+			isSoundEnd = true;
 	}
 
 
-	//生成通道采样值的频谱
-	void Synther::CreateChannelSamplesFreqSpectrum()
-	{
-		if (!tau->isEnableCreateFreqSpectrums)
-		{
-			cacheSampleStreamIdx = 0;
-			return;
-		}
 
-		float* out = (float*)synthSampleStream;
-
-		switch (tau->channelOutputMode)
-		{
-		case ChannelOutputMode::Stereo:
-			for (int i = 0; i < frameSampleCount; i++)
-			{
-				cacheLeftChannelSampleStream[cacheSampleStreamIdx] = leftChannelFrameBuf[i * 2];
-				cacheLeftChannelSampleStream[cacheSampleStreamIdx + 1] = 0;
-
-				cacheRightChannelSampleStream[cacheSampleStreamIdx] = rightChannelSamples[i * 2 + 1];
-				cacheRightChannelSampleStream[cacheSampleStreamIdx + 1] = 0;
-
-				cacheSampleStreamIdx += 2;
-			}
-			break;
-
-		case ChannelOutputMode::Mono:
-			for (int i = 0; i < frameSampleCount; i++)
-			{
-				cacheLeftChannelSampleStream[cacheSampleStreamIdx] = leftChannelFrameBuf[i];
-				cacheLeftChannelSampleStream[cacheSampleStreamIdx + 1] = 0;
-				cacheSampleStreamIdx += 2;
-			}
-			break;
-		}
-
-		if (cacheSampleStreamIdx < tau->freqSpectrumsCount * 2)
-			return;
-
-		HanningWin(cacheLeftChannelSampleStream, cacheSampleStreamIdx);
-
-
-		if (tau->channelOutputMode != ChannelOutputMode::Mono)
-			HanningWin(cacheRightChannelSampleStream, cacheSampleStreamIdx);
-
-
-		freqSpectrumsCount = cacheSampleStreamIdx;
-
-		kiss_fft_cfg  kiss_fft_state;
-		size_t n = 102400 * sizeof(double);
-		size_t len = n;
-		kiss_fft_state = kiss_fft_alloc(freqSpectrumsCount / 2, 0, channelFFTState, &len);
-		kiss_fft(kiss_fft_state, (kiss_fft_cpx*)cacheLeftChannelSampleStream, (kiss_fft_cpx*)leftChannelFreqSpectrums);
-
-		if (tau->channelOutputMode != ChannelOutputMode::Mono)
-		{
-			len = n;
-			kiss_fft_state = kiss_fft_alloc(freqSpectrumsCount / 2, 0, channelFFTState, &len);
-			kiss_fft(kiss_fft_state, (kiss_fft_cpx*)cacheRightChannelSampleStream, (kiss_fft_cpx*)rightChannelFreqSpectrums);
-		}
-
-		//归一化
-		double invN = 1.0 / freqSpectrumsCount;
-		for (int n = 0; n < freqSpectrumsCount; n++)
-		{
-			leftChannelFreqSpectrums[n] *= invN;
-
-			if (tau->channelOutputMode != ChannelOutputMode::Mono)
-				rightChannelFreqSpectrums[n] *= invN;
-		}
-
-		cacheSampleStreamIdx = 0;
-
-	}
-
-	void Synther::HanningWin(double* data, int len)
-	{
-		double t = 0.0;
-		for (int n = 0; n < len; n++)
-		{
-			t = (double)n / (len - 1);
-			data[n * 2] *= 0.5 * (1 - FastCos(2 * M_PI * t));
-		}
-	}
-
-	//获取采样流的频谱
-	int Synther::GetSampleStreamFreqSpectrums(int channel, double* outLeft, double* outRight)
-	{
-		int count = freqSpectrumsCount;
-
-		if (channel == 0 || channel == 2)
-		{
-			memcpy(outLeft, leftChannelFreqSpectrums, count * sizeof(double));
-		}
-		else if (channel == 1 || channel == 2)
-		{
-			memcpy(outRight, rightChannelFreqSpectrums, count * sizeof(double));
-		}
-
-		return count;
-	}
 
 
 	// 移除已完成所有区域发声处理(采样处理)的KeySounder      

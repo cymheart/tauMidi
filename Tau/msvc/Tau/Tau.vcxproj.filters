@@ -43,9 +43,6 @@
     <Filter Include="core\Synth\Synther">
       <UniqueIdentifier>{60afeaff-6421-4bcd-b306-3d587b179ec1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="core\SoundFontFormat\TauFont">
-      <UniqueIdentifier>{30d1c8c1-8386-4e84-9fe6-c460211bfeee}</UniqueIdentifier>
-    </Filter>
     <Filter Include="core\Audio\AudioRt">
       <UniqueIdentifier>{1fbdef70-8c78-4a25-99a8-7d61e5446bf7}</UniqueIdentifier>
     </Filter>
@@ -88,30 +85,6 @@
     <Filter Include="core\FX">
       <UniqueIdentifier>{f7a7bd44-3bb1-47ca-9800-929b36a6c745}</UniqueIdentifier>
     </Filter>
-    <Filter Include="core\FX\AutoWah">
-      <UniqueIdentifier>{818b6c60-da77-4d51-acb8-c82deb9249a8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="core\FX\Chorus">
-      <UniqueIdentifier>{edb4d351-cb08-45c8-9857-a3535a2bccdb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="core\FX\Compressor">
-      <UniqueIdentifier>{0d39cf4b-209f-4690-9f68-81bf3f879722}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="core\FX\Delay">
-      <UniqueIdentifier>{8d6f2721-6b50-4f17-9e5c-f0eaeeca20bf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="core\FX\Eq">
-      <UniqueIdentifier>{2d1562c2-fc47-4af7-b32d-b1582ee17771}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="core\FX\Reverb">
-      <UniqueIdentifier>{0f0c8c08-47a8-4822-8978-51e3cdc02d47}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="core\FX\Tremolo">
-      <UniqueIdentifier>{e5ed4edb-f080-450f-ab39-b33c4c0c22e4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="core\FX\Distortion">
-      <UniqueIdentifier>{32ffc104-5e45-4c8c-9779-08c2802be09e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="thrids\dsignal">
       <UniqueIdentifier>{8cd7d44a-8c46-4697-a82b-dff6e23ae284}</UniqueIdentifier>
     </Filter>
@@ -129,6 +102,21 @@
     </Filter>
     <Filter Include="thrids\libmp3lame">
       <UniqueIdentifier>{5786fe4e-43c9-4970-a4cf-db359d60ae61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\sf3">
+      <UniqueIdentifier>{8fb08a42-de24-4b17-aff2-5800b7fb89cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis">
+      <UniqueIdentifier>{0ae67c23-53c3-4ec6-bd34-0376e0a4dadd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\ogg">
+      <UniqueIdentifier>{834e1b06-df60-407a-aaec-079b69002beb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\vorbis">
+      <UniqueIdentifier>{75d525dc-55b5-490a-82d8-4341642ab0f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\SoundFontFormat\SF3">
+      <UniqueIdentifier>{9d77b859-496c-4c11-b13b-710d71d19ee0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -153,10 +141,10 @@
     <ClCompile Include="..\..\src\core\Synth\Preset.cpp">
       <Filter>core\Synth</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Synth\Region.cpp">
+    <ClCompile Include="..\..\src\core\Synth\Zone.cpp">
       <Filter>core\Synth</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Synth\RegionSounder.cpp">
+    <ClCompile Include="..\..\src\core\Synth\ZoneSounder.cpp">
       <Filter>core\Synth</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\Synth\Sample.cpp">
@@ -189,7 +177,7 @@
     <ClCompile Include="..\..\src\thrids\tinyxml2\tinyxml2.cpp">
       <Filter>thrids\tinyxml2</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Synth\ModulatorList.cpp">
+    <ClCompile Include="..\..\src\core\Synth\InsideModulators.cpp">
       <Filter>core\Synth</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2.cpp">
@@ -204,10 +192,7 @@
     <ClCompile Include="..\..\src\core\SoundFontFormat\SF2\SF2Structs.cpp">
       <Filter>core\SoundFontFormat\SF2</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Synth\RegionModulation.cpp">
-      <Filter>core\Synth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\Synth\RegionSounderThread.cpp">
+    <ClCompile Include="..\..\src\core\Synth\ZoneSounderThread.cpp">
       <Filter>core\Synth</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\thrids\task\TaskProcesser.cpp">
@@ -263,9 +248,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\Synth\TauPool.cpp">
       <Filter>core\Synth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.cpp">
-      <Filter>core\SoundFontFormat\TauFont</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\Audio\AudioRt\Audio_Rt.cpp">
       <Filter>core\Audio\AudioRt</Filter>
@@ -492,59 +474,8 @@
     <ClCompile Include="..\..\src\core\FX\EffectList.cpp">
       <Filter>core\FX</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\TauEffectTask.cpp">
-      <Filter>core\FX</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\thrids\stk\Chorus.cpp">
       <Filter>thrids\stk</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\Autowah.cpp">
-      <Filter>core\FX\AutoWah</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\AutowahTask.cpp">
-      <Filter>core\FX\AutoWah</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\Chorus.cpp">
-      <Filter>core\FX\Chorus</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\ChorusTask.cpp">
-      <Filter>core\FX\Chorus</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\Compressor.cpp">
-      <Filter>core\FX\Compressor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\CompressorTask.cpp">
-      <Filter>core\FX\Compressor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\Delay.cpp">
-      <Filter>core\FX\Delay</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\DelayTask.cpp">
-      <Filter>core\FX\Delay</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\Equalizer.cpp">
-      <Filter>core\FX\Eq</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\EqualizerTask.cpp">
-      <Filter>core\FX\Eq</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\Reverb.cpp">
-      <Filter>core\FX\Reverb</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\ReverbTask.cpp">
-      <Filter>core\FX\Reverb</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\Tremolo.cpp">
-      <Filter>core\FX\Tremolo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\TremoloTask.cpp">
-      <Filter>core\FX\Tremolo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\Distortion.cpp">
-      <Filter>core\FX\Distortion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\FX\DistortionTask.cpp">
-      <Filter>core\FX\Distortion</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\thrids\dsignal\Distortion.cpp">
       <Filter>thrids\dsignal</Filter>
@@ -723,8 +654,50 @@
     <ClCompile Include="..\..\src\thrids\scutils\Mp3Recorder.cpp">
       <Filter>thrids\scutils</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Synth\PcmRecorder.cpp">
-      <Filter>core\Synth</Filter>
+    <ClCompile Include="..\..\src\core\FX\TauEffect.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Autowah.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Chorus.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Compressor.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Delay.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Distortion.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Equalizer.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Tremolo.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\Reverb.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\SpectrumVisual.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\FX\PcmRecorder.cpp">
+      <Filter>core\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\dsignal\SpectrumVisual.cpp">
+      <Filter>thrids\dsignal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Synth\Editor\MeiExporter.cpp">
+      <Filter>core\Synth\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\sf3\sfont.cpp">
+      <Filter>thrids\sf3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\SoundFontFormat\SF3\SF3Parser.cpp">
+      <Filter>core\SoundFontFormat\SF3</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -749,10 +722,10 @@
     <ClInclude Include="..\..\src\core\Synth\Preset.h">
       <Filter>core\Synth</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\Synth\Region.h">
+    <ClInclude Include="..\..\src\core\Synth\Zone.h">
       <Filter>core\Synth</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\Synth\RegionSounder.h">
+    <ClInclude Include="..\..\src\core\Synth\ZoneSounder.h">
       <Filter>core\Synth</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\Synth\Sample.h">
@@ -800,7 +773,7 @@
     <ClInclude Include="..\..\src\thrids\tinyxml2\tinyxml2.h">
       <Filter>thrids\tinyxml2</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\Synth\ModulatorList.h">
+    <ClInclude Include="..\..\src\core\Synth\InsideModulators.h">
       <Filter>core\Synth</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2.h">
@@ -818,10 +791,7 @@
     <ClInclude Include="..\..\src\core\SoundFontFormat\SF2\SF2Types.h">
       <Filter>core\SoundFontFormat\SF2</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\Synth\RegionModulation.h">
-      <Filter>core\Synth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\Synth\RegionSounderThread.h">
+    <ClInclude Include="..\..\src\core\Synth\ZoneSounderThread.h">
       <Filter>core\Synth</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\thrids\task\TaskProcesser.h">
@@ -886,9 +856,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\Synth\TauTypes.h">
       <Filter>core\Synth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\SoundFontFormat\TauFont\TauFont.h">
-      <Filter>core\SoundFontFormat\TauFont</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\Audio\AudioRt\Audio_Rt.h">
       <Filter>core\Audio\AudioRt</Filter>
@@ -1190,27 +1157,6 @@
     <ClInclude Include="..\..\src\thrids\stk\Chorus.h">
       <Filter>thrids\stk</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\FX\Autowah.h">
-      <Filter>core\FX\AutoWah</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\FX\Chorus.h">
-      <Filter>core\FX\Chorus</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\FX\Compressor.h">
-      <Filter>core\FX\Compressor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\FX\Delay.h">
-      <Filter>core\FX\Delay</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\FX\Equalizer.h">
-      <Filter>core\FX\Eq</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\FX\Tremolo.h">
-      <Filter>core\FX\Tremolo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\FX\Distortion.h">
-      <Filter>core\FX\Distortion</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\thrids\dsignal\Distortion.h">
       <Filter>thrids\dsignal</Filter>
     </ClInclude>
@@ -1297,9 +1243,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\thrids\scutils\ArrayPool.h">
       <Filter>thrids\scutils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\FX\Reverb.h">
-      <Filter>core\FX\Reverb</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\thrids\OteyPiano\DWG.h">
       <Filter>thrids\OteyPiano</Filter>
@@ -1415,8 +1358,62 @@
     <ClInclude Include="..\..\src\thrids\scutils\Mp3Recorder.h">
       <Filter>thrids\scutils</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\Synth\PcmRecorder.h">
-      <Filter>core\Synth</Filter>
+    <ClInclude Include="..\..\src\core\FX\Autowah.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Chorus.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Compressor.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Delay.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Distortion.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Equalizer.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Tremolo.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\Reverb.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\SpectrumVisual.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\FX\PcmRecorder.h">
+      <Filter>core\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\dsignal\SpectrumVisual.h">
+      <Filter>thrids\dsignal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Synth\Editor\MeiExporter.h">
+      <Filter>core\Synth\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\sf3\sfont.h">
+      <Filter>thrids\sf3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\ogg\ogg.h">
+      <Filter>thrids\ogg_vorbis\ogg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\ogg\os_types.h">
+      <Filter>thrids\ogg_vorbis\ogg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\vorbis\codec.h">
+      <Filter>thrids\ogg_vorbis\vorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\vorbis\vorbisenc.h">
+      <Filter>thrids\ogg_vorbis\vorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\vorbis\vorbisfile.h">
+      <Filter>thrids\ogg_vorbis\vorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\SoundFontFormat\SF3\SF3Parser.h">
+      <Filter>core\SoundFontFormat\SF3</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -18,6 +18,8 @@ package com.mobileer.oboetester;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
 import android.media.midi.MidiDevice;
 import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiInputPort;
@@ -30,9 +32,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.mobileer.audio_device.AudioDeviceListEntry;
+import com.mobileer.audio_device.AudioDeviceSpinner;
 import com.mobileer.miditools.MidiOutputPortConnectionSelector;
 import com.mobileer.miditools.MidiPortConnector;
 import com.mobileer.miditools.MidiTools;
@@ -58,6 +64,8 @@ public class TapToToneActivity extends TestOutputActivityBase {
 
     private MidiOutputPortConnectionSelector mPortSelector;
     private final MyNoteListener mTestListener = new MyNoteListener();
+
+    private AudioDeviceSpinner mInputDeviceSpinner;
 
     @Override
     protected void inflateActivity() {
@@ -103,11 +111,16 @@ public class TapToToneActivity extends TestOutputActivityBase {
             return true;
         });
 
+        mCommunicationDeviceView = (CommunicationDeviceView) findViewById(R.id.comm_device_view);
+
         mStartButton = (Button) findViewById(R.id.button_start);
         mStopButton = (Button) findViewById(R.id.button_stop);
         updateButtons(false);
 
         updateEnabledWidgets();
+
+        mInputDeviceSpinner = (AudioDeviceSpinner) findViewById(R.id.input_devices_spinner);
+        mInputDeviceSpinner.setDirectionType(AudioManager.GET_DEVICES_INPUTS);
     }
 
     private void updateButtons(boolean running) {
@@ -262,8 +275,7 @@ public class TapToToneActivity extends TestOutputActivityBase {
         }
         try {
             super.startAudio();
-            mTapToToneTester.resetLatency();
-            mTapToToneTester.start();
+            startTapToToneTester();
             updateButtons(true);
         } catch (IOException e) {
             e.printStackTrace();
@@ -273,9 +285,25 @@ public class TapToToneActivity extends TestOutputActivityBase {
     }
 
     public void stopTest(View view) {
-        mTapToToneTester.stop();
+        stopTapToToneTester();
         stopAudio();
         closeAudio();
         updateButtons(false);
+    }
+
+    private void startTapToToneTester() throws IOException {
+        AudioDeviceInfo deviceInfo =
+                ((AudioDeviceListEntry) mInputDeviceSpinner.getSelectedItem()).getDeviceInfo();
+        mTapToToneTester.setInputDevice(deviceInfo);
+        mInputDeviceSpinner.setEnabled(false);
+        mTapToToneTester.resetLatency();
+        mTapToToneTester.start();
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    private void stopTapToToneTester() {
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        mInputDeviceSpinner.setEnabled(true);
+        mTapToToneTester.stop();
     }
 }

@@ -40,7 +40,12 @@ namespace tauFX
 			if (!effects[i]->IsEnable())
 				continue;
 
-			effects[i]->EffectProcess(leftChannelSamples, rightChannelSamples, channelSampleCount);
+			if (leftChannelSamples == nullptr && rightChannelSamples == nullptr) {
+				effects[i]->EffectProcess(synthStream, numChannels, channelSampleCount);
+			}
+			else {
+				effects[i]->EffectProcess(leftChannelSamples, rightChannelSamples, channelSampleCount);
+			}
 		}
 	}
 

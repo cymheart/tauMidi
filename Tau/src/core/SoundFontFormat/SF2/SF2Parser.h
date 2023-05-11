@@ -15,17 +15,23 @@ namespace tau
 		{
 		}
 
+		virtual ~SF2Parser();
+
 		//设置是否解析调制器
 		void SetParseModulator(bool isParse)
 		{
 			isParseModulator = isParse;
+			if (!isParseModulator) {
+				printf("关闭解析sf调制器!");
+			}
 		}
 
 		//解析
 		void Parse(string filePath);
 
 
-	private:
+	protected:
+		void ParseCore();
 
 		//解析样本列表    
 		void ParseSampleList();
@@ -33,29 +39,29 @@ namespace tau
 		//解析乐器列表    
 		void ParseInstrumentList();
 		//解析乐器区域的生成器列表
-		Region* ParseInstRegionGeneratorList(int bagIdx, Instrument* oreInst);
+		Zone* ParseInstZoneGeneratorList(int bagIdx, Instrument* tauInst);
 		//解析乐器区域的调制器列表
-		void ParseInstRegionModulatorList(Region* region, int bagIdx, Instrument* oreInst);
+		void ParseInstZoneModulatorList(Zone* zone, int bagIdx, Instrument* tauInst);
 
 		//解析预设列表
 		void ParsePresetList();
 		//解析预设区域的生成器列表
-		Region* ParsePresetRegionGeneratorList(int bagIdx, Preset* orePreset);
+		Zone* ParsePresetZoneGeneratorList(int bagIdx, Preset* tauPreset);
 		//解析预设区域的调制器列表
-		void ParsePresetRegionModulatorList(Region* region, int bagIdx, Preset* orePreset);
-
-		//设置生成器列表值
-		void SetGenList(GeneratorList& genList, vector<SF2GeneratorList*>& sf2Gens, int start, int end, RegionType regionType);
+		void ParsePresetZoneModulatorList(Zone* zone, int bagIdx, Preset* tauPreset);
 		//生成调制器
-		void CreateModulator(vector<SF2ModulatorList*>& mods, int i, Region* region);
-		//替换区域中前一个相似调制器
-		void ReplaceRegionPrevSameModulator(Modulator* modulator, Region* region);
+		void CreateModulator(vector<SF2ModulatorList*>& mods, int start, int idx, Zone* zone);
+		//重设输出目标调制器
+		void ResetOutTargetModulator(vector<SF2ModulatorList*>& mods, int start, int idx);
+		//获取区域中相同调制器
+		Modulator* GetZoneSameModulator(Modulator* modulator, Zone* zone);
 
-	private:
+	protected:
 		bool isParseModulator = true;
 		SF2* sf2 = nullptr;
 		Modulator** modulators = nullptr;
-		size_t modulatorCount = 0;
+		size_t modulatorBufSize = 0;
+		int modulatorCount = 0;
 	};
 }
 

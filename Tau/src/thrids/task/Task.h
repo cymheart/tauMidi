@@ -6,13 +6,13 @@
 namespace task
 {
 
-	class Task
+	class Task : public ObjectMemory
 	{
 	public:
 		Task();
 		Task(TaskMsg taskMsg);
-		Task(TaskCallBack processDataCallBack, TaskMsg taskMsg = TMSG_DATA);
-		Task(TaskCompareCallBack cmpTaskCallBack, TaskMsg taskMsg = TMSG_TASK_REMOVE);
+		Task(TaskCallBack processDataCallBack, TaskMsg taskMsg = TaskMsg::TMSG_DATA);
+		Task(TaskCompareCallBack cmpTaskCallBack, TaskMsg taskMsg = TaskMsg::TMSG_TASK_REMOVE);
 
 		void Clear();
 
@@ -36,6 +36,9 @@ namespace task
 		//释放对象
 		static void Release(Task* task);
 
+		//杀死对象
+		static void Kill(Task* task);
+
 	public:
 		//过滤号
 		int filterNum = 0;
@@ -46,9 +49,10 @@ namespace task
 		int slotPos[5] = { 0 };
 		int64_t delay = 0;                //延迟执行时间
 		TaskCallBack processCallBack = nullptr;      //处理数据回调函数
-		TaskCallBack releaseCallBack = nullptr;      //释放数据回调函数
+		TaskCallBack releaseCallBack = nullptr;      //释放任务回调函数
 		TaskCompareCallBack cmpCallBack = nullptr;   //任务比较回调函数
-		TaskMsg msg = TaskMsg::TMSG_DATA;                  //任务标志
+		TaskCallBack releaseDataCallBack = nullptr;  //释放数据回调函数
+		TaskMsg msg = TaskMsg::TMSG_DATA;            //任务标志
 
 		//自定义携带数据
 		void* data = nullptr;

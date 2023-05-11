@@ -29,6 +29,7 @@ namespace tau
 			return isEnableMarkerText;
 		}
 
+		//判断是否开启速度设置
 		bool IsEnableTempo()
 		{
 			return isEnableTempo;
@@ -65,6 +66,7 @@ namespace tau
 			return tickForQuarterNote;
 		}
 
+		//判断是否开启节拍设置
 		bool IsEnableTimeSignature()
 		{
 			return isEnableTimeSignature;

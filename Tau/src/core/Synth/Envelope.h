@@ -62,7 +62,7 @@ namespace tau
 
 
 	// 包络线
-	//by cymheart, 2020--2021.
+	//by cymheart, 2020--2025.
 	class Envelope
 	{
 	public:
@@ -141,35 +141,8 @@ namespace tau
 		// <param name="sec">时间点</param>
 		void Reset(float sec = -1);
 
-	private:
-
-		// 按键的keyToHold系数影响保持时长
-		// keyToHold为百分比值，比如： 取1即为100%, 取0.25即为25%
-		// 按一个八度差，音时长改变2倍
-		// newHoldSec = 2^(keyToHold * nOctave) * holdSec
-		// 例如:
-		// 当前按键键号为40，则相对基键60，相差60 - 40 = 20个半音，即为 20/12 = 1.66667个Octave，即nOcatve = 1.66667
-		// keyToHold = 0.5, holdSec = 1.3,
-		// 则 newHoldSec = 2^(0.5 * 1.66667) * 1.3 = 2.31634s
-		// 再例:
-		// 当前按键键号为80，则相对基键60，相差60 - 80 = -20个半音，即为 -20/12 = -1.66667个Octave，即nOcatve = -1.66667
-		// keyToHold = 0.5, holdSec = 1.3,
-		// 则 newHoldSec = 2^(0.5 * -1.66667) * 1.3 = 0.729599s     
+	private: 
 		void CalRealHoldSec();
-
-
-		// 按键的keyToDecay系数影响衰减时长
-		// keyToDecay为百分比值，比如： 取1即为100%, 取0.25即为25%
-		// 按一个八度差，音时长改变2倍
-		// newDecaySec = 2^(keyToDecay * nOctave) * decaySec
-		// 例如:
-		// 当前按键键号为40，则相对基键60，相差60 - 40 = 20个半音，即为 20/12 = 1.66667个Octave，即nOcatve = 1.66667
-		// keyToDecay = 0.5, decaySec = 1.3,
-		// 则 newDecaySec = 2^(0.5 * 1.66667) * 1.3 = 2.31634s
-		// 再例:
-		// 当前按键键号为61，则相对基键60，相差60 - 61 = -1个半音，即为 -1/12 = -0.0833333个Octave，即nOcatve = -0.0833333
-		// keyToDecay = 1, decaySec = 1,
-		// 则 newDecaySec = 2^(1 * -0.0833333) * 1 = 0.943874s      
 		void CalRealDecaySec();
 
 		//  根据给定的时间点，设置包络线所处阶段   
@@ -193,47 +166,21 @@ namespace tau
 		// 起音时长
 		float attackSec = 0.001f;
 
-		// 保持时长
-		float holdSec = 0.001f;
-
-		// 衰减时长
-		float decaySec = 0.001f;
-
 		// 延音所在y位置：范围[0,1]
 		float sustainY = 1;
 
 		// 释音时长
 		float releaseSec = 0.001f;
 
-
-		// 按键的keyToHold系数影响保持时长
-		// keyToHold为百分比值，比如： 取1即为100%, 取0.25即为25%
-		// 按一个八度差，音时长改变2倍
-		// newHoldSec = 2^(keyToHold * nOctave) * holdSec
-		// 例如:
-		// 当前按键键号为40，则相对基键60，相差60 - 40 = 20个半音，即为 20/12 = 1.66667个Octave，即nOcatve = 1.66667
-		// keyToHold = 0.5, holdSec = 1.3,
-		// 则 newHoldSec = 2^(0.5 * 1.66667) * 1.3 = 2.31634s
-		// 再例:
-		// 当前按键键号为80，则相对基键60，相差60 - 80 = -20个半音，即为 -20/12 = -1.66667个Octave，即nOcatve = -1.66667
-		// keyToHold = 0.5, holdSec = 1.3,
-		// 则 newHoldSec = 2^(0.5 * -1.66667) * 1.3 = 0.729599s 
-		float keyToHold = 0;
+		//
+		short keyToHold = 0;
+		short keyToDecay = 0;
+		// 保持时长(Timecents)
+		short holdTimecents = -12000;
+		// 衰减时长(Timecents)
+		short decayTimecents = -12000;
 
 
-		// 按键的keyToDecay系数影响衰减时长
-		// keyToDecay为百分比值，比如： 取1即为100%, 取0.25即为25%
-		// 按一个八度差，音时长改变2倍
-		// newDecaySec = 2^(keyToDecay * nOctave) * decaySec
-		// 例如:
-		// 当前按键键号为40，则相对基键60，相差60 - 40 = 20个半音，即为 20/12 = 1.66667个Octave，即nOcatve = 1.66667
-		// keyToDecay = 0.5, decaySec = 1.3,
-		// 则 newDecaySec = 2^(0.5 * 1.66667) * 1.3 = 2.31634s
-		// 再例:
-		// 当前按键键号为61，则相对基键60，相差60 - 61 = -1个半音，即为 -1/12 = -0.0833333个Octave，即nOcatve = -0.0833333
-		// keyToDecay = 1, decaySec = 1,
-		// 则 newDecaySec = 2^(1 * -0.0833333) * 1 = 0.943874s
-		float keyToDecay = 0;
 
 		//当前点在包络线上原始点值
 		float curtValue = 0;
@@ -269,6 +216,9 @@ namespace tau
 
 		//是否快速释音
 		bool isFastRelease = false;
+
+		float oldSec = -1;
+		float oldOutput = 0;
 
 	};
 }

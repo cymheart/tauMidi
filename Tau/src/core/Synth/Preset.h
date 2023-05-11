@@ -12,9 +12,9 @@ namespace tau
 		Preset();
 		~Preset();
 
-		Region* GetGlobalRegion()
+		Zone* GetGlobalZone()
 		{
-			return globalRegion;
+			return globalZone;
 		}
 
 		inline void SetBankNum(int bankSelectMSB, int bankSelectLSB, int instrumentNum)
@@ -29,10 +29,14 @@ namespace tau
 			return (bankSelectMSB << 16 | bankSelectLSB << 8 | instrumentNum);
 		}
 
-		vector<InstLinkToPresetRegionInfo>* GetPresetRegionLinkInfoList();
+		vector<InstLinkToPresetZoneInfo>& GetPresetZoneLinkInfos()
+		{
+			return presetZoneLinkInfos;
+		}
 
-		// 连接一个乐器到一个presetRegion
-		Region* LinkInstrument(Instrument* inst);
+
+		// 连接一个乐器到一个presetZone
+		Zone* LinkInstrument(Instrument* inst);
 
 	public:
 		string name;
@@ -40,8 +44,8 @@ namespace tau
 		int bankSelectLSB = 0;
 		int instrumentNum = 0;
 
-		Region* globalRegion;
-		vector<InstLinkToPresetRegionInfo>* presetRegionLinkInfoList;
+		Zone* globalZone;
+		vector<InstLinkToPresetZoneInfo> presetZoneLinkInfos;
 	};
 }
 

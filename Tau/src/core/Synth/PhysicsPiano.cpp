@@ -18,12 +18,19 @@ namespace tau
 		pianoKey.Init(param[key - A0]);
 	}
 
+	//触发按键
 	void PhysicsPianoSampleGen::Trigger(float velocity)
 	{
 		pianoKey.Trigger(velocity);
 	}
 
-
+	/// <summary>
+	/// 输出采样点值
+	/// </summary>
+	/// <param name="prevSampleIntPos">前一个采样整数位置</param>
+	/// <param name="nextSampleIntPos">后一个采样整数位置</param>
+	/// <param name="a">两者之间的插值距离</param>
+	/// <returns></returns>
 	float PhysicsPianoSampleGen::Out(int prevSampleIntPos, int nextSampleIntPos, float a)
 	{
 		if (nextSampleIntPos == samplePos) {
@@ -57,7 +64,7 @@ namespace tau
 	}
 
 
-	RegionSampleGenerator* PhysicsPiano::CreateRegionSampleGen(int key)
+	ZoneSampleGenerator* PhysicsPiano::CreateZoneSampleGen(int key)
 	{
 		if (key < A0) key = A0;
 		else if (key > C8) key = C8;
@@ -67,7 +74,7 @@ namespace tau
 		return gen;
 	}
 
-	void PhysicsPiano::ReleaseRegionSampleGen(RegionSampleGenerator* sampleGen)
+	void PhysicsPiano::ReleaseZoneSampleGen(ZoneSampleGenerator* sampleGen)
 	{
 		delete (PhysicsPianoSampleGen*)sampleGen;
 	}
@@ -78,13 +85,13 @@ namespace tau
 		sf->AddSampleGen(this);
 
 		Instrument* inst = sf->AddInstrument("Physics Piano");
-		Region* instGlobalRegion = inst->GetGlobalRegion();
-		//instGlobalRegion->GetGenList()->SetAmount(GeneratorType::AttackVolEnv, 0.1f);
-		instGlobalRegion->GetGenList()->SetAmount(GeneratorType::ReleaseVolEnv, 0.5f);
-
+		Zone* instGlobalZone = inst->GetGlobalZone();
 		sf->SampleGenBindToInstrument(this, inst);
+		//instGlobalZone->GetGenList()->SetAmount(GeneratorType::AttackVolEnv, 0.1f);
 
-		Preset* preset = sf->AddPreset("Physics Piano", 0, 1, 0);
+		GeneratorAmount a;
+		instGlobalZone->GetGens().SetAmount(GeneratorType::ReleaseVolEnv, a);
+		Preset* preset = sf->AddPreset("Physics Piano", bankSelectMSB, bankSelectLSB, instrumentNum);
 		sf->InstrumentBindToPreset(inst, preset);
 	}
 }

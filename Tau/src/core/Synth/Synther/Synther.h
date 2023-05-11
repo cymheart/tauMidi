@@ -12,26 +12,14 @@
 #include"scutils/RingBuffer.h"
 #include "Synth/Editor/EditorTypes.h"
 #include <scutils/ArrayPool.h>
-#include "Synth/PcmRecorder.h"
 
 using namespace task;
 using namespace tauFX;
 using namespace scutils;
+using namespace dsignal;
 
 namespace tau
 {
-	// Synther类型
-	enum class SyntherType
-	{
-		//未知
-		Unknown,
-		//实时
-		Realtime,
-		//可midi编辑
-		MidiEditor
-	};
-
-
 	struct FadeSamplesInfo
 	{
 		double gain = 1;
@@ -46,8 +34,6 @@ namespace tau
 	public:
 		Synther(Tau* tau);
 		virtual ~Synther();
-
-		virtual SyntherType GetType() { return SyntherType::Unknown; }
 
 		//投递任务
 		void PostTask(TaskCallBack taskCallBack, void* data, int delay = 0);
@@ -71,13 +57,13 @@ namespace tau
 			return isOpened;
 		}
 
-		//获取采样流的频谱
-		int GetSampleStreamFreqSpectrums(int channel, double* outLeft, double* outRight);
-
 	private:
 		static void FillAudioSample(void* udata, uint8_t* stream, int len);
 
 	protected:
+
+		void Lock();
+		void UnLock();
 
 		// 开启声音播放引擎
 		void OpenAudio();
@@ -204,6 +190,9 @@ namespace tau
 		//关闭所有虚拟乐器所有按键
 		void OffAllKeys();
 
+		//关闭与指定id匹配的所有虚拟乐器所有按键
+		void OffAllKeys(int id);
+
 		//根据指定通道获取关连虚拟乐器
 		vector<VirInstrument*>* GetVirInstruments(Channel* channel);
 
@@ -228,38 +217,40 @@ namespace tau
 		//合并声道buffer到数据流
 		void CombineChannelBufferToStream();
 
-		void CreateChannelSamplesFreqSpectrum();
+		//渐隐合成流的声音，
+		//对effects效果器产生的余音进行检测，以确保没有任何余音，才结束
+		void FadeSynthStream();
 
 		// 渲染虚拟乐器区域发声     
-		void RenderVirInstRegionSound();
+		void RenderVirInstZoneSound();
 
 		//移除需要删除的乐器
 		void RemoveNeedDeleteVirInsts(bool isDirectRemove = false);
 
 		//快速释音超过限制的区域发声
-		void FastReleaseRegionSounders();
+		void FastReleaseZoneSounders();
 
 		//快速释音超过限制的区域发声2
 		//比例算法
-		void FastReleaseRegionSounders2();
+		void FastReleaseZoneSounders2();
 
 		//  移除已完成所有区域发声处理(采样处理)的KeySounder               
 		void RemoveProcessEndedKeySounder();
 
-
 		static bool SounderCountCompare(VirInstrument* a, VirInstrument* b);
 
+		// 请求缓存渲染事件
+		void ReqCacheRender();
+		static void CacheRenderTask(Task* ev);
+
 		// 请求帧渲染事件
-		void ReqRender(float delay = 0);
+		void ReqRender();
 		static void RenderTask(Task* ev);
 		// 渲染每帧音频
 		void Render();
 
 		// 帧渲染
 		void FrameRender(uint8_t* stream, int len);
-
-		//最终合成流的pcm录制
-		void RecordPCMing();
 
 		// 录制所有乐器弹奏为midi
 		void RecordMidi();
@@ -277,8 +268,6 @@ namespace tau
 		// 获取录制的midi轨道
 		vector<MidiTrack*>* TakeRecordMidiTracks(
 			VirInstrument** virInst, int size, float recordMidiTickForQuarterNote, vector<RecordTempo>* tempos);
-
-		void HanningWin(double* data, int len);
 
 
 		/// <summary>
@@ -330,7 +319,6 @@ namespace tau
 
 		void Runto(double sec);
 
-		void GetCurTimeLateNeedWaitKeySignalNote(int note, float lateSec);
 		void SetPlayType(MidiEventPlayType playType);
 		void EnterPlayMode(EditorPlayMode playMode);
 		void LeavePlayMode();
@@ -406,13 +394,6 @@ namespace tau
 		// 处理播放midi文件事件
 		void ProcessMidiEvents();
 
-		void ClearRecordPCM();
-		void StartRecordPCM();
-		void StopRecordPCM();
-		void SaveRecordPCM(string& path);
-		void SaveRecordPCMToWav(string& path);
-		void SaveRecordPCMToMp3(string& path);
-
 
 		/////////////////////////////////////////////////////
 		bool CanCache();
@@ -423,6 +404,7 @@ namespace tau
 		void CachePlay();
 		void CachePause();
 		void CacheStop();
+		void CacheReadTail();
 		bool CacheGoto(double sec, bool isMustReset = false);
 		inline void CacheReset()
 		{
@@ -444,8 +426,6 @@ namespace tau
 		void CacheWrite();
 		void CacheRead();
 		void CacheReadFallSamples();
-
-		void CacheFadeSynthSampleStream();
 
 		void CacheEnterStepPlayMode();
 
@@ -495,8 +475,9 @@ namespace tau
 	protected:
 
 		Tau* tau;
+		TaskProcesser* cacheTaskProcesser = nullptr;
 		TaskProcesser* taskProcesser = nullptr;
-		RegionSounderThread* regionSounderThreadPool = nullptr;
+		ZoneSounderThread* ZoneSounderThreadPool = nullptr;
 
 		//是否开启
 		bool isOpened = false;
@@ -542,7 +523,6 @@ namespace tau
 		//给发音区域存储计算帧样本值的右通道buf
 		float rightChannelFrameBuf[4096 * 10] = { 0 };
 
-
 		//是否开启乐器效果器
 		bool isEnableVirInstEffects = true;
 
@@ -559,20 +539,6 @@ namespace tau
 		uint8_t* synthSampleStream = nullptr;
 		int synthStreamBufferSize = 0;
 
-
-		//
-		double* cacheLeftChannelSampleStream = nullptr;
-		double* cacheRightChannelSampleStream = nullptr;
-
-		double* channelFFTState = nullptr;
-
-		double* leftChannelFreqSpectrums = nullptr;
-		double* rightChannelFreqSpectrums = nullptr;
-
-		int freqSpectrumsCount = 0;
-		int cacheSampleStreamIdx = 0;
-
-
 		//目前渲染子帧位置
 		int childFramePos = 0;
 
@@ -586,9 +552,9 @@ namespace tau
 		double sec = 0;
 
 		//所有正在发声的区域
-		RegionSounder* totalRegionSounders[100000] = { nullptr };
+		ZoneSounder* totalZoneSounders[100000] = { nullptr };
 		//所有正在发声的区域数量
-		int totalRegionSounderCount = 0;
+		int totalZoneSounderCount = 0;
 
 		//所有发音是否结束
 		bool isSoundEnd = true;
@@ -601,13 +567,8 @@ namespace tau
 		int instSoundCount[1000];
 
 		//预设乐器替换
-		unordered_map<uint32_t, uint32_t>* presetBankReplaceMap = nullptr;
-
-		//
+		unordered_map<uint32_t, uint32_t> presetBankReplaceMap;
 		Audio* audio = nullptr;
-
-		//是否发声结束删除
-		bool isSoundEndRemove = false;
 		float soundEndGain = 1;
 
 		//	
@@ -651,23 +612,14 @@ namespace tau
 		//
 		MidiEditor* midiEditor = nullptr;
 
-		//pcm录制
-		PcmRecorder pcmRecorder;
-		//pcm录制状态0:不录制, 1:录制中， 2：准备停止录制
-		int pcmRecordState = 0;
-		Semaphore pcmRecordWaitSem;
-
-
-
 		//
-
 		friend class MidiEditorSynther;
 		friend class Tau;
 		friend class Editor;
 		friend class VirInstrument;
 		friend class MidiEditor;
-		friend class RegionSounderThread;
-		friend class RegionSounderThreadData;
+		friend class ZoneSounderThread;
+		friend class ZoneSounderThreadData;
 		friend class KeySounder;
 		friend class Channel;
 	};

@@ -12,7 +12,7 @@ namespace scutils
 		~RingBuffer();
 
 		template<typename T>
-		inline void Write(T value)
+		void Write(T value)
 		{
 			int64_t writeEndPos = writePos + sizeof(T);
 			if (writeEndPos < bufSize)
@@ -57,28 +57,68 @@ namespace scutils
 		}
 
 		//读取指定长度字节到dst中
-		void ReadToDst(void* dst, int64_t len);
+		void ReadToDst(void* dst, int64_t needReadSize);
 
 		//拾取指定长度字节到dst中
-		inline void PeekToDst(void* dst, int64_t len)
+		void PeekToDst(void* dst, int64_t needReadSize)
 		{
 			int64_t orgReadPos = readPos;
-			ReadToDst(dst, len);
+			ReadToDst(dst, needReadSize);
 			readPos = orgReadPos;
 		}
 
-		inline void OffsetReadPos(int64_t len)
+		//往后移动len读取位置
+		void OffsetReadPos(int64_t len)
 		{
 			ReadToDst(nullptr, len);
 		}
 
-		inline int64_t GetReadPos()
+		//往后移动len写入位置
+		void OffsetWritePos(int64_t len)
+		{
+			Write(nullptr, len);
+		}
+
+
+		//获取读取位置
+		int64_t GetReadPos()
 		{
 			return readPos;
 		}
 
+		//获取写入位置
+		int64_t GetWritePos()
+		{
+			return writePos;
+		}
+
+		//设置写入位置
+		void SetWritePos(int64_t pos)
+		{
+			writePos = 0;
+			OffsetWritePos(pos);
+		}
+
+		//设置读取位置
+		void SetReadPos(int64_t pos)
+		{
+			readPos = 0;
+			OffsetReadPos(pos);
+		}
+
+		//获取buf的总尺寸
+		int64_t GetBufSize()
+		{
+			return bufSize;
+		}
+
+		//获取原始buf
+		uint8_t* GetBuf() {
+			return buf;
+		}
+
 		//获取剩余需要读取的尺寸
-		inline int64_t GetNeedReadSize()
+		int64_t GetNeedReadSize()
 		{
 			int64_t size;
 			if (writePos >= readPos)
@@ -88,11 +128,6 @@ namespace scutils
 			return size;
 		}
 
-		inline void Clear()
-		{
-			readPos = 0;
-			writePos = 0;
-		}
 
 	private:
 

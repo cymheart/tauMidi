@@ -16,12 +16,12 @@
 
 package com.mobileer.oboetester;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.media.AudioAttributes;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.os.Build;
@@ -31,18 +31,15 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -58,10 +55,11 @@ abstract class TestAudioActivity extends Activity {
     public static final int AUDIO_STATE_OPEN = 0;
     public static final int AUDIO_STATE_STARTED = 1;
     public static final int AUDIO_STATE_PAUSED = 2;
-    public static final int AUDIO_STATE_STOPPED = 3;
-    public static final int AUDIO_STATE_RELEASED = 4;
-    public static final int AUDIO_STATE_CLOSING = 5;
-    public static final int AUDIO_STATE_CLOSED = 6;
+    public static final int AUDIO_STATE_FLUSHED = 3;
+    public static final int AUDIO_STATE_STOPPED = 4;
+    public static final int AUDIO_STATE_RELEASED = 5;
+    public static final int AUDIO_STATE_CLOSING = 6;
+    public static final int AUDIO_STATE_CLOSED = 7;
 
     public static final int COLOR_ACTIVE = 0xFFD0D0A0;
     public static final int COLOR_IDLE = 0xFFD0D0D0;
@@ -77,8 +75,7 @@ abstract class TestAudioActivity extends Activity {
     public static final int ACTIVITY_GLITCHES = 6;
     public static final int ACTIVITY_TEST_DISCONNECT = 7;
     public static final int ACTIVITY_DATA_PATHS = 8;
-
-    private static final int MY_PERMISSIONS_REQUEST_EXTERNAL_STORAGE = 1001;
+    public static final int ACTIVITY_DYNAMIC_WORKLOAD = 9;
 
     private int mAudioState = AUDIO_STATE_CLOSED;
 
@@ -86,11 +83,16 @@ abstract class TestAudioActivity extends Activity {
     private Button mOpenButton;
     private Button mStartButton;
     private Button mPauseButton;
+    private Button mFlushButton;
     private Button mStopButton;
     private Button mReleaseButton;
     private Button mCloseButton;
     private MyStreamSniffer mStreamSniffer;
     private CheckBox mCallbackReturnStopBox;
+    private Spinner mHangTimeSpinner;
+
+    // Only set in some activities
+    protected CommunicationDeviceView mCommunicationDeviceView;
     private int mSampleRate;
     private int mSingleTestIndex = -1;
     private static boolean mBackgroundEnabled;
@@ -99,6 +101,7 @@ abstract class TestAudioActivity extends Activity {
     protected boolean mTestRunningByIntent;
     protected String mResultFileName;
     private String mTestResults;
+    private ExternalFileWriter mExternalFileWriter = new ExternalFileWriter(this);
 
     public String getTestName() {
         return "TestAudio";
@@ -228,6 +231,10 @@ abstract class TestAudioActivity extends Activity {
         super.onStart();
         resetConfiguration();
         setActivityType(getActivityType());
+        // TODO Use LifeCycleObserver instead of this.
+        if (mCommunicationDeviceView != null) {
+            mCommunicationDeviceView.onStart();
+        }
     }
 
     protected void resetConfiguration() {
@@ -292,6 +299,9 @@ abstract class TestAudioActivity extends Activity {
             Log.i(TAG, "onStop() called so stop the test =========================");
             onStopTest();
         }
+        if (mCommunicationDeviceView != null) {
+            mCommunicationDeviceView.onStop();
+        }
         super.onStop();
     }
 
@@ -310,6 +320,7 @@ abstract class TestAudioActivity extends Activity {
             mOpenButton.setBackgroundColor(mAudioState == AUDIO_STATE_OPEN ? COLOR_ACTIVE : COLOR_IDLE);
             mStartButton.setBackgroundColor(mAudioState == AUDIO_STATE_STARTED ? COLOR_ACTIVE : COLOR_IDLE);
             mPauseButton.setBackgroundColor(mAudioState == AUDIO_STATE_PAUSED ? COLOR_ACTIVE : COLOR_IDLE);
+            mFlushButton.setBackgroundColor(mAudioState == AUDIO_STATE_FLUSHED ? COLOR_ACTIVE : COLOR_IDLE);
             mStopButton.setBackgroundColor(mAudioState == AUDIO_STATE_STOPPED ? COLOR_ACTIVE : COLOR_IDLE);
             mReleaseButton.setBackgroundColor(mAudioState == AUDIO_STATE_RELEASED ? COLOR_ACTIVE : COLOR_IDLE);
             mCloseButton.setBackgroundColor(mAudioState == AUDIO_STATE_CLOSED ? COLOR_ACTIVE : COLOR_IDLE);
@@ -372,7 +383,6 @@ abstract class TestAudioActivity extends Activity {
         if (streamContext.configurationView != null) {
             streamContext.configurationView.setOutput(false);
         }
-        streamContext.tester = AudioInputTester.getInstance();
         mStreamContexts.add(streamContext);
         return streamContext;
     }
@@ -411,6 +421,7 @@ abstract class TestAudioActivity extends Activity {
         if (mOpenButton != null) {
             mStartButton = (Button) findViewById(R.id.button_start);
             mPauseButton = (Button) findViewById(R.id.button_pause);
+            mFlushButton = (Button) findViewById(R.id.button_flush);
             mStopButton = (Button) findViewById(R.id.button_stop);
             mReleaseButton = (Button) findViewById(R.id.button_release);
             mCloseButton = (Button) findViewById(R.id.button_close);
@@ -428,6 +439,24 @@ abstract class TestAudioActivity extends Activity {
         }
         OboeAudioStream.setCallbackReturnStop(false);
 
+        mHangTimeSpinner = (Spinner) findViewById(R.id.spinner_hang_time);
+        if (mHangTimeSpinner != null) {
+            mHangTimeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    String hangTimeText = (String) mHangTimeSpinner.getAdapter().getItem(position);
+                    int hangTimeMillis = Integer.parseInt(hangTimeText);
+                    Log.d(TAG, "Hang Time = " + hangTimeMillis + " msec");
+
+                    OboeAudioStream.setHangTimeMillis(hangTimeMillis);
+                }
+
+                public void onNothingSelected(AdapterView<?> parent) {
+                    OboeAudioStream.setHangTimeMillis(0);
+                }
+            });
+        }
+        OboeAudioStream.setHangTimeMillis(0);
+
         mStreamSniffer = new MyStreamSniffer();
     }
 
@@ -443,8 +472,8 @@ abstract class TestAudioActivity extends Activity {
     }
 
     protected void showErrorToast(String message) {
+        Log.e(TAG, "showErrorToast(\"" + message + "\")");
         String text = "Error: " + message;
-        Log.e(TAG, text);
         showToast(text);
     }
 
@@ -459,20 +488,39 @@ abstract class TestAudioActivity extends Activity {
         });
     }
 
+    private void onStartAllContexts() {
+        for (StreamContext streamContext : mStreamContexts) {
+            streamContext.tester.getCurrentAudioStream().onStart();
+        }
+    }
+    private void onStopAllContexts() {
+        for (StreamContext streamContext : mStreamContexts) {
+            streamContext.tester.getCurrentAudioStream().onStop();
+        }
+    }
+
     public void openAudio(View view) {
         try {
             openAudio();
         } catch (Exception e) {
-            showErrorToast(e.getMessage());
+            showErrorToast("openAudio() caught " + e.getMessage());
+        }
+    }
+
+    void clearHangTime() {
+        OboeAudioStream.setHangTimeMillis(0);
+        if (mHangTimeSpinner != null) {
+            mHangTimeSpinner.setSelection(0);
         }
     }
 
     public void startAudio(View view) {
         Log.i(TAG, "startAudio() called =======================================");
+        clearHangTime(); // start running
         try {
             startAudio();
         } catch (Exception e) {
-            showErrorToast(e.getMessage());
+            showErrorToast("startAudio() caught " + e.getMessage());
         }
         keepScreenOn(true);
     }
@@ -493,6 +541,10 @@ abstract class TestAudioActivity extends Activity {
     public void pauseAudio(View view) {
         pauseAudio();
         keepScreenOn(false);
+    }
+
+    public void flushAudio(View view) {
+        flushAudio();
     }
 
     public void closeAudio(View view) {
@@ -528,6 +580,10 @@ abstract class TestAudioActivity extends Activity {
                 if (sampleRate == 0) {
                     sampleRate = streamSampleRate;
                 }
+                // Associate volume keys with this output stream.
+                int actualUsage = streamContext.tester.actualConfiguration.getUsage();
+                int actualContentType = streamContext.tester.actualConfiguration.getContentType();
+                setStreamControlByAttributes(actualUsage, actualContentType);
             }
         }
         for (StreamContext streamContext : mStreamContexts) {
@@ -539,7 +595,23 @@ abstract class TestAudioActivity extends Activity {
             }
         }
         updateEnabledWidgets();
+        onStartAllContexts();
         mStreamSniffer.startStreamSniffer();
+    }
+
+    /**
+     * Associate the volume keys with the stream we are playing.
+     * @param usage usage for the stream
+     * @param contentType tupe of the stream
+     */
+    private void setStreamControlByAttributes(int usage, int contentType) {
+        AudioAttributes attributes = new AudioAttributes.Builder().setUsage(usage)
+                .setContentType(contentType).build();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            int volumeControlStream = attributes.getVolumeControlStream();
+            Log.i(TAG, "setVolumeControlStream(" + volumeControlStream + ")");
+            setVolumeControlStream(volumeControlStream);
+        }
     }
 
     /**
@@ -573,7 +645,7 @@ abstract class TestAudioActivity extends Activity {
                 try {
                     streamContext.configurationView.setupEffects(sessionId);
                 } catch (Exception e) {
-                    showErrorToast(e.getMessage());
+                    showErrorToast("openStreamContext() caught " + e.getMessage());
                 }
             }
             streamContext.configurationView.updateDisplay(streamContext.tester.actualConfiguration);
@@ -585,6 +657,8 @@ abstract class TestAudioActivity extends Activity {
 
     private native int pauseNative();
 
+    private native int flushNative();
+
     private native int stopNative();
 
     private native int releaseNative();
@@ -593,15 +667,18 @@ abstract class TestAudioActivity extends Activity {
 
     private native int getFramesPerCallback();
 
+    public native void setUseAlternativeAdpf(boolean enabled);
+
     private static native void setDefaultAudioValues(int audioManagerSampleRate, int audioManagerFramesPerBurst);
 
     public void startAudio() throws IOException {
         Log.i(TAG, "startAudio() called =========================");
         int result = startNative();
         if (result != 0) {
-            showErrorToast("Start failed with " + result);
-            throw new IOException("startNative returned " + result);
+            showErrorToast("Start failed with " + result + ", " + StreamConfiguration.convertErrorToText(result));
+            throw new IOException("startNative returned " + result + ", " + StreamConfiguration.convertErrorToText(result));
         } else {
+            onStartAllContexts();
             for (StreamContext streamContext : mStreamContexts) {
                 StreamConfigurationView configView = streamContext.configurationView;
                 if (configView != null) {
@@ -614,7 +691,7 @@ abstract class TestAudioActivity extends Activity {
     }
 
     protected void toastPauseError(int result) {
-        showErrorToast("Pause failed with " + result);
+        showErrorToast("Pause failed with " + result + ", " + StreamConfiguration.convertErrorToText(result));
     }
 
     public void pauseAudio() {
@@ -624,26 +701,39 @@ abstract class TestAudioActivity extends Activity {
         } else {
             mAudioState = AUDIO_STATE_PAUSED;
             updateEnabledWidgets();
+            onStopAllContexts();
+        }
+    }
+
+    public void flushAudio() {
+        int result = flushNative();
+        if (result != 0) {
+            showErrorToast("Flush failed with " + result + ", " + StreamConfiguration.convertErrorToText(result));
+        } else {
+            mAudioState = AUDIO_STATE_FLUSHED;
+            updateEnabledWidgets();
         }
     }
 
     public void stopAudio() {
         int result = stopNative();
         if (result != 0) {
-            showErrorToast("Stop failed with " + result);
+            showErrorToast("Stop failed with " + result + ", " + StreamConfiguration.convertErrorToText(result));
         } else {
             mAudioState = AUDIO_STATE_STOPPED;
             updateEnabledWidgets();
+            onStopAllContexts();
         }
     }
 
     public void releaseAudio() {
         int result = releaseNative();
         if (result != 0) {
-            showErrorToast("release failed with " + result);
+            showErrorToast("Release failed with " + result + ", " + StreamConfiguration.convertErrorToText(result));
         } else {
             mAudioState = AUDIO_STATE_RELEASED;
             updateEnabledWidgets();
+            onStopAllContexts();
         }
     }
 
@@ -705,24 +795,6 @@ abstract class TestAudioActivity extends Activity {
         myAudioMgr.stopBluetoothSco();
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String[] permissions,
-                                           int[] grantResults) {
-
-        if (MY_PERMISSIONS_REQUEST_EXTERNAL_STORAGE != requestCode) {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-            return;
-        }
-        // If request is cancelled, the result arrays are empty.
-        if (grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            writeTestResult(mTestResults);
-        } else {
-            showToast("Writing external storage needed for test results.");
-        }
-    }
-
     @NonNull
     protected String getCommonTestReport() {
         StringBuffer report = new StringBuffer();
@@ -754,48 +826,17 @@ abstract class TestAudioActivity extends Activity {
         return report.toString();
     }
 
-    void writeTestResultIfPermitted(String resultString) {
-        // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            mTestResults = resultString;
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_REQUEST_EXTERNAL_STORAGE);
-        } else {
-            // Permission has already been granted
-            writeTestResult(resultString);
-        }
-    }
-
-    void maybeWriteTestResult(String resultString) {
+    File maybeWriteTestResult(String resultString) {
+        File fileWritten = null;
         if (mResultFileName != null) {
-            writeTestResultIfPermitted(resultString);
-        };
-    }
-
-    // Run this in a background thread.
-    void writeTestResult(String resultString) {
-        File resultFile = new File(mResultFileName);
-        Writer writer = null;
-        try {
-            writer = new OutputStreamWriter(new FileOutputStream(resultFile));
-            writer.write(resultString);
-        } catch (
-                IOException e) {
-            e.printStackTrace();
-            showErrorToast(" writing result file. " + e.getMessage());
-        } finally {
-            if (writer != null) {
-                try {
-                    writer.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                fileWritten = mExternalFileWriter.writeStringToExternalFile(resultString, mResultFileName);
+            } catch (IOException e) {
+                e.printStackTrace();
+                showErrorToast(" writing result file. " + e.getMessage());
             }
+            mResultFileName = null;
         }
-
-        mResultFileName = null;
+        return fileWritten;
     }
 }

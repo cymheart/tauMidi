@@ -1,16 +1,16 @@
-#include"Mp3Recorder.h"
+ï»¿#include"Mp3Recorder.h"
 
 namespace scutils
 {
 	lame_global_flags* Mp3Recorder::glf = NULL;
 
 	/**
-   * ³õÊ¼»¯ lame±àÂëÆ÷
-   * @param inSampleRate ÊäÈë²ÉÑùÂÊ
-   * @param outChannel ÉùµÀÊı
-   * @param outSampleRate Êä³ö²ÉÑùÂÊ
-   * @param outBitrate ±ÈÌØÂÊ(kbps)
-   * @param quality 0~9£¬0×îºÃ
+   * åˆå§‹åŒ– lameç¼–ç å™¨
+   * @param inSampleRate è¾“å…¥é‡‡æ ·ç‡
+   * @param outChannel å£°é“æ•°
+   * @param outSampleRate è¾“å‡ºé‡‡æ ·ç‡
+   * @param outBitrate æ¯”ç‰¹ç‡(kbps)
+   * @param quality 0~9ï¼Œ0æœ€å¥½
    */
 	void Mp3Recorder::Init(
 		int inSamplerate, int outChannel, int outSamplerate,
@@ -31,13 +31,13 @@ namespace scutils
 	}
 
 	/**
-	 *  ±àÂë£¬°ÑÂ¼ÖÆµÄ PCM Êı¾İ×ª»»³É mp3 ¸ñÊ½
+	 *  ç¼–ç ï¼ŒæŠŠå½•åˆ¶çš„ PCM æ•°æ®è½¬æ¢æˆ mp3 æ ¼å¼
 	 *
-	 * @param buffer_l ×óÉùµÀÊäÈëÊı¾İ
-	 * @param buffer_r ÓÒÉùµÀÊäÈëÊı¾İ
-	 * @param nsamples   ÊäÈëÊı¾İµÄsizeÊäÈëÊı¾İµÄsize
-	 * @param mp3buf Êä³öÊı¾İ
-	 * @return Êä³öµ½mp3bufµÄbyteÊıÁ¿
+	 * @param buffer_l å·¦å£°é“è¾“å…¥æ•°æ®
+	 * @param buffer_r å³å£°é“è¾“å…¥æ•°æ®
+	 * @param nsamples   è¾“å…¥æ•°æ®çš„sizeè¾“å…¥æ•°æ®çš„size
+	 * @param mp3buf è¾“å‡ºæ•°æ®
+	 * @return è¾“å‡ºåˆ°mp3bufçš„byteæ•°é‡
 	 */
 	int Mp3Recorder::Encode(short* buffer_l, short* buffer_r, int nsamples, uint8_t* mp3buf, int mp3bufSize)
 	{
@@ -46,13 +46,13 @@ namespace scutils
 
 
 	/**
-	 *  ±àÂë£¬°Ñ  Â¼ÖÆµÄ PCM Êı¾İ×ª»»³É mp3 ¸ñÊ½
+	 *  ç¼–ç ï¼ŒæŠŠ  å½•åˆ¶çš„ PCM æ•°æ®è½¬æ¢æˆ mp3 æ ¼å¼
 	 *
-	 * @param buffer_l ×óÉùµÀÊäÈëÊı¾İ
-	 * @param buffer_r ÓÒÉùµÀÊäÈëÊı¾İ
-	 * @param nsamples   ÊäÈëÊı¾İµÄsize
-	 * @param mp3buf Êä³öÊı¾İ
-	 * @return Êä³öµ½mp3bufµÄbyteÊıÁ¿
+	 * @param buffer_l å·¦å£°é“è¾“å…¥æ•°æ®
+	 * @param buffer_r å³å£°é“è¾“å…¥æ•°æ®
+	 * @param nsamples   è¾“å…¥æ•°æ®çš„size
+	 * @param mp3buf è¾“å‡ºæ•°æ®
+	 * @return è¾“å‡ºåˆ°mp3bufçš„byteæ•°é‡
 	 */
 	int Mp3Recorder::EncodeFloat(float* buffer_l, float* buffer_r, int nsamples, uint8_t* mp3buf, int mp3bufSize)
 	{
@@ -61,10 +61,10 @@ namespace scutils
 
 
 	/**
-	 *  Ë¢Ğ´
+	 *  åˆ·å†™
 	 *
-	 * @param mp3buf mp3Êı¾İ»º´æÇø
-	 * @return  ·µ»ØË¢Ğ´µÄÊıÁ¿
+	 * @param mp3buf mp3æ•°æ®ç¼“å­˜åŒº
+	 * @return  è¿”å›åˆ·å†™çš„æ•°é‡
 	 */
 	int Mp3Recorder::flush(uint8_t* mp3buf, int mp3bufSize)
 	{
@@ -73,7 +73,7 @@ namespace scutils
 
 
 	/**
-* ¹Ø±Õ lame ±àÂëÆ÷£¬ÊÍ·Å×ÊÔ´
+* å…³é—­ lame ç¼–ç å™¨ï¼Œé‡Šæ”¾èµ„æº
 */
 	void Mp3Recorder::close()
 	{

@@ -2,8 +2,7 @@
 
 namespace tauFX
 {
-	Tremolo::Tremolo(Synther* synther)
-		:TauEffect(synther)
+	Tremolo::Tremolo()
 	{
 		leftTremolo = new daisysp::Tremolo();
 		rightTremolo = new daisysp::Tremolo();
@@ -51,6 +50,23 @@ namespace tauFX
 		{
 			leftChannelSamples[i] = leftTremolo->Process(leftChannelSamples[i]);
 			rightChannelSamples[i] = leftTremolo->Process(rightChannelSamples[i]);
+		}
+	}
+
+	void Tremolo::EffectProcess(float* synthStream, int numChannels, int channelSampleCount)
+	{
+		if (numChannels == 2) {
+			for (int i = 0; i < channelSampleCount * numChannels; i += 2)
+			{
+				synthStream[i] = leftTremolo->Process(synthStream[i]);
+				synthStream[i + 1] = leftTremolo->Process(synthStream[i + 1]);
+			}
+		}
+		else {
+			for (int i = 0; i < channelSampleCount; i++)
+			{
+				synthStream[i] = leftTremolo->Process(synthStream[i]);
+			}
 		}
 	}
 }

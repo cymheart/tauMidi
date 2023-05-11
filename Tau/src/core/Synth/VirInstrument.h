@@ -114,15 +114,15 @@ namespace tau
 		}
 
 		//获取区域发声数量
-		inline int GetRegionSounderCount()
+		inline int GetZoneSounderCount()
 		{
-			return regionSounderCount;
+			return ZoneSounderCount;
 		}
 
 		//获取区域发声数组
-		inline RegionSounder** GetRegionSounders()
+		inline ZoneSounder** GetZoneSounders()
 		{
-			return regionSounders;
+			return ZoneSounders;
 		}
 
 		//最后一个保留按键
@@ -146,8 +146,8 @@ namespace tau
 		//从正在发音的KeySounders中查找KeySounder
 		bool FindKeySounderFromKeySounders(KeySounder* keySounder);
 
-		// 找寻最后一个按键发声区域中具有同样乐器区域的regionSounder
-		RegionSounder* FindLastSameRegion(Region* region);
+		// 找寻最后一个按键发声区域中具有同样乐器区域的ZoneSounder
+		ZoneSounder* FindLastSameZone(Zone* Zone);
 
 		//是否使用单音模式
 		inline bool UseMonoMode()
@@ -179,14 +179,11 @@ namespace tau
 			return useLegato;
 		}
 
-		//调制生成器参数
-		void ModulationParams();
+		//调制生成器
+		void Modulation();
 
-		//调制生成器参数
-		void ModulationParams(int key);
-
-		//调制输入按键生成器参数
-		void ModulationInputKeyParams();
+		//调制生成器
+		void Modulation(int key);
 
 		// 移除已完成所有区域发声处理(采样处理)的KeySounder   
 		void RemoveProcessEndedKeySounder();
@@ -253,7 +250,7 @@ namespace tau
 		void FadeReverbDepth();
 
 		//设置区域混音深度
-		void SetRegionReverbDepth(float value);
+		void SetZoneReverbDepth(float value);
 
 		//bend
 		void SetPitchBend(int value);
@@ -271,13 +268,16 @@ namespace tau
 		void SetController(MidiControllerType ctrlType, int value);
 
 		//按键
-		void OnKey(int key, float velocity, int tickCount = 0, int id = 0);
+		void OnKey(int key, float velocity, int tickCount = -1, int id = 0);
 
 		//松开按键
 		void OffKey(int key, float velocity = 127.0f, int id = 0);
 
 		//松开所有按键
 		void OffAllKeys();
+
+		//松开与指定id匹配的所有按键
+		void OffAllKeys(int id);
 
 
 		//执行按键
@@ -295,7 +295,7 @@ namespace tau
 
 		// 设置具有相同独占类的区域将不再处理样本
 		// exclusiveClasses数组以一个小于等于0的值结尾
-		void StopExclusiveClassRegionSounderProcess(int* exclusiveClasses);
+		void StopExclusiveClassZoneSounderProcess(int* exclusiveClasses);
 
 		// 录制指定乐器弹奏为midi
 		void RecordMidi();
@@ -307,13 +307,13 @@ namespace tau
 		MidiTrack* TakeMidiTrack(float baseTickForQuarterNote, vector<RecordTempo>* tempos);
 
 		//合并区域已处理发音样本
-		void CombineRegionSounderSamples(RegionSounder* regionSounder);
+		void CombineZoneSounderSamples(ZoneSounder* ZoneSounder);
 
 		//生成发声keySounders
 		void CreateKeySounders();
 
 		//为渲染准备所有正在发声的区域
-		int CreateRegionSounderForRender(RegionSounder** totalRegionSounder, int startSaveIdx);
+		int CreateZoneSounderForRender(ZoneSounder** totalZoneSounder, int startSaveIdx);
 
 		void PrintOnKeyInfo(int key, float velocity, bool isRealTime);
 
@@ -342,7 +342,7 @@ namespace tau
 		FadeEffectDepthInfo fadeReverbDepthInfo;
 
 		// 区域混音处理
-		Reverb* regionReverb = nullptr;
+		Reverb* ZoneReverb = nullptr;
 
 		//当前混音深度
 		float curtReverbDepth = 0;
@@ -413,24 +413,24 @@ namespace tau
 		KeySounder* offKeySounder[1024 * 200];
 
 		//当前乐器中所有正在发声的区域
-		RegionSounder* regionSounders[100000] = { nullptr };
+		ZoneSounder* ZoneSounders[100000] = { nullptr };
 		//当前乐器中所有正在发声的区域数量
-		int regionSounderCount = 0;
+		int ZoneSounderCount = 0;
 
-		int realRegionSounderCount = 0;
+		int realZoneSounderCount = 0;
 
 		//midiTrack录制
-		MidiTrackRecord* midiTrackRecord;
+		MidiTrackRecord* midiTrackRecord = nullptr;
 		//是否启用录制功能
-		bool isEnableRecordFunction = true;
+		bool isEnableRecordFunction = false;
 
 
 		//
 		friend class Synther;
-		friend class RegionSounderThread;
+		friend class ZoneSounderThread;
 		friend class MidiEditor;
 		friend class KeySounder;
-		friend class RegionSounder;
+		friend class ZoneSounder;
 		friend class Synther;
 		friend class RealtimeSynther;
 		friend class MidiRender;

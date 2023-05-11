@@ -16,6 +16,8 @@
 
 package com.mobileer.oboetester;
 
+import static com.mobileer.oboetester.StreamConfiguration.convertChannelMaskToText;
+
 import android.content.Context;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -57,6 +59,7 @@ public class BaseAutoGlitchActivity extends GlitchActivity {
     private static class TestDirection {
         public final int channelUsed;
         public final int channelCount;
+        public final int channelMask;
         public final int deviceId;
         public final int mmapUsed;
         public final int performanceMode;
@@ -65,6 +68,7 @@ public class BaseAutoGlitchActivity extends GlitchActivity {
         public TestDirection(StreamConfiguration configuration, int channelUsed) {
             this.channelUsed = channelUsed;
             channelCount = configuration.getChannelCount();
+            channelMask = configuration.getChannelMask();
             deviceId = configuration.getDeviceId();
             mmapUsed = configuration.isMMap() ? 1 : 0;
             performanceMode = configuration.getPerformanceMode();
@@ -75,6 +79,7 @@ public class BaseAutoGlitchActivity extends GlitchActivity {
             int count = 0;
             count += (channelUsed != other.channelUsed) ? 1 : 0;
             count += (channelCount != other.channelCount) ? 1 : 0;
+            count += (channelMask != other.channelMask) ? 1 : 0;
             count += (deviceId != other.deviceId) ? 1 : 0;
             count += (mmapUsed != other.mmapUsed) ? 1 : 0;
             count += (performanceMode != other.performanceMode) ? 1 : 0;
@@ -86,6 +91,7 @@ public class BaseAutoGlitchActivity extends GlitchActivity {
             StringBuffer text = new StringBuffer();
             text.append(TestDataPathsActivity.comparePassedField(prefix, this, passed, "channelUsed"));
             text.append(TestDataPathsActivity.comparePassedField(prefix,this, passed, "channelCount"));
+            text.append(TestDataPathsActivity.comparePassedField(prefix,this, passed, "channelMask"));
             text.append(TestDataPathsActivity.comparePassedField(prefix,this, passed, "deviceId"));
             text.append(TestDataPathsActivity.comparePassedField(prefix,this, passed, "mmapUsed"));
             text.append(TestDataPathsActivity.comparePassedField(prefix,this, passed, "performanceMode"));
@@ -97,6 +103,7 @@ public class BaseAutoGlitchActivity extends GlitchActivity {
             return "D=" + deviceId
                     + ", " + ((mmapUsed > 0) ? "MMAP" : "Lgcy")
                     + ", ch=" + channelText(channelUsed, channelCount)
+                    + ", cm=" + convertChannelMaskToText(channelMask)
                     + "," + StreamConfiguration.convertPerformanceModeToText(performanceMode)
                     + "," + StreamConfiguration.convertSharingModeToText(sharingMode);
         }
@@ -214,7 +221,8 @@ public class BaseAutoGlitchActivity extends GlitchActivity {
                 + ", Perf = " + StreamConfiguration.convertPerformanceModeToText(
                 config.getPerformanceMode())
                 + ", " + StreamConfiguration.convertSharingModeToText(config.getSharingMode())
-                + ", ch = " + channelText(channel, config.getChannelCount());
+                + ", ch = " + channelText(channel, config.getChannelCount())
+                + ", cm = " + convertChannelMaskToText(config.getChannelMask());
     }
 
     protected String getStreamText(AudioStreamBase stream) {
@@ -280,14 +288,14 @@ public class BaseAutoGlitchActivity extends GlitchActivity {
                 getOutputChannel()
         );
 
-        // The test would only be worth running if we got the configuration we requested on input or output.
+        // The test will only be worth running if we got the configuration we requested on input or output.
         String skipReason = shouldTestBeSkipped();
         boolean skipped = skipReason.length() > 0;
         boolean valid = !openFailed && !skipped;
         boolean startFailed = false;
         if (valid) {
             try {
-                startAudioTest();
+                startAudioTest();   // Start running the test in the background.
             } catch (IOException e) {
                 e.printStackTrace();
                 valid = false;
@@ -353,6 +361,7 @@ public class BaseAutoGlitchActivity extends GlitchActivity {
                 mAutomatedTestRunner.incrementPassCount();
                 result = TEST_RESULT_PASSED;
             }
+
         }
         mAutomatedTestRunner.flushLog();
 
@@ -400,9 +409,23 @@ public class BaseAutoGlitchActivity extends GlitchActivity {
         appendFailedSummary(text + "\n");
     }
 
-    protected void analyzeTestResults() {
-        logAnalysis("\n==== ANALYSIS ===========");
-        logAnalysis("Compare failed configuration with closest one that passed.");
+    private int countPassingTests() {
+        int numPassed = 0;
+        for (TestResult other : mTestResults) {
+            if (other.passed()) {
+                numPassed++;
+            }
+        }
+        return numPassed;
+    }
+
+    protected void compareFailedTestsWithNearestPassingTest() {
+        logAnalysis("\n==== COMPARISON ANALYSIS ===========");
+        if (countPassingTests() == 0) {
+            logAnalysis("Comparison skipped because NO tests passed.");
+            return;
+        }
+        logAnalysis("Compare failed tests with others that passed.");
         // Analyze each failed test.
         for (TestResult testResult : mTestResults) {
             if (testResult.failed()) {
@@ -419,6 +442,7 @@ public class BaseAutoGlitchActivity extends GlitchActivity {
             }
         }
     }
+
 
     @Nullable
     private TestResult[] findClosestPassingTestResults(TestResult testResult) {

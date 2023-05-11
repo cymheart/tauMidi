@@ -3,7 +3,7 @@
 
 #include "TauTypes.h"
 #include "Sample.h"
-#include "Region.h"
+#include "Zone.h"
 #include <Synth/SampleGenerator.h>
 
 namespace tau
@@ -14,27 +14,34 @@ namespace tau
 		Instrument();
 		~Instrument();
 
-		Region* GetGlobalRegion()
+		Zone* GetGlobalZone()
 		{
-			return globalRegion;
+			return globalZone;
 		}
 
-		// 连接一个样本到一个instRegion
-		Region* LinkSamples(Sample* sample);
+		//连接一个样本到一个新的乐器区域
+		//一般sf文件都通过这个来关联样本和乐器区域
+		Zone* LinkSamples(Sample* sample);
 
-		// 连接一个样本发生器到一个instRegion
-		Region* LinkSamplesGen(SampleGenerator* sampleGen);
+		//连接一个样本生成器到一个新的乐器区域
+		//这个接口可以用来关联一些动态生成的样本(比如物理钢琴算法动态生成的样本)和乐器区域绑定
+		Zone* LinkSamplesGen(SampleGenerator* sampleGen);
 
-		// 获取KeyNum在指定范围内的乐器区域组
-		int GetHavKeyInstRegionLinkInfos(int keyNum, float velocity, SamplesLinkToInstRegionInfo* activeInstRegionLinkInfos);
+
+		vector<SamplesLinkToInstZoneInfo>& GetInstZoneLinkInfos()
+		{
+			return instZoneLinkInfos;
+		}
+
+
 
 	public:
 		string name;
 
 	private:
 
-		Region* globalRegion;
-		vector<SamplesLinkToInstRegionInfo>* instRegionLinkInfoList;
+		Zone* globalZone;
+		vector<SamplesLinkToInstZoneInfo> instZoneLinkInfos;
 
 	};
 }

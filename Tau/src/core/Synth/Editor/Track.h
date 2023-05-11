@@ -75,6 +75,9 @@ namespace tau
 		//结束时间点
 		double endSec = 0;
 
+		//结束tick点
+		int32_t endTick = 0;
+
 
 	private:
 
@@ -88,6 +91,7 @@ namespace tau
 		bool _isUpdatePlayPrevPos = false;
 
 		friend class MidiEditor;
+		friend class MeiExporter;
 	};
 
 

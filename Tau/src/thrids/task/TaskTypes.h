@@ -7,6 +7,7 @@
 #include"scutils/ObjectPool.h"
 #include"scutils/LinkedList.h"
 #include"scutils/LinkedListNode.h"
+#include"scutils/ObjectMemory.h"
 #include<chrono>
 
 using namespace scutils;
@@ -33,22 +34,20 @@ namespace task
 		TimerWheelQue
 	};
 
-	enum TaskMsg
+	enum TaskMsg :int
 	{
-		TMSG_DATA,
-		TMSG_QUIT,
-		TMSG_TIMER_START,
-		TMSG_TIMER_RESTART,
-		TMSG_TIMER_RUN,
-		TMSG_TIMER_STOP,
-		TMSG_TASK_REMOVE,
-		TMSG_PAUSE,
-		/**任务阻塞过滤单个*/
-		TMSG_TASK_BLOCK_FILTER_SINGLE,
-		/**任务阻塞过滤*/
-		TMSG_TASK_BLOCK_FILTER,
-		/**任务不阻塞过滤*/
-		TMSG_TASK_NOT_BLOCK_FILTER,
+		TMSG_DATA = 0, //数据处理
+		TMSG_QUIT, //退出
+		TMSG_PAUSE, //暂停
+		TMSG_TIMER_START, //定时器启动
+		TMSG_TIMER_RUN,  //定时器运行中
+		TMSG_TIMER_STOP,  //定时器停止
+		TMSG_TIMER_REMOVE, //定时器移除
+		TMSG_TASK_REMOVE,	 //任务移除
+		TMSG_TASK_BLOCK_FILTER_SINGLE, //任务阻塞过滤单个
+		TMSG_TASK_BLOCK_FILTER,  //任务阻塞过滤
+		TMSG_TASK_NOT_BLOCK_FILTER, //任务不阻塞过滤
+		TMSG_CUSTOM,  //自定义
 	};
 
 

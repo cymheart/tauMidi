@@ -39,6 +39,12 @@ namespace tau
 			endSec = sec;
 		}
 
+		//获取结束tick
+		inline int GetEndTick()
+		{
+			return endTick;
+		}
+
 
 		//获取播放时间
 		inline double GetPlaySec()
@@ -124,12 +130,8 @@ namespace tau
 		//计算结束时间点
 		void ComputeEndSec();
 
-		/// <summary>
-		/// 获取当前时间之后的需要等待按键信号的notes
-		/// </summary>
-		/// <param name="lateSec">当前时间之后的秒数</param>
-		void GetCurTimeLateNeedWaitKeySignalNote(int note, double lateSec);
-
+		//计算结束tick点
+		void ComputeEndTick();
 
 		//当前时间curtPlaySec往前处理一个sec的时间长度的所有midi事件
 		void Process(double sec, bool isStepOp = false);
@@ -191,9 +193,6 @@ namespace tau
 		//是否为手指弹奏的音符
 		bool IsPointerPlayNote(MidiEvent* ev, Track* track);
 
-		void GetNeedWaitKeySignalNote(Track* track, int note, double curtSec);
-		void GetNeedWaitKeySignalNoteFromSimpleTrack(int note, double lateSec);
-
 		//设置当前播放时间
 		void SetCurtPlaySec(double sec);
 
@@ -229,11 +228,11 @@ namespace tau
 		vector<Track*> tracks;
 		int trackCount = 0;
 
-		LateNoteInfo lateNoteInfo;
-		LateNoteInfo noteOffLateNoteInfo;
-
 		//结束时间点
 		double endSec = 0;
+
+		//结束tick点
+		double endTick = 0;
 
 		//播放速率(相对于正常播放速率1.0的倍率)
 		float speed = 1;

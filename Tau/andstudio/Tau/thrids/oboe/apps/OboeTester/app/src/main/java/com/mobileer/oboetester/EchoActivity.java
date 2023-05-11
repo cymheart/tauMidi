@@ -42,9 +42,8 @@ public class EchoActivity extends TestInputActivity {
     private Button mStartButton;
     private Button mStopButton;
     private TextView mStatusTextView;
-    private CommunicationDeviceView mCommunicationDeviceView;
 
-    private ColdStartSniffer mNativeSniffer = new ColdStartSniffer(this);
+    private ColdStartSniffer mNativeSniffer = new ColdStartSniffer();
 
     protected static final int MAX_DELAY_TIME_PROGRESS = 1000;
 
@@ -71,10 +70,6 @@ public class EchoActivity extends TestInputActivity {
         private int mInputLatency;
         private int mOutputLatency;
 
-        public ColdStartSniffer(Activity activity) {
-            super(activity);
-        }
-
         @Override
         public void startSniffer() {
             stableCallCount = 0;
@@ -83,16 +78,10 @@ public class EchoActivity extends TestInputActivity {
             super.startSniffer();
         }
 
-        public void run() {
+        @Override
+        public boolean isComplete() {
             mInputLatency = getColdStartInputMillis();
             mOutputLatency = getColdStartOutputMillis();
-            updateStatusText();
-            if (!isComplete()) {
-                reschedule();
-            }
-        }
-
-        private boolean isComplete() {
             if (mInputLatency > 0 && mOutputLatency > 0) {
                 stableCallCount++;
             }
@@ -113,11 +102,6 @@ public class EchoActivity extends TestInputActivity {
                     + "\n");
             message.append("stable.call.count = " + stableCallCount +  "\n");
             return message.toString();
-        }
-
-        @Override
-        public String getShortReport() {
-            return getCurrentStatusReport();
         }
 
         @Override
@@ -161,14 +145,6 @@ public class EchoActivity extends TestInputActivity {
 
         mCommunicationDeviceView = (CommunicationDeviceView) findViewById(R.id.comm_device_view);
         hideSettingsViews();
-    }
-
-    @Override
-    protected void onStop() {
-        if (mCommunicationDeviceView != null) {
-            mCommunicationDeviceView.cleanup();
-        }
-        super.onStop();
     }
 
     private void setDelayTimeByPosition(int progress) {

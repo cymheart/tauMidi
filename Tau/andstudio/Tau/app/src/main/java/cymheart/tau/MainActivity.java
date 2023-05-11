@@ -3,26 +3,19 @@ package cymheart.tau;
 import androidx.appcompat.app.AppCompatActivity;
 import android.Manifest;
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
-import android.text.style.RelativeSizeSpan;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 //import com.tbruyelle.rxpermissions3.RxPermissions;
 
 import com.tbruyelle.rxpermissions3.RxPermissions;
 
-import cymheart.tau.effect.Equalizer;
-import cymheart.tau.effect.Reverb;
-import cymheart.tau.utils.dsignal.Filter;
+import cymheart.tau.FX.Equalizer;
+import cymheart.tau.FX.SpectrumVisual;
 
 public class MainActivity extends AppCompatActivity   {
 
@@ -37,54 +30,54 @@ public class MainActivity extends AppCompatActivity   {
             new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
 
-    class ButtonListener implements View.OnClickListener, View.OnTouchListener {
-
-        public void onClick(View v) {
-            if(v.getId() == R.id.button2){
-                Log.d("test", "cansal button ---> click");
-            }
-        }
-
-        public boolean onTouch(View v, MotionEvent event) {
-            if(v.getId() == R.id.button2){
-                if(event.getAction() == MotionEvent.ACTION_UP){
-                    tau.OffKey(60, 127, virInst);
-                }
-                if(event.getAction() == MotionEvent.ACTION_DOWN){
-                    tau.OnKey(60, 127, virInst);
-                }
-            }
-
-            if(v.getId() == R.id.button3){
-                if(event.getAction() == MotionEvent.ACTION_UP){
-                    tau.OffKey(40, 127, virInst);
-                }
-                if(event.getAction() == MotionEvent.ACTION_DOWN){
-                    tau.OnKey(40, 127, virInst);
-                }
-            }
-
-            if(v.getId() == R.id.button4){
-                if(event.getAction() == MotionEvent.ACTION_UP){
-                    tau.OffKey(90, 127, virInst);
-                }
-                if(event.getAction() == MotionEvent.ACTION_DOWN){
-                    tau.OnKey(90, 127, virInst);
-                }
-            }
-
-            if(v.getId() == R.id.button5){
-                if(event.getAction() == MotionEvent.ACTION_UP){
-                    tau.OffKey(110, 127, virInst);
-                }
-                if(event.getAction() == MotionEvent.ACTION_DOWN){
-                    tau.OnKey(110, 127, virInst);
-                }
-            }
-            return false;
-        }
-
-    }
+//    class ButtonListener implements View.OnClickListener, View.OnTouchListener {
+//
+//        public void onClick(View v) {
+//            if(v.getId() == R.id.button2){
+//                Log.d("test", "cansal button ---> click");
+//            }
+//        }
+//
+//        public boolean onTouch(View v, MotionEvent event) {
+//            if(v.getId() == R.id.button2){
+//                if(event.getAction() == MotionEvent.ACTION_UP){
+//                    tau.OffKey(60, 127, virInst);
+//                }
+//                if(event.getAction() == MotionEvent.ACTION_DOWN){
+//                    tau.OnKey(60, 127, virInst);
+//                }
+//            }
+//
+//            if(v.getId() == R.id.button3){
+//                if(event.getAction() == MotionEvent.ACTION_UP){
+//                    tau.OffKey(40, 127, virInst);
+//                }
+//                if(event.getAction() == MotionEvent.ACTION_DOWN){
+//                    tau.OnKey(40, 127, virInst);
+//                }
+//            }
+//
+//            if(v.getId() == R.id.button4){
+//                if(event.getAction() == MotionEvent.ACTION_UP){
+//                    tau.OffKey(90, 127, virInst);
+//                }
+//                if(event.getAction() == MotionEvent.ACTION_DOWN){
+//                    tau.OnKey(90, 127, virInst);
+//                }
+//            }
+//
+//            if(v.getId() == R.id.button5){
+//                if(event.getAction() == MotionEvent.ACTION_UP){
+//                    tau.OffKey(110, 127, virInst);
+//                }
+//                if(event.getAction() == MotionEvent.ACTION_DOWN){
+//                    tau.OnKey(110, 127, virInst);
+//                }
+//            }
+//            return false;
+//        }
+//
+//    }
 
     void cb(VirInstrument[] virInst)
     {
@@ -94,6 +87,8 @@ public class MainActivity extends AppCompatActivity   {
 
     }
 
+    protected double[] ampOfBars = new double[1000];
+    protected int[] freqOfBars = new int[1000];
     AppCompatActivity activityw;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -181,7 +176,7 @@ public class MainActivity extends AppCompatActivity   {
 //        tau.SetMidiKeepSameTimeNoteOnCount(10);
 
         tau.SetSoundFont(sf);
-        tau.SetFrameSampleCount(64);
+        tau.SetFrameSampleCount(256);
         tau.SetSampleProcessRate(44100);
         tau.SetChannelCount(2);
         tau.SetLimitRegionSounderCount(64);
@@ -191,19 +186,44 @@ public class MainActivity extends AppCompatActivity   {
         tau.ConntectMidiDevice(0);
        // tau.SetSampleStreamCacheSec(5);
         tau.SetEnableAllVirInstEffects(false);
-        tau.SetEnableCreateFreqSpectrums(false, 4096);
+       // tau.SetEnableCreateFreqSpectrums(false, 4096);
       //  tau.AppendReplaceInstrument(0,0,0,0,1,0);
 
 
 
 
-        Reverb reverb = new Reverb();
-        reverb.SetRoomSize(0.7f);
-        reverb.SetWidth(0.5f);
-        reverb.SetDamping(0.3f);
-        reverb.SetEffectMix(0.5f);
-        tau.AddEffect(reverb);
+
+
+
+//        Reverb reverb = new Reverb();
+//        reverb.SetRoomSize(0.7f);
+//        reverb.SetWidth(0.5f);
+//        reverb.SetDamping(0.3f);
+//        reverb.SetEffectMix(0.5f);
+//        tau.AddEffect(reverb);
         tau.Open();
+
+        SpectrumVisual spectrumVisual = new SpectrumVisual();
+        spectrumVisual.Init(40,  40, 44100, 2,6000, 160, 5120, 3);
+
+//
+//        tau.Load("/storage/emulated/0/(ACG)芬兰梦境乐团-The Dawn《魔兽世界》亡灵序曲.mid");
+//        tau.Play();
+//
+//        int i = 250000000;
+//        while(--i>0) {
+//            try {
+//                Thread.sleep(16);
+//            } catch (InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
+//
+//          //  tau.editor.GetSpectrumsBars(ampOfBars, freqOfBars);
+//
+//            Log.d("s", "W");
+//        }
+
+
 //        tau.Load("/storage/emulated/0/QianQianQueGe.mid", true);
 //
 //        try {
@@ -228,19 +248,19 @@ public class MainActivity extends AppCompatActivity   {
 
 
 
-        ButtonListener b = new ButtonListener();
-
-        Button btn2 = findViewById(R.id.button2);
-      //  btn2.setOnTouchListener(b);
-
-        Button btn3 = findViewById(R.id.button3);
-        btn3.setOnTouchListener(b);
-
-        Button btn4 = findViewById(R.id.button4);
-        btn4.setOnTouchListener(b);
-
-        Button btn5 = findViewById(R.id.button5);
-        btn5.setOnTouchListener(b);
+//        ButtonListener b = new ButtonListener();
+//
+//        Button btn2 = findViewById(R.id.button2);
+//      //  btn2.setOnTouchListener(b);
+//
+//        Button btn3 = findViewById(R.id.button3);
+//        btn3.setOnTouchListener(b);
+//
+//        Button btn4 = findViewById(R.id.button4);
+//        btn4.setOnTouchListener(b);
+//
+//        Button btn5 = findViewById(R.id.button5);
+//        btn5.setOnTouchListener(b);
 
 
         // tv.setText(stringFromJNI());
@@ -266,13 +286,13 @@ public class MainActivity extends AppCompatActivity   {
 
 
                                         //for(int i=0; i<1; i++) {
-                                            tau.Load("/storage/emulated/0/Just the Way You Are-Bruno Mars.mid", true, true);
+                                          //  tau.Load("/storage/emulated/0/Just the Way You Are-Bruno Mars.mid", true, true);
                                             Log.d("MidiMarker", "midiMarker:" + tau.editor.GetMidiMarkers().size());
 
                                             tau.editor.AddMyMarker(5);
                                         tau.editor.AddMyMarker(1);
                                         tau.editor.AddMyMarker(7);
-                                        tau.editor.SaveMidiExInfo();
+                                      //  tau.editor.SaveMidiExInfo();
 
 //                                            while (!tau.IsLoadCompleted())
 //                                            {
@@ -315,31 +335,31 @@ public class MainActivity extends AppCompatActivity   {
 
 
 
-     btn2.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View view)
-        {
-            RxPermissions permissions = new RxPermissions(activityw);
-            permissions.setLogging(true);
-            permissions.request(permissionsGroup)
-                    .subscribe(
-                            granted -> {
-                                if (granted) { // Always true pre-M
-                                    tau.Load("/storage/emulated/0/dream.mid", false);
-
-//                                    while (!tau.IsLoadCompleted())
-//                                    {
-//                                        Thread.sleep(50);
-//                                    }
+//     btn2.setOnClickListener(new View.OnClickListener() {
+//        @Override
+//        public void onClick(View view)
+//        {
+//            RxPermissions permissions = new RxPermissions(activityw);
+//            permissions.setLogging(true);
+//            permissions.request(permissionsGroup)
+//                    .subscribe(
+//                            granted -> {
+//                                if (granted) { // Always true pre-M
+//                                    tau.Load("/storage/emulated/0/dream.mid", false);
 //
-//                                    tau.Play();
-                                } else {
-                                    //TestVentrue.VentruePlayTest();
-
-                                }
-                            });
-        }
-    });
+////                                    while (!tau.IsLoadCompleted())
+////                                    {
+////                                        Thread.sleep(50);
+////                                    }
+////
+////                                    tau.Play();
+//                                } else {
+//                                    //TestVentrue.VentruePlayTest();
+//
+//                                }
+//                            });
+//        }
+//    });
 
 
         // checkPermissionRequest(this);

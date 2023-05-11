@@ -1,8 +1,8 @@
 ﻿/*
 * 调制器(Modulator)
 * 调制器由Midi的控制器值输入到输入端，或内部预设输入值输入到输入端，再经过调制方法和控制参量，调节增加目标值到指定值
-* 调制器的最终调制目标是区域(region)的生成器(generator)的值,最终生成器的值将会影响区域(region)中的生成器的值，
-* 在区域发声器(RegionSounder)中的，将使用这些生成器修改值，控制区域声音的发声方式
+* 调制器的最终调制目标是区域(Zone)的生成器(generator)的值,最终生成器的值将会影响区域(Zone)中的生成器的值，
+* 在区域发声器(ZoneSounder)中的，将使用这些生成器修改值，控制区域声音的发声方式
 * 当输入端类型Modulator，说明可以通过调制器形成链式调节，即:
 * 调制器1可以调制调制器2的数值，再由调制器2调制调制器3，
 * 最终由最后一个调制器调制目标生成器的值，形成一个链式调节
@@ -26,8 +26,8 @@ namespace tau
 		Common
 	};
 
-	// 调制方式
-	enum class ModulationType
+	// 输出运算方式
+	enum class OutOpType
 	{
 		//未定义，将使用内部默认设定
 		Unknown,
@@ -63,8 +63,9 @@ namespace tau
 	// 值处理方式
 	enum class ModTransformType
 	{
-		Linear,
-		Absolute
+		Linear,   //原值 
+		Absolute, //绝对值
+		Negative,  //取负
 	};
 
 	//输入输出状态
@@ -82,11 +83,11 @@ namespace tau
 	enum class ModInputPreset :int
 	{
 		//当前端口没有输入
-		None = 0,
+		NoController = 0,
 		//当前输入端输入音符的力度值
-		NoteOnVelocity = 1,
+		NoteOnVelocity = 2,
 		//当前输入端输入音符的键值
-		NoteOnKey = 2,
+		NoteOnKeyNumber = 3,
 		PolyPressure = 10,
 		//当前输入端输入的midi控制的总体平均压力值
 		ChannelPressure = 13,
@@ -121,7 +122,7 @@ namespace tau
 		ModInputType inputType = ModInputType::Preset;
 
 		//预设值
-		ModInputPreset inputPreset = ModInputPreset::None;
+		ModInputPreset inputPreset = ModInputPreset::NoController;
 
 		//输入控制器号
 		MidiControllerType ctrlType = MidiControllerType::PanMSB;
@@ -141,10 +142,6 @@ namespace tau
 		// 输入原生值的最大限制
 		float inputNativeValueMax = 1;
 
-		// 输出调制器
-		Modulator* outputModulator = nullptr;
-
-
 	};
 
 
@@ -152,8 +149,8 @@ namespace tau
 	/*
 	* 调制器(Modulator)
 	* 调制器由Midi的控制器值输入到输入端，或内部预设输入值输入到输入端，再经过调制方法和控制参量，调节增加目标值到指定值
-	* 调制器的最终调制目标是区域(region)的生成器(generator)的值,最终生成器的值将会影响区域(region)中的生成器的值，
-	* 在区域发声器(RegionSounder)中的，将使用这些生成器修改值，控制区域声音的发声方式
+	* 调制器的最终调制目标是区域(Zone)的生成器(generator)的值,最终生成器的值将会影响区域(Zone)中的生成器的值，
+	* 在区域发声器(ZoneSounder)中的，将使用这些生成器修改值，控制区域声音的发声方式
 	* 当输入端类型Modulator，说明可以通过调制器形成链式调节，即:
 	* 调制器1可以调制调制器2的数值，再由调制器2调制调制器3，
 	* 最终由最后一个调制器调制目标生成器的值，形成一个链式调节
@@ -177,13 +174,14 @@ namespace tau
 			this->type = type;
 		}
 
-		//是否和modulator相似
+		//判断是否和modulator一样
+		//不比较amount
 		bool IsSame(Modulator* modulator);
 
 		//获取端口数量
 		inline size_t GetInputPortCount()
 		{
-			return inputInfos->size();
+			return inputInfos.size();
 		}
 
 		// <summary>
@@ -221,25 +219,25 @@ namespace tau
 		//获取输入端口的输入值
 		inline float GetInputValue(int port)
 		{
-			return (*inputInfos)[(int)port]->inputNativeValue;
+			return inputInfos[port]->inputNativeValue;
 		}
 
 		//获取输入端口的输入类型
 		inline ModInputType GetInputType(int port)
 		{
-			return (*inputInfos)[(int)port]->inputType;
+			return inputInfos[port]->inputType;
 		}
 
 		//获取输入端口的控制器类型
 		inline MidiControllerType GetInputCtrlType(int port)
 		{
-			return (*inputInfos)[(int)port]->ctrlType;
+			return inputInfos[port]->ctrlType;
 		}
 
 		//获取输入端口的预设类型
 		inline ModInputPreset GetInputPresetType(int port)
 		{
-			return (*inputInfos)[(int)port]->inputPreset;
+			return inputInfos[port]->inputPreset;
 		}
 
 		// <summary>
@@ -263,25 +261,31 @@ namespace tau
 			if (type == ModSourceTransformType::Func)
 				return;
 
-			sourceTransTypes[(int)port] = type;
-			this->dir[(int)port] = dir;
-			this->polar[(int)port] = polar;
-			this->inValueRange[(int)port] = GetMapValueRange(polar);
-			this->outValueRange[(int)port] = GetMapValueRange(polar);
+			sourceTransTypes[port] = type;
+			this->dir[port] = dir;
+			this->polar[port] = polar;
+			this->inValueRange[port] = GetMapValueRange(polar);
+			this->outValueRange[port] = GetMapValueRange(polar);
 		}
 
 		inline void SetSourceTransform(int port, ModTransformCallBack modTransformFunc, RangeFloat inValueRange, RangeFloat outValueRange)
 		{
-			sourceTransTypes[(int)port] = ModSourceTransformType::Func;
-			this->modTransformFunc[(int)port] = modTransformFunc;
-			this->inValueRange[(int)port] = inValueRange;
-			this->outValueRange[(int)port] = outValueRange;
+			sourceTransTypes[port] = ModSourceTransformType::Func;
+			this->modTransformFunc[port] = modTransformFunc;
+			this->inValueRange[port] = inValueRange;
+			this->outValueRange[port] = outValueRange;
 		}
 
 		// 设置数量值
 		inline void SetAmount(float amount)
 		{
 			this->amount = amount;
+		}
+
+		// 获取数量值
+		inline float GetAmount()
+		{
+			return amount;
 		}
 
 		// 设置绝对值类型
@@ -296,17 +300,23 @@ namespace tau
 		// 设置输出目标为另一个调制器targetMod的port
 		void SetOutTarget(Modulator* targetMod, int port = 0);
 
-		//设置输出的调制方式
-		inline void SetOutModulationType(ModulationType modulationType)
+		//设置输出的运算方式
+		inline void SetOutOp(OutOpType opType)
 		{
-			outTargetModulationType = modulationType;
+			outTargetOp = opType;
 		}
 
-		// 获取输出的调制方式
-		inline ModulationType GetOutModulationType()
+		// 获取输出的运算方式
+		inline OutOpType GetOutOp()
 		{
-			return outTargetModulationType;
+			return outTargetOp;
 		}
+
+		//设置输出值的单位变换方式
+		void SetOutUnitTransform(UnitTransformCallBack cb) {
+			outUnitTransform = cb;
+		}
+
 
 		//获取输入输出状态
 		inline ModIOState GetIOState()
@@ -354,6 +364,18 @@ namespace tau
 		//获取最终输出目标Modulator
 		Modulator* GetLastOutTargetModulator();
 
+
+		//判断是否有调制器输入
+		bool HavModulatorInput() 
+		{
+			for (int i = 0; i < inputInfos.size(); i++)
+			{
+				if (inputInfos[i]->inputType == ModInputType::Modulator)
+					return true;
+			}
+			return false;
+		}
+
 		//设置控制器调制器输入信息到列表
 		void SetCtrlModulatorInputInfo(
 			MidiControllerType ctrlType,
@@ -377,172 +399,13 @@ namespace tau
 		// <summary>
 		// 获取控制类型曲线的映射范围
 		// </summary>
-		inline  RangeFloat GetMapValueRange(int polar)
+		inline RangeFloat GetMapValueRange(int polar)
 		{
-			if (polar == 0)
-				return RangeFloat(0, 1);
-			return RangeFloat(-1, 1);
+			return polar == 0 ? RangeFloat(0, 1) : RangeFloat(-1, 1);
 		}
 
-
-		/// <summary>
-		/// 映射输入值到控制类型值域范围
-		/// </summary>
-		/// <param name="inValue">输入值</param>
-		/// <param name="inValueMin">输入值的最小值限制</param>
-		/// <param name="inValueMax">输入值的最大值限制</param>
-		/// <param name="sourceType">变换类型</param>
-		/// <param name="dir">变换线方向 0: Positive minY->maxY, 1: Negative maxY->minY</param>
-		/// <param name="polar">变换线极性  0: Unipolar y值范围: 0->1, 1: Bipolar  y值范围: -1->1</param>
-		/// <returns>映射值</returns>
-		float MapValue(float inValue, float inValueMin, float inValueMax, ModSourceTransformType sourceTransType, int dir, int polar);
-
-
-		/// <summary>
-		/// 映射输入值到控制类型值域范围
-		/// </summary>
-		/// <param name="inValue">输入值</param>
-		/// <param name="inValueMin">输入值的最小值限制</param>
-		/// <param name="inValueMax">输入值的最大值限制</param>
-		/// <param name="tranformFunc">变换自定义方法</param>
-		/// <param name="funcInRange">输入数值范围</param>
-		/// <returns></returns>
-		float MapValue(float inValue, float inValueMin, float inValueMax, ModTransformCallBack tranformFunc, RangeFloat funcInRange);
-
-
-		/// <summary>
-		/// 映射原始值到归一化值 
-		/// mapValue = mapValueMin + (nativeValue - nativeValueMin) /(nativeValueMax - nativeValueMin) * (mapValueMax - mapValueMin)
-		/// </summary>
-		/// <param name="nativeValue">原始值</param>
-		/// <param name="nativeValueMin">原始值范围最小值</param>
-		/// <param name="nativeValueMax">原始值范围最大值</param>
-		/// <param name="mapValueMin">映射值范围最小值</param>
-		/// <param name="mapValueMax">映射值范围最大值</param>
-		/// <returns>原始值的映射值</returns>
-		inline float MappingToNormalValue(
-			float nativeValue,
-			float nativeValueMin, float nativeValueMax,
-			float mapValueMin, float mapValueMax)
-		{
-			return mapValueMin + (nativeValue - nativeValueMin) / (nativeValueMax - nativeValueMin) * (mapValueMax - mapValueMin);
-		}
-
-		//Linear Controller Curves
-		// Linear
-		// x:[0, 1]
-		// y:[0, 1]
-		inline float LinearPositiveUnipolar(float x)
-		{
-			return x;
-		}
-
-		// Linear
-		// x:[0, 1]
-		// y:[1, 0]
-		inline float LinearNegativeUnipolar(float x)
-		{
-			return 1 - x;
-		}
-
-		// Linear
-		// x:[-1, 1]
-		// y:[-1, 1]
-		inline float LinearPositiveBipolar(float x)
-		{
-			return x;
-		}
-
-		// Linear
-		// x:[-1, 1]
-		// y:[1, -1]
-		// <param name="x"></param>
-		// <returns></returns>
-		inline float LinearNegativeBipolar(float x)
-		{
-			return -x;
-		}
-
-		//Concave Controller Curves
-		// Concave
-		// x:[0, 1]
-		// y:[0, 1]
-		float ConcavePositiveUnipolar(float x);
-
-		// Concave
-		// x:[0, 1]
-		// y:[1, 0]
-		float ConcaveNegativeUnipolar(float x);
-
-
-		// Concave
-		// x:[-1, 1]
-		// y:[-1, 1]
-		float ConcavePositiveBipolar(float x);
-
-		// Concave
-		// x:[-1, 1]
-		// y:[1, -1]
-		float ConcaveNegativeBipolar(float x);
-
-
-		//Convex Controller Curves 
-		// Convex
-		// x:[0, 1]
-		// y:[0, 1] 
-		float ConvexPositiveUnipolar(float x);
-
-		// Convex
-		// x:[0, 1]
-		// y:[1, 0]    
-		float ConvexNegativeUnipolar(float x);
-
-
-		// Convex
-		// x:[-1, 1]
-		// y:[-1, 1]
-		float ConvexPositiveBipolar(float x);
-
-
-
-		//Convex
-		/// x:[-1, 1]
-		/// y:[1, -1]
-		float ConvexNegativeBipolar(float x);
-
-
-		//Switch Controller Curves 
-		// Switch
-		// x:[0, 1]
-		// y:[0, 1]
-		inline  float SwitchPositiveUnipolar(float x)
-		{
-			return x < 0.5f ? 0.0f : 1.0f;
-		}
-
-		// Switch
-		// x:[0, 1]
-		// y:[1, 0]
-		inline float SwitchNegativeUnipolar(float x)
-		{
-			return x < 0.5f ? 1.0f : 0.0f;
-		}
-
-		// Switch
-		// x:[-1, 1]
-		// y:[-1, 1]
-		inline float SwitchPositiveBipolar(float x)
-		{
-			return x < 0.0f ? -1.0f : 1.0f;
-		}
-
-		// Switch
-		// x:[-1, 1]
-		// y:[1, -1]
-		inline  float SwitchNegativeBipolar(float x)
-		{
-			return x < 0.0f ? 1.0f : -1.0f;
-		}
+		// 映射输入值到控制类型值域范围
+		float MapValueFromInputPort(int port);
 
 
 	private:
@@ -550,7 +413,7 @@ namespace tau
 		ModulatorType type = ModulatorType::Common;
 
 		// 输出目标到生成器类型
-		GeneratorType outTargetGeneratorType = GeneratorType::Velocity;
+		GeneratorType outTargetGeneratorType = GeneratorType::None;
 
 		// 输出目标为另一个调制器
 		Modulator* outTargetModulator = nullptr;
@@ -561,11 +424,14 @@ namespace tau
 		// 输出值的绝对值处理
 		ModTransformType absType = ModTransformType::Linear;
 
-		//输出值调制方式
-		ModulationType outTargetModulationType = ModulationType::Unknown;
+		//输出值运算方式
+		OutOpType outTargetOp = OutOpType::Add;
+
+		//输出值的单位变换
+		UnitTransformCallBack outUnitTransform = nullptr; 
 
 		// 输入信息
-		ModInputInfoList* inputInfos = nullptr;
+		vector<ModInputInfo*> inputInfos;
 
 		// 端口控制器类型
 		ModSourceTransformType sourceTransTypes[2] = { ModSourceTransformType::Linear };
@@ -573,16 +439,18 @@ namespace tau
 		// 端口控制器回调
 		ModTransformCallBack modTransformFunc[2] = { nullptr };
 
-
-
 		RangeFloat inValueRange[2];
 		RangeFloat outValueRange[2];
 
 		//输入输出状态
 		//-1:未给定输入值
 		//1:已经调用input()送入了值，等待输出
-		//0:已近调用了output(),可以直接获取输出值
+		//0:已经调用了output(),可以直接获取输出值
 		ModIOState ioState = ModIOState::Non;
+
+		float inputValue[2] = { 0, 0 };
+		float inputMinValue[2] = { 0, 0 };
+		float inputMaxValue[2] = { 0, 0 };
 
 		//变换线极性
 		//0: Unipolar y值范围: 0->1

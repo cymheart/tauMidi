@@ -33,6 +33,11 @@ namespace tau
 			defaultTempo.SetTempoByBPM(120, tickForQuarterNote, 0, 0);
 		}
 
+		// 获取一个四分音符的tick数
+		int GetTickForQuarterNote() {
+			return tickForQuarterNote;
+		}
+
 		//获取当前速度
 		Tempo* GetTempo(double sec);
 		//获取当前速度

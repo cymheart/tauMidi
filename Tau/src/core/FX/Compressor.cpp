@@ -2,8 +2,7 @@
 
 namespace tauFX
 {
-	Compressor::Compressor(Synther* synther)
-		:TauEffect(synther)
+	Compressor::Compressor()
 	{
 		leftCompressor = new dsignal::Compressor();
 		rightCompressor = new  dsignal::Compressor();
@@ -92,6 +91,23 @@ namespace tauFX
 		{
 			leftChannelSamples[i] = leftCompressor->Process(leftChannelSamples[i]);
 			rightChannelSamples[i] = rightCompressor->Process(rightChannelSamples[i]);
+		}
+	}
+
+	void Compressor::EffectProcess(float* synthStream, int numChannels, int channelSampleCount)
+	{
+		if (numChannels == 2) {
+			for (int i = 0; i < channelSampleCount * numChannels; i += 2)
+			{
+				synthStream[i] = leftCompressor->Process(synthStream[i]);
+				synthStream[i + 1] = rightCompressor->Process(synthStream[i + 1]);
+			}
+		}
+		else {
+			for (int i = 0; i < channelSampleCount; i++)
+			{
+				synthStream[i] = leftCompressor->Process(synthStream[i]);
+			}
 		}
 	}
 }

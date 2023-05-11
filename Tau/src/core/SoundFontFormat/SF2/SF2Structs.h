@@ -12,13 +12,18 @@ namespace tau
 	{
 
 	public:
+		SF2PresetHeader() {};
 		SF2PresetHeader(ByteStream& br);
 
 	public:
 		static uint32_t Size;
 		byte presetName[20];
-		uint16_t Preset = 0, Bank = 0, PresetBagIndex = 0;
-		uint32_t library = 0, genre = 0, morphology = 0;
+		uint16_t Preset = 0;          //预设编号
+		uint16_t Bank = 0;            //预设音色库
+		uint16_t PresetBagIndex = 0;  //指向预设关联的Bag列表起始索引
+		uint32_t library = 0;         //音色版权标识码（32位）
+		uint32_t genre = 0;           //乐器分类（如0 = 未分类，1 = 钢琴，2 = 弦乐）
+		uint32_t morphology = 0;      //发音特征编码（如0 = 单音，1 = 复音）
 	};
 
 
@@ -28,6 +33,7 @@ namespace tau
 	class SF2Bag
 	{
 	public:
+		SF2Bag() {};
 		SF2Bag(ByteStream& br);
 	public:
 		static uint32_t Size;
@@ -42,16 +48,17 @@ namespace tau
 	class SF2ModulatorList
 	{
 	public:
+		SF2ModulatorList() {};
 		SF2ModulatorList(ByteStream& br);
 
 	public:
 		static uint32_t Size;
 
-		uint16_t ModulatorSource;
-		SF2Generator ModulatorDestination;
-		uint16_t ModulatorAmount;
-		uint16_t ModulatorAmountSource;
-		SF2Transform ModulatorTransform;
+		uint16_t ModulatorSource;           // 调制源（2字节枚举，如LFO、包络）
+		SF2Generator ModulatorDestination;  // 调制目标（2字节枚举或链接其他调制器）
+		SHORT ModulatorAmount;              // 调制量（有符号短整型，范围-32768~32767）
+		uint16_t ModulatorAmountSource;     // 调制量的动态源（2字节枚举）
+		SF2Transform ModulatorTransform;    // 调制转换操作（2字节枚举，如线性、指数）
 	};
 
 
@@ -61,6 +68,7 @@ namespace tau
 	class SF2GeneratorList
 	{
 	public:
+		SF2GeneratorList() {};
 		SF2GeneratorList(ByteStream& br);
 	public:
 		static uint32_t Size;
@@ -77,6 +85,7 @@ namespace tau
 	class SF2Instrument
 	{
 	public:
+		SF2Instrument() {};
 		SF2Instrument(ByteStream& br);
 	public:
 		static uint32_t Size;
@@ -95,6 +104,7 @@ namespace tau
 	{
 
 	public:
+		SF2SampleHeader() {};
 		SF2SampleHeader(ByteStream& br);
 
 	public:

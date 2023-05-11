@@ -42,19 +42,19 @@ namespace tau
 		Preset* AddPreset(string name, int bankSelectMSB, int bankSelectLSB, int instrumentNum);
 
 		//获取预设列表
-		inline PresetList* GetPresetList()
+		inline vector<Preset*>* GetPresetList()
 		{
-			return presetList;
+			return presets;
 		}
 
 		// 样本绑定到乐器上
-		Region* SampleBindToInstrument(Sample* sample, Instrument* inst);
+		Zone* SampleBindToInstrument(Sample* sample, Instrument* inst);
 
 		// 样本发生器绑定到乐器上
-		Region* SampleGenBindToInstrument(SampleGenerator* sampleGen, Instrument* inst);
+		Zone* SampleGenBindToInstrument(SampleGenerator* sampleGen, Instrument* inst);
 
 		// 乐器绑定到预设上 
-		Region* InstrumentBindToPreset(Instrument* inst, Preset* preset);
+		Zone* InstrumentBindToPreset(Instrument* inst, Preset* preset);
 
 		// 获取乐器预设
 		Preset* GetInstrumentPreset(int bankSelectMSB, int bankSelectLSB, int instrumentNum);
@@ -75,13 +75,13 @@ namespace tau
 		SampleList* sampleList = nullptr;
 		SampleGenList* sampleGenList = nullptr;
 		InstrumentList* instList = nullptr;
-		PresetList* presetList = nullptr;
+		vector<Preset*>* presets;
 		PresetMap* presetBankDict = nullptr;
 
 		//是否开启物理钢琴
 		bool isEnablePhysicsPiano = false;
 
-
+	
 		//音源解析格式
 		SoundFontParserMap* sfParserMap;
 	};

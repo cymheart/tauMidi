@@ -25,7 +25,8 @@ namespace scutils
 		int64_t writeEndPos = writePos + size;
 		if (writeEndPos < bufSize)
 		{
-			memcpy(buf + writePos, value, size);
+			if (value)
+				memcpy(buf + writePos, value, size);
 			writePos += size;
 		}
 		else
@@ -33,24 +34,26 @@ namespace scutils
 			uint8_t* valPtr = (uint8_t*)(value);
 			int64_t frontCount = bufSize - writePos;
 			int64_t backCount = writeEndPos - bufSize;
-			memcpy(buf + writePos, valPtr, frontCount);
-			if (backCount > 0)
-				memcpy(buf, valPtr + frontCount, backCount);
+			if (value) {
+				memcpy(buf + writePos, valPtr, frontCount);
+				if (backCount > 0)
+					memcpy(buf, valPtr + frontCount, backCount);
+			}
 			writePos = backCount;
 		}
 	}
 
 	//读取指定长度字节到dst中
-	void RingBuffer::ReadToDst(void* dst, int64_t len)
+	void RingBuffer::ReadToDst(void* dst, int64_t needReadSize)
 	{
 		if (writePos == readPos)
 			return;
 
-		int64_t readEndPos = readPos + len;
+		int64_t readEndPos = readPos + needReadSize;
 		if (readEndPos < bufSize)
 		{
 			if (dst)
-				memcpy(dst, buf + readPos, len);
+				memcpy(dst, buf + readPos, needReadSize);
 			readPos = readEndPos;
 		}
 		else

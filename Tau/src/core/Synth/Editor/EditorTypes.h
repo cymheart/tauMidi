@@ -35,9 +35,7 @@ namespace tau
 		//播放
 		PLAY,
 		//暂停
-		PAUSE,
-		//结束暂停
-		ENDPAUSE
+		PAUSE
 	};
 
 	//缓存状态

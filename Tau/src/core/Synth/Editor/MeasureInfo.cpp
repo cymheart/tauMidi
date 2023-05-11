@@ -1,164 +1,116 @@
-#include"MeasureInfo.h"
+ï»¿#include"MeasureInfo.h"
 
 namespace tau
 {
-
-	//Éú³ÉĞ¡½ÚĞÅÏ¢
-	void MeasureInfo::Create(MidiMarkerList& midiMarkerList, float endSec)
+	//ç”Ÿæˆå°èŠ‚ä¿¡æ¯
+	void MeasureInfo::Create(MidiMarkerList& midiMarkerList, int midiEndTick)
 	{
 		measureNum = 0;
-		mIdx = -1;
-		bIdx = -1;
+		int mIdx = -1;
 		double curtSec = 0;
+		int curtTick = 0;
 
-		//Ò»¸öËÄ·ÖÒô·ûµÄÃëÊı
+		//ä¸€ä¸ªå››åˆ†éŸ³ç¬¦çš„ç§’æ•°
 		double microTempo = 0;
-		// ÅÄºÅ·Ö×Ó(ÒÔden·ÖÒô·ûÎªÒ»ÅÄ£¬Ã¿Ğ¡½ÚÓĞnumÅÄ)
-		int num = 4;
-		// ÅÄºÅ·ÖÄ¸(ÒÔden·ÖÒô·ûÎªÒ»ÅÄ)
-		int den = 4;
+		// æ‹å·åˆ†å­(ä»¥denåˆ†éŸ³ç¬¦ä¸ºä¸€æ‹ï¼Œæ¯å°èŠ‚æœ‰numæ‹)
+		int num = -1;
+		// æ‹å·åˆ†æ¯(ä»¥denåˆ†éŸ³ç¬¦ä¸ºä¸€æ‹)
+		int den = -1;
 
-		float beatCostSec, newBeatCostSec;
+		float beatCostSec; //æ¯æ‹èŠ±è´¹å¤šå°‘ç§’
+		int beatCostTicks = 0; //æ¯æ‹èŠ±è´¹å¤šå°‘tick
+		float measureCostSec; //æ¯èŠ‚èŠ±è´¹å¤šå°‘ç§’
+		int measureCostTicks = 0; //æ¯èŠ‚èŠ±è´¹å¤šå°‘tick
 		MidiMarker* midiMarker;
-		MidiMarker* nextMarker = nullptr;
-		double beatStartSec;
-		double nextMarkerStartSec;
-		int state = 0;
-		int j;
-
 		vector<MidiMarker*>& midiMarkers = midiMarkerList.GetMidiMarkers();
-
+		int qNoteTicks = midiMarkerList.GetTickForQuarterNote();
+		int startTick = 0;
+		float startSec = 0;
+		vector<MidiMarkerInfo> midiMarkerInfos;
 		for (int i = 0; i < midiMarkers.size(); i++)
 		{
 			midiMarker = midiMarkers[i];
-			if (midiMarker->IsEnableTempo()) {
-				microTempo = midiMarker->GetMicroTempo() * 0.000001f;
-				if (state == 1)
-					state = 2;
-			}
 
-			if (midiMarker->IsEnableTimeSignature())
-			{
-				num = midiMarker->GetNumerator();
-				den = pow(2, midiMarker->GetDenominator());
-				state = 2;
-				if (microTempo == 0) {
-					state = 1;
-					continue;
-				}
-			}
-
-			if (state != 2)
+			if (!midiMarker->IsEnableTempo() &&
+				!midiMarker->IsEnableTimeSignature())
 				continue;
-			state = 0;
 
-			//¸ù¾İÃ¿4·ÖÒô·ûÎªÒ»ÅÄµÄÊ±¼ämicroTempo£¬ °´±ÈÖµ¼ÆËãden·ÖÒô·û×÷ÎªÒ»ÅÄµÄ»¨·ÑÊ±¼ä
-			//ÀıÈç2/4ÅÄ, ¼´ÒÔ2·ÖÒô·ûÎªÒ»ÅÄ£¬Ã¿Ğ¡½ÚÓĞ4ÅÄ£¬2·ÖÒô·ûÊÇ4·ÖÒô·ûÊ±ÖµµÄ2±¶£¬¼´4.0f / den±¶
-			beatCostSec = 4.0f / den * microTempo;
+			startSec = midiMarker->GetStartSec();
+			startTick = midiMarker->GetStartTick();
 
-			bool flag = true;
-			while (flag)
+			for (int j = i; j < midiMarkers.size(); j++) 
 			{
-				measure[++mIdx] = curtSec;
-				measure[++mIdx] = bIdx + 1;
-				measureNum = (mIdx + 1) / 2;
-				beatStartSec = curtSec;
+				midiMarker = midiMarkers[j];
+				if (midiMarker->GetStartTick() != startTick) {
+					i = j - 1;
+					break;
+				}
 
-				int numIdx = num;
-				while (numIdx--)
+				if (midiMarker->IsEnableTempo()) {
+					microTempo = midiMarker->GetMicroTempo() * 0.000001f;
+				}
+
+				if (midiMarker->IsEnableTimeSignature())
 				{
-					curtSec += beatCostSec;
-					beat[++bIdx] = curtSec;
-
-					if (nextMarker != nullptr)
-					{
-						state = 2;
-						if (curtSec > nextMarkerStartSec)
-						{
-							if (nextMarker->IsEnableTempo())
-							{
-								curtSec = nextMarkerStartSec + (curtSec - nextMarkerStartSec) * newBeatCostSec / beatCostSec;
-								beat[bIdx] = curtSec;
-								beatCostSec = newBeatCostSec;
-							}
-
-							if (nextMarker->IsEnableTimeSignature())
-							{
-								curtSec -= beatCostSec;
-
-								num = nextMarker->GetNumerator();
-								numIdx = num - 1;
-								den = pow(2, nextMarker->GetDenominator());
-								beatCostSec = den / 4.0f * microTempo;
-
-								curtSec += beatCostSec;
-								beat[bIdx] = curtSec;
-
-							}
-
-							state = 0;
-							nextMarker = nullptr;
-						}
-					}
-
-					if (state != 0) {
-						if (curtSec >= endSec)
-							return;
-						continue;
-					}
-
-
-					for (j = i + 1; j < midiMarkers.size(); j++)
-					{
-						if (midiMarkers[j]->IsEnableTempo())
-						{
-							nextMarker = midiMarkers[j];
-							microTempo = nextMarker->GetMicroTempo() * 0.000001f;
-							newBeatCostSec = den / 4.0f * microTempo;
-							nextMarkerStartSec = nextMarker->GetStartSec();
-						}
-
-
-						if (midiMarkers[j]->IsEnableTimeSignature()) {
-							nextMarker = midiMarkers[j];
-							nextMarkerStartSec = nextMarker->GetStartSec();
-						}
-
-						if (nextMarker != nullptr && curtSec >= nextMarkerStartSec)
-						{
-							if (midiMarkers[j]->IsEnableTempo()) {
-								curtSec = nextMarkerStartSec + (curtSec - nextMarkerStartSec) * newBeatCostSec / beatCostSec;
-								beat[bIdx] = curtSec;
-								beatCostSec = newBeatCostSec;
-							}
-
-							if (midiMarkers[j]->IsEnableTimeSignature()) {
-								curtSec = midiMarkers[j]->GetStartSec();
-								beat[bIdx] = curtSec;
-								numIdx = 0;
-								i = j - 1;
-								flag = false;
-								nextMarker = nullptr;
-								break;
-							}
-						}
-						else {
-							i = j;
-							break;
-						}
-
-					}
-
-					if (j == midiMarkers.size())
-						i = j;
-
-					if (curtSec >= endSec)
-						return;
+					num = midiMarker->GetNumerator();
+					den = pow(2, midiMarker->GetDenominator());
 				}
 			}
 
-			state = 0;
+			MidiMarkerInfo info = {
+				startSec,
+				startTick,
+				microTempo, num, den
+			};
+			midiMarkerInfos.push_back(info);
 		}
+
+		midiMarkerInfos.push_back({0, midiEndTick, 0, 0, 0});
+
+
+		for (int i = 0; i < midiMarkerInfos.size() - 1; i++) 
+		{
+			MidiMarkerInfo& mInfoA = midiMarkerInfos[i];
+			MidiMarkerInfo& mInfoB = midiMarkerInfos[i+1];
+
+			// æ‹å·åˆ†æ¯(ä»¥denåˆ†éŸ³ç¬¦ä¸ºä¸€æ‹)
+			den = mInfoA.den;
+			// æ‹å·åˆ†å­(ä»¥denåˆ†éŸ³ç¬¦ä¸ºä¸€æ‹ï¼Œæ¯å°èŠ‚æœ‰numæ‹)
+			num = mInfoA.num;
+
+			//æ ¹æ®æ¯4åˆ†éŸ³ç¬¦ä¸ºä¸€æ‹çš„æ—¶é—´microTempoï¼Œ æŒ‰æ¯”å€¼è®¡ç®—denåˆ†éŸ³ç¬¦ä½œä¸ºä¸€æ‹çš„èŠ±è´¹æ—¶é—´
+			//ä¾‹å¦‚1/2æ‹, å³ä»¥2åˆ†éŸ³ç¬¦ä¸ºä¸€æ‹ï¼Œæ¯å°èŠ‚æœ‰4æ‹ï¼Œ2åˆ†éŸ³ç¬¦æ˜¯4åˆ†éŸ³ç¬¦æ—¶å€¼çš„2å€ï¼Œå³4.0f / denå€
+			beatCostSec = 4.0f / den * mInfoA.microTempo;
+			beatCostTicks = 4.0f / den * qNoteTicks;
+			measureCostSec = beatCostSec * num;
+			measureCostTicks = beatCostTicks * num;
+
+			float curtSec = mInfoA.startSec;
+			int curtTick = mInfoA.startTick;
+			int endTick = mInfoB.startTick;
+
+			while (curtTick < endTick)
+			{
+				++mIdx;
+				measure[mIdx].startSec = curtSec;
+				measure[mIdx].startTick = curtTick;
+				measure[mIdx].beatNum = num;
+				measure[mIdx].beatCostSec = beatCostSec;
+				curtSec += measureCostSec;
+				curtTick += measureCostTicks;
+
+				//
+				if (curtTick >= endTick && i + 1 == midiMarkerInfos.size() - 1)
+				{
+					mEndTick = curtTick - 1;
+					mEndSec = curtSec;
+				}
+
+			}	
+		}	
+
+		measureNum = mIdx + 1;
 	}
+
 
 }

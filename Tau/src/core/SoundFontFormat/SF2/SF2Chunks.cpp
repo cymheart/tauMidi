@@ -8,6 +8,12 @@ namespace tau
 		size = br.read<uint32_t>();
 	}
 
+	void SF2Chunk::SetName(const char* name)
+	{
+		memcpy(chunkName, name, 4);
+	}
+
+
 	SF2ListChunk::SF2ListChunk(ByteStream& br)
 		:SF2Chunk(br)
 	{
@@ -144,7 +150,6 @@ namespace tau
 		samples.clear();
 	}
 
-
 	InfoListChunk::InfoListChunk(ByteStream& br)
 		:SF2ListChunk(br)
 	{
@@ -181,6 +186,13 @@ namespace tau
 			DEL(subChunks[i]);
 		subChunks.clear();
 	}
+
+
+	void InfoListChunk::AddSubChunk(SF2Chunk* subChunk)
+	{
+		subChunks.push_back(subChunk);
+	}
+
 
 	/// <summary>
 	/// 获取备注

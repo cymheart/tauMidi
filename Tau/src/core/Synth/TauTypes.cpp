@@ -1,4 +1,4 @@
-#include "TauTypes.h"
+ï»¿#include "TauTypes.h"
 
 namespace tau
 {
@@ -16,12 +16,12 @@ namespace tau
 			KeyWhite, //C8
 	};
 
-	//»ñÈ¡noteÀàĞÍ
+	//è·å–noteç±»å‹
 	int GetNoteType(int note)
 	{
 		return keyTypes88Std[note - A0];
 	}
-	//»ñÈ¡ÏÂÒ»¸öºÚÉ«ÀàĞÍnote
+	//è·å–ä¸‹ä¸€ä¸ªé»‘è‰²ç±»å‹note
 	int GetNextBlackNote(int note)
 	{
 		for (int i = note - A0 + 1; i < 88; i++)
@@ -30,7 +30,7 @@ namespace tau
 		return -1;
 	}
 
-	//»ñÈ¡ÏÂÒ»¸ö°×É«ÀàĞÍnote
+	//è·å–ä¸‹ä¸€ä¸ªç™½è‰²ç±»å‹note
 	int GetNextWhiteNote(int note)
 	{
 		for (int i = note - A0 + 1; i < 88; i++)

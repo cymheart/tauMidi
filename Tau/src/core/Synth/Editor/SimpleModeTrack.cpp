@@ -1,11 +1,12 @@
-#include"Editor.h"
+ï»¿#include"Editor.h"
 #include"MidiEditor.h"
 #include"Track.h"
 #include"Midi/MidiEvent.h"
+#include <algorithm>
 
 namespace tau
 {
-	//Éú³É¼òµ¥Ä£Ê½Òô·û¹ìµÀ
+	//ç”Ÿæˆç®€å•æ¨¡å¼éŸ³ç¬¦è½¨é“
 	void MidiEditor::CreateSimpleModeTrack()
 	{
 		simpleModeTrackNotes.Release();
@@ -17,7 +18,7 @@ namespace tau
 			classifyNoteOnEvents[i].clear();
 		}
 
-		//»ñÈ¡ĞèÒªµ¯×àµÄnoteEv²¢°´noteÖµ·ÖÀàµ½classifyNoteOnEventsÖĞ
+		//è·å–éœ€è¦å¼¹å¥çš„noteEvå¹¶æŒ‰noteå€¼åˆ†ç±»åˆ°classifyNoteOnEventsä¸­
 		int minTrackIdx = -1;
 		Track* track;
 		for (int i = 0; i < tracks.size(); i++)
@@ -81,8 +82,8 @@ namespace tau
 		simpleModeTrack = tracks[minTrackIdx];
 
 
-		//¼ÆËã³öĞèÒªµ¯×àµÄkey·¶Î§startKeyIdx µ½ endKeyIdx
-		//°´·¶Î§ÖĞnoteµÄÊıÁ¿×î¶à£¬À´¾ö¶¨keyµÄ·¶Î§
+		//è®¡ç®—å‡ºéœ€è¦å¼¹å¥çš„keyèŒƒå›´startKeyIdx åˆ° endKeyIdx
+		//æŒ‰èŒƒå›´ä¸­noteçš„æ•°é‡æœ€å¤šï¼Œæ¥å†³å®škeyçš„èŒƒå›´
 		int whiteKeyCount;
 		int noteCount = 0;
 		int maxNoteCount = 0;
@@ -90,7 +91,7 @@ namespace tau
 		int endKeyIdx = 0;
 		int a = A0, b = 1;
 
-		//ÔÚ½öÓĞ7¸ö¼üµÄÊ±ºò°´¼üÖµµÄ°Ë¶È½øĞĞ·¶Î§Æ¥Åä
+		//åœ¨ä»…æœ‰7ä¸ªé”®çš„æ—¶å€™æŒ‰é”®å€¼çš„å…«åº¦è¿›è¡ŒèŒƒå›´åŒ¹é…
 		if (simpleModePlayWhiteKeyCount == 7) {
 			a = C1; b = 12;
 		}
@@ -120,7 +121,7 @@ namespace tau
 			}
 		}
 
-		//°ÑstartKeyIdx µ½endKeyIdx °´¼ü·¶Î§ÍâµÄnoteEv ÒÔµ½µ½·¶Î§ÖĞ
+		//æŠŠstartKeyIdx åˆ°endKeyIdx æŒ‰é”®èŒƒå›´å¤–çš„noteEv ä»¥åˆ°åˆ°èŒƒå›´ä¸­
 		int blackNoteIdx = startKeyIdx;
 		int whiteNoteIdx = startKeyIdx - 1;
 		int gotoClassifyNoteIdx;
@@ -169,7 +170,7 @@ namespace tau
 		}
 
 
-		//×éºÏÊ±¼äµãÁ¬ÔÚÒ»ÆğµÄnoteEvÎªÒ»¸önoteEv,²¢°ÑÆä·ÅÈë×ÓÏîÖĞ
+		//ç»„åˆæ—¶é—´ç‚¹è¿åœ¨ä¸€èµ·çš„noteEvä¸ºä¸€ä¸ªnoteEv,å¹¶æŠŠå…¶æ”¾å…¥å­é¡¹ä¸­
 		vector<NoteOnEvent*> childNoteOnEvents;
 		NoteOnEvent* newNoteEv;
 		NoteOffEvent* newNoteOffEv;
@@ -184,7 +185,7 @@ namespace tau
 			newNoteOffEv = nullptr;
 			vector<NoteOnEvent*>& noteOnEvents = classifyNoteOnEvents[i];
 			if (!noteOnEvents.empty()) {
-				//°´Ê±¼äÅÅĞòĞèÒªµ¯×àµÄNotes
+				//æŒ‰æ—¶é—´æ’åºéœ€è¦å¼¹å¥çš„Notes
 				sort(noteOnEvents.begin(), noteOnEvents.end(), NoteCmp);
 				newNoteEv = new NoteOnEvent();
 				newNoteOffEv = new NoteOffEvent();
@@ -238,11 +239,11 @@ namespace tau
 			}
 		}
 
-		//¶ÔsimpleModeNoteTrackÖĞµÄnote°´Ê±¼äË³Ğò£¬ÓÉĞ¡µ½´óÅÅĞò
+		//å¯¹simpleModeNoteTrackä¸­çš„noteæŒ‰æ—¶é—´é¡ºåºï¼Œç”±å°åˆ°å¤§æ’åº
 		simpleModeTrackNotes.Sort(NoteCmp);
 
 
-		//°´Ê±³¤´óĞ¡¼ò»¯ºÏ²¢Òô·û
+		//æŒ‰æ—¶é•¿å¤§å°ç®€åŒ–åˆå¹¶éŸ³ç¬¦
 		if (mergeSimpleSrcNoteLimitSec <= 0 || mergeSimpleDestNoteLimitSec <= 0) {
 			simpleModeTrackNotesOffset = simpleModeTrackNotes.GetHeadNode();
 			return;

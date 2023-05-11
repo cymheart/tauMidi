@@ -18,8 +18,22 @@ namespace tauFX
 
 		void Set(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount)
 		{
+			synthStream = nullptr;
+
+			//
 			this->leftChannelSamples = leftChannelSamples;
 			this->rightChannelSamples = rightChannelSamples;
+			this->channelSampleCount = channelSampleCount;
+		}
+
+		void Set(float* synthStream, int numChannels, int channelSampleCount)
+		{
+			this->leftChannelSamples = nullptr;
+			this->rightChannelSamples = nullptr;
+
+			//
+			this->synthStream = synthStream;
+			this->numChannels = numChannels;
 			this->channelSampleCount = channelSampleCount;
 		}
 
@@ -32,8 +46,10 @@ namespace tauFX
 
 	private:
 		vector<TauEffect*> effects;
+		float* synthStream = nullptr;
 		float* leftChannelSamples = nullptr;
 		float* rightChannelSamples = nullptr;
+		int numChannels = 2;
 		int channelSampleCount = 64;
 	};
 

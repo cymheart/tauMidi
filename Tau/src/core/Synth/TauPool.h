@@ -4,7 +4,7 @@
 #include "TauTypes.h"
 #include"SyntherEvent.h"
 #include"KeySounder.h"
-#include"RegionSounder.h"
+#include"ZoneSounder.h"
 
 
 namespace tau
@@ -16,12 +16,12 @@ namespace tau
 	public:
 
 		ObjectPool<KeySounder>& KeySounderPool() { return keySounderPool; }
-		ObjectPool<RegionSounder>& RegionSounderPool() { return regionSounderPool; }
+		ObjectPool<ZoneSounder>& ZoneSounderPool() { return zoneSounderPool; }
 		ObjectPool<SyntherEvent>& RenderEventPool() { return renderEventPool; }
 
 	private:
 		ObjectPool<KeySounder> keySounderPool;
-		ObjectPool<RegionSounder> regionSounderPool;
+		ObjectPool<ZoneSounder> zoneSounderPool;
 		ObjectPool<SyntherEvent> renderEventPool;
 	};
 

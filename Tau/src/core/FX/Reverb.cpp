@@ -3,8 +3,7 @@
 namespace tauFX
 {
 
-	Reverb::Reverb(Synther* synther)
-		:TauEffect(synther)
+	Reverb::Reverb()
 	{
 		freeVerb = new stk::FreeVerb();
 	}
@@ -68,6 +67,28 @@ namespace tauFX
 			frames = &LastFrame();
 			leftChannelSamples[i] = (float)(*frames)[0];
 			rightChannelSamples[i] = (float)(*frames)[1];
+		}
+	}
+
+	void Reverb::EffectProcess(float* synthStream, int numChannels, int channelSampleCount)
+	{
+		const stk::StkFrames* frames;
+		if (numChannels == 2) {
+			for (int i = 0; i < channelSampleCount * numChannels; i += 2)
+			{
+				Tick(synthStream[i], synthStream[i + 1]);
+				frames = &LastFrame();
+				synthStream[i] = (float)(*frames)[0];
+				synthStream[i + 1] = (float)(*frames)[1];
+			}
+		}
+		else {
+			for (int i = 0; i < channelSampleCount; i++)
+			{
+				Tick(synthStream[i], synthStream[i]);
+				frames = &LastFrame();
+				synthStream[i] = (float)(*frames)[0];
+			}
 		}
 	}
 }

@@ -11,6 +11,13 @@ namespace tau
 	public:
 		~Sample();
 
+
+		//获取样本指定位置值
+		inline float GetValue(uint32_t pos) {
+			if (sm24 == nullptr) return pcm[pos] / 32768.0f * 0.95f; //16位样本值
+			return (pcm[pos] << 8 | sm24[pos]) / 8388608.0f * 0.95f; //24位样本值
+		}
+
 		// 设置样本
 		void SetSamples(short* samples, uint32_t size, uint8_t* sm24 = nullptr);
 
@@ -62,8 +69,10 @@ namespace tau
 		string name;
 
 		// PCM流
-		float* pcm = nullptr;
+		short* pcm = nullptr;
+		uint8_t* sm24 = nullptr; //24位样本低8位值
 		size_t size = 0;
+
 
 		// 样本采样率
 		float sampleRate = 44100;

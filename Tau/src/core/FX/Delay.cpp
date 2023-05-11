@@ -2,8 +2,7 @@
 
 namespace tauFX
 {
-	Delay::Delay(Synther* synther)
-		:TauEffect(synther)
+	Delay::Delay()
 	{
 		delayLeftChannel = new stk::DelayL();
 		delayRightChannel = new stk::DelayL();
@@ -37,6 +36,31 @@ namespace tauFX
 			else {
 				leftChannelSamples[i] = (float)delayLeftChannel->tick(leftChannelSamples[i]);
 				rightChannelSamples[i] = (float)delayRightChannel->tick(rightChannelSamples[i]);
+			}
+		}
+	}
+
+	void Delay::EffectProcess(float* synthStream, int numChannels, int channelSampleCount)
+	{
+		if (numChannels == 2) {
+			for (int i = 0; i < channelSampleCount * numChannels; i += 2)
+			{
+				if (delayChannel == DelayChannel::LeftChannel) {
+					synthStream[i] = (float)delayLeftChannel->tick(synthStream[i]);
+				}
+				else if (delayChannel == DelayChannel::RightChannel) {
+					synthStream[i + 1] = (float)delayRightChannel->tick(synthStream[i + 1]);
+				}
+				else {
+					synthStream[i] = (float)delayLeftChannel->tick(synthStream[i]);
+					synthStream[i + 1] = (float)delayRightChannel->tick(synthStream[i + 1]);
+				}
+			}
+		}
+		else {
+			for (int i = 0; i < channelSampleCount; i++)
+			{
+				synthStream[i] = (float)delayLeftChannel->tick(synthStream[i]);
 			}
 		}
 	}

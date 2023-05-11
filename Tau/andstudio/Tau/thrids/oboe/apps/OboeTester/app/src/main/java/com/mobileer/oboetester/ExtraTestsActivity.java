@@ -33,4 +33,11 @@ public class ExtraTestsActivity extends BaseOboeTesterActivity {
         launchTestThatDoesRecording(TestRouteDuringCallbackActivity.class);
     }
 
+    public void onLaunchDynamicWorkloadTest(View view) {
+        launchTestActivity(DynamicWorkloadActivity.class);
+    }
+
+    public void onLaunchColdStartLatencyTest(View view) {
+        launchTestActivity(TestColdStartLatencyActivity.class);
+    }
 }

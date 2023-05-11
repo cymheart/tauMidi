@@ -1,6 +1,5 @@
 ﻿#ifdef __ANDROID__
 #include "Audio_oboe.h"
-#include"scutils/logging_macros.h"
 
 namespace tau
 {
@@ -68,11 +67,11 @@ namespace tau
 		// 2. 通过 AudioStreamBuilder 打开 Oboe 音频流
 		mStream = nullptr;
 		oboe::Result r = mBuilder.openStream(&mStream);
-		LOGI("openManagedStream result : %s", oboe::convertToText(r));
+		//LOGI("openManagedStream result : %s", oboe::convertToText(r));
 
 		// 3. 开始播放
 		r = mStream->requestStart();
-		LOGI("requestStart result : %s", oboe::convertToText(r));
+		//LOGI("requestStart result : %s", oboe::convertToText(r));
 		isOpened = true;
 
 	}

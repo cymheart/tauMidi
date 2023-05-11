@@ -1,6 +1,4 @@
-﻿
-
-#ifndef _KeySounder_h_
+﻿#ifndef _KeySounder_h_
 #define _KeySounder_h_
 
 #include "TauTypes.h"
@@ -51,8 +49,8 @@ namespace tau
 		// exclusiveClassList : 一个包含非0的数字，遇到-1为结尾
 		void CreateExclusiveClassList(int32_t* exclusiveClassList);
 
-		// 停止对持有相同独占类的RegionSounder的处理     
-		void StopExclusiveClassRegionSounderProcess(int exclusiveClass);
+		// 停止对持有相同独占类的ZoneSounder的处理     
+		void StopExclusiveClassZoneSounderProcess(int exclusiveClass);
 
 		// 内部相关的所有区域发声处理是否结束
 		// 包括了采样处理结束，和效果音残余处理结束   
@@ -121,35 +119,27 @@ namespace tau
 		}
 
 		// 获取所有的发声区域     
-		inline RegionSounderList* GetRegionSounderList()
+		inline vector<ZoneSounder*>& GetZoneSounders()
 		{
-			return regionSounderList;
+			return zoneSounders;
 		}
 
 		// 是否具有发声区域    
-		bool IsHavRegionSounder();
+		bool IsHavZoneSounder();
 
 		//设置是否为实时控制类型
 		void SetRealtimeControlType(bool isRealtimeControl);
 
-		//调制生成器参数     
-		void ModulationParams();
-
-		//调制输入按键生成器参数
-		void ModulationInputKeyParams();
-
+		//调制生成器
+		void Modulation();
 
 
 
 	private:
 
 		// 根据给定的按键，在预设区域中找到所有对应的乐器区域，并存入乐器区域激活列表 
-		void CreateActiveRegionSounderList();
+		void CreateActiveZoneSounders();
 
-		RegionSounder* CreateRegionSounder(
-			Sample* sample, SampleGenerator* sampleGen,
-			Region* activeInstRegion, Region* activeInstGlobalRegion,
-			Region* activePresetRegion, Region* activePresetGlobalRegion);
 
 	public:
 		Synther* synther = nullptr;
@@ -178,12 +168,8 @@ namespace tau
 		//是否强制释放按键
 		bool isForceOffKey = false;
 
-
-
-		RegionSounderList* regionSounderList = nullptr;
-
-		//
-		SamplesLinkToInstRegionInfo activeInstRegionLinkInfos[512];
+		vector<ZoneSounder*> zoneSounders;
+		SamplesLinkToInstZoneInfo activeInstZoneLinkInfos[512];
 	};
 }
 

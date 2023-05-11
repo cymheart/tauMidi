@@ -1,7 +1,7 @@
 ﻿#include"Synther/Synther.h"
 #include"VirInstrument.h"
 #include"KeySounder.h"
-#include"RegionSounder.h"
+#include"ZoneSounder.h"
 #include"Tau.h"
 #include"Channel.h"
 #include"Preset.h"
@@ -23,6 +23,7 @@ namespace tau
 		this->preset = preset;
 
 		channel->AddVirInstrument(this);
+
 
 		keySounders = new list<KeySounder*>;
 		onKeySounders = new vector<KeySounder*>;
@@ -131,7 +132,7 @@ namespace tau
 		startGain = !isFade ? 0 : gain;
 		dstGain = 0;
 		startGainFadeSec = synther->GetCurtSec();
-		totalGainFadeTime = 0.2f;
+		totalGainFadeTime = 0.2;
 
 		//
 		synther->AddNeedDelVirInstrument(this);
@@ -141,35 +142,35 @@ namespace tau
 	//状态处理
 	void VirInstrument::StateProcess()
 	{
-		float scale;
+		float t;
 		switch (state)
 		{
 		case VirInstrumentState::OFFING:
-			scale = (synther->GetCurtSec() - startGainFadeSec) / totalGainFadeTime;
-			if (scale >= 1) {
-				scale = 1;
+			t = (synther->GetCurtSec() - startGainFadeSec) / totalGainFadeTime;
+			if (t >= 1) {
+				t = 1;
 				state = VirInstrumentState::OFFED;
 			}
 
-			gain = startGain + (dstGain - startGain) * scale;
+			gain = startGain + (dstGain - startGain) * t;
 			break;
 
 		case VirInstrumentState::ONING:
-			scale = (synther->GetCurtSec() - startGainFadeSec) / totalGainFadeTime;
-			if (scale >= 1) {
-				scale = 1;
+			t = (synther->GetCurtSec() - startGainFadeSec) / totalGainFadeTime;
+			if (t >= 1) {
+				t = 1;
 				state = VirInstrumentState::ONED;
 			}
-			gain = startGain + (dstGain - startGain) * scale;
+			gain = startGain + (dstGain - startGain) * t;
 			break;
 
 		case VirInstrumentState::REMOVING:
-			scale = (synther->GetCurtSec() - startGainFadeSec) / totalGainFadeTime;
-			if (scale >= 1) {
-				scale = 1;
+			t = (synther->GetCurtSec() - startGainFadeSec) / totalGainFadeTime;
+			if (t >= 1) {
+				t = 1;
 				state = VirInstrumentState::REMOVED;
 			}
-			gain = startGain + (dstGain - startGain) * scale;
+			gain = startGain + (dstGain - startGain) * t;
 			break;
 		case VirInstrumentState::ONED:
 			break;
@@ -183,7 +184,7 @@ namespace tau
 	//增加效果器
 	void VirInstrument::AddEffect(TauEffect* effect)
 	{
-		effect->SetSynther(synther);
+		effect->SetTau(tau);
 		effects->AppendEffect(effect);
 	}
 
@@ -195,45 +196,27 @@ namespace tau
 		memset(rightChannelSamples, 0, sizeof(float) * tau->frameSampleCount);
 	}
 
-	//调制生成器参数
-	void VirInstrument::ModulationParams()
+	//调制生成器
+	void VirInstrument::Modulation()
+	{
+		list<KeySounder*>::iterator it = keySounders->begin();
+		list<KeySounder*>::iterator end = keySounders->end();
+		for (; it != end; it++)
+			(*it)->Modulation();
+	}
+
+	//调制生成器
+	void VirInstrument::Modulation(int key)
 	{
 		list<KeySounder*>::iterator it = keySounders->begin();
 		list<KeySounder*>::iterator end = keySounders->end();
 		for (; it != end; it++)
 		{
-			KeySounder& keySounder = *(*it);
-			keySounder.ModulationParams();
+			KeySounder* keySounder = *it;
+			if (keySounder->GetOnKey() == key)
+				keySounder->Modulation();
 		}
 	}
-
-	//调制生成器参数
-	void VirInstrument::ModulationParams(int key)
-	{
-		list<KeySounder*>::iterator it = keySounders->begin();
-		list<KeySounder*>::iterator end = keySounders->end();
-		for (; it != end; it++)
-		{
-			KeySounder& keySounder = *(*it);
-			if (keySounder.GetOnKey() != key)
-				continue;
-			keySounder.ModulationParams();
-		}
-	}
-
-
-	//调制输入按键生成器参数
-	void VirInstrument::ModulationInputKeyParams()
-	{
-		list<KeySounder*>::iterator it = keySounders->begin();
-		list<KeySounder*>::iterator end = keySounders->end();
-		for (; it != end; it++)
-		{
-			KeySounder& keySounder = *(*it);
-			keySounder.ModulationParams();
-		}
-	}
-
 
 	// 录制为midi
 	void VirInstrument::RecordMidi()
@@ -288,7 +271,7 @@ namespace tau
 			return;
 
 		channel->SetPitchBend(value);
-		ModulationParams();
+		Modulation();
 
 		//录制
 		if (isEnableRecordFunction && midiTrackRecord)
@@ -302,7 +285,7 @@ namespace tau
 			return;
 
 		channel->SetPolyPressure(pressure);
-		ModulationParams(key);
+		Modulation(key);
 
 		//录制
 		if (isEnableRecordFunction && midiTrackRecord)
@@ -374,7 +357,7 @@ namespace tau
 			return;
 
 		channel->SetControllerValue(ctrlType, value);
-		ModulationParams();
+		Modulation();
 
 		//录制
 		if (isEnableRecordFunction && midiTrackRecord)
@@ -414,7 +397,7 @@ namespace tau
 		//对同时产生的大量发音按键进行忽略
 		//忽略算法:如果当前所有区域发音数量超过极限值的一半
 		//并且当前非实时按键发音....
-		if (synther->totalRegionSounderCount > tau->limitRegionSounderCount * 0.5f)
+		if (synther->totalZoneSounderCount > tau->limitZoneSounderCount * 0.5f)
 		{
 			if (tickCount <= 5)
 			{
@@ -448,6 +431,8 @@ namespace tau
 
 
 	//按键
+	//tickCount:此参数如果>=0,将会判断onkey tick总量对系统的影响
+	//id用于区分keySounder和松开的key是同一个按键
 	void VirInstrument::OnKey(int key, float velocity, int tickCount, int id)
 	{
 		if (state == VirInstrumentState::OFFED ||
@@ -494,6 +479,12 @@ namespace tau
 	//松开所有按键
 	void VirInstrument::OffAllKeys()
 	{
+		OffAllKeys(-1);
+	}
+
+	//松开与指定id匹配的所有按键
+	void VirInstrument::OffAllKeys(int id) {
+
 		if (state == VirInstrumentState::OFFED ||
 			state == VirInstrumentState::REMOVED ||
 			state == VirInstrumentState::REMOVING)
@@ -505,6 +496,9 @@ namespace tau
 		for (int i = 0; i < onKeySounders->size(); i++)
 		{
 			keySounder = (*onKeySounders)[i];
+			if (id >= 0 && keySounder->GetID() != id)
+				continue;
+
 			keySounder->SetForceOffKey(true);
 			KeyEvent keyEvent;
 			keyEvent.isOnKey = false;
@@ -530,8 +524,7 @@ namespace tau
 
 		//
 		channel->SetNoteOnKey(key, velocity);
-		if (tau->UseCommonModulator())
-			ModulationInputKeyParams();
+		Modulation();
 
 		//使用单音模式时，其它保持按键状态并在发音当中的keySounder将被快速释音，
 		//同时使其保持在按键状态队列当中，只有这样在释放当前发音按键的时候，其他保持按键状态的key才能恢复发音
@@ -565,7 +558,7 @@ namespace tau
 			//如果在已按键状态表中查到一个对应的key的keySounder，
 			//同时还需要判断这个keySounder有没有被请求松开过，如果没有被请求松开过，
 			//才可以对应此刻的松开按键
-			if (kSounder->GetID() == id &&
+			if (kSounder->GetID() == id &&      //id相同，表示kSounder和松开的key是同一个按键
 				kSounder->IsOnningKey(key) &&
 				!kSounder->IsNeedOffKey())
 			{
@@ -577,7 +570,7 @@ namespace tau
 		OffKeyCore(keySounder, velocity);
 	}
 
-	//按键动作送入RegionSounder中执行处理
+	//按键动作送入ZoneSounder中执行处理
 	void VirInstrument::OnKeyCore(KeySounder* keySounder, int key, float velocity)
 	{
 		isSoundEnd = false;
@@ -585,7 +578,7 @@ namespace tau
 		keySounder->CreateExclusiveClassList(exclusiveClasses);
 
 		//设置具有相同独占类的区域将不再处理样本
-		StopExclusiveClassRegionSounderProcess(exclusiveClasses);
+		StopExclusiveClassZoneSounderProcess(exclusiveClasses);
 
 		onKeySounders->push_back(keySounder);
 		keySounders->push_back(keySounder);
@@ -716,8 +709,8 @@ namespace tau
 	}
 
 
-	// 找寻最后一个按键发声区域中具有同样乐器区域的regionSounder
-	RegionSounder* VirInstrument::FindLastSameRegion(Region* region)
+	// 找寻最后一个按键发声区域中具有同样乐器区域的ZoneSounder
+	ZoneSounder* VirInstrument::FindLastSameZone(Zone* Zone)
 	{
 		KeySounder* keySounder = GetLastOnKeyStateSounder();
 		if (keySounder == nullptr)
@@ -731,12 +724,11 @@ namespace tau
 				return nullptr;
 		}
 
-		RegionSounderList& regionSounderList = *(keySounder->GetRegionSounderList());
-		size_t size = regionSounderList.size();
-		for (int i = 0; i < size; i++)
+		auto zoneSounders = keySounder->GetZoneSounders();
+		for (int i = 0; i < zoneSounders.size(); i++)
 		{
-			if (regionSounderList[i]->instRegion == region)
-				return regionSounderList[i];
+			if (zoneSounders[i]->instZone == Zone)
+				return zoneSounders[i];
 		}
 
 		return nullptr;
@@ -744,7 +736,7 @@ namespace tau
 
 	// 设置具有相同独占类的区域将不再处理样本
 	// exclusiveClasses数组以一个小于等于0的值结尾
-	void VirInstrument::StopExclusiveClassRegionSounderProcess(int* exclusiveClasses)
+	void VirInstrument::StopExclusiveClassZoneSounderProcess(int* exclusiveClasses)
 	{
 		if (exclusiveClasses[0] < 0)
 			return;
@@ -756,7 +748,7 @@ namespace tau
 		{
 			keySounder = *it;
 			for (int j = 0; exclusiveClasses[j] > 0; j++)
-				keySounder->StopExclusiveClassRegionSounderProcess(exclusiveClasses[j]);
+				keySounder->StopExclusiveClassZoneSounderProcess(exclusiveClasses[j]);
 		}
 	}
 
@@ -773,7 +765,7 @@ namespace tau
 				if (keySounder)
 					keySounder->SetRealtimeControlType(keyEvent.isRealTime);
 				//
-				//PrintOnKeyInfo(keyEvent.key, keyEvent.velocity, keyEvent.isRealTime);
+				PrintOnKeyInfo(keyEvent.key, keyEvent.velocity, keyEvent.isRealTime);
 			}
 			else
 			{
@@ -797,6 +789,7 @@ namespace tau
 				<< "<<<" << GetPreset()->name.c_str() << ">>> "
 				<< "  乐器号" << channel->GetProgramNum()
 				<< "  按键" << key
+				<< "  力度" << velocity
 				<< "  通道" << channel->GetChannelNum()
 				<< "  实时 " << endl;
 		}
@@ -806,13 +799,14 @@ namespace tau
 				<< "<<<" << GetPreset()->name.c_str() << ">>> "
 				<< "  乐器号" << channel->GetProgramNum()
 				<< "  按键" << key
+				<< "  力度" << velocity
 				<< "  轨道" << trackNum
 				<< "  通道" << channel->GetChannelNum() << endl;
 		}
 	}
 
 	//为渲染准备所有正在发声的区域
-	int VirInstrument::CreateRegionSounderForRender(RegionSounder** totalRegionSounder, int startSaveIdx)
+	int VirInstrument::CreateZoneSounderForRender(ZoneSounder** totalZoneSounder, int startSaveIdx)
 	{
 		if (isEnableInnerEffects)
 		{
@@ -824,7 +818,7 @@ namespace tau
 		StateProcess();
 
 		//
-		regionSounderCount = 0;
+		ZoneSounderCount = 0;
 		if (IsSoundEnd()) {
 			return 0;
 		}
@@ -839,19 +833,18 @@ namespace tau
 
 		for (; it != rend; it++)
 		{
-			RegionSounderList* regionSounderList = (*it)->GetRegionSounderList();
-			for (int i = (int)(regionSounderList->size() - 1); i >= 0; i--)
+			auto zoneSounders = (*it)->GetZoneSounders();
+			for (int i = zoneSounders.size() - 1; i >= 0; i--)
 			{
-				RegionSounder* regionSounder = (*regionSounderList)[i];
-				if (regionSounder->IsSoundEnd()) {
+				ZoneSounder* zoneSounder = zoneSounders[i];
+				if (zoneSounder->IsSoundEnd()) 
 					continue;
-				}
-
-				totalRegionSounder[idx++] = regionSounder;
-				regionSounders[regionSounderCount++] = regionSounder;
+				
+				totalZoneSounder[idx++] = zoneSounder;
+				ZoneSounders[ZoneSounderCount++] = zoneSounder;
 
 				//获取区域混音深度数值
-				reverbDepth = regionSounder->GetGenReverbEffectsSend() * 0.01f;
+				reverbDepth = zoneSounder->GetGenReverbEffectsSend().amount * 0.001f;
 				if (reverbDepth > curtReverbDepth)
 					curtReverbDepth = reverbDepth;
 
@@ -899,59 +892,59 @@ namespace tau
 			scale = 1;
 		}
 
-		SetRegionReverbDepth(fadeReverbDepthInfo.startDepth + (fadeReverbDepthInfo.dstDepth - fadeReverbDepthInfo.startDepth) * scale);
+		SetZoneReverbDepth(fadeReverbDepthInfo.startDepth + (fadeReverbDepthInfo.dstDepth - fadeReverbDepthInfo.startDepth) * scale);
 	}
 
 
 	//设置区域混音深度
-	void VirInstrument::SetRegionReverbDepth(float value)
+	void VirInstrument::SetZoneReverbDepth(float value)
 	{
 		fadeReverbDepthInfo.curtDepth = value;
-		if (regionReverb != nullptr)
-			regionReverb->SetEnable(false);
+		if (ZoneReverb != nullptr)
+			ZoneReverb->SetEnable(false);
 
 		if (fadeReverbDepthInfo.curtDepth != 0)
 		{
-			if (!regionReverb)
+			if (!ZoneReverb)
 			{
-				regionReverb = new Reverb();
-				innerEffects->AppendEffect(regionReverb);
+				ZoneReverb = new Reverb();
+				innerEffects->AppendEffect(ZoneReverb);
 			}
 
-			regionReverb->SetEnable(true);
+			ZoneReverb->SetEnable(true);
 
-			if (abs(fadeReverbDepthInfo.curtDepth - regionReverb->GetEffectMix()) > 0.001f)
+			if (abs(fadeReverbDepthInfo.curtDepth - ZoneReverb->GetEffectMix()) > 0.001f)
 			{
-				regionReverb->SetRoomSize(0.6f);
-				regionReverb->SetWidth(0.5f);
-				regionReverb->SetDamping(0.1f);
-				regionReverb->SetEffectMix(fadeReverbDepthInfo.curtDepth);
+				ZoneReverb->SetRoomSize(0.6f);
+				ZoneReverb->SetWidth(0.5f);
+				ZoneReverb->SetDamping(0.1f);
+				ZoneReverb->SetEffectMix(fadeReverbDepthInfo.curtDepth);
 			}
 		}
 	}
 
 
 	//合并区域已处理发音样本
-	void VirInstrument::CombineRegionSounderSamples(RegionSounder* regionSounder)
+	void VirInstrument::CombineZoneSounderSamples(ZoneSounder* ZoneSounder)
 	{
-		if (IsSoundEnd() || regionSounder->IsSoundEnd() || regionSounder->virInst != this)
+		if (IsSoundEnd() || ZoneSounder->IsSoundEnd() || ZoneSounder->virInst != this)
 			return;
 
 		ChannelOutputMode outputMode = tau->GetChannelOutputMode();
-		float* regionLeftChannelSamples = regionSounder->GetLeftChannelSamples();
-		float* regionRightChannelSamples = regionSounder->GetRightChannelSamples();
+		float* ZoneLeftChannelSamples = ZoneSounder->GetLeftChannelSamples();
+		float* ZoneRightChannelSamples = ZoneSounder->GetRightChannelSamples();
 		int framePos = synther->childFramePos;
 		for (int i = 0; i < tau->childFrameSampleCount; i++)
 		{
-			leftChannelSamples[framePos + i] += regionLeftChannelSamples[i] * gain;
-			rightChannelSamples[framePos + i] += regionRightChannelSamples[i] * gain;
+			leftChannelSamples[framePos + i] += ZoneLeftChannelSamples[i] * gain;
+			rightChannelSamples[framePos + i] += ZoneRightChannelSamples[i] * gain;
 		}
 
 		//当区域按键时间超过0.1s后（有的发音样本起始音会很长时间处于0值，所以需要一个延迟时间再判断）
 		//此时处理不能听到发声的滞留区域，使其结束发音
-		KeySounder* keySounder = regionSounder->GetKeySounder();
+		KeySounder* keySounder = ZoneSounder->GetKeySounder();
 		if (synther->GetCurtSec() - keySounder->GetOnKeySec() > 0.1f)
-			regionSounder->EndBlockSound();
+			ZoneSounder->EndBlockSound();
 
 	}
 

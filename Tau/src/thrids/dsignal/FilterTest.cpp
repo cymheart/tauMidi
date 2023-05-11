@@ -1,4 +1,4 @@
-#include"FilterTest.h"
+ï»¿#include"FilterTest.h"
 
 namespace dsignal
 {
@@ -30,26 +30,26 @@ namespace dsignal
 		Compute();
 	}
 
-	//ÉèÖÃQs
+	//è®¾ç½®Qs
 	void FilterTest::SetQs(int idx, float q)
 	{
 		qs_[idx] = q;
 	}
 
 
-	//ÉèÖÃÆµÂÊµã
+	//è®¾ç½®é¢‘ç‡ç‚¹
 	void FilterTest::SetFreq(float freqHZ)
 	{
 		freq_ = freqHZ;
 	}
 
-	//ÉèÖÃQ
+	//è®¾ç½®Q
 	void FilterTest::SetQ(float q)
 	{
 		q_ = q;
 	}
 
-	//ÉèÖÃÔöÒæÎ»ÖÃ0-1
+	//è®¾ç½®å¢ç›Šä½ç½®0-1
 	void FilterTest::SetGainPos(float pos)
 	{
 		if (pos <= 0.5)
@@ -94,7 +94,7 @@ namespace dsignal
 		highShelf.CalculateCoefficients();*/
 	}
 
-	//»ñÈ¡ÂË²¨Æ÷
+	//è·å–æ»¤æ³¢å™¨
 	vector<dsignal::Filter*> FilterTest::GetFilters()
 	{
 		vector<dsignal::Filter*> filters;

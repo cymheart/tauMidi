@@ -17,8 +17,6 @@ namespace tau
 		amp = 1;
 		delaySec = 0;
 		attackSec = 0.001f;
-		holdSec = 0.001f;
-		decaySec = 0.001f;
 		sustainY = 1;
 		releaseSec = 0.001f;
 		keyToHold = 0;
@@ -34,6 +32,8 @@ namespace tau
 		curtValue = 0;
 		curtSec = 0;
 		isFastRelease = false;
+		oldSec = -1;
+		oldOutput = 0;
 	}
 
 	// 启动
@@ -96,6 +96,9 @@ namespace tau
 	// <param name="sec">秒</param>
 	float Envelope::GetEnvValue(float sec)
 	{
+	//	if (sec == oldSec)
+	//		return oldOutput;
+
 		curtSec = sec;
 		if (curtStage == EnvStage::Stop)
 		{
@@ -145,6 +148,10 @@ namespace tau
 			}
 		}
 
+
+		oldSec = sec;
+		oldOutput = curtValue;;
+
 		return curtValue;
 	}
 
@@ -192,53 +199,46 @@ namespace tau
 	}
 
 
-	// 按键的keyToHold系数影响保持时长
-	// keyToHold为百分比值，比如： 取1即为100%, 取0.25即为25%
-	// 按一个八度差，音时长改变2倍
-	// newHoldSec = 2^(keyToHold * nOctave) * holdSec
-	// 例如:
-	// 当前按键键号为40，则相对基键60，相差60 - 40 = 20个半音，即为 20/12 = 1.66667个Octave，即nOcatve = 1.66667
-	// keyToHold = 0.5, holdSec = 1.3,
-	// 则 newHoldSec = 2^(0.5 * 1.66667) * 1.3 = 2.31634s
-	// 再例:
-	// 当前按键键号为80，则相对基键60，相差60 - 80 = -20个半音，即为 -20/12 = -1.66667个Octave，即nOcatve = -1.66667
-	// keyToHold = 0.5, holdSec = 1.3,
-	// 则 newHoldSec = 2^(0.5 * -1.66667) * 1.3 = 0.729599s
+    // 范围：-1200（每键号减少 1 个八度时间）至 1200（每键号增加 1 个八度时间）。
+	// 修正后的HoldEnv时间(timecents) = HoldEnv + (KeynumToEnvHold * (OnKeyNumber - 60))
+	// 键号 60（中央 C）：保持时间不变。
+	// 键号 > 60：保持时间随键号升高按比例缩短（若 KeynumToEnvHold 为正值）。
+	// 键号 < 60：保持时间随键号降低按比例延长（若 KeynumToEnvHold 为正值）。
+	//设计意图：
+	//模拟真实乐器特性：例如钢琴高音区衰减更快,低音区衰减更慢。
+	//动态音色控制：结合 HoldEnv 和 KeynumToEnvDecay，实现音色随音高变化的复杂动态响应。
 	void Envelope::CalRealHoldSec()
 	{
 		if (keyToHold == 0 || onKey == false)
 		{
-			realHoldSec = holdSec;
+			realHoldSec = UnitTransform::TimecentsToSec(holdTimecents);
 			return;
 		}
 
-		float nOctave = (float)(60.0 - (float)noteKeyNum) / 12.0f;
-		realHoldSec = (float)pow(2, keyToHold * nOctave) * holdSec;
+		short n = holdTimecents + keyToHold * (noteKeyNum - 60);
+		realHoldSec = UnitTransform::TimecentsToSec(n);
 	}
 
 
-	// 按键的keyToDecay系数影响衰减时长
-	// keyToDecay为百分比值，比如： 取1即为100%, 取0.25即为25%
-	// 按一个八度差，音时长改变2倍
-	// newDecaySec = 2^(keyToDecay * nOctave) * decaySec
-	// 例如:
-	// 当前按键键号为40，则相对基键60，相差60 - 40 = 20个半音，即为 20/12 = 1.66667个Octave，即nOcatve = 1.66667
-	// keyToDecay = 0.5, decaySec = 1.3,
-	// 则 newDecaySec = 2^(0.5 * 1.66667) * 1.3 = 2.31634s
-	// 再例:
-	// 当前按键键号为61，则相对基键60，相差60 - 61 = -1个半音，即为 -1/12 = -0.0833333个Octave，即nOcatve = -0.0833333
-	// keyToDecay = 1, decaySec = 1,
-	// 则 newDecaySec = 2^(1 * -0.0833333) * 1 = 0.943874s
+	// 键位对音量包络衰减时间的调节
+	// MIDI 键号升高时，音量包络衰减时间缩短的速率（以 时间厘/键位单位 为单位）
+	// 单位：时间厘/键位（Timecents per KeyNumber），每单位键号变化对应的时间厘调整量
+	// 范围：-1200 至 1200，负值表示键号升高时衰减时间延长，正值表示缩短。
+	// 默认值：0 → 衰减时间不随键号变化，始终采用 DecayEnv的设定值。
+	// 键号 60（中央 C） 的衰减时间始终不变（由 DecayVolEnv 直接控制）。
+	// 修正后的DecayEnv时间(timecents) = DecayEnv + (KeynumToEnvDecay * (OnKeyNumber - 60))
+	// 结合 SustainEnv（持续电平）和 ReleaseEnv（释放时间），可模拟钢琴、吉他等乐器的自然衰减特性。
+	// 例如，高音区快速衰减至 50% 电平，低音区缓慢衰减至 20% 电平。
 	void Envelope::CalRealDecaySec()
 	{
 		if (keyToDecay == 0 || onKey == false)
 		{
-			realDecaySec = decaySec;
+			realDecaySec = UnitTransform::TimecentsToSec(decayTimecents);
 			return;
 		}
 
-		float nOctave = (60.0f - (float)noteKeyNum) / 12.0f;
-		realDecaySec = (float)pow(2, keyToDecay * nOctave) * decaySec;
+		short n = decayTimecents + keyToDecay * (noteKeyNum - 60);
+		realDecaySec = UnitTransform::TimecentsToSec(n);
 	}
 
 

@@ -9,10 +9,10 @@ namespace TauClr
 		tau->SetFrameSampleCount(512);
 		tau->SetSampleProcessRate(44100);
 		tau->SetChildFrameSampleCount(64);
-		tau->SetLimitRegionSounderCount(500);
+		tau->SetLimitZoneSounderCount(500);
 		tau->SetLimitOnKeySpeed(600);
 
-		tau->SetUseRegionInnerChorusEffect(true);
+		tau->SetUseZoneInnerChorusEffect(true);
 		tau->SetEnableAllVirInstEffects(true);
 	}
 
@@ -88,7 +88,7 @@ namespace TauClr
 
 	TauClr::EditorState TauSharp::GetEditorState()
 	{
-		return (TauClr::EditorState)tau->GetEditorState();
+		return (TauClr::EditorState)tau->GetPlayState();
 	}
 
 	//获取当前播放时间点

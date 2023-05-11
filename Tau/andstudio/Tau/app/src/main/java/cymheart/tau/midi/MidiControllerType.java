@@ -137,7 +137,7 @@ public enum MidiControllerType
     PolyModeOff(126),
     PolyModeOn(127);
 
-    private int id; // Could be other data type besides int
+    private final int id; // Could be other data type besides int
     private MidiControllerType(int id) {
         this.id = id;
     }

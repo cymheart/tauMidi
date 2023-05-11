@@ -11,7 +11,7 @@ namespace tauFX
 	class DLL_CLASS Autowah : public TauEffect
 	{
 	public:
-		Autowah(Synther* synther = nullptr);
+		Autowah();
 		virtual ~Autowah();
 
 		void Clear();
@@ -31,29 +31,9 @@ namespace tauFX
 		*/
 		void SetLevel(float level);
 
-	public:
-		/** sets wah
-		\param wah : set wah amount, , 0...1.0
-	*/
-		void SetWahTask(float wah);
-
-		/** sets mix amount
-			\param drywet : set effect dry/wet, 0...100.0
-		*/
-		void SetDryWetTask(float drywet);
-
-		/** sets wah level
-			\param level : set wah level, 0...1.0
-		*/
-		void SetLevelTask(float level);
-
-	private:
-		static void _SetWahTask(Task* task);
-		static void _SetDryWetTask(Task* task);
-		static void _SetLevelTask(Task* task);
-
 	private:
 		void EffectProcess(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount);
+		void EffectProcess(float* synthStream, int numChannels, int channelSampleCount);
 
 	private:
 		daisysp::Autowah* leftAutowah;

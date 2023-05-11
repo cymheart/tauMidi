@@ -3,8 +3,7 @@
 
 namespace tauFX
 {
-	Chorus::Chorus(Synther* synther)
-		:TauEffect(synther)
+	Chorus::Chorus()
 	{
 		//leftChannelChorus = new stk::Chorus(2000);
 		//rightChannelChorus = new stk::Chorus(2000);
@@ -13,8 +12,6 @@ namespace tauFX
 		rightChannelChorus = new daisysp::Chorus();
 
 		float sampleRate = 48000;
-		if (synther != nullptr)
-			sampleRate = synther->GetSampleProcessRate();
 
 		leftChannelChorus->Init(sampleRate);
 		rightChannelChorus->Init(sampleRate);
@@ -27,11 +24,6 @@ namespace tauFX
 		DEL(rightChannelChorus);
 	}
 
-	void Chorus::SetSynther(Synther* synther)
-	{
-		this->synther = synther;
-		Init(synther->GetSampleProcessRate());
-	}
 
 	void Chorus::Init(float sample_rate)
 	{
@@ -41,7 +33,7 @@ namespace tauFX
 
 	void Chorus::Clear()
 	{
-		Init(synther->GetSampleProcessRate());
+
 	}
 
 	//! Set modulation depth in range 0.0 - 1.0.
@@ -91,6 +83,20 @@ namespace tauFX
 
 			leftChannelSamples[i] = leftChannelChorus->GetLeft() + rightChannelChorus->GetLeft();
 			rightChannelSamples[i] = leftChannelChorus->GetRight() + rightChannelChorus->GetRight();
+		}
+	}
+
+	void Chorus::EffectProcess(float* synthStream, int numChannels, int channelSampleCount)
+	{
+		if (numChannels == 2) {
+			for (int i = 0; i < channelSampleCount * numChannels; i += 2)
+			{
+				leftChannelChorus->Process(synthStream[i]);
+				rightChannelChorus->Process(synthStream[i + 1]);
+
+				synthStream[i] = leftChannelChorus->GetLeft() + rightChannelChorus->GetLeft();
+				synthStream[i + 1] = leftChannelChorus->GetRight() + rightChannelChorus->GetRight();
+			}
 		}
 	}
 

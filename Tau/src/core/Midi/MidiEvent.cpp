@@ -28,13 +28,6 @@ namespace tau
 	{
 		int oldCount = childNoteOnEventCount;
 		childNoteOnEventCount += count;
-
-		if (childNoteOnEventCount <= 0 || childNoteOnEventCount > 1000)
-		{
-			int a;
-			a = 3;
-		}
-
 		NoteOnEvent** newChildNoteOnEvents = new NoteOnEvent * [childNoteOnEventCount];
 
 		int idx = 0;

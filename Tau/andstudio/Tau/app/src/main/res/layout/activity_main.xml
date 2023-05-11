@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:scaleX="2"
     android:textDirection="ltr"
     tools:context=".MainActivity">
 
@@ -31,7 +32,7 @@
 
             <Button
                 android:id="@+id/button7"
-                android:layout_width="match_parent"
+                android:layout_width="453dp"
                 android:layout_height="wrap_content"
                 android:text="Button" />
         </TableRow>
@@ -39,39 +40,36 @@
         <EditText
             android:id="@+id/editTextTextPersonName4"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="99dp"
             android:editable="true"
             android:ellipsize="end"
             android:inputType="text"
             android:maxLines="2"
+            android:rotation="-138"
+            android:rotationX="36"
+            android:rotationY="-40"
             android:singleLine="false"
-            android:text="Namesdasdddddddddddddddddddddddddddddddddsssssssssssssssssssssssssssadasdaddddddddddddddddddddddddddddddddddddddddddddweeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeddddddddd" />
+            android:text="Namesdasdddddddddddddddddddddddddddddddddsssssssssssssssssssssseeeeeeeeeeeeeeeeeeddddddddd" />
 
         <Button
             android:id="@+id/button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="468dp"
             android:rotation="0"
-            android:rotationX="0"
-            android:rotationY="-2"
+            android:rotationX="2"
+            android:rotationY="53"
             android:text="Button" />
-
-        <Button
-            android:id="@+id/button2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Button2" />
-
-        <Button
-            android:id="@+id/button3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Button3" />
 
         <TableRow
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </FrameLayout>
+
     </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

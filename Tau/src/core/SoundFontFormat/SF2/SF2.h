@@ -4,7 +4,6 @@
 *
 
 */
-
 #ifndef _SF2_h_
 #define _SF2_h_
 
@@ -17,6 +16,7 @@ namespace tau
 	class SF2
 	{
 	public:
+		SF2(){};
 		SF2(string path);
 		~SF2();
 

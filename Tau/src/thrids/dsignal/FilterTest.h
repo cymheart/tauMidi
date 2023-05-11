@@ -1,4 +1,4 @@
-#ifndef _FilterTest_h_
+ï»¿#ifndef _FilterTest_h_
 #define _FilterTest_h_
 
 #include "scutils/Utils.h"
@@ -13,35 +13,35 @@ namespace dsignal
 	public:
 		FilterTest();
 
-		//ÉèÖÃ×î´óÆ«ÒÆÔöÒæ
+		//è®¾ç½®æœ€å¤§åç§»å¢ç›Š
 		void SetMaxOffsetGainDB(float maxOffsetGain)
 		{
 			maxOffsetGain_ = abs(maxOffsetGain);
 			maxOffsetGainlin = pow(10.0, -maxOffsetGain_ / 20);
 		}
 
-		//ÉèÖÃ×î´óÆ«ÒÆÔöÒæ
+		//è®¾ç½®æœ€å¤§åç§»å¢ç›Š
 		float GetMaxOffsetGainDB()
 		{
 			return maxOffsetGain_;
 		}
 
-		//ÉèÖÃÆµÂÊµã
+		//è®¾ç½®é¢‘ç‡ç‚¹
 		void SetFreq(float freqHZ);
 
-		//ÉèÖÃQ
+		//è®¾ç½®Q
 		void SetQ(float q);
 
-		//ÉèÖÃQs
+		//è®¾ç½®Qs
 		void SetQs(int idx, float q);
 
-		//ÉèÖÃÔöÒæÎ»ÖÃ0-1
+		//è®¾ç½®å¢ç›Šä½ç½®0-1
 		void SetGainPos(float pos);
 
-		//¼ÆËãÂË²¨²ÎÊı
+		//è®¡ç®—æ»¤æ³¢å‚æ•°
 		void Compute();
 
-		//»ñÈ¡ÂË²¨Æ÷
+		//è·å–æ»¤æ³¢å™¨
 		vector<dsignal::Filter*> GetFilters();
 
 		double Filtering(double input);

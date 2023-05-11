@@ -68,6 +68,19 @@ namespace scutils
 			return tail;
 		}
 
+		LinkedListNode<T>* operator[](int index) {
+			if (index < 0 || index >= size)
+				throw string("索引越界");
+
+			auto node = head;
+			for (int i = 0; node != nullptr; node = node->next, i++) {
+				if (i == index) 
+					return node;
+			}
+			return nullptr;
+		}
+
+
 		/**合并列表，并清空被合并list*/
 		void Merge(LinkedList<T>& mergeList)
 		{

@@ -6,6 +6,7 @@
 #include <chrono>
 #include<thread>
 
+
 namespace task
 {
 	class TaskProcesser
@@ -15,6 +16,12 @@ namespace task
 		~TaskProcesser();
 
 		void SetTaskQueueType(TaskQueueType type);
+
+		std::thread::id& GetThreadID() {
+			return threadID;
+		}
+
+		Task* CreateTask();
 
 		void PushTask(Task* task);
 		Task* PopTask(TaskMsg msg = TaskMsg::TMSG_DATA);
@@ -32,6 +39,14 @@ namespace task
 		//设置锁模式
 		inline void SetLockMode(bool isLock) {
 			this->isLock = isLock;
+		}
+
+		//启用协程
+		void EnableCoroutine();
+
+		void* GetMainFiberHandle()
+		{
+			return mainFiberHandle;
 		}
 
 		//返回一个当前时间的毫秒值
@@ -74,25 +89,16 @@ namespace task
 
 		//生成固定帧率定时器 
 		TaskTimer* CreateTimer(TimerCallBack timerCB, void* data, bool isRepeat);
-
 		//生成定时器 
 		TaskTimer* CreateTimer(TimerCallBack timerCB, void* data, int durationMS, bool isRepeat);
+		//回收定时器 
+		void RecycleTimer(TaskTimer* timer);
 
+		//
 		void PostBlockFilterSingle(int filterNumber);
 		void PostUnBlockFilter();
-		Task* PostTask(TaskCallBack taskCallBack);
-		Task* PostTask(TaskCallBack taskCallBack, int delay);
-		Task* PostTask(TaskCallBack taskCallBack, void* data);
-		Task* PostTask(TaskCallBack taskCallBack, void* data, int delay);
-		Task* PostTaskByFilter(TaskCallBack taskCallBack, int filterNumber);
-		Task* PostTaskByFilter(TaskCallBack taskCallBack, int delay, int filterNumber);
-		Task* PostTaskByFilter(TaskCallBack taskCallBack, void* data, int filterNumber);
-
-		Task* PostTask(TaskCallBack taskCallBack, void* data, int delay, int filterNumber);
-		Task* PostTask(Task* task);
-		Task* PostTask(Task* task, int delay);
-
-
+		void PostRemoveTask(TaskCompareCallBack cmpCB, void* data, int delay);
+		void PostTask(Task* task, int delay = 0);
 
 	private:
 
@@ -156,10 +162,14 @@ namespace task
 
 		bool isStop = true;
 
+		//是否启用协程
+		bool enableCoroutine = false;
+		//协程句柄
+		void* mainFiberHandle = nullptr;
 
 		int64_t startTime = 0;
 
-		thread::id threadID;
+		std::thread::id threadID;
 		Semaphore pauseSem;
 		Semaphore quitSem;
 

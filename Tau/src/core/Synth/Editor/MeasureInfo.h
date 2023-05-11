@@ -1,97 +1,105 @@
-#ifndef _MeasureInfo_h_
+ï»¿#ifndef _MeasureInfo_h_
 #define _MeasureInfo_h_
 
 #include "Synth/TauTypes.h"
 #include"MidiMarkerList.h"
 
-
+//cymheart 2025
 namespace tau
 {
-	// Ð¡½ÚÐÅÏ¢
+	struct MeasureData {
+		float startSec;
+		int startTick;
+		int beatNum;
+		float beatCostSec;
+	};
+
+	struct MidiMarkerInfo
+	{
+		float startSec;
+		int32_t startTick;
+		double microTempo = 0;
+		// æ‹å·åˆ†å­(ä»¥denåˆ†éŸ³ç¬¦ä¸ºä¸€æ‹ï¼Œæ¯å°èŠ‚æœ‰numæ‹)
+		int num = -1;
+		// æ‹å·åˆ†æ¯(ä»¥denåˆ†éŸ³ç¬¦ä¸ºä¸€æ‹)
+		int den = -1;
+	};
+
+	// å°èŠ‚ä¿¡æ¯
 	//by cymheart, 2022.
 	class MeasureInfo
 	{
 	public:
 
-		//Éú³ÉÐ¡½Ú
-		void Create(MidiMarkerList& midiMarkerList, float endSec);
+		//ç”Ÿæˆå°èŠ‚
+		void Create(MidiMarkerList& midiMarkerList, int midiEndTick);
 
 		void Clear()
 		{
-			mIdx = 0;
-			bIdx = 0;
 			measureNum = 0;
 			atMeasure = 1;
+			mEndTick = 0;
 		}
 
-		//»ñÈ¡Ð¡½ÚÊýÁ¿
+		//èŽ·å–å°èŠ‚æ•°é‡
 		int GetMeasureCount()
 		{
 			return measureNum;
 		}
 
-		//»ñÈ¡Ö¸¶¨Ð¡½ÚµÄ¿ªÊ¼Ê±¼äµã
+		//èŽ·å–æŒ‡å®šå°èŠ‚çš„å¼€å§‹æ—¶é—´ç‚¹
 		float GetMeasureStartSec(int i)
 		{
 			i = min(measureNum, i) - 1;
-			return measure[i * 2];
+			return measure[i].startSec;
 		}
 
-		//»ñÈ¡Ö¸¶¨Ð¡½ÚµÄ½áÊøÊ±¼äµã
+		//èŽ·å–æŒ‡å®šå°èŠ‚çš„ç»“æŸæ—¶é—´ç‚¹
 		float GetMeasureEndSec(int i)
 		{
 			i = min(measureNum, i);
 			if (i == measureNum)
-				return beat[bIdx];
+				return mEndSec;
 
-			return measure[i * 2];
+			return measure[i].startSec;
 		}
 
-		//»ñÈ¡Ð¡½ÚÅÄ×ÓÊýÁ¿
+		//èŽ·å–æŒ‡å®šå°èŠ‚çš„å¼€å§‹tickç‚¹
+		float GetMeasureStartTick(int i)
+		{
+			i = min(measureNum, i) - 1;
+			return measure[i].startTick;
+		}
+
+		//èŽ·å–æŒ‡å®šå°èŠ‚çš„ç»“æŸtickç‚¹
+		float GetMeasureEndTick(int i)
+		{
+			i = min(measureNum, i);
+			if (i == measureNum)
+				return mEndTick;
+
+			return measure[i].startTick - 1;
+		}
+
+
+		//èŽ·å–å°èŠ‚æ‹å­æ•°é‡
 		int GetMeasureBeatCount(int i)
 		{
 			i = min(measureNum, i);
-			if (i == measureNum) {
-				int a = measure[(i - 1) * 2 + 1];
-				return bIdx - a + 1;
-			}
-
-			//
-			int a = measure[(i - 1) * 2 + 1];
-			int b = measure[i * 2 + 1];
-			return b - a + 1;
-
+			float mSec = GetMeasureEndSec(i) - GetMeasureStartSec(i) + 0.001f;
+			return (int)(mSec / measure[i - 1].beatCostSec);
 		}
 
-		//»ñÈ¡Ð¡½ÚÖ¸¶¨ÅÄ×ÓµÄ½áÊøÊ±¼äµã
+		//èŽ·å–å°èŠ‚æŒ‡å®šæ‹å­çš„ç»“æŸæ—¶é—´ç‚¹
 		float GetMeasureBeatEndSec(int measureIdx, int beatIdx)
 		{
-			int a = measure[(measureIdx - 1) * 2 + 1];
-			return beat[a + (beatIdx - 1)];
+			int i = min(measureNum, measureIdx);
+			float mSec = GetMeasureEndSec(i) - GetMeasureStartSec(i);
+			return measure[i - 1].startSec + beatIdx * measure[i - 1].beatCostSec;
 		}
 
 
-		float* GetMeasureDatas()
-		{
-			return measure;
-		}
-
-		int GetMeasureDataSize()
-		{
-			return mIdx + 1;
-		}
-
-		float* GetBeatDatas()
-		{
-			return beat;
-		}
-
-		int GetBeatDataSize()
-		{
-			return bIdx + 1;
-		}
-
-		//»ñÈ¡Ö¸¶¨Ê±¼äËùÔÚµÄÐ¡½Ú
+		//èŽ·å–æŒ‡å®šæ—¶é—´æ‰€åœ¨çš„å°èŠ‚
 		int GetSecAtMeasure(float sec)
 		{
 			int left = 0, right = measureNum - 1;
@@ -100,7 +108,7 @@ namespace tau
 			while (true)
 			{
 				curt = (right + left) / 2;
-				float s = measure[curt * 2];
+				float s = measure[curt].startSec;
 				if (s > sec) right = curt;
 				else if (s < sec) left = curt;
 				else return curt + 1;
@@ -112,23 +120,17 @@ namespace tau
 
 	private:
 
-		//Ð¡½ÚÐÅÏ¢
-		float measure[10000];
+		//å°èŠ‚ä¿¡æ¯
+		MeasureData measure[3000];
 
-		//ÅÄ×ÓÐÅÏ¢
-		float beat[10000];
-
-		//Ð¡½Ú½áÊøÎ»ÖÃ
-		int mIdx = 0;
-
-		//ÅÄ×Ó½áÊøÎ»ÖÃ
-		int bIdx = 0;
-
-		//Ð¡½ÚÊýÁ¿
+		//å°èŠ‚æ•°é‡
 		int measureNum = 0;
 
-		//ËùÔÚÐ¡½Ú
+		//æ‰€åœ¨å°èŠ‚
 		int atMeasure = 1;
+
+		int mEndTick = 0;
+		float mEndSec = 0;
 
 	};
 }

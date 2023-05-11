@@ -2,8 +2,7 @@
 
 namespace tauFX
 {
-	Autowah::Autowah(Synther* synther)
-		:TauEffect(synther)
+	Autowah::Autowah()
 	{
 		leftAutowah = new daisysp::Autowah();
 		rightAutowah = new daisysp::Autowah();
@@ -58,6 +57,23 @@ namespace tauFX
 		{
 			leftChannelSamples[i] = leftAutowah->Process(leftChannelSamples[i]);
 			rightChannelSamples[i] = rightAutowah->Process(rightChannelSamples[i]);
+		}
+	}
+
+	void Autowah::EffectProcess(float* synthStream, int numChannels, int channelSampleCount)
+	{
+		if (numChannels == 2) {
+			for (int i = 0; i < channelSampleCount * numChannels; i += 2)
+			{
+				synthStream[i] = leftAutowah->Process(synthStream[i]);
+				synthStream[i + 1] = rightAutowah->Process(synthStream[i + 1]);
+			}
+		}
+		else {
+			for (int i = 0; i < channelSampleCount; i++)
+			{
+				synthStream[i] = leftAutowah->Process(synthStream[i]);
+			}
 		}
 	}
 }

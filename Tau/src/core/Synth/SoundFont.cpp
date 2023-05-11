@@ -3,7 +3,7 @@
 #include"Preset.h"
 #include"SoundFontParser.h"
 #include"SoundFontFormat/SF2/SF2Parser.h"
-#include"SoundFontFormat/TauFont/TauFont.h"
+#include"SoundFontFormat/SF3/SF3Parser.h"
 #include"PhysicsPiano.h"
 
 namespace tau
@@ -13,8 +13,8 @@ namespace tau
 		sampleList = new SampleList;
 		sampleGenList = new SampleGenList;
 		instList = new InstrumentList;
-		presetList = new PresetList;
 		presetBankDict = new PresetMap;
+		presets = new vector<Preset*>;
 		sfParserMap = new SoundFontParserMap();
 
 		//
@@ -26,7 +26,14 @@ namespace tau
 		DEL_OBJS_VECTOR(sampleList);
 		DEL_OBJS_VECTOR(sampleGenList);
 		DEL_OBJS_VECTOR(instList);
-		DEL_OBJS_VECTOR(presetList);
+
+		//
+		for (int i = 0; i < presets->size(); i++)
+			delete (*presets)[i];
+		delete presets;
+		presets = nullptr;
+		
+		//
 		DEL(presetBankDict);
 
 		//
@@ -40,12 +47,13 @@ namespace tau
 	void SoundFont::AddParsers()
 	{
 		//
-		AddParser("TauFont", new TauFont(this));
-
-		//
 		SF2Parser* sf2Parser = new SF2Parser(this);
-		sf2Parser->SetParseModulator(false);
+		sf2Parser->SetParseModulator(true);
 		AddParser("SF2", sf2Parser);
+		//
+		SF3Parser* sf3Parser = new SF3Parser(this);
+		sf3Parser->SetParseModulator(true);
+		AddParser("SF3", sf3Parser);
 	}
 
 	//增加一个解析格式类型
@@ -108,25 +116,25 @@ namespace tau
 		Preset* preset = new Preset();
 		preset->name = name;
 		preset->SetBankNum(bankSelectMSB, bankSelectLSB, instrumentNum);
-		presetList->push_back(preset);
+		presets->push_back(preset);
 		(*presetBankDict)[preset->GetBankKey()] = preset;
 		return preset;
 	}
 
 	// 乐器绑定到预设上
-	Region* SoundFont::InstrumentBindToPreset(Instrument* inst, Preset* preset)
+	Zone* SoundFont::InstrumentBindToPreset(Instrument* inst, Preset* preset)
 	{
 		return preset->LinkInstrument(inst);
 	}
 
 	// 样本绑定到乐器上
-	Region* SoundFont::SampleBindToInstrument(Sample* sample, Instrument* inst)
+	Zone* SoundFont::SampleBindToInstrument(Sample* sample, Instrument* inst)
 	{
 		return inst->LinkSamples(sample);
 	}
 
-	// 样本发生器绑定到乐器上
-	Region* SoundFont::SampleGenBindToInstrument(SampleGenerator* sampleGen, Instrument* inst)
+	// 样本生成器绑定到乐器上
+	Zone* SoundFont::SampleGenBindToInstrument(SampleGenerator* sampleGen, Instrument* inst)
 	{
 		return inst->LinkSamplesGen(sampleGen);
 	}

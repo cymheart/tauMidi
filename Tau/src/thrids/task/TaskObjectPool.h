@@ -14,12 +14,17 @@ namespace task
 	public:
 		ObjectPool<LinkedListNode<Task*>>& NodePool() { return nodePool; }
 		ObjectPool<Task>& TaskPool() { return taskPool; }
-		ObjectPool<TimerTask>& TimerPool() { return timerPool; }
+		ObjectPool<TimerTask>& TimerTaskPool() { return timerTaskPool; }
+		ObjectPool<TaskTimer>& TimerPool() { return timerPool; }
+	private:
+		static Task* NewTask();
+		static void TaskRelease(Task* task);
 
 	private:
 		ObjectPool<LinkedListNode<Task*>> nodePool;
 		ObjectPool<Task> taskPool;
-		ObjectPool<TimerTask> timerPool;
+		ObjectPool<TimerTask> timerTaskPool;
+		ObjectPool<TaskTimer> timerPool;
 	};
 
 }

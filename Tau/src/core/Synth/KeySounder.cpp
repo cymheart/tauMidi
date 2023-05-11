@@ -1,5 +1,5 @@
 ﻿#include"KeySounder.h"
-#include"RegionSounder.h"
+#include"ZoneSounder.h"
 #include"Preset.h"
 #include"Instrument.h"
 #include"Tau.h"
@@ -11,12 +11,12 @@ namespace tau
 {
 	KeySounder::KeySounder()
 	{
-		regionSounderList = new RegionSounderList;
 	}
 
 	KeySounder::~KeySounder()
 	{
-		DEL_OBJS_VECTOR(regionSounderList);
+		for (int i = 0; i < zoneSounders.size(); i++)
+			delete zoneSounders[i];
 	}
 
 	KeySounder* KeySounder::New()
@@ -40,13 +40,9 @@ namespace tau
 
 	void KeySounder::Release()
 	{
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++)
-		{
-			(*regionSounderList)[i]->Release();
-		}
-		regionSounderList->clear();
-
+		for (int i = 0; i < zoneSounders.size(); i++)
+			zoneSounders[i]->Release();
+		zoneSounders.clear();
 		TauPool::GetInstance().KeySounderPool().Push(this);
 	}
 
@@ -59,11 +55,10 @@ namespace tau
 		downKey = key;
 		downKeySec = synther->GetCurtSec();
 		this->velocity = velocity;
-		CreateActiveRegionSounderList();
+		CreateActiveZoneSounders();
 
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++)
-			(*regionSounderList)[i]->OnKey(key, velocity);
+		for (int i = 0; i < zoneSounders.size(); i++)
+			zoneSounders[i]->OnKey(key, velocity);
 
 	}
 
@@ -73,9 +68,8 @@ namespace tau
 		if (isOnningKey == false)
 			return downKey;
 
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++)
-			(*regionSounderList)[i]->OffKey(velocity);
+		for (int i = 0; i < zoneSounders.size(); i++)
+			zoneSounders[i]->OffKey(velocity);
 
 		isOnningKey = false;
 		return downKey;
@@ -85,11 +79,8 @@ namespace tau
 	void KeySounder::NeedOffKey()
 	{
 		isNeedOffKey = true;
-
-		//
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++)
-			(*regionSounderList)[i]->NeedOffKey();
+		for (int i = 0; i < zoneSounders.size(); i++)
+			zoneSounders[i]->NeedOffKey();
 	}
 
 	// 生成当前按键区域的独占类表
@@ -100,11 +91,10 @@ namespace tau
 		int32_t exclusiveClass;
 		bool isExist;
 
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < zoneSounders.size(); i++)
 		{
 			isExist = false;
-			exclusiveClass = (int)(*regionSounderList)[i]->GetGenExclusiveClass();
+			exclusiveClass = zoneSounders[i]->GetGenExclusiveClass().amount;
 
 			for (int j = 0; j < idx; j++)
 			{
@@ -124,20 +114,17 @@ namespace tau
 		exclusiveClassList[idx] = -1;
 	}
 
-	// 停止对持有相同独占类的RegionSounder的处理
-	void KeySounder::StopExclusiveClassRegionSounderProcess(int exclusiveClass)
+	// 停止对持有相同独占类的ZoneSounder的处理
+	void KeySounder::StopExclusiveClassZoneSounderProcess(int exclusiveClass)
 	{
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < zoneSounders.size(); i++)
 		{
-			if ((*regionSounderList)[i]->IsSoundEnd() == true)
+			if (zoneSounders[i]->IsSoundEnd() == true)
 				continue;
 
-			int val = (int)(*regionSounderList)[i]->GetGenExclusiveClass();
+			int val = zoneSounders[i]->GetGenExclusiveClass().amount;
 			if (val == exclusiveClass)
-			{
-				(*regionSounderList)[i]->EndSound();
-			}
+				zoneSounders[i]->EndSound();
 		}
 	}
 
@@ -148,10 +135,9 @@ namespace tau
 		if (isSoundEnd)
 			return true;
 
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < zoneSounders.size(); i++)
 		{
-			if (!(*regionSounderList)[i]->IsSoundEnd())
+			if (!zoneSounders[i]->IsSoundEnd())
 				return false;
 		}
 
@@ -165,34 +151,28 @@ namespace tau
 		if (isSoundEnd)
 			return;
 
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++)
-		{
-			(*regionSounderList)[i]->EndSound();
-		}
-
+		for (int i = 0; i < zoneSounders.size(); i++)
+			zoneSounders[i]->EndSound();
+	
 		isSoundEnd = true;
 		soundEndSec = synther->GetCurtSec();
 	}
 
 
 	// 是否具有发声区域
-	bool KeySounder::IsHavRegionSounder()
+	bool KeySounder::IsHavZoneSounder()
 	{
-		if (regionSounderList->size() == 0)
-			return false;
-		return true;
+		return !zoneSounders.empty();
 	}
 
 	// 是否保持按键状态
 	bool KeySounder::IsHoldDownKey()
 	{
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++) {
-			if ((*regionSounderList)[i]->IsSoundEnd())
+		for (int i = 0; i < zoneSounders.size(); i++) {
+			if (zoneSounders[i]->IsSoundEnd())
 				continue;
 
-			return (*regionSounderList)[i]->IsHoldDownKey();
+			return zoneSounders[i]->IsHoldDownKey();
 		}
 
 		return false;
@@ -201,95 +181,107 @@ namespace tau
 	//设置是否为实时控制类型
 	void KeySounder::SetRealtimeControlType(bool isRealtimeControl)
 	{
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++)
-			(*regionSounderList)[i]->isRealtimeControl = isRealtimeControl;
+		for (int i = 0; i < zoneSounders.size(); i++)
+			zoneSounders[i]->isRealtimeControl = isRealtimeControl;
 	}
 
-	//调制生成器参数
-	void KeySounder::ModulationParams()
+	//调制生成器
+	void KeySounder::Modulation()
 	{
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < zoneSounders.size(); i++)
 		{
-			if ((*regionSounderList)[i]->IsSoundEnd())
-				continue;
-
-			(*regionSounderList)[i]->ModulationParams();
+			if (!zoneSounders[i]->IsSoundEnd())
+				zoneSounders[i]->Modulation();
 		}
 	}
 
-	//调制输入按键生成器参数
-	void KeySounder::ModulationInputKeyParams()
-	{
-		size_t size = regionSounderList->size();
-		for (int i = 0; i < size; i++)
-		{
-			if ((*regionSounderList)[i]->IsSoundEnd())
-				continue;
-
-			(*regionSounderList)[i]->ModulationInputKeyParams();
-		}
-	}
 
 	// 根据给定的按键，在预设区域中找到所有对应的乐器区域，并存入乐器区域激活列表
-	void KeySounder::CreateActiveRegionSounderList()
+	void KeySounder::CreateActiveZoneSounders()
 	{
 		Preset* preset = virInst->GetPreset();
-		vector<InstLinkToPresetRegionInfo>* presetRegionLinkInfoList = preset->GetPresetRegionLinkInfoList();
-		Instrument* inst;
-		Region* presetRegion;
-		RegionSounder* regionSounder;
-		size_t size = presetRegionLinkInfoList->size();
-		RangeFloat keyRange;
-		RangeFloat velRange;
+		if (preset == nullptr)
+			return;
 
+		Zone* presetGlobalZone = preset->GetGlobalZone();
+		vector<InstLinkToPresetZoneInfo>& presetZoneLinkInfos = preset->GetPresetZoneLinkInfos();
+		Zone* presetZone;
+		Instrument* inst;
+		Zone* instZone;
+		Zone* instGlobalZone;
+		ZoneSounder* zoneSounder;
+		size_t size = presetZoneLinkInfos.size();
+		GeneratorAmount keyRange;
+		GeneratorAmount velRange;
 
 		for (int i = 0; i < size; i++)
 		{
-			presetRegion = (*presetRegionLinkInfoList)[i].region;
-			keyRange = presetRegion->GetKeyRange();
-			velRange = presetRegion->GetVelRange();
+			presetZone = presetZoneLinkInfos[i].Zone;
+			GeneratorList& presetGenList = presetZone->GetGens();
+			GeneratorList& presetGlobalGenList = presetGlobalZone->GetGens();
+			if (!presetGenList.IsEmpty(GeneratorType::KeyRange))
+				keyRange = presetGenList.GetAmount(GeneratorType::KeyRange);
+			else
+				keyRange = presetGlobalGenList.GetAmount(GeneratorType::KeyRange);
 
-			if (!(downKey >= keyRange.min && downKey <= keyRange.max &&
-				velocity >= velRange.min && velocity <= velRange.max))
+			//
+			if (!presetGenList.IsEmpty(GeneratorType::VelRange))
+				velRange = presetGenList.GetAmount(GeneratorType::VelRange);
+			else
+				velRange = presetGlobalGenList.GetAmount(GeneratorType::VelRange);
+
+
+			if (downKey >= keyRange.rangeData.low && downKey <= keyRange.rangeData.high &&
+				velocity >= velRange.rangeData.low && velocity <= velRange.rangeData.high)
 			{
-				continue;
-			}
+				inst = presetZoneLinkInfos[i].linkInst;
+				instGlobalZone = inst->GetGlobalZone();
+				vector<SamplesLinkToInstZoneInfo>& instZoneLinkInfos = inst->GetInstZoneLinkInfos();
 
-			inst = (*presetRegionLinkInfoList)[i].linkInst;
-			int sz = inst->GetHavKeyInstRegionLinkInfos(downKey, velocity, activeInstRegionLinkInfos);
+				//
+				int pos = 0;
+				for (int i = 0; i < instZoneLinkInfos.size(); i++)
+				{
+					instZone = instZoneLinkInfos[i].Zone;
+					GeneratorList& instGenList = instZone->GetGens();
+					GeneratorList& instGlobalGenList = instGlobalZone->GetGens();
+					if (!instGenList.IsEmpty(GeneratorType::KeyRange))
+						keyRange = instGenList.GetAmount(GeneratorType::KeyRange);
+					else
+						keyRange = instGlobalGenList.GetAmount(GeneratorType::KeyRange);
+					//
+					if (!instGenList.IsEmpty(GeneratorType::VelRange))
+						velRange = instGenList.GetAmount(GeneratorType::VelRange);
+					else
+						velRange = instGlobalGenList.GetAmount(GeneratorType::VelRange);
 
-			for (int j = 0; j < sz; j++)
-			{
-				regionSounder = CreateRegionSounder(
-					activeInstRegionLinkInfos[j].linkSample, activeInstRegionLinkInfos[j].linkSampleGen,
-					activeInstRegionLinkInfos[j].region, inst->GetGlobalRegion(),
-					(*presetRegionLinkInfoList)[i].region, preset->GetGlobalRegion());
+					//
+					if (downKey >= keyRange.rangeData.low && downKey <= keyRange.rangeData.high &&
+						velocity >= velRange.rangeData.low && velocity <= velRange.rangeData.high)
+					{
+						activeInstZoneLinkInfos[pos++] = instZoneLinkInfos[i];
+					}
+				}
 
-				regionSounderList->push_back(regionSounder);
+				//
+				for (int j = 0; j < pos; j++)
+				{
+					zoneSounder = ZoneSounder::New();
+					zoneSounder->synther = synther;
+					zoneSounder->tau = synther->tau;
+					zoneSounder->virInst = virInst;
+					zoneSounder->keySounder = this;
+					zoneSounder->instZone = activeInstZoneLinkInfos[j].Zone;
+					zoneSounder->instGlobalZone = inst->GetGlobalZone();
+					zoneSounder->presetZone = presetZoneLinkInfos[i].Zone;
+					zoneSounder->presetGlobalZone = preset->GetGlobalZone();
+					zoneSounder->SetSample(activeInstZoneLinkInfos[j].linkSample);
+					zoneSounder->SetSampleGen(activeInstZoneLinkInfos[j].linkSampleGen);
+					zoneSounder->Init();
+					zoneSounders.push_back(zoneSounder);
+				}				
 			}
 		}
 	}
 
-	RegionSounder* KeySounder::CreateRegionSounder(
-		Sample* sample, SampleGenerator* sampleGen,
-		Region* activeInstRegion, Region* activeInstGlobalRegion,
-		Region* activePresetRegion, Region* activePresetGlobalRegion)
-	{
-		RegionSounder* regionSounder = RegionSounder::New();
-		regionSounder->synther = synther;
-		regionSounder->tau = synther->tau;
-		regionSounder->virInst = virInst;
-		regionSounder->keySounder = this;
-		regionSounder->instRegion = activeInstRegion;
-		regionSounder->instGlobalRegion = activeInstGlobalRegion;
-		regionSounder->presetRegion = activePresetRegion;
-		regionSounder->presetGlobalRegion = activePresetGlobalRegion;
-		regionSounder->SetSample(sample);
-		regionSounder->SetSampleGen(sampleGen);
-		regionSounder->Init();
-
-		return regionSounder;
-	}
 }

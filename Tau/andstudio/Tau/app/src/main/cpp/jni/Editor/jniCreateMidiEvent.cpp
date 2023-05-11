@@ -42,7 +42,7 @@ void CreateJNoteOnEventClassInfo(JNIEnv *env)
     //
     SaveJMidiEventClassFields(env, jNoteOnEventClass, jNoteOnEventFields);
     jNoteOnEventFields[jNoteOnEventOffNoteNdkPtr] = env->GetFieldID(jNoteOnEventClass, "ndkNoteOffEvent", "J");
-    jNoteOnEventFields[jNoteOnEventNote] = env->GetFieldID(jNoteOnEventClass, "note", "I");
+    jNoteOnEventFields[jNoteOnEventNote] = env->GetFieldID(jNoteOnEventClass, "num", "I");
     jNoteOnEventFields[jNoteOnEventVelocity] = env->GetFieldID(jNoteOnEventClass, "velocity", "I");
 }
 

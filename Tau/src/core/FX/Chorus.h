@@ -10,11 +10,10 @@ namespace tauFX
 	class DLL_CLASS Chorus : public TauEffect
 	{
 	public:
-		Chorus(Synther* synther = nullptr);
+		Chorus();
 		virtual ~Chorus();
 
 		void Clear();
-		void SetSynther(Synther* synther);
 		void Init(float sample_rate);
 		float GetEffectMix();
 
@@ -26,17 +25,9 @@ namespace tauFX
 
 		void SetEffectMix(float mix);
 
-		void EffectProcess(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount);
-
-	public:
-		void SetModDepthTask(float depth);
-		void SetModFrequencyTask(float depth);
-		void SetEffectMixTask(float depth);
-
 	private:
-		static void _SetModDepthTask(Task* task);
-		static void _SetModFrequencyTask(Task* task);
-		static void _SetEffectMixTask(Task* task);
+		void EffectProcess(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount);
+		void EffectProcess(float* synthStream, int numChannels, int channelSampleCount);
 
 	private:
 

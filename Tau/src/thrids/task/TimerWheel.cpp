@@ -37,7 +37,8 @@ namespace task
 	{
 		int count;
 		LinkedList<Task*>* taskList;
-		long tm = curtTimeMS + 1;
+		int64_t tm = curtTimeMS + 1;
+		Task* task;
 
 		for (; tm <= timeMS; tm++)
 		{
@@ -54,7 +55,7 @@ namespace task
 				LinkedListNode<Task*>* next = nullptr;
 
 				for (; node != nullptr; node = next) {
-					Task* task = node->elem;
+					task = node->elem;
 					next = taskList->Remove(node);
 					if (task->slotPos[i - 1] < pointer[i - 1])
 						timeOutList.AddLast(node);
@@ -88,14 +89,14 @@ namespace task
 					continue;
 				}
 
-				if (node->elem != nullptr) {
-					ret = ReadTaskCallback(taskProcesser, node->elem);
-				}
-
+				task = node->elem;
 				next = timeOutList.Remove(node);
+				node->Clear();
 				TaskObjectPool::GetInstance().NodePool().Push(node);
 				node = next;
 
+				//
+				ret = ReadTaskCallback(taskProcesser, task);
 				if (ret == 1)
 					return false;
 			}
@@ -204,6 +205,7 @@ namespace task
 		for (; node != nullptr; node = next) {
 			ReleaseCallback(taskProcesser, node->elem);
 			next = node->next;
+			node->Clear();
 			TaskObjectPool::GetInstance().NodePool().Push(node);
 		}
 		timeOutList.Clear();
@@ -352,6 +354,7 @@ namespace task
 					{
 						wheelSlots[i]->AddElemCount(-1);
 						taskList->Remove(node);
+						node->Clear();
 						TaskObjectPool::GetInstance().NodePool().Push(node);
 						return true;
 					}
@@ -365,6 +368,7 @@ namespace task
 			if (node->elem == task)
 			{
 				timeOutList.Remove(node);
+				node->Clear();
 				TaskObjectPool::GetInstance().NodePool().Push(node);
 				return true;
 			}

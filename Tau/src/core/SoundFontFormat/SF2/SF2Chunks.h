@@ -5,28 +5,36 @@
 #include"SF2Structs.h"
 namespace tau
 {
-	class  SF2Chunk
+	class SF2Chunk
 	{
 	public:
+		SF2Chunk() {};
 		SF2Chunk(ByteStream& br);
+		virtual ~SF2Chunk() {};
+		void SetName(const char* name);
+		void SetSize(uint32_t sz) {
+			size = sz;
+		}
+
 	public:
 		byte chunkName[4];
-		uint32_t size;
+		uint32_t size = 0;
 	};
 
-	class  SF2ListChunk :public SF2Chunk
+	class SF2ListChunk :public SF2Chunk
 	{
 	public:
+		SF2ListChunk() {};
 		SF2ListChunk(ByteStream& br);
 	public:
 		byte listChunkName[4];
 	};
 
-
-	class  VersionSubChunk : public SF2Chunk
+	class VersionSubChunk : public SF2Chunk
 	{
 
 	public:
+		VersionSubChunk() { SetName("ifil"); };
 		VersionSubChunk(ByteStream& br);
 
 	public:
@@ -34,23 +42,35 @@ namespace tau
 
 	};
 
-	class  HeaderSubChunk : public SF2Chunk
+	class HeaderSubChunk : public SF2Chunk
 	{
 	public:
-		int maxSize = 0;
+		int maxSize = 0x100;
 		char* field = nullptr;
 
 	public:
+		HeaderSubChunk() {};
 		HeaderSubChunk(ByteStream& br, int maxSize = 0x100);
 		~HeaderSubChunk();
+
+		void SetField(char* str) {
+			size = strlen(str) + 1;
+			if (size == 0) return;
+			field = (char*)malloc(size);
+			if (field == nullptr)
+				return;
+			strcpy(field, str);
+		}
+
 	};
 
 	/// <summary>
 	/// 16位采样数据子块
 	/// </summary>
-	class  SMPLSubChunk : public SF2Chunk
+	class SMPLSubChunk : public SF2Chunk
 	{
 	public:
+		SMPLSubChunk() {};
 		SMPLSubChunk(ByteStream& br);
 		~SMPLSubChunk();
 
@@ -61,9 +81,10 @@ namespace tau
 	/// <summary>
    /// 低8位采样数据子块
    /// </summary>
-	class  SM24SubChunk : public SF2Chunk
+	class SM24SubChunk : public SF2Chunk
 	{
 	public:
+		SM24SubChunk() {};
 		SM24SubChunk(ByteStream& br);
 		~SM24SubChunk();
 
@@ -75,9 +96,10 @@ namespace tau
 	/// <summary>
 	/// 预设列表子块
 	/// </summary>
-	class  PHDRSubChunk : public SF2Chunk
+	class PHDRSubChunk : public SF2Chunk
 	{
 	public:
+		PHDRSubChunk() {};
 		PHDRSubChunk(ByteStream& br);
 		~PHDRSubChunk();
 	public:
@@ -92,6 +114,7 @@ namespace tau
 	{
 
 	public:
+		INSTSubChunk() {};
 		INSTSubChunk(ByteStream& br);
 		~INSTSubChunk();
 
@@ -102,9 +125,10 @@ namespace tau
 	/// <summary>
 	/// 区域列表子块
 	/// </summary>
-	class  BAGSubChunk : public SF2Chunk
+	class BAGSubChunk : public SF2Chunk
 	{
 	public:
+		BAGSubChunk() {};
 		BAGSubChunk(ByteStream& br);
 		~BAGSubChunk();
 
@@ -116,9 +140,10 @@ namespace tau
 	/// <summary>
 	/// 调制器列表子块
 	/// </summary>
-	class  MODSubChunk : public SF2Chunk
+	class MODSubChunk : public SF2Chunk
 	{
 	public:
+		MODSubChunk() {};
 		MODSubChunk(ByteStream& br);
 		~MODSubChunk();
 
@@ -131,9 +156,10 @@ namespace tau
 	/// <summary>
 	/// 生成器列表子块
 	/// </summary>
-	class  GENSubChunk : public SF2Chunk
+	class GENSubChunk : public SF2Chunk
 	{
 	public:
+		GENSubChunk() {};
 		GENSubChunk(ByteStream& br);
 		~GENSubChunk();
 
@@ -142,14 +168,13 @@ namespace tau
 
 	};
 
-
-
 	/// <summary>
 	/// 样本列表子块
 	/// </summary>
-	class  SHDRSubChunk : public SF2Chunk
+	class SHDRSubChunk : public SF2Chunk
 	{
 	public:
+		SHDRSubChunk() {};
 		SHDRSubChunk(ByteStream& br);
 		~SHDRSubChunk();
 
@@ -161,16 +186,17 @@ namespace tau
 	/// <summary>
 	/// 信息列表块
 	/// </summary>
-	class  InfoListChunk : public SF2ListChunk
+	class InfoListChunk : public SF2ListChunk
 	{
 	public:
+		InfoListChunk() {};
 		InfoListChunk(ByteStream& br);
 		~InfoListChunk();
 
+		void AddSubChunk(SF2Chunk* subChunk);
+
 		// 获取备注
 		string GetComment();
-
-
 
 	public:
 		const int commentMaxSize = 0x10000;
@@ -181,9 +207,10 @@ namespace tau
 	/// <summary>
   /// 样本列表块
   /// </summary>
-	class  SdtaListChunk : public SF2ListChunk
+	class SdtaListChunk : public SF2ListChunk
 	{
 	public:
+		SdtaListChunk() {};
 		SdtaListChunk(ByteStream& br);
 		~SdtaListChunk();
 
@@ -193,9 +220,10 @@ namespace tau
 	};
 
 
-	class  PdtaListChunk : public SF2ListChunk
+	class PdtaListChunk : public SF2ListChunk
 	{
 	public:
+		PdtaListChunk() {};
 		PdtaListChunk(ByteStream& br);
 		~PdtaListChunk();
 

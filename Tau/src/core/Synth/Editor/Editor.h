@@ -55,9 +55,11 @@ namespace tau
 		// 释放按键 
 		void OffKey(int key, float velocity, int trackIdx, int id = 0);
 		// 释放指定轨道的所有按键 
-		void OffAllKeys(int trackIdx);
+		void OffAllKeysForTrack(int trackIdx);
 		// 释放所有按键 
 		void OffAllKeys();
+		// 释放匹配指定id的所有按键 
+		void OffAllKeys(int id);
 
 		//载入
 		//在非阻塞模式isWaitLoadCompleted = false下，
@@ -142,6 +144,9 @@ namespace tau
 
 		//是否是等待中的按键事件
 		bool IsWaitNoteOnEvent(NoteOnEvent* noteOnEv);
+
+		//设置是否开启伴奏
+		void SetOpenAccompany(bool isOpen);
 
 		//获取播放模式
 		EditorPlayMode GetPlayMode()
@@ -308,11 +313,14 @@ namespace tau
 			return userData;
 		}
 
-		//获取采样流的频谱
-		int GetSampleStreamFreqSpectrums(int channel, double* outLeft, double* outRight);
-
+		//获取音频通道数量
+		int GetAudioChannelCount();
 
 		vector<Track*>& GetTracks();
+
+
+		string ExportMEI();
+
 
 
 	public:
@@ -331,8 +339,8 @@ namespace tau
 
 		void ResetParams();
 
-		//载入
-		void _Load();
+		//载入核心
+		void LoadCore();
 
 		//移除核心
 		void RemoveCore();
@@ -373,7 +381,9 @@ namespace tau
 
 		Tau* tau = nullptr;
 		Synther* synther = nullptr;
-		MidiEditor* midiEditor;
+		MidiEditor* midiEditor = nullptr;
+		MeiExporter* meiExporter = nullptr;
+
 		MidiMarkerList midiMarkerList;
 
 
@@ -395,6 +405,8 @@ namespace tau
 		//播放速率(相对于正常播放速率1.0的倍率)
 		float speed = 1;
 
+		//是否开启伴奏
+		bool isOpenAccompany = true;
 
 		//播放模式
 		EditorPlayMode playMode = EditorPlayMode::Common;

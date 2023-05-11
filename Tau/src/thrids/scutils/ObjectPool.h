@@ -8,10 +8,12 @@ namespace scutils
 	template <class T>
 	class ObjectPool
 	{
+		using AllocMethodCallBack = T * (*)();
+
 	public:
 		ObjectPool(int count = 50)
 		{
-			CreatePool(count);
+
 		}
 
 		~ObjectPool()
@@ -24,11 +26,15 @@ namespace scutils
 			pos = -1;
 		}
 
+		AllocMethodCallBack NewMethod = nullptr;
+
 		void CreatePool(int count)
 		{
 			for (int i = 0; i < count; i++)
 			{
-				T* obj = new T();
+				T* obj;
+				if (NewMethod != nullptr) obj = NewMethod();
+				else obj = new T();
 				pos++;
 				objList.push_back(nullptr);
 				objList[pos] = obj;
@@ -56,16 +62,16 @@ namespace scutils
 
 			size_t size = objList.size();
 
-			/*if (pos > 300)
+			if (pos > 50)
 			{
-				for (int i = 101; i <= pos; i++)
+				for (int i = 51; i <= pos; i++)
 				{
 					DEL(objList[i]);
 				}
 
-				objList.resize(size - (pos - 100));
-				pos = 100;
-			}*/
+				objList.resize(size - (pos - 50));
+				pos = 50;
+			}
 
 			pos++;
 

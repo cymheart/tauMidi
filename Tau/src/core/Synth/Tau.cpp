@@ -6,8 +6,8 @@
 #include "Editor/Editor.h"
 #include"FX/TauEffect.h"
 #include"FX/EffectList.h"
+#include"InsideModulators.h"
 
-using namespace dsignal;
 
 /*
 * Tau是一个soundfont合成器
@@ -21,17 +21,18 @@ namespace tau {
 		timeBeginPeriod(1);
 #endif
 		presetBankReplaceMap = new unordered_map<uint32_t, uint32_t>;
-
 		synther = new Synther(this);
 		editor = new Editor(this);
+		insideModulators = new InsideModulators();
+
 		synther->CreateMidiEditor();
 		editor->SetMidiEditor(synther->midiEditor);
 
 
 		SetFrameSampleCount(frameSampleCount);
 		SetSampleProcessRate(sampleProcessRate);
-
 	}
+
 
 	Tau::~Tau()
 	{
@@ -43,6 +44,7 @@ namespace tau {
 		DEL(editor);
 		DEL(synther);
 		DEL(presetBankReplaceMap);
+		DEL(insideModulators);
 
 	}
 
@@ -120,6 +122,16 @@ namespace tau {
 		synther->SetUseMulThread(useMulThreads);
 	}
 
+
+	void Tau::Lock()
+	{
+		synther->Lock();
+	}
+
+	void Tau::UnLock()
+	{
+		synther->UnLock();
+	}
 
 
 	// 获取乐器预设
@@ -233,6 +245,7 @@ namespace tau {
 		synther->SetVirInstrumentProgram(virInst, bankSelectMSB, bankSelectLSB, instrumentNum);
 	}
 
+
 	/// <summary>
 	/// 在虚拟乐器列表中，启用指定的虚拟乐器,如果不存在，将在虚拟乐器列表中自动创建它
 	/// 注意如果deviceChannelNum已经被使用过，此时会直接修改这个通道上的虚拟乐器的音色到指定音色，
@@ -301,40 +314,5 @@ namespace tau {
 
 		DEL(curtVirInsts);
 		return virInsts;
-	}
-
-	void Tau::ClearRecordPCM()
-	{
-		synther->ClearRecordPCM();
-	}
-
-	//开始录制pcm
-	void Tau::StartRecordPCM()
-	{
-		synther->StartRecordPCM();
-	}
-
-	//停止录制pcm
-	void Tau::StopRecordPCM()
-	{
-		synther->StopRecordPCM();
-	}
-
-	//保存录制pcm的到pcm文件
-	void Tau::SaveRecordPCM(string& path)
-	{
-		synther->SaveRecordPCM(path);
-	}
-
-	//保存录制pcm的到wav文件
-	void Tau::SaveRecordPCMToWav(string& path)
-	{
-		synther->SaveRecordPCMToWav(path);
-	}
-
-	//保存录制pcm的到mp3文件
-	void Tau::SaveRecordPCMToMp3(string& path)
-	{
-		synther->SaveRecordPCMToMp3(path);
 	}
 }

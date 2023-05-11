@@ -54,11 +54,10 @@ namespace tau
 	bool Editor::IsWaitNoteOnEvent(NoteOnEvent* noteOnEv)
 	{
 		TauLock(tau);
-
+	
 		if (needOnkey[noteOnEv->note] == 0)
 			return false;
 
-		//
 		auto node = needOnKeyEventList[noteOnEv->note].GetHeadNode();
 		for (; node; node = node->next) {
 			if (noteOnEv == node->elem)
@@ -235,7 +234,7 @@ namespace tau
 		}
 
 		isWait = true;
-		printf("等待按键:%d \n", key);
+		//printf("等待按键:%d \n", key);
 	}
 
 	//需要松开按键信号
@@ -262,9 +261,8 @@ namespace tau
 			return;
 
 		TauLock(tau);
-		//GetNeedWaitKeySignalNote(key, lateNoteSec);
-
-		printf("按下按键:%d \n", key);
+	
+		//printf("按下按键:%d \n", key);
 		onkey[key]++;
 		onKeyCount++;
 

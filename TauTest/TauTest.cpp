@@ -11,8 +11,9 @@
 #include <FX\Equalizer.h>
 #include <FX\Compressor.h>
 #include <FX\Tremolo.h>
-#include <FX\Overdrive.h>
 #include <FX\Distortion.h>
+#include<FX\PcmRecorder.h>
+#include<FX\SpectrumVisual.h>
 #include<Synth/Editor/Editor.h>
 using namespace tau;
 
@@ -46,24 +47,20 @@ void art(Tau* tau)
 {
 	VirInstrument* inst = tau->EnableVirInstrument(0, 0, 0, 0);
 	//tau->SetVirInstrumentMidiControllerValue(inst, MidiControllerType::ModulationWheelMSB, 127);
-	Sleep(2000);
-	tau->OnKey(67, 50, inst);
+	Sleep(1000);
+	 tau->OnKey(70, 89, inst);
 
-	Sleep(2000);
-	tau->OffKey(67, 50, inst);
+	Sleep(500);
+	tau->OffKey(70, 89, inst);
+	Sleep(12000);
 
-	/*
-	for (int i = 50; i < 90; i++) {
-
-		tau->OnKey(60, 50, inst);
-
-		Sleep(500);
-
-		tau->OffKey(i, 50, inst);
-
-		Sleep(1200);
+	for (int i = 20; i < 90; i++) {
+		tau->OnKey(i, 127, inst);
+		Sleep(200);
+		tau->OffKey(i, 127, inst);
+		Sleep(200);
 	}
-	*/
+	
 
 	//	tau->OffKey(92, 127, inst);
 		//tau->OffKey(57, 127, inst);
@@ -161,7 +158,6 @@ void art(Tau* tau)
 }
 
 
-
 int main(int argc, char* argv[])
 {
 	//资源根路径
@@ -178,13 +174,21 @@ int main(int argc, char* argv[])
 
 	SoundFont sf;
 	//设置音源
-	//sf.Parse("SF2", sfPath + "GeneralUser GS MuseScore v1.442.sf2");
-	sf.Parse("SF2", sfPath + "gnusmas_gm_soundfont_2.01.sf2");
+	sf.Parse("SF2", sfPath + "GeneralUser GS MuseScore v1.442.sf2");
+	//sf.Parse("SF2", sfPath + "MS Basic.sf2");
+	//sf.Parse("SF2", sfPath + "testmod.sf2");
+	// sf.Parse("SF3", sfPath + "MS Basic.sf3");
+	//sf.Parse("SF2", sfPath + "gnusmas_gm_soundfont_2.01.sf2");
 	//sf.Parse("SF2", sfPath + "FluidR3_GM.sf2");
 	//sf.Parse("SF2", sfPath + "CrisisGeneralMidi301.sf2");
+	//sf.Parse("SF2", sfPath + "Sonatina_Symphonic_Orchestra.sf2");
+	//sf.Parse("SF2", sfPath + "Farfisa Grand Piano V4.sf2");
 	//sf.Parse("SF2", sfPath + "GMGSx.sf2");
 	//sf.Parse("SF2", sfPath + "SGM-V2.01.sf2");
 	//sf.Parse("SF2", sfPath + "tongfang.sf2");
+
+
+	//物理钢琴需要在文件轨道中指定乐器播放才会生效
 	//sf.EnablePhysicsPiano(0, 1, 0);
 
 
@@ -197,18 +201,20 @@ int main(int argc, char* argv[])
 	//建立tau
 	Tau* tau = new Tau();
 
-	tau->SetFrameSampleCount(64);
+	tau->SetFrameSampleCount(256);
 	tau->SetSampleProcessRate(44100);
 	tau->SetChildFrameSampleCount(64);
-	tau->SetLimitRegionSounderCount(500);
+	tau->SetLimitZoneSounderCount(500);
 	tau->SetLimitOnKeySpeed(600);
 	tau->SetSoundFont(&sf);
-	//tau->SetEnableMidiEventCountOptimize(false);
+	//tau->SetChannelOutputMode(ChannelOutputMode::Mono);
+	tau->SetEnableMidiEventCountOptimize(true);
 	//tau->SetEnableMidiEventParseLimitTime(true, 1);
-	//tau->SetMidiKeepSameTimeNoteOnCount(20);
-	tau->SetEnableCreateFreqSpectrums(false);
-	tau->SetSampleStreamCacheSec(2);
-	tau->SetUseRegionInnerChorusEffect(false);
+	tau->SetMidiKeepSameTimeNoteOnCount(20);
+	//tau->SetEnableCreateSpectrumsBars(false);
+	//tau->SetSampleStreamCacheSec(5);
+	tau->SetEnableMergeNotesOptimize(true);
+	tau->SetUseZoneInnerChorusEffect(false);
 	tau->SetEnableAllVirInstEffects(false);
 	//tau->SetAudioEngine(Audio::EngineType::PortAudio);
 	//tau->SetAudioEngine(Audio::EngineType::RtAudio);
@@ -218,7 +224,7 @@ int main(int argc, char* argv[])
 	//tau->AppendReplaceInstrument(0, 0, 0, 0, 1, 0);
 
 	//添加压缩器效果
-	//Compressor* compressor = new Compressor();
+	Compressor* compressor = new Compressor();
 	//tau->AddEffect(compressor);
 
 	//添加均衡器效果
@@ -233,8 +239,8 @@ int main(int argc, char* argv[])
 	Reverb* reverb = new Reverb();
 	reverb->SetRoomSize(0.6f);
 	reverb->SetWidth(0.5f);
-	reverb->SetDamping(0.2f);
-	reverb->SetEffectMix(0.5f);
+	reverb->SetDamping(0.3f);
+	reverb->SetEffectMix(0.2f);
 	tau->AddEffect(reverb);
 	//
 		//Chorus* chorus = new Chorus();
@@ -244,10 +250,17 @@ int main(int argc, char* argv[])
 		//tau->AddEffect(chorus);
 
 	Autowah* wah = new Autowah();
+
+	wah->LockData();
 	wah->SetLevel(1);
 	wah->SetDryWet(100);
 	wah->SetWah(1);
+	wah->UnLockData();
+
 	//tau->AddEffect(wah);
+
+
+
 
 	//Tremolo* tremolo = new Tremolo();
 	//tremolo->SetDepth(0.8);
@@ -263,12 +276,24 @@ int main(int argc, char* argv[])
 	distortion->SetRectif(0.5);
 	distortion->SetMix(1);
 	//distortion->SetSoftWidth(0.2);
-	//tau->AddEffect(distortion);
+//	tau->AddEffect(distortion);
+
+	//TauEffect* pcmRecorder = new PcmRecorder();
+	//tau->AddEffect(pcmRecorder);
+	//delete (TauEffect*)pcmRecorder;
+
+
+	//SpectrumVisual* spectrumVisual = new SpectrumVisual();
+	//tau->AddEffect(spectrumVisual);
 
 
 	//打开音频
 	tau->Open();
 
+	//spectrumVisual->Init(40,
+	//	44100, 2,
+	//	60, 5000,
+	//	160, 5120);
 
 
 	vector<string> midiFiles;
@@ -278,15 +303,19 @@ int main(int argc, char* argv[])
 	//添加需要播放的midi文件
 	//midiFiles.push_back(midiPath + "tau2.5.9.mid");
 	//	midiFiles.push_back(midiPath + "01-StartWithMiddleC.mid");
-
-	midiFiles.push_back(midiPath + "大航海时代.mid");
-	midiFiles.push_back(midiPath + "Free Loop.mid");
-	midiFiles.push_back(midiPath + "梦醒时分.mid");
-	midiFiles.push_back(midiPath + "逍遥叹.mid");
-	midiFiles.push_back(midiPath + "仙剑奇侠传 - 蝶恋(95版).mid");
-	midiFiles.push_back(midiPath + "Sunny.mid");
+	//midiFiles.push_back(midiPath + "venture.mid");
+	//midiFiles.push_back(midiPath + "大航海时代.mid");
+	//midiFiles.push_back(midiPath + "世界第一等.mid");
+	//midiFiles.push_back(midiPath + "(SG)世界第一等.mid");
+	//midiFiles.push_back(midiPath + "地球仪完美版 圣斗士冥王篇.mid");
+	//midiFiles.push_back(midiPath + "(SG)世界第一等.mid");
+	//midiFiles.push_back(midiPath + "Free Loop.mid");
+	//midiFiles.push_back(midiPath + "梦醒时分.mid");
+	//midiFiles.push_back(midiPath + "逍遥叹.mid");
+	//midiFiles.push_back(midiPath + "仙剑奇侠传 - 蝶恋(95版).mid");
+	//midiFiles.push_back(midiPath + "Sunny.mid");
 	//	midiFiles.push_back(midiPath + "learning\\MengXingShiFen.mid");
-	midiFiles.push_back(midiPath + "生命之杯GS.mid");
+	//midiFiles.push_back(midiPath + "生命之杯GS.mid");
 	midiFiles.push_back(midiPath + "追梦人.mid");
 
 	midiFiles.push_back(midiPath + "venture.mid");
@@ -333,7 +362,7 @@ int main(int argc, char* argv[])
 	midiFiles.push_back(midiPath + "圣斗士星矢-天马.mid");
 	midiFiles.push_back(midiPath + "ゲーム名賞_聖闘士星矢-地球儀.mid");
 	midiFiles.push_back(midiPath + "爱江山更爱美人-李丽芬.mid");
-	midiFiles.push_back(midiPath + "地球仪完美版 圣斗士冥王篇.mid");
+
 	midiFiles.push_back(midiPath + "故乡的原风景 钢琴版.mid");
 	//midiFiles.push_back(midiPath + "Fujiwara no Mokou's Theme act.5.0 32 million ICEwiimaker.mid");
 	midiFiles.push_back(midiPath + "故乡的原风景(陶笛).mid");
@@ -356,84 +385,303 @@ int main(int argc, char* argv[])
 	//{
 		//tau->RemoveMidi();
 
-//	art(tau);
+	//art(tau);
 
-	string p = midiPath + "(SG)世界第一等.mid"; // "仙剑奇侠传 - 蝶恋(95版).mid";
+
+
+	string p3 = midiPath + "(SG)世界第一等4.mid"; // "仙剑奇侠传 - 蝶恋(95版).mid";
+
+	//string p3 = midiPath + "TestMEIX21.mid"; // "仙剑奇侠传 - 蝶恋(95版).mid";
 	////string p = midiPath + "learning\\QianQianQueGe.mid";
-	string p3 = midiPath + "大话西游主题曲.mid";
-	string p2 = midiPath + "狂妄之人x.mid";
-	tau->Load(p);
-	tau->Play();
+	string p2 = midiPath + "圆周率+TSMB2之作+3.14百万音符.mid";
+	string p4 = midiPath + "music\\Alouette.mid";
+	string p = midiPath + "(SG)世界第一等.mid";
 
-	//Sleep(5000);
-	//->Goto(4);
-
-
-
-//	tau->SetTrackPlayType(1, MidiEventPlayType::LeftHand);
-
-//	tau->CreateSimpleModeTrack();
-
-	//tau->EnterWaitPlayMode();
+//	tau->Load(p3);
+	//Editor* editor = tau->GetEditor();
+	//editor->ExportMEI();
 
 
+	//tau->SetEnableCreateSpectrumsBars(true);
+
+	//tau->Load(p);
 
 	//tau->EnterMuteMode();
 
-	tau->Play();
-
-	//tau->Goto(16);
-
-	/*Sleep(1000);
-	tau->EditorOnKeySignal(55);
-
-	Sleep(1000);
-	tau->EditorOnKeySignal(64);
-
-	Sleep(1000);
-	tau->EditorOnKeySignal(55);
-
-	Sleep(1000);
-	tau->EditorOnKeySignal(57);
-
-	Sleep(1000);
-	tau->EditorOnKeySignal(60);
-
-	Sleep(5000);
-	tau->Goto(16);*/
+	//tau->SetPlayType(MidiEventPlayType::LeftHand);
+//	tau->SetTrackPlayType(1, MidiEventPlayType::LeftHand);
 
 
-	//	tau->EditorOnKeySignal(67);
+	//tau->SpectrumsVisualInit(40, 40, 100);
+	//tau->Play();
 
-		//tau->SetSimpleModePlayWhiteKeyCount(3);
-		//tau->CreateSimpleModeTrack();
+	/*Sleep(300);
+	tau->Goto(10);*/
+
+	//int i = 0;
+	//while (i++ < 20)
+	//{
+	//	Sleep(300);
+	//	tau->Goto(10);
+	//	Sleep(300);
+	//	tau->Goto(2);
+	//}
+
+	//int i = -1;
+	//while (1)
+	//{
+	//	Sleep(2000);
+	//	i++;
+	//	tau->Load(midiFiles[i]);
+	//	tau->Play();
+	//}
+
+
+
+
+	//Sleep(10000);
+
+
+	//double ampbars[320];
+	//int freqbars[160];
+
+	//spectrumVisual->LockData();
+	//int count = spectrumVisual->GetAmpBars(ampbars, freqbars);
+	//int count = spectrumVisual->CreateSmoothAmpBars(ampbars);
+
+//	spectrumVisual->UnLockData();
+
+	//int b;
+	//b = 3;
+	//double left[20000];
+	//double right[20000];
+
+	//int count = tau->GetSampleStreamFreqSpectrums(0, left, right);
+
+	//count = 4;
+
+	//tau->SetOpenAccompany(false);
+
+
+	/*for (int i = 0; i < 20; i++) {
+		Sleep(100);
+		tau->Goto(6);
+		Sleep(100);
+		tau->Goto(16);
+	}*/
+
+
+	//pcmRecorder->StartRecordPCM();
+
+	//Sleep(30000);
+
+	//string path = "G:\\圆周率+TSMB2之作+3.14百万音符.mp3";
+	//pcmRecorder->SaveRecordPCMToMp3(path);
+
+	/*while (1)
+	{
+		Sleep(5);
+
+		if (tau->GetPlayState() == EditorState::PAUSE ||
+			tau->GetPlayState() == EditorState::STOP ||
+			tau->GetPlayState() == EditorState::ENDPAUSE)
+		{
+			string path = "G:\\圆周率+TSMB2之作+3.14百万音符.mp3";
+			tau->SaveRecordPCMToMp3(path);
+			break;
+		}
+	}*/
+
+
+
+
+
+
+
+	//for (int i = 0; i < 20; i++) {
+
+	//	tau->Goto(3);
+	//	tau->Play();
+
+	//	Sleep(7000);
+	//	tau->Goto(8);
+	//	tau->Play();
+	//	Sleep(3000);
+	//}
+
+	//Sleep(4000);
+
+	//tau->Remove();
+
+	////Sleep(1000);
+
+	//printf("\n载入:Au Clair de la Lune\n");
+	//tau->Load(p4);
+	//tau->Play();
+	//Sleep(1000);
+
+	//tau->Stop();
+	//Sleep(2100);
+	//tau->Play();
+	//Sleep(1100);
+	//tau->Stop();
+
+
+	//for (int i = 0; i < 20; i++) {
+
+	//	printf("\nStop!!\n");
+	//	tau->Goto(0);
+	//	printf("\nplay!!!\n");
+	//	tau->Play();
+	//	Sleep(4000);
+	//}
+
+
+	//for (int i = 0; i < 1; i++) {
+
+	//	printf("\n载入:Au Clair de la Lune\n");
+	//	tau->Load(p4);
+	//	Sleep(300);
+	//	tau->Play();
+	//	Sleep(5000);
+
+	//	printf("\n载入:Au Clair de la Lune2\n");
+	//	tau->Load(p4);
+	//	tau->Play();
+	//	Sleep(5000);
+	//}
+
+
+	//for (int i = 0; i < 20; i++)
+	//{
+	//	printf("\n载入:Au Clair de la Lune\n");
+	//	//tau->Remove();
+	//	tau->Load(p4);
+
+	//	//Sleep(13000);
+
+	//	tau->Play();
+
+	//	Sleep(400);
+	//	printf("\n载入:Au Clair de la Lune2\n");
+	//	tau->Load(p4);
+	//	tau->Play();
+	//	Sleep(400);
+	//}
+
+	//tau->Remove();
+
+
+
+	//tau->SetPlayType(MidiEventPlayType::LeftHand);
+	//tau->SetTrackPlayType(1, MidiEventPlayType::LeftHand);
+
+
+	//tau->EnterWaitPlayMode();
+
+	//tau->Play();
+
+	//Sleep(3000);
+
+	//tau->EditorOnKeySignal(60);
+	//Sleep(200);
+	////tau->EditorOffKeySignal(60);
+
+	//Sleep(2000);
+	//tau->EditorOnKeySignal(60);
+	//Sleep(200);
+	//tau->EditorOffKeySignal(60);
+
+
+	//	Sleep(100);
+		//tau->Goto(0);
+
+
+		////->Goto(4);
+
+
+		//tau->Load(p3);
 		//tau->Play();
 
-		/*while (true) {
-			for (int i = 60; i < 90; i++) {
-				tau->OnKey(i, 120, 1);
-				Sleep(200);
-				tau->OffKey(i, 120, 1);
-			}
-		}*/
+		//Sleep(2000);
+		//tau->Load(p);
+		//tau->Play();
 
-		//art(tau);
+
+		//	tau->SetTrackPlayType(1, MidiEventPlayType::LeftHand);
+
+		//	tau->CreateSimpleModeTrack();
+
+			//tau->EnterWaitPlayMode();
+
+
+
+			//tau->EnterMuteMode();
+
+		//	tau->Play();
+
+			//tau->Goto(16);
+
+			/*Sleep(1000);
+			tau->EditorOnKeySignal(55);
+
+			Sleep(1000);
+			tau->EditorOnKeySignal(64);
+
+			Sleep(1000);
+			tau->EditorOnKeySignal(55);
+
+			Sleep(1000);
+			tau->EditorOnKeySignal(57);
+
+			Sleep(1000);
+			tau->EditorOnKeySignal(60);
+
+			Sleep(5000);
+			tau->Goto(16);*/
+
+
+			//	tau->EditorOnKeySignal(67);
+
+				//tau->SetSimpleModePlayWhiteKeyCount(3);
+				//tau->CreateSimpleModeTrack();
+				//tau->Play();
+
+				/*while (true) {
+					for (int i = 60; i < 90; i++) {
+						tau->OnKey(i, 120, 1);
+						Sleep(200);
+						tau->OffKey(i, 120, 1);
+					}
+				}*/
+
+				//art(tau);
 
 	int i = -1;
 	while (1)
 	{
-		Sleep(5);
+		Sleep(100);
 		if (tau->GetPlayState() == EditorState::PAUSE ||
-			tau->GetPlayState() == EditorState::STOP ||
-			tau->GetPlayState() == EditorState::ENDPAUSE)
+			tau->GetPlayState() == EditorState::STOP)
 		{
 			i++;
 			if (i >= midiFiles.size())
 				break;
 
 			tau->Load(midiFiles[i]);
-			tau->Play();
+		//	tau->DisableChannel(6);
 
+		//	tau->DisableAllTrack();
+		//	tau->EnableChannel(6);
+			//tau->DisableTrack(5);
+			//tau->EnableTrack(2);
+
+			//tau->DisableAllTrack();
+			//tau->EnableChannel(3);
+			//tau->DisableTrack(5);
+			//tau->EnableTrack(1);
+			//tau->SetMidiVirInstrument(2, 0, 1, 0); //设置轨道2启用物理钢琴乐器
+			tau->Play();
 		}
 	}
 

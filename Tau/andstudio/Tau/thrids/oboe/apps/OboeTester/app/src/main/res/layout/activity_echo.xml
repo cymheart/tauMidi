@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:fillViewport="true" >
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -83,6 +84,30 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal" />
+
+        <com.mobileer.oboetester.VolumeBarView
+            android:id="@+id/volumeBar0"
+            android:layout_marginBottom="4dp"
+            android:layout_width="fill_parent"
+            android:layout_height="20dp" />
+
+        <com.mobileer.oboetester.VolumeBarView
+            android:id="@+id/volumeBar1"
+            android:layout_marginBottom="4dp"
+            android:layout_width="fill_parent"
+            android:layout_height="20dp" />
+
+        <com.mobileer.oboetester.VolumeBarView
+            android:id="@+id/volumeBar2"
+            android:layout_marginBottom="4dp"
+            android:layout_width="fill_parent"
+            android:layout_height="20dp" />
+
+        <com.mobileer.oboetester.VolumeBarView
+            android:id="@+id/volumeBar3"
+            android:layout_marginBottom="4dp"
+            android:layout_width="fill_parent"
+            android:layout_height="20dp" />
 
         <TextView
             android:id="@+id/text_status"

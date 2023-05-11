@@ -7,6 +7,12 @@
 namespace tau
 {
 
+	//设置是否开启伴奏
+	void Tau::SetOpenAccompany(bool isOpen)
+	{
+		editor->SetOpenAccompany(isOpen);
+	}
+
 	//设置初始化开始播放时间点
 	void Tau::SetInitStartPlaySec(double sec)
 	{
@@ -26,15 +32,21 @@ namespace tau
 	}
 
 	// 释放指定轨道的所有按键 
-	void Tau::OffAllKeys(int trackIdx)
+	void Tau::OffAllKeysForTrack(int trackIdx)
 	{
-		editor->OffAllKeys(trackIdx);
+		editor->OffAllKeysForTrack(trackIdx);
 	}
 
 	// 释放所有按键 
 	void Tau::OffAllKeys()
 	{
 		editor->OffAllKeys();
+	}
+
+	// 释放与指定id匹配的所有按键 
+	void Tau::OffAllKeys(int id)
+	{
+		editor->OffAllKeys(id);
 	}
 
 	//判断是否载入完成

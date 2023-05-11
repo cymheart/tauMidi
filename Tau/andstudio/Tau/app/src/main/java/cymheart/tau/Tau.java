@@ -5,10 +5,9 @@ import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiManager;
 
 import cymheart.tau.editor.Editor;
-import cymheart.tau.effect.Effect;
+import cymheart.tau.FX.Effect;
 import cymheart.tau.midi.MidiControllerType;
 import cymheart.tau.mididevice.MidiFramer;
-import cymheart.tau.mididevice.MidiInputPortSelector;
 import cymheart.tau.mididevice.MidiOutputPortSelector;
 import cymheart.tau.utils.Utils;
 
@@ -79,37 +78,6 @@ public class Tau
     {
         ndkClose(ndkTau);
         editor.Remove();
-    }
-
-
-    public void ClearRecordPCM()
-    {
-        ndkClearRecordPCM(ndkTau);
-    }
-
-    public void StartRecordPCM()
-    {
-        ndkStartRecordPCM(ndkTau);
-    }
-
-    public void StopRecordPCM()
-    {
-        ndkStopRecordPCM(ndkTau);
-    }
-
-    public void SaveRecordPCM(String path)
-    {
-        ndkSaveRecordPCM(ndkTau, path);
-    }
-
-    public void SaveRecordPCMToWav(String path)
-    {
-        ndkSaveRecordPCMToWav(ndkTau, path);
-    }
-
-    public void SaveRecordPCMToMp3(String path)
-    {
-        ndkSaveRecordPCMToMp3(ndkTau, path);
     }
 
 
@@ -238,12 +206,6 @@ public class Tau
         ndkSetEnableMidiEventParseLimitTime(ndkTau, enable, limitSec);
     }
 
-    //设置是否开启生成采样频谱,频谱点采样数量(默认值: 2048)
-    public void SetEnableCreateFreqSpectrums(boolean enable, int count)
-    {
-        ndkSetEnableCreateFreqSpectrums(ndkTau, enable, count);
-    }
-
     //设置初始化开始播放时间点
     public void SetInitStartPlaySec(double sec)
     {
@@ -264,18 +226,6 @@ public class Tau
         editor.SetIncludeNeedWaitKey(key);
     }
 
-    //按键信号
-    public void OnKeySignal(int key)
-    {
-        editor.OnKeySignal(key);
-    }
-
-    //按键信号
-    public void OffKeySignal(int key)
-    {
-        editor.OffKeySignal(key);
-    }
-
 
     //判断是否读取完成
     public boolean IsLoadCompleted()
@@ -283,29 +233,6 @@ public class Tau
         return editor.IsLoadCompleted();
     }
 
-    //载入
-    public void Load(String midifile, boolean isWaitLoadCompleted,  boolean isLoadMidiExInfo)
-    {
-        editor.Load(midifile, isWaitLoadCompleted, isLoadMidiExInfo);
-    }
-
-    //载入
-    public void Load(String midifile, boolean isWaitLoadCompleted,  boolean isLoadMidiExInfo, String user)
-    {
-        editor.Load(midifile, isWaitLoadCompleted, isLoadMidiExInfo, user);
-    }
-
-    //载入
-    public void Load(String midifile, boolean isWaitLoadCompleted)
-    {
-        editor.Load(midifile, isWaitLoadCompleted);
-    }
-
-    //载入
-    public void Load(String midifile)
-    {
-        editor.Load(midifile);
-    }
 
     public void Play()
     {
@@ -361,11 +288,6 @@ public class Tau
         return editor.GetBackgroundPlayState();
     }
 
-    //获取采样流的频谱
-    public int GetSampleStreamFreqSpectrums(int channel, double[] outLeft, double[] outRight)
-    {
-        return editor.GetSampleStreamFreqSpectrums(channel, outLeft, outRight);
-    }
 
     // 禁止播放指定编号Midi文件的轨道
     public void DisableTrack(int trackIdx)
@@ -547,7 +469,6 @@ public class Tau
     private static native void ndkSetEnableCopySameChannelControlEvents(long ndkTau, boolean enable);
     private static native void ndkSetMidiKeepSameTimeNoteOnCount(long ndkTau, int count);
     private static native void ndkSetEnableMidiEventParseLimitTime(long ndkTau, boolean enable, float limitSec);
-    private static native void ndkSetEnableCreateFreqSpectrums(long ndkTau, boolean enable, int count);
 
     private static native void ndkAddEffect(long ndkTau, long ndkEffect);
     private static native void ndkSetEnableAllVirInstEffects(long ndkTau, boolean isEnable);
@@ -583,13 +504,6 @@ public class Tau
     private static native void ndkOnVirInstrument(long ndkTau, long ndkVirInstrument, boolean isFade);
     private static native void ndkOffVirInstrument(long ndkTau, long ndkVirInstrument, boolean isFade);
 
-
-    private static native void ndkClearRecordPCM(long ndkTau);
-    private static native void ndkStartRecordPCM(long ndkTau);
-    private static native void ndkStopRecordPCM(long ndkTau);
-    private static native void ndkSaveRecordPCM(long ndkTau, String path);
-    private static native void ndkSaveRecordPCMToWav(long ndkTau, String path);
-    private static native void ndkSaveRecordPCMToMp3(long ndkTau, String path);
 
 }
 

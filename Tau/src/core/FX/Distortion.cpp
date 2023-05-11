@@ -2,8 +2,7 @@
 
 namespace tauFX
 {
-	Distortion::Distortion(Synther* synther)
-		:TauEffect(synther)
+	Distortion::Distortion()
 	{
 		leftDistortion = new dsignal::Distortion();
 		rightDistortion = new dsignal::Distortion();
@@ -128,6 +127,23 @@ namespace tauFX
 		{
 			leftChannelSamples[i] = leftDistortion->Process(leftChannelSamples[i]);
 			rightChannelSamples[i] = rightDistortion->Process(rightChannelSamples[i]);
+		}
+	}
+
+	void Distortion::EffectProcess(float* synthStream, int numChannels, int channelSampleCount)
+	{
+		if (numChannels == 2) {
+			for (int i = 0; i < channelSampleCount * numChannels; i += 2)
+			{
+				synthStream[i] = leftDistortion->Process(synthStream[i]);
+				synthStream[i + 1] = rightDistortion->Process(synthStream[i + 1]);
+			}
+		}
+		else {
+			for (int i = 0; i < channelSampleCount; i++)
+			{
+				synthStream[i] = leftDistortion->Process(synthStream[i]);
+			}
 		}
 	}
 }

@@ -2,7 +2,7 @@
 #include"Synth/Tau.h"
 #include"Synth/VirInstrument.h"
 #include"Synth/Editor/MidiEditor.h"
-#include"Synth/RegionSounderThread.h"
+#include"Synth/ZoneSounderThread.h"
 #include"Synth/Channel.h"
 #include"Synth/Preset.h"
 

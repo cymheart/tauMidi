@@ -12,6 +12,7 @@ android {
         baseline = file("lint-baseline.xml")
     }
 
+
     repositories {
         maven { url 'https://maven.aliyun.com/repository/public/' }
         maven { url 'https://maven.aliyun.com/repository/google/' }
@@ -32,7 +33,7 @@ android {
 
     defaultConfig {
         //设置library时,注释掉applicationId "cymheart.tau"这行,反之打开
-        //applicationId "cymheart.tau"
+       //applicationId "cymheart.tau"
         minSdkVersion 23
         targetSdk 26
 
@@ -60,7 +61,8 @@ android {
 
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            //proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
     }

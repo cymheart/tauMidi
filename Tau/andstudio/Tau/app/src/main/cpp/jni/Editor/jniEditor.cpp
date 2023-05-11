@@ -10,9 +10,11 @@
 #include<Synth/VirInstrument.h>
 #include"jniCreateMidiEvent.h"
 #include<Synth/Editor/MeasureInfo.h>
-
+#include <android/log.h>
 using namespace tau;
 
+#define  LOG_TAG "SHUIYES"
+#define  LOGD(fmt, args...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG, fmt, ##args)
 
 struct CBData{
     JNIEnv* env;
@@ -60,6 +62,17 @@ Java_cymheart_tau_editor_Editor_ndkInit(JNIEnv *env, jclass clazz, jobject jedit
     cbData->jeditor = env->NewGlobalRef(jeditor);
     editor->SetUserData((void*)cbData);
 }
+
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkSetOpenAccompany(JNIEnv *env, jclass clazz, jlong ndk_editor,
+                                                    jboolean is_open) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->SetOpenAccompany(is_open);
+}
+
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -319,6 +332,14 @@ Java_cymheart_tau_editor_Editor_ndkGoto(JNIEnv *env, jclass clazz, jlong ndk_edi
 
 
 extern "C"
+JNIEXPORT void JNICALL
+Java_cymheart_tau_editor_Editor_ndkRunto(JNIEnv *env, jclass clazz, jlong ndk_editor, jdouble sec) {
+    Editor* editor = (Editor*)ndk_editor;
+    editor->Runto(sec);
+}
+
+
+extern "C"
 JNIEXPORT jint JNICALL
 Java_cymheart_tau_editor_Editor_ndkGetSecTickCount(JNIEnv *env, jclass clazz, jlong ndk_editor,
                                                    jdouble sec) {
@@ -371,18 +392,6 @@ Java_cymheart_tau_editor_Editor_ndkSetSpeed(JNIEnv *env, jclass clazz, jlong ndk
     editor->SetSpeed(speed);
 }
 
-extern "C"
-JNIEXPORT jint JNICALL
-Java_cymheart_tau_editor_Editor_ndkGetSampleStreamFreqSpectrums(JNIEnv *env, jclass clazz, jlong ndk_editor,
-                                                                jint channel, jdoubleArray out_left,
-                                                                jdoubleArray out_right) {
-    Editor* editor = (Editor*)ndk_editor;
-    double *left = env->GetDoubleArrayElements(out_left, 0);
-    double *right = env->GetDoubleArrayElements(out_right, 0);
-    int count = editor->GetSampleStreamFreqSpectrums(channel, left, right);
-    return count;
-}
-
 
 extern "C"
 JNIEXPORT jdouble JNICALL
@@ -427,6 +436,7 @@ void LoadStart(Editor* editor)
     jclass jclsProcess = env->GetObjectClass(cbData->jeditor);
     jmethodID method = env->GetMethodID(jclsProcess, "_JniLoadStart", "()V");
     env->CallVoidMethod(cbData->jeditor, method);
+
 }
 
 

@@ -4,27 +4,46 @@ namespace tau
 {
 	Sample::~Sample()
 	{
-		free(pcm);
+		if (pcm != nullptr) {
+			free(pcm);
+			pcm = nullptr;
+		}
+
+		if (sm24 != nullptr) {
+			free(sm24);
+			sm24 = nullptr;
+		}
 	}
+
 
 	// 设置样本
 	void Sample::SetSamples(short* samples, uint32_t size, uint8_t* sm24)
 	{
-		this->size = size;
-		pcm = (float*)malloc(size * sizeof(float));
-
-		//是否为24位样本值
-		if (sm24 == nullptr)
-		{
-			for (uint32_t i = 0; i < size; i++)
-				pcm[i] = samples[i] / 32767.0f * 0.9f;
+		if (pcm != nullptr) {
+			free(pcm);
+			pcm = nullptr;
 		}
-		else
-		{
-			for (uint32_t i = 0; i < size; i++)
-			{
-				pcm[i] = (samples[i] << 8 | sm24[i]) / 8388607.0f * 0.9f;
-			}
+
+		if (this->sm24 != nullptr) {
+			free(this->sm24);
+			this->sm24 = nullptr;
+		}
+
+		//
+		this->size = size;
+		pcm = (short*)malloc(size * sizeof(short));
+		if (pcm == nullptr) {
+			this->size = 0;
+			throw string("不能为样本分配足够的空间!");	
+			return;
+		}else {
+			memcpy(pcm, samples, size * sizeof(short));
+		}
+
+		if (sm24 != nullptr) {
+			this->sm24 = (uint8_t*)malloc(size * sizeof(uint8_t));
+			if (this->sm24 != nullptr) 
+				memcpy(this->sm24, sm24, size * sizeof(uint8_t));		
 		}
 	}
 }

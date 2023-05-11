@@ -523,7 +523,7 @@ namespace tau
 			LinkedList<MidiEvent*>* midiEventList = midiTracks[i]->GetEventList();
 			LinkedListNode<MidiEvent*>* orgNode = midiEventList->GetHeadNode();
 			LinkedListNode<MidiEvent*>* nextNode = nullptr, * orgNodeNext = nullptr;
-			LinkedListNode<MidiEvent*>* startNode = nullptr, * prevNode;
+			LinkedListNode<MidiEvent*>* startNode = nullptr, * prevNode = nullptr;
 
 			for (; orgNode; orgNode = orgNodeNext)
 			{
@@ -586,7 +586,9 @@ namespace tau
 					continue;
 				}
 
-				prevNode = startNode->prev;
+				if(startNode != nullptr)
+					prevNode = startNode->prev;
+
 				//当每perGroupTick有超过perGroupNoteCount个note在其中时，将启用简化合并note算法
 				//把符合要求的note插入到eventsAtNotes分类中
 				LinkedListNode<MidiEvent*>* nd;
@@ -639,7 +641,9 @@ namespace tau
 					for (; node; node = next)
 					{
 						MidiEvent* ev = node->elem;
-						MidiEvent* ev2 = node->next->elem;
+						MidiEvent* ev2 = nullptr;
+						if (node->next != nullptr)
+							ev2 = node->next->elem;
 
 						//1. ev和ev2形成note1, 并且 note2 跟随 note1 
 						if (ev->type == MidiEventType::NoteOn &&
@@ -934,6 +938,7 @@ namespace tau
 				//
 				NoteOffEvent* noteOffEvent = new NoteOffEvent();
 				noteOffEvent->startTick = curtParseTickCount;
+				noteOffEvent->endTick = curtParseTickCount;
 				noteOffEvent->note = note;
 				noteOffEvent->velocity = velocity;
 				noteOffEvent->channel = lastParseEventChannel;
@@ -957,6 +962,7 @@ namespace tau
 
 				NoteOnEvent* noteOnEvent = new NoteOnEvent();
 				noteOnEvent->startTick = curtParseTickCount;
+				noteOnEvent->endTick = curtParseTickCount;
 				noteOnEvent->note = note;
 				noteOnEvent->velocity = velocity;
 				noteOnEvent->channel = lastParseEventChannel;
@@ -986,6 +992,7 @@ namespace tau
 
 			NoteOffEvent* noteOffEvent = new NoteOffEvent();
 			noteOffEvent->startTick = curtParseTickCount;
+			noteOffEvent->endTick = curtParseTickCount;
 			noteOffEvent->note = note;
 			noteOffEvent->velocity = velocity;
 			noteOffEvent->channel = lastParseEventChannel;
@@ -1002,7 +1009,7 @@ namespace tau
 		case 0xA:
 		{
 			KeyPressureEvent* keyPressureEvent = new KeyPressureEvent();
-			keyPressureEvent->startTick = curtParseTickCount;
+			keyPressureEvent->endTick = keyPressureEvent->startTick = curtParseTickCount;
 			keyPressureEvent->note = midiReader->read<byte>();
 			keyPressureEvent->value = midiReader->read<byte>();
 			keyPressureEvent->channel = lastParseEventChannel;
@@ -1014,6 +1021,7 @@ namespace tau
 		{
 			ControllerEvent* ctrlEvent = new ControllerEvent();
 			ctrlEvent->startTick = curtParseTickCount;
+			ctrlEvent->endTick = ctrlEvent->startTick;
 			ctrlEvent->ctrlType = (MidiControllerType)midiReader->read<byte>();
 			ctrlEvent->value = midiReader->read<byte>();
 			ctrlEvent->channel = lastParseEventChannel;
@@ -1025,6 +1033,7 @@ namespace tau
 		{
 			ProgramChangeEvent* programEvent = new ProgramChangeEvent();
 			programEvent->startTick = curtParseTickCount;
+			programEvent->endTick = programEvent->startTick;
 			programEvent->channel = lastParseEventChannel;
 			programEvent->value = midiReader->read<byte>();
 			track.AddEvent(programEvent);
@@ -1035,6 +1044,7 @@ namespace tau
 		{
 			ChannelPressureEvent* channelPressureEvent = new ChannelPressureEvent();
 			channelPressureEvent->startTick = curtParseTickCount;
+			channelPressureEvent->endTick = channelPressureEvent->startTick;
 			channelPressureEvent->value = midiReader->read<byte>();
 			channelPressureEvent->channel = lastParseEventChannel;
 			track.AddEvent(channelPressureEvent);
@@ -1045,6 +1055,7 @@ namespace tau
 		{
 			PitchBendEvent* pitchBendEvent = new PitchBendEvent();
 			pitchBendEvent->startTick = curtParseTickCount;
+			pitchBendEvent->endTick = pitchBendEvent->startTick;
 
 			int ff = midiReader->read<byte>() & 0x7F;
 			int nn = midiReader->read<byte>() & 0x7F;
@@ -1063,6 +1074,7 @@ namespace tau
 		{
 			SysexEvent* sysexEvent = new SysexEvent();
 			sysexEvent->startTick = curtParseTickCount;
+			sysexEvent->endTick = sysexEvent->startTick;
 			byte b;
 			vector<byte> byteCodes;
 
@@ -1096,6 +1108,7 @@ namespace tau
 			{
 				TextEvent* textEvent = new TextEvent();
 				textEvent->startTick = curtParseTickCount;
+				textEvent->endTick = textEvent->startTick;
 
 				switch (type)
 				{
@@ -1158,6 +1171,7 @@ namespace tau
 				midiReader->read<byte>();  // 长度
 				TempoEvent* tempoEvent = new TempoEvent();
 				tempoEvent->startTick = curtParseTickCount;
+				tempoEvent->endTick = tempoEvent->startTick;
 				tempoEvent->microTempo = (float)Read3BtyesToInt32(*midiReader);
 
 				//有些midi文件的格式明明是SyncTracks，但速度设置却没有放在全局0轨道中，而把速度设置放在了其他轨道，
@@ -1180,6 +1194,7 @@ namespace tau
 				midiReader->read<byte>(); // 长度
 				SmpteEvent* smpteEvent = new SmpteEvent();
 				smpteEvent->startTick = curtParseTickCount;
+				smpteEvent->endTick = smpteEvent->startTick;
 				smpteEvent->hr = midiReader->read<byte>();
 				smpteEvent->mn = midiReader->read<byte>();
 				smpteEvent->sec = midiReader->read<byte>();
@@ -1194,6 +1209,7 @@ namespace tau
 				midiReader->read<byte>(); // 长度
 				TimeSignatureEvent* timeSignatureEvent = new TimeSignatureEvent();
 				timeSignatureEvent->startTick = curtParseTickCount;
+				timeSignatureEvent->endTick = timeSignatureEvent->startTick;
 				timeSignatureEvent->numerator = midiReader->read<byte>();
 				timeSignatureEvent->denominator = midiReader->read<byte>();
 				timeSignatureEvent->metronomeCount = midiReader->read<byte>();
@@ -1219,6 +1235,7 @@ namespace tau
 				midiReader->read<byte>(); // 长度
 				KeySignatureEvent* keySignatureEvent = new KeySignatureEvent();
 				keySignatureEvent->startTick = curtParseTickCount;
+				keySignatureEvent->endTick = keySignatureEvent->startTick;
 				keySignatureEvent->sf = (int8_t)midiReader->read<byte>();
 				keySignatureEvent->mi = midiReader->read<byte>();
 				keySignatureEvent->track = trackIdx;
@@ -1247,6 +1264,7 @@ namespace tau
 			{
 				UnknownEvent* unknownEvent = new UnknownEvent();
 				unknownEvent->startTick = curtParseTickCount;
+				unknownEvent->endTick = unknownEvent->startTick;
 				unknownEvent->codeType = type;
 				uint32_t len = ReadDynamicValue(*midiReader);
 				if (len <= 0)

@@ -1,10 +1,8 @@
 package cymheart.tau.midi;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.util.ArrayList;
+import android.graphics.RectF;
+
 import java.util.List;
 
 public class NoteOnEvent extends MidiEvent {
@@ -25,7 +23,7 @@ public class NoteOnEvent extends MidiEvent {
 
     public int GetID()
     {
-        return startTick<<7 | note;
+        return startTick<<7 | num;
     }
 
 
@@ -39,13 +37,58 @@ public class NoteOnEvent extends MidiEvent {
     /**手指编号提示数量*/
     public int fingerIdxCount = 0;
 
-    /**记录推迟多长时间被按下*/
-    public float lateDownSec = 0;
+    public void ClearHandFingers(){
+        fingerIdxCount = 0;
+    }
+
+    /**是否已具有手指标签*/
+    public boolean HavHandFingerLabel(int hand, int finger){
+        for(int i=0; i<fingerIdxCount; i++) {
+            if(fingerAtHand[i] == hand && fingerIdxs[i] == finger)
+                return true;
+        }
+        return false;
+    }
+
+
+    /**添加手指标签*/
+    public void AddHandFingerLabel(int hand, int finger){
+        fingerAtHand[fingerIdxCount++] = hand;
+        fingerIdxs[fingerIdxCount++] = finger;
+    }
+
+    /**移除手指标签*/
+    public void RemoveHandFingerLabel(int hand, int finger){
+        for(int i=0; i<fingerIdxCount; i++)
+        {
+            if(fingerAtHand[i] == hand && fingerIdxs[i] == finger) {
+                fingerAtHand[i] = -1;
+                fingerIdxs[i] = -1;
+                for(int j=i+1; j<fingerIdxCount; j++) {
+                    fingerAtHand[j - 1] = fingerAtHand[j];
+                    fingerIdxs[j - 1] = fingerIdxs[j];
+                }
+                return;
+            }
+        }
+    }
+
+
+
+    /**记录的推迟多长时间被按下*/
+    public float recordLateSec = 0;
+
+    /**记录的是否丢失*/
+    public boolean recordIsMiss = false;
 
     /**是否弹奏*/
     public boolean isPlay = false;
     /**是否丢失*/
     public boolean isMiss = false;
+
+    /**是否已发送按键信号*/
+    public boolean isOnKeySignal = false;
+
     /**游戏点数*/
     public float gamePoint = 0;
     /**游戏点数倍率*/
@@ -57,10 +100,20 @@ public class NoteOnEvent extends MidiEvent {
     /**显示区域*/
     public float left, top, right, bottom;
 
+
+    /**弹奏的开始时间*/
+    public float playedStartSec;
+    /**弹奏的结束时间*/
+    public float playedEndSec;
+    /**弹奏的显示区域*/
+    public RectF playedArea = new RectF();
+
+
+
     // 结束tick
     public int endTick = 0;
-    // 音符
-    public int note = 0;
+    // 音符号
+    public int num = 0;
     // 力度
     public int velocity = 0;
 
@@ -73,65 +126,10 @@ public class NoteOnEvent extends MidiEvent {
     public void SetPlayType(int type)
     {
         super.SetPlayType(type);
-
         if(ndkNoteOffEvent != 0)
             ndkSetPlayType(ndkNoteOffEvent, playType);
     }
 
-
-    @Override
-    public void SetByInnerJson()
-    {
-        if(jsonMidiEvent == null)
-            return;
-
-        super.SetByInnerJson();
-
-        try {
-            fingerIdxCount = 0;
-            JSONArray jsonFingerIdxs = jsonMidiEvent.getJSONArray("fingerIdxs");
-            if(jsonFingerIdxs != null){
-                for (int j = 0; j < jsonFingerIdxs.length(); j++) {
-                    JSONObject jsonFingerIdx = jsonFingerIdxs.getJSONObject(j);
-                    fingerAtHand[fingerIdxCount++] = jsonFingerIdx.getInt("hand");
-                    fingerIdxs[fingerIdxCount++] = jsonFingerIdx.getInt("idx");
-                }
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void SetInnerJson()
-    {
-        if(jsonMidiEvent == null)
-            return;
-
-        super.SetInnerJson();
-
-        try {
-            JSONArray jsonFingerIdxs = jsonMidiEvent.getJSONArray("fingerIdxs");
-            if(jsonFingerIdxs == null)
-            {
-                jsonFingerIdxs = new JSONArray();
-                jsonMidiEvent.put("fingerIdxs", jsonFingerIdxs);
-            }else{
-                for (int j = jsonFingerIdxs.length(); j >= 0; j--)
-                    jsonFingerIdxs.remove(j);
-            }
-
-            for(int i=0; i<fingerIdxCount; i++)
-            {
-                JSONObject jsonFingerIdx = new JSONObject();
-                jsonFingerIdx.put("hand", fingerAtHand[i]);
-                jsonFingerIdx.put("idx", fingerIdxs[i]);
-                jsonFingerIdxs.put(jsonFingerIdx);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
 
     private long ndkNoteOffEvent = 0;
 }

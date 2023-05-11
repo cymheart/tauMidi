@@ -16,7 +16,7 @@ namespace tauFX
 	class DLL_CLASS Delay : public TauEffect
 	{
 	public:
-		Delay(Synther* synther = nullptr);
+		Delay();
 		virtual ~Delay();
 
 		void SetDelayChannel(DelayChannel delayChannel)
@@ -26,16 +26,9 @@ namespace tauFX
 
 		void SetDelay(float delay);
 
-	public:
-		void SetDelayChannelTask(DelayChannel delayChannel);
-		void SetDelayTask(float delay);
-
-	private:
-		static void _SetDelayChannelTask(Task* task);
-		static void _SetDelayTask(Task* task);
-
 	private:
 		void EffectProcess(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount);
+		void EffectProcess(float* synthStream, int numChannels, int channelSampleCount);
 
 	private:
 		stk::DelayL* delayLeftChannel;

@@ -1,5 +1,6 @@
 ﻿#include"MidiMarkerList.h"
 #include"Midi/MidiEvent.h"
+#include <algorithm>
 
 namespace tau
 {
@@ -112,6 +113,7 @@ namespace tau
 
 		return &(midiMarkers[prevIdx]->tempo);
 	}
+
 
 	//计算速度和起始时间
 	void MidiMarkerList::ComputeTempoAndStartSec()

@@ -4,6 +4,9 @@
 #include<Synth/TauTypes.h>
 #include "scutils/Utils.h"
 #include "task/Task.h"
+#include "Synth/Tau.h"
+
+
 using namespace scutils;
 using namespace tau;
 using namespace task;
@@ -14,18 +17,11 @@ namespace tauFX
 	class DLL_CLASS TauEffect
 	{
 	public:
-		TauEffect(Synther* synther = nullptr)
+		TauEffect()
 		{
-			this->synther = synther;
 		}
 
 		virtual ~TauEffect() { }
-
-
-		virtual void SetSynther(Synther* synther)
-		{
-			this->synther = synther;
-		}
 
 		virtual void Clear() {}
 
@@ -41,7 +37,21 @@ namespace tauFX
 			return isEnable;
 		}
 
-		virtual void EffectProcess(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount) = 0;
+		void LockData();
+		void UnLockData();
+
+		void SetTau(Tau* tau) {
+			this->tau = tau;
+		}
+
+		//
+		virtual void EffectProcess(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount) {
+
+		}
+
+		virtual void EffectProcess(float* synthStream, int numChannels, int channelSampleCount) {
+
+		}
 
 	public:
 		void SetEnableTask(bool isEnable);
@@ -51,7 +61,7 @@ namespace tauFX
 	protected:
 		//是否开启效果
 		bool isEnable = true;
-		Synther* synther = nullptr;
+		Tau* tau = nullptr;
 	};
 }
 

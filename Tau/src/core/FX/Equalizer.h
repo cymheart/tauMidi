@@ -12,19 +12,16 @@ namespace tauFX
 	class DLL_CLASS Equalizer : public TauEffect
 	{
 	public:
-		Equalizer(Synther* synther = nullptr);
+		Equalizer();
 		virtual ~Equalizer();
 
-		void SetSynther(Synther* synther);
 		void SetFreqBandGain(int bandIdx, float gainDB);
-		void EffectProcess(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount);
+
 		vector<dsignal::Filter*> GetFilters();
 
-	public:
-		void SetFreqBandGainTask(int bandIdx, float gainDB);
-
 	private:
-		static void _SetFreqBandGainTask(Task* task);
+		void EffectProcess(float* leftChannelSamples, float* rightChannelSamples, int channelSampleCount);
+		void EffectProcess(float* synthStream, int numChannels, int channelSampleCount);
 
 	private:
 		dsignal::GraphEqualizer* eq;

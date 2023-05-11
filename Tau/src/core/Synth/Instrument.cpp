@@ -3,63 +3,39 @@ namespace tau
 {
 	Instrument::Instrument()
 	{
-		globalRegion = new Region(RegionType::Instrument);
-		instRegionLinkInfoList = new vector<SamplesLinkToInstRegionInfo>;
+		globalZone = new Zone(ZoneType::Instrument);
 	}
 
 	Instrument::~Instrument()
 	{
-		DEL(globalRegion);
+		DEL(globalZone);
+		instZoneLinkInfos.clear();
 	}
 
-	// 连接一个样本到一个instRegion
-	Region* Instrument::LinkSamples(Sample* sample)
+	//连接一个样本到一个新的乐器区域
+	//一般sf文件都通过这个来关联样本和乐器区域
+	Zone* Instrument::LinkSamples(Sample* sample)
 	{
-		Region* instRegion = new Region(RegionType::Instrument);
-		SamplesLinkToInstRegionInfo linkInfo;
-		linkInfo.region = instRegion;
+		Zone* instZone = new Zone(ZoneType::Instrument);
+		SamplesLinkToInstZoneInfo linkInfo;
+		linkInfo.Zone = instZone;
 		linkInfo.linkSampleGen = nullptr;
 		linkInfo.linkSample = sample;
-		instRegionLinkInfoList->push_back(linkInfo);
-		return instRegion;
+		instZoneLinkInfos.push_back(linkInfo);
+		return instZone;
 	}
 
-	// 连接一个样本发生器到一个instRegion
-	Region* Instrument::LinkSamplesGen(SampleGenerator* sampleGen)
+	//连接一个样本生成器到一个新的乐器区域
+	//这个接口可以用来关联一些动态生成的样本(比如物理钢琴算法动态生成的样本)和乐器区域绑定
+	Zone* Instrument::LinkSamplesGen(SampleGenerator* sampleGen)
 	{
-		Region* instRegion = new Region(RegionType::Instrument);
-		SamplesLinkToInstRegionInfo linkInfo;
-		linkInfo.region = instRegion;
+		Zone* instZone = new Zone(ZoneType::Instrument);
+		SamplesLinkToInstZoneInfo linkInfo;
+		linkInfo.Zone = instZone;
 		linkInfo.linkSample = nullptr;
 		linkInfo.linkSampleGen = sampleGen;
-		instRegionLinkInfoList->push_back(linkInfo);
-		return instRegion;
+		instZoneLinkInfos.push_back(linkInfo);
+		return instZone;
 	}
 
-	// 获取KeyNum在指定范围内的乐器区域组
-	int Instrument::GetHavKeyInstRegionLinkInfos(int keyNum, float velocity, SamplesLinkToInstRegionInfo* activeInstRegionLinkInfos)
-	{
-		RangeFloat keyRange;
-		RangeFloat velRange;
-		int pos = 0;
-		for (int i = 0; i < instRegionLinkInfoList->size(); i++)
-		{
-			keyRange = (*instRegionLinkInfoList)[i].region->GetKeyRange();
-			velRange = (*instRegionLinkInfoList)[i].region->GetVelRange();
-
-			if (keyNum >= keyRange.min && keyNum <= keyRange.max &&
-				velocity >= velRange.min && velocity <= velRange.max)
-			{
-				activeInstRegionLinkInfos[pos++] = (*instRegionLinkInfoList)[i];
-			}
-		}
-
-		SamplesLinkToInstRegionInfo info;
-		info.linkSample = nullptr;
-		info.region = nullptr;
-		activeInstRegionLinkInfos[pos] = info;
-
-		return pos;
-
-	}
 }

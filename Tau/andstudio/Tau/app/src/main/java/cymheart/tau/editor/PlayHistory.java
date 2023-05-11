@@ -16,19 +16,12 @@ import cymheart.tau.utils.FileUtils;
  * 弹奏记录
  * ----JsonPlayHistory结构----
  *{
- *  linkfiles:
- *  {
- *     midiExFilePath:string
- *     playRecordFilePath:string
- *  },
- *
  *  accounts:
  *  {
  *    playNoteCount:int
  *    errorNoteCount:int
  *    missNoteCount:int
- *    pullCount:int
- *    loopCount:int
+ *    pausePlayCount:int
  *    gamePoint:int
  *    totalGamePoint:int
  *    totalNoteCount:int
@@ -46,6 +39,7 @@ import cymheart.tau.utils.FileUtils;
  *       {
  *          index:int
  *          lateSec:float
+ *          isMiss:boolean
  *          gamePoint:float
  *       },
  *          ...,
@@ -69,9 +63,6 @@ public class PlayHistory {
 
     protected Editor editor;
 
-    protected String midiExFilePath;
-    protected String playRecordFilePath;
-
 
     /**已弹奏音符数量*/
     protected int playNoteCount = 0;
@@ -79,10 +70,7 @@ public class PlayHistory {
     protected int errorNoteCount = 0;
     /**错过弹奏的音符数量*/
     protected int missNoteCount = 0;
-    /**回拉时间次数*/
-    protected int pullCount = 0;
-    /**循环次数*/
-    protected int loopCount = 0;
+
     /**游戏获取点数*/
     protected int gamePoint = 0;
     /**总游戏点数*/
@@ -92,6 +80,10 @@ public class PlayHistory {
     /**得分*/
     protected int score = 0;
 
+    public PlayHistory(Editor editor){
+        this.editor = editor;
+    }
+
 
     /**从文件中加载历史记录*/
     public void LoadFromFile(String filePath)
@@ -100,18 +92,11 @@ public class PlayHistory {
             String jsonStr = FileUtils.getInstance().ReadFileToString(filePath);
             JSONObject jsonHistory = new JSONObject(jsonStr);
 
-            //linkfiles
-            JSONObject jsonLinkfiles = jsonHistory.getJSONObject("linkfiles");
-            midiExFilePath = jsonLinkfiles.getString("midiExFilePath");
-            playRecordFilePath = jsonLinkfiles.getString("playRecordFilePath");
-
             //accounts(结算信息)
             JSONObject jsonAccounts = jsonHistory.getJSONObject("accounts");
             playNoteCount = jsonAccounts.getInt("playNoteCount");
             errorNoteCount = jsonAccounts.getInt("errorNoteCount");
             missNoteCount = jsonAccounts.getInt("missNoteCount");
-            pullCount = jsonAccounts.getInt("pullCount");
-            loopCount = jsonAccounts.getInt("loopCount");
             gamePoint = jsonAccounts.getInt("gamePoint");
             totalGamePoint = jsonAccounts.getInt("totalGamePoint");
             totalNoteCount = jsonAccounts.getInt("totalNoteCount");
@@ -139,7 +124,8 @@ public class PlayHistory {
                     jsonNote = jsonNotes.getJSONObject(j);
                     noteIdx = jsonNote.getInt("index");
                     noteLateSec = (float)jsonNote.getDouble("lateSec");
-                    noteOnEvents[noteIdx].lateDownSec = noteLateSec;
+                    noteOnEvents[noteIdx].recordLateSec = noteLateSec;
+                    noteOnEvents[noteIdx].recordIsMiss = jsonNote.getBoolean("isMiss");
                 }
             }
 
@@ -149,32 +135,22 @@ public class PlayHistory {
     }
 
 
-    public void SaveToFile(String filePath, String playRecordPath, String midiExFilePath)
+    public void SaveToFile(String filePath)
     {
         try {
 
             JSONObject jsonPlayHistory = new JSONObject();
 
-            //linkfiles
-            JSONObject jsonLinkfiles = new JSONObject();
-            jsonLinkfiles.put("midiExFilePath", midiExFilePath);
-            jsonLinkfiles.put("playRecordFilePath", playRecordPath);
-            jsonPlayHistory.put("linkfiles", jsonLinkfiles);
-
-
             //accounts(结算信息)
             JSONObject jsonAccounts = new JSONObject();
             jsonAccounts.put("playNoteCount", editor.GetPlayedNoteCount());
             jsonAccounts.put("errorNoteCount", editor.GetPlayErrorNoteCount());
-            jsonAccounts.put("missNoteCount", editor.GetMissNoteCount());
-            jsonAccounts.put("pullCount", editor.GetPullTimeCount());
-            jsonAccounts.put("loopCount", editor.GetLoopCount());
+            jsonAccounts.put("missNoteCount", editor.GetMissedNoteCount());
             jsonAccounts.put("gamePoint", (int)editor.GetPlayGamePoint());
             jsonAccounts.put("totalGamePoint", (int)editor.GetTotalGamePoint());
             jsonAccounts.put("totalNoteCount", editor.GetNeedPlayNoteCount());
             jsonAccounts.put("score", editor.GetScore());
             jsonPlayHistory.put("accounts", jsonAccounts);
-
 
             //tracks
             JSONArray jsonTracks = null;
@@ -201,6 +177,7 @@ public class PlayHistory {
                     jsonNote = new JSONObject();
                     jsonNote.put("index", j);
                     jsonNote.put("lateSec", ev.lateSec);
+                    jsonNote.put("isMiss", ev.isMiss);
                     jsonNote.put("gamePoint", ev.gamePoint);
 
                     //

@@ -64,24 +64,10 @@ public class MidiEvent {
     public void SetPlayType(int type)
     {
         playType = type;
-
         if(ndkMidiEvent != 0)
             ndkSetPlayType(ndkMidiEvent, playType);
-
-        SetPlayTypeToInnerJson(playType);
     }
 
-    protected void SetPlayTypeToInnerJson(int type)
-    {
-        if(jsonMidiEvent == null)
-            return;
-
-        try {
-            jsonMidiEvent.put("PlayType", type);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
 
     public int index = 0;
 
@@ -98,26 +84,7 @@ public class MidiEvent {
     //事件相关轨道
     public Track track = null;
 
-    public JSONObject jsonMidiEvent = null;
-    public void SetByInnerJson()
-    {
-        if(jsonMidiEvent == null)
-            return;
-
-        try {
-            playType = jsonMidiEvent.getInt("PlayType");
-            ndkSetPlayType(ndkMidiEvent, playType);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void SetInnerJson()
-    {
-        SetPlayTypeToInnerJson(playType);
-    }
-
-    private long ndkMidiEvent = 0;
+    private long ndkMidiEvent;
     public long getNdkMidiEvent() {
         return ndkMidiEvent;
     }

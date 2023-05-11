@@ -5,30 +5,10 @@
 
 namespace tau
 {
-	union GeneratorAmount
+	struct Generator
 	{
-		struct {
-			float low;
-			float high;
-		} rangeData;
-
-		float amount;
-	};
-
-	class Generator
-	{
-	public:
-		Generator(GeneratorType type = GeneratorType::None)
-		{
-			this->type = type;
-			genAmount.rangeData.low = 0;
-			genAmount.rangeData.high = 0;
-			genAmount.amount = 0;
-		}
-
-	public:
-		GeneratorType type;
-		GeneratorAmount genAmount;
+		GeneratorType type = GeneratorType::None;
+		GeneratorAmount genAmount = {(int16_t)0};
 	};
 
 
@@ -39,63 +19,29 @@ namespace tau
 		~GeneratorList();
 
 		void Clear();
-
 		void Remove(GeneratorType type);
-		// type值
-		// 0: instrument类型
-		// 1: preset类型
-		inline void SetType(RegionType type)
-		{
-			this->type = type;
-		}
+		void Copy(GeneratorList& orgGens);
 
 		// 根据生成器类型,判断此类型生成器是否为空值，从未设置过
 		bool IsEmpty(GeneratorType type)
 		{
-			return (gens[(int)type] == nullptr ? true : false);
+			return gens[(int)type].type == GeneratorType::None;
 		}
 
 		// 根据生成器类型，获取生成器数据值
-		float GetAmount(GeneratorType type)
-		{
-			return (gens[(int)type] == nullptr ?
-				GetDefaultValue(type) : gens[(int)type]->genAmount.amount);
-		}
-
-		// 根据生成器类型，获取生成器数据范围值
-		RangeFloat GetAmountRange(GeneratorType type);
-
-
-		// 根据生成器类型，获取生成器数据范围的低值
-		float GetAmountLow(GeneratorType type);
-
-
-		// 根据生成器类型，获取生成器数据范围的高值(int)
-		float GetAmountHigh(GeneratorType type);
-
-		void ZeroAmount(GeneratorType type);
+		GeneratorAmount GetAmount(GeneratorType type);
 
 		// 根据生成器类型，设置生成器数据值
-		void SetAmount(GeneratorType type, float amount);
+		void SetAmount(GeneratorType type, GeneratorAmount amount);
 
-		// 根据生成器类型，设置生成器数据范围值
-		void SetAmountRange(GeneratorType type, float low, float high);
+		GeneratorAmount GetDefaultValue(GeneratorType genType);
 
-		float GetDefaultValue(GeneratorType genType);
+		// 钳位类型值的取值范围   
+		GeneratorAmount ClampValueRange(GeneratorType genType, GeneratorAmount value);
 
-		RangeFloat GetDefaultRangeValue(GeneratorType genType);
-
-		// 限制类型值的取值范围   
-		float LimitValueRange(GeneratorType genType, float value);
-
-
-		// 限制类型值的取值范围  
-		RangeFloat LimitRangeValueRange(GeneratorType genType, float low, float high);
 
 	private:
-		Generator* gens[64] = { nullptr };
-		RegionType type = RegionType::Instrument;
-
+		Generator gens[(int)GeneratorType::EndOper + 1];
 	};
 }
 
