@@ -1,8 +1,9 @@
 .vs
 Library
 .obj
-x64
 Win32
+.tlog
+portaudio\build\msvc\x64
 /TauTest/SoundFont/CrisisGeneralMidi301.sf2
 /TauTest/SoundFont/CrisisGeneralMidi301test.sf2
 /TauTest/SoundFont/Farfisa Grand Piano V4.sf2
@@ -26,3 +27,9 @@ Win32
 /TauTest/midi/Test087.mid
 /TauTest/midi/boundclip.mid
 /TauTest/midi/venture2.mid
+/portaudio/build/msvc/x64
+/rtaudio/msvc/x64
+/SDL2/VisualC/SDL/x64
+/Tau/msvc/Tau/x64
+/TauClr/x64
+/TauTest/x64
