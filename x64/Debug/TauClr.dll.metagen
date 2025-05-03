@@ -1,0 +1,55 @@
+ImageRuntimeVersion: v4.0.30319
+Assembly TauClr, Version=0.0.*, Culture=固定语言(固定国家/地区): 
+	hash=SHA1, flags=PublicKey
+Assembly mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Class TauClr.SoundFontSharp: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.IDisposable
+  Methods:
+    Parse(String, String): PrivateScope, Public, HideBySig
+    GetSoundFont(): PrivateScope, Public, HideBySig
+    Dispose(): PrivateScope, Public, Final, Virtual, HideBySig
+Struct TauClr.EditorState: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    TauClr.EditorState STOP = 0 : Public, Static, Literal, HasDefault
+    TauClr.EditorState PLAY = 1 : Public, Static, Literal, HasDefault
+    TauClr.EditorState PAUSE = 2 : Public, Static, Literal, HasDefault
+Class TauClr.InstrumentSharp: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.IDisposable
+  Methods:
+    SetVirInstrument(VirInstrument*): PrivateScope, Public, HideBySig
+    GetVirInstrument(): PrivateScope, Public, HideBySig
+    Dispose(): PrivateScope, Public, Final, Virtual, HideBySig
+Class TauClr.TauSharp: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.IDisposable
+  Methods:
+    EnableInstrument(Int32, Int32, Int32, Int32): PrivateScope, Public, HideBySig
+    OnKey(Int32, Single, InstrumentSharp): PrivateScope, Public, HideBySig
+    OnKey(Int32, Single, InstrumentSharp, Int32): PrivateScope, Public, HideBySig
+    OffKey(Int32, Single, InstrumentSharp): PrivateScope, Public, HideBySig
+    OffKey(Int32, Single, InstrumentSharp, Int32): PrivateScope, Public, HideBySig
+    Open(): PrivateScope, Public, HideBySig
+    IsLoadCompleted(): PrivateScope, Public, HideBySig
+    Load(String): PrivateScope, Public, HideBySig
+    Load(String, Boolean(HasFieldMarshal)): PrivateScope, Public, HideBySig
+    Play(): PrivateScope, Public, HideBySig
+    Stop(): PrivateScope, Public, HideBySig
+    Pause(): PrivateScope, Public, HideBySig
+    Close(): PrivateScope, Public, HideBySig
+    Goto(Single): PrivateScope, Public, HideBySig
+    GetEditorState(): PrivateScope, Public, HideBySig
+    GetPlaySec(): PrivateScope, Public, HideBySig
+    GetEndSec(): PrivateScope, Public, HideBySig
+    SetSpeed(Single): PrivateScope, Public, HideBySig
+    SetSoundFont(SoundFontSharp): PrivateScope, Public, HideBySig
+    Dispose(): PrivateScope, Public, Final, Virtual, HideBySig
