@@ -3,7 +3,6 @@ Library
 .obj
 Win32
 .tlog
-portaudio\build\msvc\x64
 /TauTest/SoundFont/CrisisGeneralMidi301.sf2
 /TauTest/SoundFont/CrisisGeneralMidi301test.sf2
 /TauTest/SoundFont/Farfisa Grand Piano V4.sf2
