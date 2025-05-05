@@ -234,6 +234,17 @@ namespace tau
 		ReCache();
 	}
 
+	//设置通道声音增益(单位:dB)
+	void Synther::SetChannelVolumeGain(int channelIdx, float gainDB)
+	{
+		if (channelIdx == -1)
+			midiEditor->SetChannelVolumeGain(-1, gainDB);
+		else
+			midiEditor->SetChannelVolumeGain(channelIdx, gainDB);
+
+		ReCache();
+	}
+
 	//设置轨道事件演奏方式
 	void Synther::SetTrackPlayType(Track* track, MidiEventPlayType playType)
 	{

@@ -56,30 +56,15 @@ namespace tau
 
 	struct RecordTempo;
 	struct LfoModInfo;
-	struct EnvModInfo;
 	struct SamplesLinkToInstZoneInfo;
 	struct InstLinkToPresetZoneInfo;
-	struct LineEquationInfo;
-
-
-	using SampleList = vector<Sample*>;
-	using SampleGenList = vector<SampleGenerator*>;
-	using InstrumentList = vector<Instrument*>;
-	using LineEquationInfoList = vector <LineEquationInfo>;
-	using ZoneSounderThreadDataList = vector <ZoneSounderThreadData*>;
-	using MidiEditorList = vector <MidiEditor*>;
-	using MidiFileList = vector <MidiFile*>;
-	using GeneratorTypeList = vector <GeneratorType>;
-	using VirInstList = vector <VirInstrument*>;
-	using ModPresetTypeList = vector<ModInputPreset>;
-
-
-	using ZoneSounderQueue = list<ZoneSounder*>;
 
 
 	using PresetMap = unordered_map<uint32_t, Preset*>;
 	using SoundFontParserMap = unordered_map<string, SoundFontParser*>;
 
+
+	typedef unsigned char byte;
 	typedef uint64_t KeySounderID;
 
 	using UnitTransformCallBack = float (*)(float value);

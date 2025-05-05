@@ -226,6 +226,9 @@ namespace tau
 		// 启用播放指定编号通道
 		void EnableChannel(int channelIdx);
 
+		//设置通道声音增益(单位:dB)
+		void SetChannelVolumeGain(int channelIdx, float gainDB);
+
 		//设置排除需要等待的按键
 		void SetExcludeNeedWaitKeys(int* excludeKeys, int size);
 

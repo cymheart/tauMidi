@@ -109,14 +109,38 @@
     <Filter Include="thrids\ogg_vorbis">
       <UniqueIdentifier>{0ae67c23-53c3-4ec6-bd34-0376e0a4dadd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="thrids\ogg_vorbis\ogg">
-      <UniqueIdentifier>{834e1b06-df60-407a-aaec-079b69002beb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="thrids\ogg_vorbis\vorbis">
-      <UniqueIdentifier>{75d525dc-55b5-490a-82d8-4341642ab0f7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="core\SoundFontFormat\SF3">
       <UniqueIdentifier>{9d77b859-496c-4c11-b13b-710d71d19ee0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\include">
+      <UniqueIdentifier>{ccb7031a-b26b-4f1b-9779-7641c7d64840}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\include\ogg">
+      <UniqueIdentifier>{8e4615ef-f608-4054-8e9b-e9d17e65b111}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\include\vorbis">
+      <UniqueIdentifier>{ccc31428-4fa4-43c0-921a-525ab461a3b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\libogg">
+      <UniqueIdentifier>{cdbe4d55-10f7-4db3-ba00-7294bc84ad61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\libvorbis">
+      <UniqueIdentifier>{6429729f-6ef0-475b-8a77-9120c4bd37f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\libvorbis\books">
+      <UniqueIdentifier>{ba2b1ec1-ef00-47a4-80df-56d8c7c2621b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\libvorbis\books\coupled">
+      <UniqueIdentifier>{fa7e594e-37d9-4218-8241-1c513f36552e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\libvorbis\books\floor">
+      <UniqueIdentifier>{5ac76011-213f-4e28-8b47-e5b7e52c479f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\libvorbis\books\uncoupled">
+      <UniqueIdentifier>{3b2ca47a-59a3-4d59-aa03-76644be6e116}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thrids\ogg_vorbis\libvorbis\modes">
+      <UniqueIdentifier>{46c6731f-1f2f-4b55-9858-2b5f41b41728}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -698,6 +722,81 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\SoundFontFormat\SF3\SF3Parser.cpp">
       <Filter>core\SoundFontFormat\SF3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libogg\bitwise.c">
+      <Filter>thrids\ogg_vorbis\libogg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libogg\framing.c">
+      <Filter>thrids\ogg_vorbis\libogg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\analysis.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\barkmel.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\bitrate.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\block.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\codebook.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\envelope.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\floor0.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\floor1.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\info.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\lookup.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\lpc.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\lsp.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\mapping0.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\mdct.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\psy.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\registry.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\res0.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\sharedbook.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\smallft.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\synthesis.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\vorbisenc.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\vorbisfile.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\window.c">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1397,23 +1496,160 @@
     <ClInclude Include="..\..\src\thrids\sf3\sfont.h">
       <Filter>thrids\sf3</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\thrids\ogg_vorbis\ogg\ogg.h">
-      <Filter>thrids\ogg_vorbis\ogg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\thrids\ogg_vorbis\ogg\os_types.h">
-      <Filter>thrids\ogg_vorbis\ogg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\thrids\ogg_vorbis\vorbis\codec.h">
-      <Filter>thrids\ogg_vorbis\vorbis</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\thrids\ogg_vorbis\vorbis\vorbisenc.h">
-      <Filter>thrids\ogg_vorbis\vorbis</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\thrids\ogg_vorbis\vorbis\vorbisfile.h">
-      <Filter>thrids\ogg_vorbis\vorbis</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\SoundFontFormat\SF3\SF3Parser.h">
       <Filter>core\SoundFontFormat\SF3</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\ogg\config_types.h">
+      <Filter>thrids\ogg_vorbis\include\ogg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\ogg\ogg.h">
+      <Filter>thrids\ogg_vorbis\include\ogg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\ogg\os_types.h">
+      <Filter>thrids\ogg_vorbis\include\ogg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\vorbis\codec.h">
+      <Filter>thrids\ogg_vorbis\include\vorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\vorbis\vorbisenc.h">
+      <Filter>thrids\ogg_vorbis\include\vorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\vorbis\vorbisfile.h">
+      <Filter>thrids\ogg_vorbis\include\vorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libogg\crctable.h">
+      <Filter>thrids\ogg_vorbis\libogg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\backends.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\bitrate.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\codebook.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\codec_internal.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\envelope.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\highlevel.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\lookup.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\lookup_data.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\lpc.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\lsp.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\masking.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\mdct.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\misc.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\os.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\psy.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\registry.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\scales.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\smallft.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\window.h">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\books\coupled\res_books_51.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\books\coupled</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\books\coupled\res_books_stereo.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\books\coupled</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\books\floor\floor_books.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\books\floor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\books\uncoupled\res_books_uncoupled.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\books\uncoupled</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\floor_all.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\psych_8.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\psych_11.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\psych_16.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\psych_44.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\residue_8.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\residue_16.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\residue_44.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\residue_44p51.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\residue_44u.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_8.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_11.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_16.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_22.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_32.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_44.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_44p51.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_44u.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_X.h">
+      <Filter>thrids\ogg_vorbis\libvorbis\modes</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\thrids\ogg_vorbis\libvorbis\lookups.pl">
+      <Filter>thrids\ogg_vorbis\libvorbis</Filter>
+    </None>
   </ItemGroup>
 </Project>

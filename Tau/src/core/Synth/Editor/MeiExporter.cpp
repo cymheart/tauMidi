@@ -1718,7 +1718,7 @@ namespace tau
 		VirElem* elem;
 		for (int i = 0; i < elems.size(); i++) {
 			elem = elems[i];
-			ElemFrag frag = {i, elem->startTick, elem->endTick, elem};
+			ElemFrag frag = {i, (uint32_t)elem->startTick, (uint32_t)elem->endTick, elem};
 			frags.push_back(frag);
 		}
 
@@ -1850,7 +1850,7 @@ namespace tau
 				continue;
 			
 			if (t <= 0.0001f) {
-				NoteValueInfo info = {1-t, i};
+				NoteValueInfo info = {(float)(1-t), i};
 				return info;
 			}
 
@@ -1863,7 +1863,7 @@ namespace tau
 			}
 		}
 
-		NoteValueInfo info = { maxVal, maxIdx };
+		NoteValueInfo info = { (float)maxVal, maxIdx };
 		return info;
 	}
 

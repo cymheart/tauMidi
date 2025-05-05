@@ -157,12 +157,6 @@ namespace tau
 			return volEnv->GetStage();
 		}
 
-		// 获取音量包络的当前值
-		inline float GetVolEnvCurtValue()
-		{
-			return volEnv->GetCurtValue();
-		}
-
 		// 设置力度
 		void SetVelocity(float vel);
 
@@ -171,6 +165,7 @@ namespace tau
 
 
 		// 松开按键    
+	    // releaseSec : 重设按键释放时长， -1为不设置
 		void OffKey(float velocity, float releaseSec = -1);
 
 		void SetFrameBuffer(float* leftChannelBuf, float* rightChannelBuf);

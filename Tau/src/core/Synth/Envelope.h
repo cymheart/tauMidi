@@ -18,7 +18,7 @@ namespace tau
 
 	// 包络线阶段
 	//by cymheart, 2020--2021.
-	enum class EnvStage
+	enum class EnvStage:int
 	{
 
 		// 停止   
@@ -48,19 +48,6 @@ namespace tau
 		Count
 	};
 
-	// 阶段范围信息
-	struct StageRangeInfo
-	{
-		// x轴范围
-		float xmin = 0, xmax = 0;
-		// y轴范围
-		float ymin = 0, ymax = 0;
-		float xRangeWidth = 0, xRangeWidthInv = 0;
-		float yRangeWidth = 0;
-
-	};
-
-
 	// 包络线
 	//by cymheart, 2020--2025.
 	class Envelope
@@ -82,32 +69,20 @@ namespace tau
 
 		// 松开按键
 		// <param name="sec">松开按键的时间点，秒</param>
-		void OffKey(float sec, float releaseSec = -1);
+		// <param name="resetReleaseSec">重设按键释放时长，-1为不重新设置</param>
+		void OffKey(float sec, float resetReleaseSec = -1);
 
 		//包络线时间线是否停止
 		inline bool IsStop()
 		{
-			if (curtStage == EnvStage::Stop)
-				return true;
-			return false;
+			return stage == EnvStage::Stop;
 		}
 
-		// 获取当前包络阶段
-		inline EnvStage GetStage()
-		{
-			return curtStage;
-		}
-
-		// 设置阶段
-		void SetStage(EnvStage stage)
-		{
-			curtStage = stage;
-		}
-
+	
 		// 设置基准秒
-		void SetBaseSec(float baseSec)
+		void SetBaseSec(float sec)
 		{
-			this->baseSec = baseSec;
+			baseSec = sec;
 		}
 
 		// 获取基准秒
@@ -128,6 +103,12 @@ namespace tau
 			return curtValue;
 		}
 
+		// 获取包络所处阶段
+		EnvStage GetStage()
+		{
+			return stage;
+		}
+
 		// 根据时间点获取包络线的值
 		// <param name="sec">秒</param>
 		float GetEnvValue(float sec);
@@ -145,19 +126,9 @@ namespace tau
 		void CalRealHoldSec();
 		void CalRealDecaySec();
 
-		//  根据给定的时间点，设置包络线所处阶段   
-		// <param name="sec">时间点</param>
-		void SetCurtStage(float sec);
-
-		void SetStageRangeInfo(StageRangeInfo& range, float xmin, float xmax, float ymin, float ymax);
-		float ComputeStageValueY(EnvStage stage, float x);
-
 	public:
 		//包络类型
 		EnvelopeType type = EnvelopeType::Vol;
-
-		// 幅值
-		float amp = 1;
 
 		// 延迟时长
 		// delaySec最小值如果没有设置必须默认为0，不然会有断音现象
@@ -166,8 +137,10 @@ namespace tau
 		// 起音时长
 		float attackSec = 0.001f;
 
-		// 延音所在y位置：范围[0,1]
-		float sustainY = 1;
+		// 延音所在位置：
+		// vol: [0, -100dB]
+		// mod: [1, 0]
+		float sustain = 0;
 
 		// 释音时长
 		float releaseSec = 0.001f;
@@ -181,17 +154,9 @@ namespace tau
 		short decayTimecents = -12000;
 
 
-
-		//当前点在包络线上原始点值
-		float curtValue = 0;
-
-
 	protected:
 
-		StageRangeInfo stageRangeInfo[(int)(EnvStage::Count)];
-
-		// 当前包络阶段
-		EnvStage curtStage = EnvStage::Stop;
+		EnvStage stage = EnvStage::Stop;
 
 		// 被启动的时间点
 		float openSec = 0;
@@ -202,23 +167,42 @@ namespace tau
 		// 当前按键号
 		int noteKeyNum = 60;
 
-		// 松开按键的时间点，以0为参考点
-		float offKeySec = 0;
-
-		// 基时间点
+		// 基时间点,这个时间点表示包络从那个阶段起始计算
+		// 正常baseSec为0，表示包络从delay阶段开始计算
 		float baseSec = 0;
 
 		// 当前时间点
 		float curtSec = 0;
 
+		// 原始释音时长
+		float orgReleaseSec = -1;
+
 		float realDecaySec = 0;
 		float realHoldSec = 0;
 
-		//是否快速释音
-		bool isFastRelease = false;
+		//当前点在包络线上原始点值(单位:dB)
+		float curtValue = 0;
 
 		float oldSec = -1;
 		float oldOutput = 0;
+
+		//起音结束时间点
+		float attackEndSec = 0; 
+		//保持结束时间点
+		float holdEndSec = 0;
+		//衰减结束时间点
+		float decayEndSec = 0;
+		//释放开始时间点
+		float releaseStartSec = 0;
+		//释放结束时间点
+		float releaseEndSec = 0;
+
+		//释放阶段包络最大值(单位:dB)
+		float releaseMaxEnvValue = 0;
+
+		//
+		float sustainMax = 0;
+		float sustainMin = 0;
 
 	};
 }

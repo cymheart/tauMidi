@@ -282,6 +282,12 @@ namespace tau
 		editor->EnableChannel(channelIdx);
 	}
 
+	//设置通道声音增益(单位:dB)
+	void Tau::SetChannelVolumeGain(int channelIdx, float gainDB)
+	{
+		editor->SetChannelVolumeGain(channelIdx, gainDB);
+	}
+
 
 	void Tau::SetSelectInstFragMode(SelectInstFragMode mode)
 	{

@@ -116,7 +116,7 @@ namespace tau
 		}
 
 
-		SampleList& sampleList = *sf->GetSampleList();
+		vector<Sample*>& sampleList = *sf->GetSampleList();
 
 		for (int i = 0; i < sampleLinkInfo.size(); i++)
 		{
@@ -156,7 +156,7 @@ namespace tau
 		//sf区域列表
 		vector<SF2Bag*>& bags = sf2->hydraChunk->ibagSubChunk->bags;
 		vector<SF2GeneratorList*>& sf2Gens = sf2->hydraChunk->igenSubChunk->generators;
-		SampleList& sampleList = *sf->GetSampleList();
+		vector<Sample*>& sampleList = *sf->GetSampleList();
 		Zone* zone;
 
 		int genStart = bags[bagIdx]->GeneratorIndex;
@@ -181,6 +181,7 @@ namespace tau
 
 		//设置生成器列表数据
 		GeneratorList& genList = zone->GetGens();
+		genList.SetZoneType(ZoneType::Instrument);
 		GeneratorAmount genAmount;
 		SF2GeneratorAmount sf2GenAmount;
 		for (int i = genStart; i <= genEnd; i++)
@@ -263,7 +264,7 @@ namespace tau
 		//sf区域列表
 		vector<SF2Bag*>& bags = sf2->hydraChunk->pbagSubChunk->bags;
 		vector<SF2GeneratorList*>& sf2Gens = sf2->hydraChunk->pgenSubChunk->generators;
-		InstrumentList& instList = *sf->GetInstrumentList();
+		vector<Instrument*>& instList = *sf->GetInstrumentList();
 
 		Zone* zone;
 
@@ -288,6 +289,7 @@ namespace tau
 
 		//设置生成器列表数据
 		GeneratorList& genList = zone->GetGens();
+		genList.SetZoneType(ZoneType::Preset);
 		GeneratorAmount genAmount;
 		SF2GeneratorAmount sf2GenAmount;
 		for (int i = genStart; i <= genEnd; i++)

@@ -496,6 +496,13 @@ namespace tau
 		synther->EnableChannel(channelIdx);
 	}
 
+	//设置通道声音增益(单位:dB)
+	void Editor::SetChannelVolumeGain(int channelIdx, float gainDB)
+	{
+		TauLock(tau);
+		synther->SetChannelVolumeGain(channelIdx, gainDB);
+	}
+		
 
 	////获取采样流的频谱
 	//int Editor::GetSampleStreamFreqSpectrums(int channel, double* outLeft, double* outRight)

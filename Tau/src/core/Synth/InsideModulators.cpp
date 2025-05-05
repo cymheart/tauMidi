@@ -60,6 +60,8 @@ namespace tau
 		CreateInsideModulationWheelModulator();
 		CreateInsidePitchBendModulator();
 		CreateInsidePloyPressureModulator();
+		CreateInsideChordSendModulator();
+		CreateInsideReverbSendModulator();
 	}
 
 	//根据指定类型启用内部控制器调制器
@@ -204,7 +206,6 @@ namespace tau
 		mod->SetOutTarget(GeneratorType::InitialAttenuation);
 		mod->SetOutOp(OutOpType::Add);
 		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 0);
-		mod->SetOutUnitTransform(UnitTransform::GainToDecibels);
 		mod->SetAbsType(ModTransformType::Negative);
 		mod->SetAmount(1);
 		insideCtrlMod[(int)MidiControllerType::ChannelVolumeMSB] = mod;
@@ -252,7 +253,7 @@ namespace tau
 		mod->SetOutTarget(GeneratorType::CoarseTune);
 		mod->SetOutOp(OutOpType::Add);
 		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 1);
-		mod->SetAmount(64);
+		mod->SetAmount(10);
 		insidePresetMod[(int)ModInputPreset::PitchWheel] = mod;
 	}
 
@@ -273,4 +274,32 @@ namespace tau
 		mod->SetAmount(127);
 		insidePresetMod[(int)ModInputPreset::PolyPressure] = mod;
 	}
+
+
+	//生成内部和声调制器
+	void InsideModulators::CreateInsideChordSendModulator()
+	{
+		Modulator* mod = new Modulator();
+		mod->SetType(ModulatorType::Inside);
+		mod->SetCtrlModulatorInputInfo(MidiControllerType::Effects3DepthChorusSend, 0);
+		mod->SetOutTarget(GeneratorType::ChorusEffectsSend);
+		mod->SetOutOp(OutOpType::Mul);
+		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 0);
+		mod->SetAmount(1);
+		insideCtrlMod[(int)MidiControllerType::Effects3DepthChorusSend] = mod;
+	}
+
+	//生成内部混音调制器
+	void InsideModulators::CreateInsideReverbSendModulator()
+	{
+		Modulator* mod = new Modulator();
+		mod->SetType(ModulatorType::Inside);
+		mod->SetCtrlModulatorInputInfo(MidiControllerType::Effects1DepthReverbSend, 0);
+		mod->SetOutTarget(GeneratorType::ReverbEffectsSend);
+		mod->SetOutOp(OutOpType::Mul);
+		mod->SetSourceTransform(0, ModSourceTransformType::Linear, 0, 0);
+		mod->SetAmount(1);
+		insideCtrlMod[(int)MidiControllerType::Effects1DepthReverbSend] = mod;
+	}
+
 }

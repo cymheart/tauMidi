@@ -41,12 +41,28 @@ namespace tau
 			mEndTick = 0;
 		}
 
+		MeasureData* GetMeasureDatas() {
+			return measure;
+		}
+
 		//获取小节数量
 		int GetMeasureCount()
 		{
 			return measureNum;
 		}
 
+		//获取结束tick
+		int GetEndTick()
+		{
+			return mEndTick;
+		}
+
+		//获取结束sec
+		float GetEndSec()
+		{
+			return mEndSec;
+		}
+		
 		//获取指定小节的开始时间点
 		float GetMeasureStartSec(int i)
 		{

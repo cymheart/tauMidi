@@ -57,15 +57,22 @@ namespace tau
 				}
 			}
 
-			MidiMarkerInfo info = {
-				startSec,
-				startTick,
-				microTempo, num, den
-			};
+			MidiMarkerInfo info;
+			info.startSec = startSec;
+			info.startTick = startTick;
+			info.microTempo = microTempo;
+			info.num = num;
+			info.den = den;
 			midiMarkerInfos.push_back(info);
 		}
 
-		midiMarkerInfos.push_back({0, midiEndTick, 0, 0, 0});
+		MidiMarkerInfo info;
+		info.startSec = 0;
+		info.startTick = midiEndTick;
+		info.microTempo = 0;
+		info.num = 0;
+		info.den = 0;
+		midiMarkerInfos.push_back(info);
 
 
 		for (int i = 0; i < midiMarkerInfos.size() - 1; i++) 

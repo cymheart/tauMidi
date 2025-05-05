@@ -38,8 +38,8 @@ namespace SfTools {
 //---------------------------------------------------------
 
 struct sfVersionTag {
-    int major;
-    int minor;
+    int major = 0;
+    int minor = 0;
 };
 
 enum Modulator {
@@ -74,7 +74,7 @@ enum Transform { Linear };
 struct ModulatorList {
     Modulator src;
     Generator dst;
-    int amount;
+    int amount = 0;
     Modulator amtSrc;
     Transform transform;
 };
@@ -84,7 +84,7 @@ struct ModulatorList {
 //---------------------------------------------------------
 
 union GeneratorAmount {
-    short sword;
+    short sword = 0;
     uint16_t uword;
     struct {
         uint8_t lo, hi;
@@ -92,7 +92,7 @@ union GeneratorAmount {
 };
 
 struct GeneratorList {
-    Generator gen;
+    Generator gen = Generator::Gen_StartAddrOfs;
     GeneratorAmount amount;
 };
 
@@ -103,7 +103,7 @@ struct GeneratorList {
 struct Zone {
     LinkedList<GeneratorList*> generators;
     LinkedList<ModulatorList*> modulators;
-    int instrumentIndex;
+    int instrumentIndex = 0;
 };
 
 //---------------------------------------------------------
@@ -111,13 +111,13 @@ struct Zone {
 //---------------------------------------------------------
 
 struct Preset {
-    char* name;
-    int preset;
-    int bank;
-    int presetBagNdx; // used only for read
-    int library;
-    int genre;
-    int morphology;
+    char* name = nullptr;
+    int preset = 0;
+    int bank = 0;
+    int presetBagNdx = 0; // used only for read
+    int library = 0;
+    int genre = 0;
+    int morphology = 0;
     LinkedList<Zone*> zones;
 
     Preset():name(0), preset(0), bank(0), presetBagNdx(0), library(0), genre(0), morphology(0) {}
@@ -128,8 +128,8 @@ struct Preset {
 //---------------------------------------------------------
 
 struct Instrument {
-    char* name;
-    int index;        // used only for read
+    char* name = nullptr;
+    int index = 0;        // used only for read
     LinkedList<Zone*> zones;
 
     Instrument();
@@ -141,17 +141,17 @@ struct Instrument {
 //---------------------------------------------------------
 
 struct Sample {
-    char* name;
-    uint32_t start;
-    uint32_t end;
-    uint32_t loopstart;
-    uint32_t loopend;
-    uint32_t samplerate;
+    char* name = nullptr;
+    uint32_t start = 0;
+    uint32_t end = 0;
+    uint32_t loopstart = 0;
+    uint32_t loopend = 0;
+    uint32_t samplerate = 0;
 
-    int origpitch;
-    int pitchadj;
-    int sampleLink;
-    int sampletype;
+    int origpitch = 0;
+    int pitchadj = 0;
+    int sampleLink = 0;
+    int sampletype = 0;
 
     Sample();
     ~Sample();
@@ -165,20 +165,20 @@ class SoundFont {
 public:
     string path;
     sfVersionTag version;
-    char* engine;
-    char* name;
-    char* date;
-    char* comment;
-    char* tools;
-    char* creator;
-    char* product;
-    char* copyright;
-    char* irom;
+    char* engine = nullptr;
+    char* name = nullptr;
+    char* date = nullptr;
+    char* comment = nullptr;
+    char* tools = nullptr;
+    char* creator = nullptr;
+    char* product = nullptr;
+    char* copyright = nullptr;
+    char* irom = nullptr;
     sfVersionTag iver;
 
-    int samplePos;
-    int sampleLen;
-    size_t fileLen;
+    int samplePos = 0;
+    int sampleLen = 0;
+    size_t fileLen = 0;
 
     LinkedList<Preset*> presets;
     LinkedList<Instrument*> instruments;
@@ -189,15 +189,15 @@ public:
 
 private:
 
-    ByteStream* _file;
-    FILE* f;
+    ByteStream* _file = nullptr;
+    FILE* f = nullptr;
 
     bool isBigEndianSys = false;
 
-    bool _compress;
-    double _oggQuality;
-    double _oggAmp;
-    int64_t _oggSerial;
+    bool _compress = false;
+    double _oggQuality = 0;
+    double _oggAmp = 0;
+    int64_t _oggSerial = 0;
 
     unsigned readDword();
     int readWord();
@@ -261,7 +261,7 @@ public:
     void dumpPresets();
 
     // Extra option
-    bool smallSf;
+    bool smallSf = false;
 
 };
 }

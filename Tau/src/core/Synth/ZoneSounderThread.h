@@ -63,8 +63,8 @@ namespace tau
 		Synther* synther = nullptr;
 		Tau* tau = nullptr;
 		atomic_int threadStopedCount;
-		ZoneSounderQueue zoneSounderQueue;
-		ZoneSounderThreadDataList threads;
+		list<ZoneSounder*> zoneSounderQueue;
+		vector<ZoneSounderThreadData*> threads;
 		volatile int freeThreadIdx = 0;
 		volatile int processCount = 0;
 		mutex locker;

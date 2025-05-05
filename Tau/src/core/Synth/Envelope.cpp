@@ -14,156 +14,35 @@ namespace tau
 
 	void Envelope::Clear()
 	{
-		amp = 1;
+		stage = EnvStage::Stop;
 		delaySec = 0;
 		attackSec = 0.001f;
-		sustainY = 1;
+		sustain = 0;
 		releaseSec = 0.001f;
+		orgReleaseSec = -1;
 		keyToHold = 0;
 		keyToDecay = 0;
-		curtStage = EnvStage::Stop;
 		openSec = 0;
 		onKey = false;
 		noteKeyNum = 60;
-		offKeySec = 0;
 		baseSec = 0;
 		realDecaySec = 0;
 		realHoldSec = 0;
-		curtValue = 0;
+		curtValue = -100;
 		curtSec = 0;
-		isFastRelease = false;
 		oldSec = -1;
 		oldOutput = 0;
+		holdTimecents = -12000;
+		decayTimecents = -12000;
 	}
 
-	// 启动
-	void Envelope::OnKey(int noteKey, float sec)
-	{
-		curtStage = EnvStage::Delay;
-		onKey = true;
-		noteKeyNum = noteKey;
-		openSec = sec;
-		offKeySec = 0;
-		Reset(openSec);
-	}
-
-
-	// 松开按键
-	// <param name="sec">松开按键的时间点，秒</param>
-	void Envelope::OffKey(float sec, float releaseSec)
-	{
-		if (onKey == false)
-		{
-			if (releaseSec < 0)
-				return;
-
-			StageRangeInfo& range = stageRangeInfo[(int)EnvStage::Release];
-			if (range.xmax < releaseSec ||
-				abs(releaseSec - range.xmax) < 0.0001)
-				return;
-
-			isFastRelease = true;
-			SetStageRangeInfo(range, 0, releaseSec, 0, curtValue);
-			offKeySec = sec - openSec;
-			return;
-		}
-
-		onKey = false;
-		offKeySec = sec - openSec;
-		//
-		StageRangeInfo& range = stageRangeInfo[(int)EnvStage::Release];
-		if (curtStage == EnvStage::Delay)
-		{
-			SetStageRangeInfo(range, 0, 0, 0, 0);
-		}
-		else
-		{
-			if (releaseSec >= 0 &&
-				releaseSec < range.xmax)
-			{
-				isFastRelease = true;
-				SetStageRangeInfo(range, 0, releaseSec, 0, curtValue);
-			}
-			else
-			{
-				SetStageRangeInfo(range, 0, range.xmax, 0, curtValue);
-			}
-		}
-	}
-
-
-	// 根据时间点获取包络线的值
-	// <param name="sec">秒</param>
-	float Envelope::GetEnvValue(float sec)
-	{
-	//	if (sec == oldSec)
-	//		return oldOutput;
-
-		curtSec = sec;
-		if (curtStage == EnvStage::Stop)
-		{
-			curtValue = 0;
-			return curtValue;
-		}
-
-		bool isSustainStage = true;
-		//按下按键
-		if (onKey)
-		{
-			sec = sec + baseSec - openSec;
-
-			if (curtStage != EnvStage::Sustain)
-			{
-				for (int i = (int)curtStage; i < (int)EnvStage::Sustain; i++)
-				{
-					if (sec >= stageRangeInfo[i].xmin && sec <= stageRangeInfo[i].xmax)
-					{
-						curtStage = (EnvStage)i;
-						curtValue = ComputeStageValueY(curtStage, sec);
-						isSustainStage = false;
-
-					}
-				}
-			}
-
-			if (isSustainStage == true)
-			{
-				curtStage = EnvStage::Sustain;
-				curtValue = ComputeStageValueY(curtStage, sec);
-			}
-		}
-		else
-		{
-			//在包络线的任何阶段松开按键，都将直接进入释音阶段   
-			sec = sec - offKeySec;
-			curtStage = EnvStage::Release;
-			if (sec <= stageRangeInfo[(int)curtStage].xmax)
-			{
-				curtValue = ComputeStageValueY(curtStage, sec);
-			}
-			else
-			{
-				curtStage = EnvStage::Stop;
-				curtValue = 0;
-			}
-		}
-
-
-		oldSec = sec;
-		oldOutput = curtValue;;
-
-		return curtValue;
-	}
-
-
+	
 	// 生成包络线
 	void Envelope::Create()
 	{
 		Reset();
 
-		curtStage = EnvStage::Stop;
 		onKey = false;
-		offKeySec = 0;
 		openSec = 0;
 		curtValue = 0;
 	}
@@ -178,24 +57,24 @@ namespace tau
 		CalRealDecaySec();
 		baseSec = 0;
 		curtSec = sec;
-		isFastRelease = false;
+
+		if (type == EnvelopeType::Vol) {
+			sustainMin = -144;
+			sustainMax = 0;
+		}else {
+			sustainMin = 0;
+			sustainMax = 1;
+		}
+
+		sustain = max(sustain, sustainMin);
+		sustain = min(sustain, sustainMax);
 
 		//当包络线处于延音阶段时，采样音会一直在某个采样段循环播放，直到松开按键后，将进入释音阶段
 		//此时声音的时间会重新以0点为参考
 		//注意在包络线的任何阶段松开按键，都将直接进入释音阶段
-		float attackEndSec = delaySec + attackSec;
-		float holdEndSec = attackEndSec + realHoldSec;
-		float decayEndSec = holdEndSec + realDecaySec;
-		SetStageRangeInfo(stageRangeInfo[(int)(EnvStage::Delay)], 0, delaySec, 0, 0);
-		SetStageRangeInfo(stageRangeInfo[(int)(EnvStage::Attack)], delaySec, attackEndSec, 0, 1);
-		SetStageRangeInfo(stageRangeInfo[(int)(EnvStage::Hold)], attackEndSec, holdEndSec, 1, 1);
-		SetStageRangeInfo(stageRangeInfo[(int)(EnvStage::Decay)], holdEndSec, decayEndSec, sustainY, 1);
-		SetStageRangeInfo(stageRangeInfo[(int)(EnvStage::Sustain)], 0, 0, sustainY, sustainY);
-		SetStageRangeInfo(stageRangeInfo[(int)(EnvStage::Release)], 0, releaseSec, 0, sustainY);
-
-
-		//根据给定的时间点，设置包络线所处阶段
-		SetCurtStage(sec);
+		attackEndSec = delaySec + attackSec;
+		holdEndSec = attackEndSec + realHoldSec;
+		decayEndSec = holdEndSec + realDecaySec;
 	}
 
 
@@ -242,121 +121,119 @@ namespace tau
 	}
 
 
-	//  根据给定的时间点，设置包络线所处阶段
-	// <param name="sec">时间点</param>
-	void Envelope::SetCurtStage(float sec)
+	// 启动
+	void Envelope::OnKey(int noteKey, float sec)
 	{
-		curtSec = sec;
-		if (sec - openSec < 0)
-		{
-			curtStage = EnvStage::Stop;
+		if (stage != EnvStage::Stop)
 			return;
+
+		stage = EnvStage::Delay;
+		onKey = true;
+		noteKeyNum = noteKey;
+		openSec = sec;
+		
+		if(orgReleaseSec > 0)
+			releaseSec = orgReleaseSec;
+
+		Reset(openSec);
+		//
+		GetEnvValue(sec);
+	}
+
+
+	// 松开按键
+	// <param name="sec">松开按键的时间点，秒</param>
+	// <param name="releaseSec">重设按键释放时长</param>
+	void Envelope::OffKey(float sec, float resetReleaseSec)
+	{
+		if (stage == EnvStage::Stop)
+			return;
+
+		stage = EnvStage::Release;
+
+		if (onKey) {
+			onKey = false;
+			if (resetReleaseSec < 0)
+				return;
+
+			if (orgReleaseSec < 0)
+				orgReleaseSec = releaseSec;
+			releaseSec = resetReleaseSec;
 		}
 
-		if (onKey == false)
+
+		//当按键已经松开后，下面代码只调整键释放时长
+		if (resetReleaseSec < 0)
+			return;
+
+		sec = baseSec + sec - openSec;
+		//当要重设的释放时长大于目前释放时长时，将不从设释放时长
+		if (releaseEndSec - sec < resetReleaseSec)
+			return;
+
+		//根据当前值和时间点，动态设置释放时间范围和值范围
+		releaseStartSec = sec;
+		releaseMaxEnvValue = curtValue;
+		releaseEndSec = releaseStartSec + resetReleaseSec;	
+	}
+
+
+	// 根据时间点获取包络线的值
+	float Envelope::GetEnvValue(float sec)
+	{
+
+		if (stage == EnvStage::Stop)
+			return sustainMin;
+
+		curtValue = sustainMin;
+		curtSec = baseSec + sec - openSec;
+
+		if (onKey) 
 		{
-			sec -= offKeySec;
-			StageRangeInfo& range = stageRangeInfo[(int)EnvStage::Release];
-			if (sec >= range.xmin && sec <= range.xmax)
-				curtStage = EnvStage::Release;
-			else
-				curtStage = EnvStage::Stop;
-		}
-		else
-		{
-			sec -= openSec;
-			for (int i = (int)EnvStage::Delay; i < (int)EnvStage::Sustain; i++)
+			if (curtSec < delaySec) { //Delay阶段
+				stage = EnvStage::Delay;
+				curtValue = sustainMin;
+			}
+			else if (curtSec < attackEndSec) //attack阶段
 			{
-				if (sec >= stageRangeInfo[i].xmin && sec <= stageRangeInfo[i].xmax)
-				{
-					curtStage = (EnvStage)i;
-					return;
-				}
+				stage = EnvStage::Attack;
+				float t = (curtSec - delaySec) / (attackEndSec - delaySec);
+				curtValue = sustainMin + (sustainMax - sustainMin) * t;
+
+			}
+			else if (curtSec < holdEndSec) //hold阶段
+			{
+				stage = EnvStage::Hold;
+				curtValue = sustainMax;
+			}
+			else if (curtSec < decayEndSec) //decay阶段
+			{
+				stage = EnvStage::Decay;
+				float t = (curtSec - holdEndSec) / (decayEndSec - holdEndSec);
+				curtValue = sustainMax + (sustain - sustainMax) * t;
+			}
+			else {  //sustain阶段
+				stage = EnvStage::Sustain;
+				curtValue = sustain;
 			}
 
-			curtStage = EnvStage::Sustain;
+			//根据当前值和时间点，动态设置释放时间范围和值范围
+			releaseStartSec = curtSec;
+			releaseMaxEnvValue = curtValue;
+			releaseEndSec = releaseStartSec + releaseSec;		
 		}
-	}
+		else if(curtSec < releaseEndSec){  //release阶段
+			stage = EnvStage::Release;
+			float t = (curtSec - releaseStartSec) / releaseSec;
+			curtValue = releaseMaxEnvValue + (sustainMin - releaseMaxEnvValue) * t;
 
-
-	float Envelope::ComputeStageValueY(EnvStage stage, float x)
-	{
-		StageRangeInfo range = stageRangeInfo[(int)stage];
-		//float xNormal = (x - range.xmin) / (range.xmax - range.xmin)
-		float xNormal = 0;
-		if (range.xRangeWidth != 0)
-			xNormal = (x - range.xmin) * range.xRangeWidthInv;
-
-		float y;
-
-		switch (stage)
-		{
-		case EnvStage::Delay:
-			y = 0;
-			break;
-
-		case EnvStage::Attack:
-			//y = xNormal < 1 ? 1 - pow(10.0f, -(xNormal * 20 * 0.05f)) : 1;
-			if (attackSec < 0.4f)
-				y = powf(xNormal, 4);
-			else
-				y = xNormal;
-
-			break;
-
-		case EnvStage::Hold:
-			y = 1;
-			break;
-
-		case EnvStage::Sustain:
-			y = range.ymax;
-			break;
-
-		case EnvStage::Decay:
-			if (type == EnvelopeType::Vol)
-				y = xNormal < 1 ? FastPow2(-(xNormal * 12)) : 0;
-			else
-				y = 1 - powf(xNormal, 0.8);
-
-			y = range.ymin + y * range.yRangeWidth;
-			break;
-		case EnvStage::Release:
-		{
-			//y = xNormal < 1 ? pow(10.0f, -(xNormal * 200 * 0.05f)) : 0;
-			//if (!isFastRelease)
-			//	y = xNormal < 1 ? FastPow2(-(xNormal * 20)) : 0;
-			//else
-			//y = 1 - xNormal;
-
-			//float x = 2 * xNormal - 1;
-			//y = (-(6 * x) / (1 + 5 * abs(x)) - 1) * 0.5f + 1;
-
-			y = xNormal < 1 ? powf(2, -(xNormal * 15)) : 0;
-			y = range.ymin + y * range.yRangeWidth;
-
+			if (curtValue == sustainMin)
+				stage = EnvStage::Stop;
 		}
-		break;
-
-
-		default:
-			y = 0;
-			break;
+		else if (curtValue == sustainMin) {
+			stage = EnvStage::Stop;
 		}
 
-		return y;
+		return curtValue;
 	}
-
-
-	void Envelope::SetStageRangeInfo(StageRangeInfo& range, float xmin, float xmax, float ymin, float ymax)
-	{
-		range.xmin = xmin;
-		range.xmax = xmax;
-		range.xRangeWidth = xmax - xmin;
-		if (range.xRangeWidth == 0) { range.xRangeWidthInv = 9999999; }
-		else { range.xRangeWidthInv = 1 / range.xRangeWidth; }
-		range.ymin = ymin;
-		range.ymax = ymax;
-		range.yRangeWidth = ymax - ymin;
-	}
-
 }

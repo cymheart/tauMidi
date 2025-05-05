@@ -103,6 +103,12 @@ if(objList != nullptr)\
 #endif
 #endif
 
+#if defined(_WIN32)
+#   define tau_strdup _strdup
+#else
+#   define tau_strdup strdup  // Android/Linux使用POSIX标准
+#endif
+
 namespace scutils
 {
 	DLL_FUNC int JudgeLittleOrBigEndianSystem();

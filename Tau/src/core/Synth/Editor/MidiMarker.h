@@ -19,28 +19,28 @@ namespace tau
 
 		void Copy(MidiMarker& cpyMidiMarker);
 
-		inline int GetTrack()
+		inline int GetTrack() const
 		{
 			return track;
 		}
 
-		bool IsEnableMarkerText()
+		bool IsEnableMarkerText() const
 		{
 			return isEnableMarkerText;
 		}
 
 		//判断是否开启速度设置
-		bool IsEnableTempo()
+		bool IsEnableTempo() const
 		{
 			return isEnableTempo;
 		}
 
-		inline int32_t GetStartTick()
+		inline int32_t GetStartTick() const
 		{
 			return startTick;
 		}
 
-		inline double GetStartSec()
+		inline double GetStartSec() const
 		{
 			return startSec;
 		}
@@ -56,44 +56,44 @@ namespace tau
 		}
 
 		//获取一个四分音符的微秒数
-		inline float GetMicroTempo()
+		inline float GetMicroTempo() const
 		{
 			return microTempo;
 		}
 
-		inline int32_t GetTickForQuarterNote()
+		inline int32_t GetTickForQuarterNote() const
 		{
 			return tickForQuarterNote;
 		}
 
 		//判断是否开启节拍设置
-		bool IsEnableTimeSignature()
+		bool IsEnableTimeSignature() const
 		{
 			return isEnableTimeSignature;
 		}
 
 
-		inline int GetNumerator()
+		inline int GetNumerator() const
 		{
 			return numerator;
 		}
 
-		inline int GetDenominator()
+		inline int GetDenominator() const
 		{
 			return denominator;
 		}
 
-		bool IsEnableKeySignature()
+		bool IsEnableKeySignature() const
 		{
 			return isEnableKeySignature;
 		}
 
-		inline int GetSf()
+		inline int GetSf() const
 		{
 			return sf;
 		}
 
-		inline int GetMi()
+		inline int GetMi() const
 		{
 			return mi;
 		}
@@ -112,7 +112,7 @@ namespace tau
 		}
 
 		//获取标题
-		string GetTitle()
+		string& GetTitle()
 		{
 			return titleName;
 		}
@@ -132,8 +132,8 @@ namespace tau
 		{
 			titleName = "节拍变更";
 			isEnableTimeSignature = isEnable;
-			numerator = numerator_;
-			denominator = denominator_;
+			numerator = (int)numerator_;
+			denominator = (int)denominator_;
 		}
 
 
@@ -142,17 +142,17 @@ namespace tau
 		{
 			titleName = "调号变更";
 			isEnableKeySignature = isEnable;
-			sf = sf_;
-			mi = mi_;
+			sf = (int)sf_;
+			mi = (int)mi_;
 		}
 
 		//获取调号序号
-		int GetIdx() {
-			return (sf < 0 ? 7 - sf : sf);
+		int GetIdx() const {
+			return (int)(sf < 0 ? 7 - sf : sf);
 		}
 
 		//获取调号名称
-		string GetKeySignatureName()
+		string& GetKeySignatureName()
 		{
 			int n = GetIdx();
 			return (mi == 0 ? majorName[n] : minorName[n]);
@@ -160,7 +160,7 @@ namespace tau
 
 
 		// 获取调号全名
-		string GetKeySignatureFullName()
+		string& GetKeySignatureFullName()
 		{
 			int n = GetIdx();
 			return (mi == 0 ? majorFullName[n] : minorFullName[n]);

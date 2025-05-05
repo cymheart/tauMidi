@@ -8,7 +8,7 @@ namespace tau
 	struct Generator
 	{
 		GeneratorType type = GeneratorType::None;
-		GeneratorAmount genAmount = {(int16_t)0};
+		GeneratorAmount genAmount;
 	};
 
 
@@ -21,6 +21,14 @@ namespace tau
 		void Clear();
 		void Remove(GeneratorType type);
 		void Copy(GeneratorList& orgGens);
+
+		// zone type值
+		// 0: instrument类型
+		// 1: preset类型
+		inline void SetZoneType(ZoneType type)
+		{
+			zoneType = type;
+		}
 
 		// 根据生成器类型,判断此类型生成器是否为空值，从未设置过
 		bool IsEmpty(GeneratorType type)
@@ -42,6 +50,7 @@ namespace tau
 
 	private:
 		Generator gens[(int)GeneratorType::EndOper + 1];
+		ZoneType zoneType = ZoneType::Instrument;
 	};
 }
 

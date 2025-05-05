@@ -30,6 +30,16 @@ namespace tau
 		//设置通道号
 		void SetChannelNum(int num);
 
+		//设置声音增益(单位:dB)
+		void SetVolumeGain(float gainDB) {
+			volumeGainDB = gainDB;
+		}
+
+		//获取声音增益(单位:dB)
+		float GetVolumeGain() {
+			return volumeGainDB;
+		}
+
 		//增加对应乐器
 		inline void AddVirInstrument(VirInstrument* vinst)
 		{
@@ -91,7 +101,7 @@ namespace tau
 		float GetControllerComputedValue(MidiControllerType type);
 
 		MidiControllerTypeList& GetUsedControllerTypeList();
-		ModPresetTypeList& GetUsedPresetTypeList();
+		vector<ModInputPreset>& GetUsedPresetTypeList();
 
 		//设置滑音
 		void SetPitchBend(int value);
@@ -154,8 +164,11 @@ namespace tau
 		float fineTune = 0;
 		float coarseTune = 0;
 
+		//声音增益(单位:dB)
+		float volumeGainDB = 0;
+
 		MidiControllerTypeList usedControllerTypeList;
-		ModPresetTypeList usedPresetTypeList;
+		vector<ModInputPreset> usedPresetTypeList;
 
 		friend class VirInstrument;
 		friend class Synther;

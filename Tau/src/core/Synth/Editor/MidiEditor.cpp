@@ -347,17 +347,15 @@ namespace tau
 
 	void MidiEditor::DisableAllTrack()
 	{
-		for (int i = 0; i < tracks.size(); i++) {
-			tracks[i]->isDisablePlay = true;
-			midiSynther->OffAllKeys(tracks[i]->GetChannel());
-		}
+		DisableChannel(-1);
 	}
 
 	void MidiEditor::DisableChannel(int channelIdx)
 	{
 		for (int i = 0; i < tracks.size(); i++) {
 
-			if (tracks[i]->GetChannelNum() != channelIdx)
+			if (channelIdx != -1 &&
+				tracks[i]->GetChannelNum() != channelIdx)
 				continue;
 
 			tracks[i]->isDisablePlay = true;
@@ -384,9 +382,7 @@ namespace tau
 
 	void MidiEditor::EnableAllTrack()
 	{
-		for (int i = 0; i < tracks.size(); i++) {
-			tracks[i]->isDisablePlay = false;
-		}
+		EnableChannel(-1);
 	}
 
 
@@ -394,10 +390,24 @@ namespace tau
 	{
 		for (int i = 0; i < tracks.size(); i++) {
 
-			if (tracks[i]->GetChannelNum() != channelIdx)
+			if (channelIdx != -1 && 
+				tracks[i]->GetChannelNum() != channelIdx)
 				continue;
 
 			tracks[i]->isDisablePlay = false;
+		}
+	}
+
+	//设置通道声音增益(单位:dB)
+	void MidiEditor::SetChannelVolumeGain(int channelIdx, float gainDB)
+	{
+		for (int i = 0; i < tracks.size(); i++) {
+
+			if (channelIdx != -1 && 
+				tracks[i]->GetChannelNum() != channelIdx)
+				continue;
+
+			tracks[i]->GetChannel()->SetVolumeGain(gainDB);
 		}
 	}
 

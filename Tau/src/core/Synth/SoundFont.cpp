@@ -10,9 +10,9 @@ namespace tau
 {
 	SoundFont::SoundFont()
 	{
-		sampleList = new SampleList;
-		sampleGenList = new SampleGenList;
-		instList = new InstrumentList;
+		sampleList = new vector<Sample*>;
+		sampleGenList = new vector<SampleGenerator*>;
+		instList = new vector<Instrument*>;
 		presetBankDict = new PresetMap;
 		presets = new vector<Preset*>;
 		sfParserMap = new SoundFontParserMap();

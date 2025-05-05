@@ -124,6 +124,8 @@ namespace tau
 	// 钳位类型值的取值范围
 	GeneratorAmount GeneratorList::ClampValueRange(GeneratorType genType, GeneratorAmount value)
 	{
+		if (zoneType == ZoneType::Preset)
+			return value;
 
 		switch (genType)
 		{

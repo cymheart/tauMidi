@@ -179,6 +179,31 @@
     <ClCompile Include="..\..\src\thrids\libmp3lame\vbrquantize.c" />
     <ClCompile Include="..\..\src\thrids\libmp3lame\VbrTag.c" />
     <ClCompile Include="..\..\src\thrids\libmp3lame\version.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libogg\bitwise.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libogg\framing.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\analysis.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\barkmel.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\bitrate.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\block.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\codebook.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\envelope.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\floor0.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\floor1.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\info.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\lookup.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\lpc.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\lsp.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\mapping0.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\mdct.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\psy.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\registry.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\res0.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\sharedbook.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\smallft.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\synthesis.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\vorbisenc.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\vorbisfile.c" />
+    <ClCompile Include="..\..\src\thrids\ogg_vorbis\libvorbis\window.c" />
     <ClCompile Include="..\..\src\thrids\OteyPiano\DWG.cpp" />
     <ClCompile Include="..\..\src\thrids\OteyPiano\dwgs.cpp" />
     <ClCompile Include="..\..\src\thrids\OteyPiano\filter.cpp" />
@@ -399,11 +424,55 @@
     <ClInclude Include="..\..\src\thrids\libmp3lame\vbrquantize.h" />
     <ClInclude Include="..\..\src\thrids\libmp3lame\VbrTag.h" />
     <ClInclude Include="..\..\src\thrids\libmp3lame\version.h" />
-    <ClInclude Include="..\..\src\thrids\ogg_vorbis\ogg\ogg.h" />
-    <ClInclude Include="..\..\src\thrids\ogg_vorbis\ogg\os_types.h" />
-    <ClInclude Include="..\..\src\thrids\ogg_vorbis\vorbis\codec.h" />
-    <ClInclude Include="..\..\src\thrids\ogg_vorbis\vorbis\vorbisenc.h" />
-    <ClInclude Include="..\..\src\thrids\ogg_vorbis\vorbis\vorbisfile.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\ogg\config_types.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\ogg\ogg.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\ogg\os_types.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\vorbis\codec.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\vorbis\vorbisenc.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\include\vorbis\vorbisfile.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libogg\crctable.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\backends.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\bitrate.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\books\coupled\res_books_51.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\books\coupled\res_books_stereo.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\books\floor\floor_books.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\books\uncoupled\res_books_uncoupled.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\codebook.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\codec_internal.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\envelope.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\highlevel.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\lookup.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\lookup_data.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\lpc.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\lsp.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\masking.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\mdct.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\misc.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\floor_all.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\psych_11.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\psych_16.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\psych_44.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\psych_8.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\residue_16.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\residue_44.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\residue_44p51.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\residue_44u.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\residue_8.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_11.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_16.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_22.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_32.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_44.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_44p51.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_44u.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_8.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\modes\setup_X.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\os.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\psy.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\registry.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\scales.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\smallft.h" />
+    <ClInclude Include="..\..\src\thrids\ogg_vorbis\libvorbis\window.h" />
     <ClInclude Include="..\..\src\thrids\OteyPiano\DWG.h" />
     <ClInclude Include="..\..\src\thrids\OteyPiano\dwgs.h" />
     <ClInclude Include="..\..\src\thrids\OteyPiano\filter.h" />
@@ -452,6 +521,9 @@
     <ClInclude Include="..\..\src\thrids\wav\WavHeader.hpp" />
     <ClInclude Include="..\..\src\thrids\wav\WavReader.hpp" />
     <ClInclude Include="..\..\src\thrids\wav\WavWriter.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\thrids\ogg_vorbis\libvorbis\lookups.pl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -569,7 +641,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\src\core;..\..\src\thrids;..\..\src\thrids\DaisySP;..\..\src\thrids\ogg_vorbis</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\core;..\..\src\thrids;..\..\src\thrids\DaisySP;..\..\src\thrids\ogg_vorbis\include</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)Obj\tmp\tmp\%(RelativeDir)</ObjectFileName>
       <DisableSpecificWarnings>26812;26495;4244;4305;4267;26451;4251</DisableSpecificWarnings>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
@@ -580,7 +652,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>winmm.lib;SDL2.lib;portaudio_x64.lib;rtaudio_x64.lib;libvorbis.lib;libvorbisfile.lib;libogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;SDL2.lib;portaudio_x64.lib;rtaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\..\$(Platform)\$(Configuration)\;</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -594,7 +666,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\src\core;..\..\src\thrids;..\..\src\thrids\DaisySP;..\..\src\thrids\ogg_vorbis</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\core;..\..\src\thrids;..\..\src\thrids\DaisySP;..\..\src\thrids\ogg_vorbis\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>26812;26495;4244;4305;4267;26451;4251</DisableSpecificWarnings>
       <ObjectFileName>$(IntDir)Obj\tmp\tmp\%(RelativeDir)</ObjectFileName>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
@@ -607,7 +679,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>..\..\..\$(Platform)\$(Configuration)\;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>winmm.lib;SDL2.lib;portaudio_x64.lib;rtaudio_x64.lib;libvorbis.lib;libvorbisfile.lib;libogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;SDL2.lib;portaudio_x64.lib;rtaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

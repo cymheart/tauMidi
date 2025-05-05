@@ -356,6 +356,9 @@ namespace tau
 		// 启用播放指定编号Midi文件通道
 		void EnableChannel(int channelIdx);
 
+		//设置通道声音增益(单位:dB)
+		void SetChannelVolumeGain(int channelIdx, float gainDB);
+
 		//设置轨道事件演奏方式
 		void SetTrackPlayType(Track* track, MidiEventPlayType playType);
 

@@ -18,17 +18,17 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
-#include <string.h>
-#include <math.h>
+#include <cstring>
+#include <cmath>
 #include <vorbis/vorbisenc.h>
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
 #include "sfont.h"
-#include "time.h"
+#include <ctime>
 
 using namespace SfTools;
 
@@ -213,7 +213,7 @@ bool SoundFont::read()
     catch (exception)
     {
         t.close();
-        cout << path << "ÎÄ¼þ´ò¿ª³ö´í!" << endl;
+        cout << path << "ï¿½Ä¼ï¿½ï¿½ò¿ª³ï¿½ï¿½ï¿½!" << endl;
         return false;
     }
 
@@ -437,7 +437,7 @@ char* SoundFont::readString(int n)
         throw string("unexpected end of file");
     if (data[n-1] != 0)
         data[n] = 0;
-    return _strdup(data);
+    return tau_strdup(data);
 }
 
 //---------------------------------------------------------
@@ -975,7 +975,7 @@ short* SoundFont::createUncompressSmpl()
     catch (exception)
     {
         t.close();
-        cout << path << "ÎÄ¼þ´ò¿ª³ö´í!" << endl;
+        cout << path << "ï¿½Ä¼ï¿½ï¿½ò¿ª³ï¿½ï¿½ï¿½!" << endl;
         return nullptr;
     }
 
@@ -996,8 +996,8 @@ short* SoundFont::createUncompressSmpl()
         currentSamplePos += len;
         s->end = currentSamplePos;
 
-        //¸ù¾Ýsf2¸ñÊ½¹æ·¶½«ÔÚÑù±¾Ä©Î²¶àÌí¼Ó46¸öÁãÖµµã
-        //sf24ÎÄµµ¹æ·¶µÄ6.1 Sample Data Format in the smpl Sub-chunkÓÐÌáµ½
+        //ï¿½ï¿½ï¿½ï¿½sf2ï¿½ï¿½Ê½ï¿½æ·¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä©Î²ï¿½ï¿½ï¿½ï¿½ï¿½46ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½
+        //sf24ï¿½Äµï¿½ï¿½æ·¶ï¿½ï¿½6.1 Sample Data Format in the smpl Sub-chunkï¿½ï¿½ï¿½áµ½
         currentSamplePos += 46;
 
         // Loop start and end are now based on the beginning of the section "smpl"
@@ -1280,7 +1280,7 @@ int SoundFont::writeCompressedSample(Sample* s)
     catch (exception)
     {
         t.close();
-        cout << path << "ÎÄ¼þ´ò¿ª³ö´í!" << endl;
+        cout << path << "ï¿½Ä¼ï¿½ï¿½ò¿ª³ï¿½ï¿½ï¿½!" << endl;
         return false;
     }
 
@@ -1437,7 +1437,7 @@ bool SoundFont::writeCSample(Sample* s, int idx)
     catch (exception)
     {
         t.close();
-        cout << path << "ÎÄ¼þ´ò¿ª³ö´í!" << endl;
+        cout << path << "ï¿½Ä¼ï¿½ï¿½ò¿ª³ï¿½ï¿½ï¿½!" << endl;
         return false;
     }
 
@@ -2176,7 +2176,7 @@ int SoundFont::writeUncompressedSample(Sample* s)
     catch (exception)
     {
         t.close();
-        cout << path << "ÎÄ¼þ´ò¿ª³ö´í!" << endl;
+        cout << path << "ï¿½Ä¼ï¿½ï¿½ò¿ª³ï¿½ï¿½ï¿½!" << endl;
         return false;
     }
 
@@ -2305,8 +2305,8 @@ int SoundFont::writeUncompressedSample(Sample* s, ByteStream& f)
             length += numberRead;
         } while (numberRead);
 
-        //¸ù¾Ýsf2¸ñÊ½¹æ·¶½«ÔÚÑù±¾Ä©Î²¶àÌí¼Ó46¸öÁãÖµµã,¼´92×Ö½Ú¸ö0
-        //sf24ÎÄµµ¹æ·¶µÄ6.1 Sample Data Format in the smpl Sub-chunkÓÐÌáµ½
+        //ï¿½ï¿½ï¿½ï¿½sf2ï¿½ï¿½Ê½ï¿½æ·¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä©Î²ï¿½ï¿½ï¿½ï¿½ï¿½46ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½,ï¿½ï¿½92ï¿½Ö½Ú¸ï¿½0
+        //sf24ï¿½Äµï¿½ï¿½æ·¶ï¿½ï¿½6.1 Sample Data Format in the smpl Sub-chunkï¿½ï¿½ï¿½áµ½
         short zeros[46] = { 0 };
         _file->write(zeros, 92);
         ov_clear(&vf);

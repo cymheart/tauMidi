@@ -11,7 +11,7 @@ namespace tau
 
 		if (sf2 == nullptr || sf2->size == 0) {
 			DEL(sf2);
-			cout << filePath << "ÎÄ¼þ½âÎöÊ§°Ü!" << endl;
+			cout << filePath << "ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½!" << endl;
 			return;
 		}
 
@@ -145,22 +145,27 @@ namespace tau
 		PHDRSubChunk* presets = new PHDRSubChunk();
 		hydraChunk->phdrSubChunk = presets;
 		//
-		int pBagIdx = 0;
-		auto node = sf3.presets.GetHeadNode();
+
+        int pBagIdx = 0;
+        auto node = sf3.presets.GetHeadNode();
 		for (; node != nullptr; node = node->next) {
 			auto p = node->elem;
-			auto sf2Preset = new SF2PresetHeader();	
+			auto sf2Preset = new SF2PresetHeader();
 			strcpy((char*)(sf2Preset->presetName), p->name);
+
+
+
 			sf2Preset->Bank = p->bank;
 			sf2Preset->Preset = p->preset;
 			sf2Preset->library = p->library;
 			sf2Preset->morphology = p->morphology;
 			sf2Preset->genre = p->genre;
 			sf2Preset->PresetBagIndex = pBagIdx;
-			presets->presets.push_back(sf2Preset);	
+			presets->presets.push_back(sf2Preset);
 			//
 			pBagIdx += p->zones.Size();
 		}
+   
 
 		//
 		BAGSubChunk* pbags = new BAGSubChunk();

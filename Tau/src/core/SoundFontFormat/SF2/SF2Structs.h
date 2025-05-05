@@ -17,7 +17,7 @@ namespace tau
 
 	public:
 		static uint32_t Size;
-		byte presetName[20];
+		byte presetName[30];
 		uint16_t Preset = 0;          //预设编号
 		uint16_t Bank = 0;            //预设音色库
 		uint16_t PresetBagIndex = 0;  //指向预设关联的Bag列表起始索引
@@ -56,7 +56,7 @@ namespace tau
 
 		uint16_t ModulatorSource;           // 调制源（2字节枚举，如LFO、包络）
 		SF2Generator ModulatorDestination;  // 调制目标（2字节枚举或链接其他调制器）
-		SHORT ModulatorAmount;              // 调制量（有符号短整型，范围-32768~32767）
+		short ModulatorAmount;              // 调制量（有符号短整型，范围-32768~32767）
 		uint16_t ModulatorAmountSource;     // 调制量的动态源（2字节枚举）
 		SF2Transform ModulatorTransform;    // 调制转换操作（2字节枚举，如线性、指数）
 	};
@@ -91,7 +91,7 @@ namespace tau
 		static uint32_t Size;
 
 		//乐器名称
-		byte instrumentName[20];
+		byte instrumentName[30];
 
 		//关联到乐器在区域中的起始标号
 		uint16_t InstrumentBagIndex;
@@ -109,7 +109,7 @@ namespace tau
 
 	public:
 		static uint32_t Size;
-		byte sampleName[20];
+		byte sampleName[30];
 		uint32_t Start;
 		uint32_t End;
 		uint32_t LoopStart;

@@ -22,7 +22,7 @@ namespace tau
 		// 增加一个样本到样本列表
 		Sample* AddSample(string name, short* samples, size_t size, uint8_t* sm24 = nullptr);
 
-		inline SampleList* GetSampleList()
+		inline vector<Sample*>* GetSampleList()
 		{
 			return sampleList;
 		}
@@ -33,7 +33,7 @@ namespace tau
 		// 增加一个乐器到乐器列表
 		Instrument* AddInstrument(string name);
 		//获取乐器列表
-		InstrumentList* GetInstrumentList()
+		vector<Instrument*>* GetInstrumentList()
 		{
 			return instList;
 		}
@@ -72,9 +72,9 @@ namespace tau
 
 	private:
 		//
-		SampleList* sampleList = nullptr;
-		SampleGenList* sampleGenList = nullptr;
-		InstrumentList* instList = nullptr;
+		vector<Sample*>* sampleList = nullptr;
+		vector<SampleGenerator*>* sampleGenList = nullptr;
+		vector<Instrument*>* instList = nullptr;
 		vector<Preset*>* presets;
 		PresetMap* presetBankDict = nullptr;
 

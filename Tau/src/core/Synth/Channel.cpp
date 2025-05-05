@@ -76,6 +76,9 @@ namespace tau
 		int itype = (int)type;
 		int imsbType = itype;
 
+		if (itype < 0)
+			return;
+
 		ccUsed[itype] = true;
 		ccValue[itype] = value;
 
@@ -83,7 +86,7 @@ namespace tau
 		if (itype <= 31)
 			ccValue[itype + 32] = 0;
 
-		if (itype >= 0 && itype <= 63)
+		if (itype <= 63)
 		{
 			imsbType = itype <= 31 ? itype : itype - 32;
 			if (ccUsed[imsbType] && ccUsed[imsbType + 32]) {
@@ -159,7 +162,7 @@ namespace tau
 		return usedControllerTypeList;
 	}
 
-	ModPresetTypeList& Channel::GetUsedPresetTypeList()
+	vector<ModInputPreset>& Channel::GetUsedPresetTypeList()
 	{
 		return usedPresetTypeList;
 	}
@@ -202,6 +205,8 @@ namespace tau
 	float Channel::GetControllerComputedValue(MidiControllerType type)
 	{
 		int itype = (int)type;
+		if (itype < 0)
+			return 0;
 
 		//特例处理
 		switch (type)
@@ -211,7 +216,7 @@ namespace tau
 		{
 			float val = ccComputedValue[(int)MidiControllerType::ChannelVolumeMSB] *
 				ccComputedValue[(int)MidiControllerType::ExpressionControllerMSB];
-			//val = powf(val, 2.0f);  
+			val = UnitTransform::GainToDecibels(val) * 10.0;
 			return val;
 		}
 
@@ -240,7 +245,8 @@ namespace tau
 
 	void Channel::Clear()
 	{
-
+		volumeGainDB = 0;
+		//
 		memset(ccUsed, 0, sizeof(bool) * 128);
 		memset(ccValue, 0, sizeof(float) * 128);
 		memset(ccCombValue, 0, sizeof(float) * 128);

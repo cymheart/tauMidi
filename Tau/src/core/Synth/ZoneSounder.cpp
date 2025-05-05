@@ -238,7 +238,9 @@ namespace tau {
 
 	}
 
+	
 	// 松开按键
+	// releaseSec : 重设按键释放时长， -1为不设置
 	void ZoneSounder::OffKey(float velocity, float releaseSec)
 	{
 		//没有使用单音模式时才可以保持按键
@@ -288,7 +290,9 @@ namespace tau {
 				}
 				break;
 
-			case GeneratorType::SampleID:
+			case GeneratorType::ChorusEffectsSend:
+			case GeneratorType::ReverbEffectsSend:
+			case GeneratorType::SampleID:		
 				break;
 
 			case GeneratorType::VolEnvToVolume: 
@@ -369,6 +373,8 @@ namespace tau {
 		//
 		resultGens.Copy(computedGens);
 	}
+
+
 
 	//计算区域的调制器列表
 	void ZoneSounder::ComputeZoneMods() 
@@ -477,7 +483,7 @@ namespace tau {
 			insideModulators->OpenInsideCtrlModulator(ctrlTypes[i]);
 		
 		//增加和通道对应的内部预设相关调制器
-		ModPresetTypeList& presetTypes = virInst->GetChannel()->GetUsedPresetTypeList();
+		vector<ModInputPreset>& presetTypes = virInst->GetChannel()->GetUsedPresetTypeList();
 		for (int i = 0; i < presetTypes.size(); i++)
 			insideModulators->OpenInsidePresetModulator(presetTypes[i]);
 	}
@@ -487,17 +493,19 @@ namespace tau {
 	{
 		AddInsideModulators();
 		ComputeZoneResultMods();
-		ModResultGens(); 		//调制ResultGens
-
-		//处理resultGens对应的参数值
+		//调制ResultGens
+		ModResultGens(); 		
+	
+		//
+		SetSampleModes();
 		SetBasePitchMul();
 		SetAttenuation();
 		SetPan();
-		SetChorusDepth();
 		SetSampleStartIdx();
 		SetSampleEndIdx();
 		SetSampleStartLoopIdx();
-		SetSampleEndLoopIdx();
+		SetSampleEndLoopIdx();	
+	  	SetChorusDepth();
 		SetVibLfoToPitch();
 		SetDelayVibLFO();
 		SetFreqVibLFO();
@@ -601,8 +609,9 @@ namespace tau {
 	//设置音量衰减值
 	void ZoneSounder::SetAttenuation()
 	{
-		short att = resultGens.GetAmount(GeneratorType::InitialAttenuation).amount * 0.45f;
-		float newAttenDstValue = UnitTransform::DecibelsToGain(-att * 0.1f);
+		float att = -resultGens.GetAmount(GeneratorType::InitialAttenuation).amount * 0.1f * 0.7f;
+		att += virInst->GetChannel()->GetVolumeGain();
+		float newAttenDstValue = UnitTransform::DecibelsToGain(att);
 		if (attenFadeInfo.dstValue == newAttenDstValue)
 			return;
 
@@ -763,7 +772,7 @@ namespace tau {
 	{
 		volEnv->delaySec = UnitTransform::TimecentsToSec(resultGens.GetAmount(GeneratorType::DelayVolEnv));
 		volEnv->attackSec = UnitTransform::TimecentsToSec(resultGens.GetAmount(GeneratorType::AttackVolEnv));
-		volEnv->sustainY = UnitTransform::DecibelsToGain(-resultGens.GetAmount(GeneratorType::SustainVolEnv).amount * 0.1f);
+		volEnv->sustain = -resultGens.GetAmount(GeneratorType::SustainVolEnv).amount * 0.1f;
 		volEnv->releaseSec = UnitTransform::TimecentsToSec(resultGens.GetAmount(GeneratorType::ReleaseVolEnv));
 		volEnv->keyToHold = resultGens.GetAmount(GeneratorType::KeynumToVolEnvHold).amount;
 		volEnv->keyToDecay = resultGens.GetAmount(GeneratorType::KeynumToVolEnvDecay).amount;
@@ -777,7 +786,7 @@ namespace tau {
 	{
 		modEnv->delaySec = UnitTransform::TimecentsToSec(resultGens.GetAmount(GeneratorType::DelayModEnv));
 		modEnv->attackSec = UnitTransform::TimecentsToSec(resultGens.GetAmount(GeneratorType::AttackModEnv));
-		modEnv->sustainY = 1 - resultGens.GetAmount(GeneratorType::SustainModEnv).amount * 0.01f;
+		modEnv->sustain = 1 - resultGens.GetAmount(GeneratorType::SustainModEnv).amount * 0.001f;
 		modEnv->releaseSec = UnitTransform::TimecentsToSec(resultGens.GetAmount(GeneratorType::ReleaseModEnv));
 		modEnv->keyToHold = resultGens.GetAmount(GeneratorType::KeynumToModEnvHold).amount;
 		modEnv->keyToDecay = resultGens.GetAmount(GeneratorType::KeynumToModEnvDecay).amount;
@@ -1046,48 +1055,31 @@ namespace tau {
 	}
 
 
-	// 使用连音
-	// 连音的定义:根据当前发音区域的乐器的最后一个keySounder的查找与当前ZoneSounder对应的
-	//instZone,如果找到并且处于Sustain阶段，将直接使当前发音区域从Sustain阶段发音
+	// 连奏模式（Legato Mode）：在合成器中，启用Legato模式时，
+	// 新触发的音符不会重新触发包络，而是保持之前的包络状态，从而平滑过渡。
+	// 在合成器中，启用连奏模式后，新音符不会重置包络，而是继承前一个音符的包络状态，从而保持连贯性。
+	// 例如，若前一个音符处于释音阶段，新音符的包络会从当前值继续而非重新触发
 	void ZoneSounder::UseLegato()
 	{
+		//根据当前发音区域的乐器的最后一个keySounder的查找与当前ZoneSounder对应的
+	    //instZone,如果找到并且处于Sustain阶段，将直接使当前发音区域从Sustain阶段发音
 		if (virInst->UseLegato() && virInst->GetLastOnKeyStateSounder() != nullptr)
 		{
 			KeySounder* keySounder = virInst->GetLastOnKeyStateSounder();
-			EnvStage stage;
 			auto zoneSounders = keySounder->GetZoneSounders();
 			for (int i = 0; i < zoneSounders.size(); i++)
 			{
+				//为同一个发音区域
 				if (zoneSounders[i]->instZone == instZone)
 				{
 					isActiveLegato = true;
-					stage = zoneSounders[i]->GetVolEnvStage();
-					if (stage == EnvStage::Sustain)
-					{
-						volEnv->SetStage(EnvStage::Sustain);
-					}
-					else
-					{
-						volEnv->SetBaseSec(
-							zoneSounders[i]->volEnv->GetCurtSec() +
-							zoneSounders[i]->volEnv->GetBaseSec());
-					}
+					volEnv->SetBaseSec(zoneSounders[i]->volEnv->GetCurtSec());
 				}
 			}
 
 			if (!isActiveLegato)
 			{
-				stage = zoneSounders[0]->GetVolEnvStage();
-				if (stage == EnvStage::Sustain)
-				{
-					volEnv->SetStage(EnvStage::Sustain);
-				}
-				else
-				{
-					volEnv->SetBaseSec(
-						zoneSounders[0]->volEnv->GetCurtSec() +
-						zoneSounders[0]->volEnv->GetBaseSec());
-				}
+				volEnv->SetBaseSec(zoneSounders[0]->volEnv->GetCurtSec());
 			}
 		}
 	}
@@ -1256,7 +1248,7 @@ namespace tau {
 			
 			//采样音调处理
 			pitchOffsetMulStart = LfosAndEnvsPitch(sec);
-			pitchOffsetMulEnd = LfosAndEnvsPitch(endSec);
+			pitchOffsetMulEnd =  LfosAndEnvsPitch(endSec);
 
 			//处理滑音
 			if (isActivePortamento)
@@ -1432,7 +1424,6 @@ namespace tau {
 
 		//计算采样点插值
 		double a = lastSamplePos - prevIntPos;
-
 		if (sample != nullptr) //如果存在样本，将对样本采样
 			return sample->GetValue(prevIntPos) * (1 - a) + sample->GetValue(nextIntPos) * a;
 		else if(zoneSampleGen != nullptr) //否则，如果存在动态样本生成器，将通过生成器生成当前值
@@ -1576,7 +1567,7 @@ namespace tau {
 		for (int i = 0; i < volEnvInfos.size(); i++) {
 			if (volEnvInfos[i].genType == GeneratorType::VolEnvToVolume)
 			{
-				float envVal = volEnv->GetEnvValue(sec);
+				float envVal = UnitTransform::DecibelsToGain(volEnv->GetEnvValue(sec));
 				envVal *= volEnvInfos[i].modValue;
 				if (volEnvInfos[i].unitTransform != nullptr)
 					envVal = volEnvInfos[i].unitTransform(envVal);

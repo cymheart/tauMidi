@@ -412,6 +412,9 @@ namespace tau
 		// 启用播放指定编号通道
 		void EnableChannel(int channelIdx);
 
+		//设置通道声音增益(单位:dB)
+		void SetChannelVolumeGain(int channelIdx, float gainDB);
+
 		void SetSelectInstFragMode(SelectInstFragMode mode);
 		void SelectInstFragment(int trackIdx, int branchIdx, int instFragIdx);
 		void UnSelectInstFragment(int trackIdx, int branchIdx, int instFragIdx);

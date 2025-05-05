@@ -332,16 +332,12 @@ namespace tau
 
 		int key = synther->GetReplaceInstrumentKey(msb, lsb, num);
 		Preset* newPreset = tau->GetInstrumentPreset(key);
-		if (newPreset == nullptr)
-		{
+		if (newPreset == nullptr) {
 			newPreset = tau->GetInstrumentPreset(0, 0, num);
 			if (newPreset == nullptr)
-				return;
+				newPreset = tau->GetInstrumentPreset(0, 0, 0);
 		}
-
-		if (newPreset == preset)
-			return;
-
+		
 		preset = newPreset;
 		channel->SetProgramNum(num);
 
@@ -785,8 +781,13 @@ namespace tau
 
 		if (isRealTime)
 		{
+			const char* name = "";
+			if (GetPreset() != nullptr)
+				name = GetPreset()->name.c_str();
+
+
 			cout << "时间" << sec
-				<< "<<<" << GetPreset()->name.c_str() << ">>> "
+				<< "<<<" << name << ">>> "
 				<< "  乐器号" << channel->GetProgramNum()
 				<< "  按键" << key
 				<< "  力度" << velocity
@@ -795,8 +796,12 @@ namespace tau
 		}
 		else
 		{
+			const char* name ="";
+			if (GetPreset() != nullptr)
+				name = GetPreset()->name.c_str();
+
 			cout << "时间" << sec
-				<< "<<<" << GetPreset()->name.c_str() << ">>> "
+				<< "<<<" << name << ">>> "
 				<< "  乐器号" << channel->GetProgramNum()
 				<< "  按键" << key
 				<< "  力度" << velocity

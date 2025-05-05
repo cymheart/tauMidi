@@ -66,6 +66,11 @@ namespace tau
 		//生成内部PloyPressure调制器
 		void CreateInsidePloyPressureModulator();
 
+		//生成内部和声调制器
+		void CreateInsideChordSendModulator();
+		//生成内部混音调制器
+		void CreateInsideReverbSendModulator();
+
 	private:
 
 		//调制器列表

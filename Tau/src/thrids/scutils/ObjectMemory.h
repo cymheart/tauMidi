@@ -5,7 +5,7 @@
 
 namespace scutils
 {
-	//objectÄÚ´æ
+	//objectï¿½Ú´ï¿½
 	class DLL_CLASS ObjectMemory
 	{
 	public:
@@ -70,8 +70,8 @@ namespace scutils
 				FREE(p);
 		}
 
-		void* operator new[](size_t size) {return 0; }
-			void operator delete[](void* p) {}
+		void* operator new[](size_t size) {return nullptr; }
+        void operator delete[](void* p) {}
 
 	private:
 		int32_t ref;
