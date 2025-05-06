@@ -121,12 +121,21 @@ namespace tau
 		Stereo = 2
 	};
 
-
-	// 类型
-	enum class Type
+	// 虚拟乐器状态
+	enum class VirInstrumentState
 	{
-		MidiTrackType,
-		DeviceType
+		//打开中
+		ONING,
+		//已经打开
+		ONED,
+		//关闭中
+		OFFING,
+		//已经关闭
+		OFFED,
+		//移除中
+		REMOVING,
+		//移除
+		REMOVED,
 	};
 
 	// 样本类型

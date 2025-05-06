@@ -166,7 +166,7 @@ namespace tau
 					track->endSec = ev->endSec;
 
 				//
-				if (evEndTick > instFrag->endTick)
+				if (evEndTick > (int)instFrag->endTick)
 					instFrag->endTick = evEndTick;
 
 				if (evEndTick > track->endTick)

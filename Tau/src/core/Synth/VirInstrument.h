@@ -8,24 +8,6 @@ using namespace tauFX;
 
 namespace tau
 {
-
-	// 虚拟乐器状态
-	enum class VirInstrumentState
-	{
-		//打开中
-		ONING,
-		//已经打开
-		ONED,
-		//关闭中
-		OFFING,
-		//已经关闭
-		OFFED,
-		//移除中
-		REMOVING,
-		//移除
-		REMOVED,
-	};
-
 	/*
 	* 虚拟乐器类
 	* 通过指定通道和预设来确认当前乐器所在的演奏空间

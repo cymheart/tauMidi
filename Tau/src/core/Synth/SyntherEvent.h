@@ -1,5 +1,5 @@
-﻿#ifndef _RenderEvent_h_
-#define _RenderEvent_h_
+﻿#ifndef _SyntherEvent_h_
+#define _SyntherEvent_h_
 
 #include"TauTypes.h"
 #include"Synther/Synther.h"

@@ -70,7 +70,7 @@ namespace dsignal
 		if (rate <= 0) rate = this->rate;
 		//
 		if (start_freq < 0) start_freq = 0;
-		if (end_freq > rate / 2) end_freq = rate / 2;
+		if (end_freq > (int)rate / 2) end_freq = rate / 2;
 		if (start_freq > end_freq) {
 			int tmp = start_freq;
 			start_freq = end_freq;
@@ -80,7 +80,7 @@ namespace dsignal
 		if (channels <= 0) channels = this->channels;
 
 		if (low_cut_off <= 0) low_cut_off = 0;
-		if (high_cut_off > rate / 2) high_cut_off = high_cut_off / 2;
+		if (high_cut_off > (int)rate / 2) high_cut_off = high_cut_off / 2;
 		if (low_cut_off > high_cut_off) {
 			int tmp = low_cut_off;
 			low_cut_off = high_cut_off;

@@ -53,14 +53,7 @@ namespace tau
 		HeaderSubChunk(ByteStream& br, int maxSize = 0x100);
 		~HeaderSubChunk();
 
-		void SetField(char* str) {
-			size = strlen(str) + 1;
-			if (size == 0) return;
-			field = (char*)malloc(size);
-			if (field == nullptr)
-				return;
-			strcpy(field, str);
-		}
+		void SetField(char* str);
 
 	};
 

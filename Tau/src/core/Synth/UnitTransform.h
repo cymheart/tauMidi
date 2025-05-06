@@ -18,7 +18,6 @@ namespace tau
       1 Kilobel (kB) = 10 Hectobels (hB)
       1 Megabel (MB) = 1000 Kilobel (kB)
 	*/
-
 	class UnitTransform
 	{
 	public:

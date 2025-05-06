@@ -646,19 +646,21 @@ namespace tau
 							ev2 = node->next->elem;
 
 						//1. ev和ev2形成note1, 并且 note2 跟随 note1 
-						if (ev->type == MidiEventType::NoteOn &&
-							ev2->type == MidiEventType::NoteOff)
+						if (ev->type == MidiEventType::NoteOn && 
+							ev2 !=nullptr && ev2->type == MidiEventType::NoteOff)
 						{
 							//如果存在note2，连接note2到note1中
 							if (node->next->next != nullptr)
 							{
 								noteOnEv = (NoteOnEvent*)ev;
 								noteOnEv2 = (NoteOnEvent*)(node->next->next->elem);
+								if (noteOnEv2 == nullptr)
+									break;
 
 								//当note1和note2距离在规定范围mergeNoteMaxDistTick内时 
 								//且note2的tick范围小于mergeNoteMaxSelfTick，连接note2到note1中
-								if (noteOnEv2->startTick - noteOnEv->endTick <= mergeNoteMaxDistTick &&
-									noteOnEv2->endTick - noteOnEv2->startTick <= mergeNoteMaxSelfTick)
+								if (noteOnEv2->startTick - noteOnEv->endTick <= (uint32_t)mergeNoteMaxDistTick &&
+									noteOnEv2->endTick - noteOnEv2->startTick <= (uint32_t)mergeNoteMaxSelfTick)
 								{
 									prevNext = node->next;
 									next = notes.Remove(prevNext);
@@ -668,7 +670,9 @@ namespace tau
 									DEL(noteOnEv->noteOffEvent);
 									noteOnEv->noteOffEvent = noteOnEv2->noteOffEvent;
 									DEL(noteOnEv2);
-									noteOnEv->endTick = noteOnEv->noteOffEvent->startTick;
+
+									if(noteOnEv->noteOffEvent != nullptr)
+										noteOnEv->endTick = noteOnEv->noteOffEvent->startTick;
 
 									next = node;
 								}
@@ -682,10 +686,15 @@ namespace tau
 						}
 						//2. note2和note1交错 或者note2被note1包含
 						else if (ev->type == MidiEventType::NoteOn &&
-							ev2->type == MidiEventType::NoteOn)
+							ev2 != nullptr && ev2->type == MidiEventType::NoteOn)
 						{
 							noteOnEv = (NoteOnEvent*)ev;
 							noteOnEv2 = (NoteOnEvent*)(node->next->elem);
+							if (noteOnEv == nullptr || noteOnEv2 == nullptr) {
+								next = node;
+								continue;
+							}
+
 
 							//2.1 note2被note1包含，移除note2
 							if (noteOnEv2->endTick <= noteOnEv->endTick)
@@ -711,7 +720,8 @@ namespace tau
 								DEL(noteOnEv->noteOffEvent);
 
 								noteOnEv->noteOffEvent = noteOnEv2->noteOffEvent;
-								noteOnEv->endTick = noteOnEv->noteOffEvent->startTick;
+								if(noteOnEv->noteOffEvent != nullptr)
+									noteOnEv->endTick = noteOnEv->noteOffEvent->startTick;
 								DEL(noteOnEv2);
 							}
 
@@ -719,7 +729,8 @@ namespace tau
 
 						}
 						else {
-							next = node->next->next;
+							if(node != nullptr && node->next != nullptr)
+								next = node->next->next;
 						}
 					}
 				}

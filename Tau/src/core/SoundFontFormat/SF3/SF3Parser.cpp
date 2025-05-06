@@ -127,7 +127,16 @@ namespace tau
 		for (; snode != nullptr; snode = snode->next) {
 			auto s = snode->elem;
 			auto smpl = new SF2SampleHeader();
-			strcpy((char*)(smpl->sampleName), s->name);
+			//
+			int size = strlen(s->name);
+			char* dest = (char*)(smpl->sampleName);
+#ifdef _WIN32
+			strcpy_s(dest, size, s->name);
+#else
+			strncpy(dest, s->name, size - 1);
+			dest[size - 1] = '\0';
+#endif
+
 			smpl->Start = s->start;
 			smpl->End = s->end;
 			smpl->LoopStart = s->loopstart;
@@ -151,10 +160,18 @@ namespace tau
 		for (; node != nullptr; node = node->next) {
 			auto p = node->elem;
 			auto sf2Preset = new SF2PresetHeader();
-			strcpy((char*)(sf2Preset->presetName), p->name);
 
+			//
+			int size = strlen(p->name);
+			char* dest = (char*)(sf2Preset->presetName);
+#ifdef _WIN32
+			strcpy_s(dest, size, p->name);
+#else
+			strncpy(dest, p->name, size - 1);
+			dest[size - 1] = '\0';
+#endif
 
-
+			//
 			sf2Preset->Bank = p->bank;
 			sf2Preset->Preset = p->preset;
 			sf2Preset->library = p->library;
@@ -237,7 +254,17 @@ namespace tau
 		for (; inode != nullptr; inode = inode->next) {
 			auto inst = inode->elem;
 			auto sf2Inst = new SF2Instrument();
-			strcpy((char*)(sf2Inst->instrumentName), inst->name);
+			//
+			int size = strlen(inst->name);
+			char* dest = (char*)(sf2Inst->instrumentName);
+#ifdef _WIN32
+			strcpy_s(dest, size, inst->name);
+#else
+			strncpy(dest, inst->name, size - 1);
+			dest[size - 1] = '\0';
+#endif
+
+			//
 			sf2Inst->InstrumentBagIndex = ibagIdx;
 			insts->instruments.push_back(sf2Inst);
 			//

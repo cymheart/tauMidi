@@ -11,7 +11,7 @@ namespace tau
 		float startSec;
 		int startTick;
 		int beatNum;
-		float beatCostSec;
+		float* beatSecs;
 	};
 
 	struct MidiMarkerInfo
@@ -22,7 +22,7 @@ namespace tau
 		// 拍号分子(以den分音符为一拍，每小节有num拍)
 		int num = -1;
 		// 拍号分母(以den分音符为一拍)
-		int den = -1;
+		int den = -1;		
 	};
 
 	// 小节信息
@@ -38,7 +38,6 @@ namespace tau
 		{
 			measureNum = 0;
 			atMeasure = 1;
-			mEndTick = 0;
 		}
 
 		MeasureData* GetMeasureDatas() {
@@ -51,16 +50,28 @@ namespace tau
 			return measureNum;
 		}
 
+		//获取beat datas
+		float* GetBeatDatas()
+		{
+			return beatSecs;
+		}
+
+		//获取拍数量
+		int GetBeatCount()
+		{
+			return beatCount;
+		}
+
 		//获取结束tick
 		int GetEndTick()
 		{
-			return mEndTick;
+			return measure[measureNum].startTick;
 		}
 
 		//获取结束sec
 		float GetEndSec()
 		{
-			return mEndSec;
+			return measure[measureNum].startSec;
 		}
 		
 		//获取指定小节的开始时间点
@@ -74,9 +85,6 @@ namespace tau
 		float GetMeasureEndSec(int i)
 		{
 			i = min(measureNum, i);
-			if (i == measureNum)
-				return mEndSec;
-
 			return measure[i].startSec;
 		}
 
@@ -91,9 +99,6 @@ namespace tau
 		float GetMeasureEndTick(int i)
 		{
 			i = min(measureNum, i);
-			if (i == measureNum)
-				return mEndTick;
-
 			return measure[i].startTick - 1;
 		}
 
@@ -101,19 +106,17 @@ namespace tau
 		//获取小节拍子数量
 		int GetMeasureBeatCount(int i)
 		{
-			i = min(measureNum, i);
-			float mSec = GetMeasureEndSec(i) - GetMeasureStartSec(i) + 0.001f;
-			return (int)(mSec / measure[i - 1].beatCostSec);
+			i = min(measureNum, i) - 1;
+			return measure[i].beatNum;
 		}
 
 		//获取小节指定拍子的结束时间点
 		float GetMeasureBeatEndSec(int measureIdx, int beatIdx)
 		{
-			int i = min(measureNum, measureIdx);
-			float mSec = GetMeasureEndSec(i) - GetMeasureStartSec(i);
-			return measure[i - 1].startSec + beatIdx * measure[i - 1].beatCostSec;
+			int i = min(measureNum, measureIdx) - 1;
+			int bidx = min(measure[i].beatNum - 1, beatIdx);
+			return measure[i].beatSecs[bidx];
 		}
-
 
 		//获取指定时间所在的小节
 		int GetSecAtMeasure(float sec)
@@ -134,19 +137,24 @@ namespace tau
 			}
 		}
 
+	private:	
+		static int GetNextTempoIdx(vector<MidiMarker*>& midiMarkers, int idx);
+
 	private:
 
 		//小节信息
 		MeasureData measure[3000];
-
 		//小节数量
 		int measureNum = 0;
 
+		//每拍时间点
+		float beatSecs[10000];
+		//拍数量
+		int beatCount = 0;
+
+
 		//所在小节
 		int atMeasure = 1;
-
-		int mEndTick = 0;
-		float mEndSec = 0;
 
 	};
 }

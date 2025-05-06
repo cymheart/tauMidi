@@ -40,6 +40,22 @@ namespace tau
 		free(field);
 	}
 
+	void HeaderSubChunk::SetField(char* str) {
+		size = strlen(str) + 1;
+		if (size == 0) return;
+		field = (char*)malloc(size);
+		if (field == nullptr)
+			return;
+
+#ifdef _WIN32
+		strcpy_s(field, size, str);
+#else
+		strncpy(field, str, size - 1);
+		field[size - 1] = '\0';
+#endif
+	}
+
+
 	SMPLSubChunk::SMPLSubChunk(ByteStream& br)
 		: SF2Chunk(br)
 	{

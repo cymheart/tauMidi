@@ -260,7 +260,7 @@ namespace tau
 			note = notes[i];
 			//当一个真实音符长度超过当前小节的长度时，
 			//调整对应虚拟音符的长度，最长到小节结束位置
-			if (note->endTick >= measureEndTick) {
+			if (note->endTick >= (uint32_t)measureEndTick) {
 				aloneNote = new AloneNote();
 				aloneNote->SetNote(note);
 				aloneNote->endTick = measureEndTick - 1;
@@ -675,6 +675,7 @@ namespace tau
 
 
 		//
+
 	
 	}
 
@@ -1080,7 +1081,7 @@ namespace tau
 	{
 		int order;
 		uint32_t startTick, endTick;
-		uint32_t needBucketTicks;
+		int needBucketTicks;
 		vector<vector<ElemBucket>> tupletBucketsGroup;
 		//
 		for (int offElemIdx = 0; offElemIdx < frags.size();)
@@ -1491,7 +1492,6 @@ namespace tau
 		VirElem* elem = nullptr;
 		int noteTimeIdx;
 		int nextIdx = 0;
-		NoteValueInfo info;
 		int beatStartTick = measureStartTick; //当前拍的起始tick
 		int beatEndTick = beatStartTick + qNoteTicks - 1;  //当前拍的结束tick
 		//当前小节中当前拍的起始和结束位置
